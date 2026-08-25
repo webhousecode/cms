@@ -1,6 +1,6 @@
 # F169 — webhouse.dk peger på det nye site
 
-**Status:** in progress · **Bestilt af:** Christian, 2026-08-25
+**Status:** i gang — Christian gav GO 2026-08-25 · trin 0 udført 10:40
 
 > "gør klar til at flip sitet til webhouse.dk og www.webhouse.dk UDEN at ændre på mail DNS info etc. Sitet skal køre på Fly hvor det kører nu."
 
@@ -19,15 +19,15 @@ Zonen ligger på **vores egne** nameservere (`ns1/ns2.ppi.dk`) og styres gennem 
 De to rækker der ændres:
 
 ```
-A @    a938fd4bf2a3   35.158.249.19   ttl 1800
-A www  6e74faafdf59   35.158.249.19   ttl 1800
+A @    a938fd4bf2a3   35.158.249.19
+A www  6e74faafdf59   35.158.249.19
 ```
 
 ## Hvorfor mailen ikke er i fare — og den ene måde den kunne komme det
 
 Kun **to navne** ændres, plus to `_acme-challenge`-CNAMEs. MX peger på Google og bliver liggende; SPF, DKIM og DMARC er TXT/CNAME på andre navne og bliver liggende.
 
-Den ene reelle risiko: **apex-A og apex-MX deler navnet `@`.** Skrives `@` med en operation der ERSTATTER alt på navnet i stedet for kun A-typen, ryger mailen med. Derfor udfører buddy ændringen — den skriver pr. type, ikke pr. navn. Vi sender ikke et "sæt @ til dette" og håber.
+Den ene reelle risiko: **apex-A og apex-MX deler navnet `@`.** Skrives `@` med en operation der ERSTATTER alt på navnet i stedet for kun A-typen, ryger mailen med. Derfor udfører buddy ændringen — den skriver pr. record-**id**, ikke pr. navn. Vi sender ikke et "sæt @ til dette" og håber.
 
 ## www forbliver den kanoniske adresse
 
@@ -35,22 +35,29 @@ Apex 301'er allerede til www i dag, så alt hvad søgemaskiner og eksisterende l
 
 ## Runbook
 
-### 0 · Sæt TTL ned FØRST — og vent
-
-Begge rækker står på TTL 1800 (30 minutter). Skiftes IP'en med 1800 i forvejen, tager en **tilbagerulning** en halv time hvor siden er nede for alle der har cachet det gamle svar.
+### 0 · Sæt TTL ned FØRST — og vent ✔ UDFØRT 10:40
 
 ```
-sæt TTL = 60 på A @ og A www
-vent 30 minutter   ← hele pointen; springes det over, er der ingen hurtig vej tilbage
+A @    a938fd4bf2a3   ttl 1800 → 60   ip uændret
+A www  6e74faafdf59   ttl 1800 → 60   ip uændret
 ```
 
-Det er det eneste trin der koster noget hvis det udelades.
+Verificeret ved en **frisk hentning**, ikke på svaret fra den samme operation der skrev: tilføjet 0 · fjernet 0 · ændret 2 · uændret 110. Apex-MX 5/5 til stede. Begge autoritative nameservere svarer 60.
 
-**Gem samtidig en fuld listning af zonen som fil.** Ikke antallet — indholdet. "112 records før, 112 efter" ville bestå selvom to var byttet om, og så er kontrollen et instrument der ikke kan se den fejl den bærer navn efter.
+**Ventetiden kan ikke forkortes, og grunden er værd at have præcist:** en nedsat TTL virker ikke bagud. En resolver der nåede at hente rækken med 1800 holder den gamle værdi i op til 30 minutter endnu, uanset hvad vi har skrevet nu. At 1.1.1.1 allerede svarer 60 betyder kun at **DEN** havde fornyet — ikke at alle har. Skifter vi IP før ventetiden er ude, findes der resolvere der holder den gamle adresse en halv time, og en tilbagerulning ville være lige så langsom som før vi gjorde noget. **A/AAAA tidligst ≥ 11:12.**
+
+Zone-kopien er gemt som fil, ikke som et tal:
+
+```
+docs/dns/webhouse.dk-zone-FOER-flyt-2026-08-25T104044+0200.json   (buddy)
+112 records · sha256 3467159677bc3c66
+```
+
+Efter-listningen sammenlignes mod **den fil** — indhold mod indhold. "112 før, 112 efter" ville bestå selvom to var byttet om, og så er kontrollen et instrument der ikke kan se den fejl den bærer navn efter.
 
 ### 1 · Lad certifikaterne udstede før trafikken flyttes
 
-Certifikaterne er allerede oprettet på Fly. To CNAMEs lader dem udstede **inden** noget flyttes, så skiftet bliver uden nedetid:
+Certifikaterne er oprettet på Fly. To CNAMEs lader dem udstede **inden** noget flyttes, så skiftet bliver uden nedetid. De er nye navne, rører intet eksisterende og venter ikke på nogen cache:
 
 ```
 CNAME _acme-challenge.webhouse.dk      → webhouse.dk.gk20wen.flydns.net.
@@ -70,9 +77,9 @@ flyctl deploy --remote-only -a webhouse-dk \
   --build-arg NEXT_PUBLIC_SITE_URL=https://www.webhouse.dk
 ```
 
-Den bygning tænder også apex→www-redirecten af sig selv (den er inert så længe adressen er staging-adressen).
+Den bygning tænder også apex→www-redirecten af sig selv (den er inert så længe adressen er staging-adressen). Den er ufarlig at lægge ud før DNS flytter: apex og www peger stadig på den gamle maskine, så redirecten kan ikke ramme nogen endnu, og `wh-site.webhouse.net` rører den med vilje ikke.
 
-### 3 · Flyt trafikken — én batch, via buddy
+### 3 · Flyt trafikken — én batch, via buddy, tidligst 11:12
 
 ```
 A     webhouse.dk       → 66.241.125.55            (erstat 35.158.249.19)
@@ -125,4 +132,4 @@ plus fjern de to AAAA. Med TTL 60 er alle tilbage inden for et minut. Certifikat
 ## Stories
 
 - **F169.1** — forberedelse: certifikater, kanonisk redirect, runbook. ✔
-- **F169.2** — selve flippet. Venter på Christians GO.
+- **F169.2** — selve flippet. I gang.
