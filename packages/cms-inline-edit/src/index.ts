@@ -1360,6 +1360,39 @@ function escapeAttr(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
+/**
+ * The attributes on an <a> that must survive a save, already serialised.
+ *
+ * Everything except `href` is preserved verbatim, with two exceptions that are
+ * dropped on purpose rather than round-tripped:
+ *
+ *  - `on*` handlers. Content is not a place for script, and writing one back
+ *    out would let an edited field carry executable code into every reader's
+ *    page. Nothing in the CMS puts them there, so dropping them loses nothing
+ *    real — and unlike the accidental loss this function exists to fix, it is
+ *    a decision rather than an oversight.
+ *  - any OTHER attribute whose value is a `javascript:` URL, for the same
+ *    reason. Note this does NOT cover `href` itself: a javascript: href with no
+ *    other attributes still becomes a Markdown link, exactly as before. Whether
+ *    that link is then rendered is the renderer's call, and each consumer
+ *    already makes it (this repo's own site refuses the scheme).
+ *
+ * Empty array means "this is an ordinary link" — the caller then writes plain
+ * Markdown, which is what the editor's own link button produces and what an
+ * author reading the stored value expects to see.
+ */
+function preservedLinkAttrs(el: Element): string[] {
+  const out: string[] = [];
+  for (const attr of Array.from(el.attributes)) {
+    const name = attr.name.toLowerCase();
+    if (name === "href") continue;
+    if (name.startsWith("on")) continue;
+    if (/^javascript:/i.test(attr.value.trim())) continue;
+    out.push(`${name}="${escapeAttr(attr.value)}"`);
+  }
+  return out;
+}
+
 function serializeInline(node: Node): string {
   let out = "";
   node.childNodes.forEach((child) => {
@@ -1405,18 +1438,22 @@ function serializeInlineNode(child: Node): string {
         break;
       case "a": {
         const href = el.getAttribute("href") || "";
-        const ref = el.getAttribute("data-cms-ref");
-        if (ref) {
-          // F164 — a link to a PAGE on the site carries a reference so the page
-          // can re-resolve href (and optionally the label) when that page moves
-          // or is renamed. Markdown link syntax has nowhere to put that, so
-          // emit inline HTML, which `marked` passes through untouched.
-          // Collapsing to [text](href) here would strip the reference on the
-          // editor's very FIRST save and silently kill the whole feature.
-          const attrs = [`href="${escapeAttr(href)}"`, `data-cms-ref="${escapeAttr(ref)}"`];
-          const label = el.getAttribute("data-cms-ref-label");
-          if (label) attrs.push(`data-cms-ref-label="${escapeAttr(label)}"`);
-          out += `<a ${attrs.join(" ")}>${inner}</a>`;
+        // Markdown link syntax can hold a URL and nothing else. An anchor that
+        // carries ANYTHING more — an F164 page reference, target, rel, a title —
+        // therefore has to be emitted as inline HTML, which `marked` passes
+        // through untouched. Collapsing it to [text](href) drops the extras on
+        // the editor's very FIRST save, silently, while the link still works.
+        //
+        // F164: a page reference is what lets a link follow its page when that
+        // page moves or is renamed. Losing it kills the whole feature.
+        //
+        // F157.7: measured on broberg.ai 2026-08-25 — a hand-written link with
+        // target="_blank" rel="noopener noreferrer" came back as a bare
+        // Markdown link after an edit to a DIFFERENT sentence in the same
+        // field. rel="noopener" is a security attribute, not decoration.
+        const extras = preservedLinkAttrs(el);
+        if (extras.length > 0) {
+          out += `<a ${[`href="${escapeAttr(href)}"`, ...extras].join(" ")}>${inner}</a>`;
         } else {
           out += href ? `[${inner}](${href})` : inner;
         }

@@ -176,3 +176,45 @@ describe("htmlToMarkdown — an inline field is not a document", () => {
     expect(htmlToMarkdown("<p>one</p><p>two</p>")).toBe("one\n\ntwo\n");
   });
 });
+
+describe("htmlToMarkdown — a link keeps what makes it that link", () => {
+  // F157.7, measured on broberg.ai 2026-08-25: a byline contained a
+  // hand-written link. An edit to a DIFFERENT sentence in the same field sent
+  // it back as a bare Markdown link, and target + rel were gone. The link still
+  // worked, so nothing looked broken — it just stopped opening in a new tab and
+  // lost rel="noopener noreferrer", which is a security attribute.
+  it("keeps target and rel on a hand-written link", () => {
+    const html =
+      'af <a href="https://example.com/" target="_blank" rel="noopener noreferrer">@nogen</a> på Instagram';
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('target="_blank"');
+    expect(md).toContain('rel="noopener noreferrer"');
+    expect(md).toContain('href="https://example.com/"');
+  });
+
+  // The other half: an ordinary link must NOT turn into raw HTML, or every
+  // link the editor's own button inserts would become markup in the stored
+  // value and an author would stop recognising their own text.
+  it("still writes a plain link as Markdown", () => {
+    expect(htmlToMarkdown('se <a href="/kontakt">kontakt</a>')).toBe("se [kontakt](/kontakt)");
+  });
+
+  it("keeps an F164 page reference", () => {
+    const html = '<a href="/da/om-sanne" data-cms-ref="sider:om-sanne" data-cms-ref-label="auto">Om os</a>';
+    const md = htmlToMarkdown(html);
+    expect(md).toContain('data-cms-ref="sider:om-sanne"');
+    expect(md).toContain('data-cms-ref-label="auto"');
+  });
+
+  it("refuses to write an event handler back out", () => {
+    const md = htmlToMarkdown('<a href="/x" onclick="alert(1)" title="ok">t</a>');
+    expect(md).not.toContain("onclick");
+    expect(md).toContain('title="ok"');
+  });
+
+  it("refuses an attribute carrying a javascript: URL", () => {
+    const md = htmlToMarkdown('<a href="/x" data-src="javascript:alert(1)" title="ok">t</a>');
+    expect(md).not.toContain("javascript:");
+    expect(md).toContain('title="ok"');
+  });
+});
