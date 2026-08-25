@@ -14,6 +14,14 @@ export interface CollectionDef {
   [key: string]: unknown;
 }
 
+export interface FormDef {
+  name: string;
+  label?: string;
+  fields: Array<Record<string, unknown>>;
+  /** Permissive: any other form-level prop (notifications, spam, autoReply, …) is preserved. */
+  [key: string]: unknown;
+}
+
 /**
  * config-writer rewrites the `collections` array of a cms.config.ts when the
  * schema editor changes it. The hard part is NOT losing anything else.
@@ -79,6 +87,27 @@ function buildCollectionsArray(collections: CollectionDef[]): string {
   return `[\n${collections.map(serializeCollection).join(',\n')}\n  ]`;
 }
 
+function serializeForm(form: FormDef): string {
+  const { fields, ...rest } = form;
+  const lines: string[] = ['    {'];
+  for (const [k, v] of Object.entries(rest)) {
+    if (v === undefined) continue;
+    lines.push(`      ${emitKey(k)}: ${emitInline(v)},`);
+  }
+  lines.push('      fields: [');
+  for (const f of fields ?? []) {
+    lines.push(`        ${emitInline(f)},`);
+  }
+  lines.push('      ],');
+  lines.push('    }');
+  return lines.join('\n');
+}
+
+function buildFormsArray(forms: FormDef[]): string {
+  if (forms.length === 0) return '[]';
+  return `[\n${forms.map(serializeForm).join(',\n')}\n  ]`;
+}
+
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -88,17 +117,50 @@ function escapeRegExp(s: string): string {
  * preserving every other byte. Throws (so the caller does NOT write) if the
  * array can't be located or is unbalanced.
  */
-export function replaceCollectionsArray(source: string, collections: CollectionDef[]): string {
-  const m = /(^|\n)([ \t]*)collections[ \t]*:[ \t]*\[/.exec(source);
+function replaceTopLevelArray(source: string, key: string, literal: string): string {
+  const m = new RegExp(`(^|\\n)([ \\t]*)${escapeRegExp(key)}[ \\t]*:[ \\t]*\\[`).exec(source);
   if (!m) {
-    throw new Error('config-writer: could not locate top-level `collections:` array in cms.config.ts');
+    throw new Error(`config-writer: could not locate top-level \`${key}:\` array in cms.config.ts`);
   }
   const bracketIdx = m.index + m[0].length - 1; // index of the opening '['
   const closeIdx = findMatchingBracket(source, bracketIdx);
   if (closeIdx < 0) {
-    throw new Error('config-writer: unbalanced `collections` array in cms.config.ts');
+    throw new Error(`config-writer: unbalanced \`${key}\` array in cms.config.ts`);
   }
-  return source.slice(0, bracketIdx) + buildCollectionsArray(collections) + source.slice(closeIdx + 1);
+  return source.slice(0, bracketIdx) + literal + source.slice(closeIdx + 1);
+}
+
+export function replaceCollectionsArray(source: string, collections: CollectionDef[]): string {
+  return replaceTopLevelArray(source, 'collections', buildCollectionsArray(collections));
+}
+
+/**
+ * Replace only the top-level `forms: [ … ]` array, or ADD one when the config
+ * has none.
+ *
+ * Forms used to be preserved-as-text and nothing else, so a form field defined
+ * in a site's repo could never reach the running admin: `/api/schema/sync`
+ * carried collections only, and the admin UI refuses by design to touch a form
+ * that is defined in code. The consequence was not just a missing field — the
+ * submit route keeps ONLY the fields the definition knows, so a value posted
+ * for a field the running admin had never heard of was dropped in silence,
+ * with a 200 and a green receipt. (Found 25 Aug 2026 shipping a required phone
+ * field to webhouse.dk.)
+ */
+export function replaceFormsArray(source: string, forms: FormDef[]): string {
+  const literal = buildFormsArray(forms);
+  if (/(^|\n)[ \t]*forms[ \t]*:[ \t]*\[/.test(source)) {
+    return replaceTopLevelArray(source, 'forms', literal);
+  }
+  // No `forms:` yet. Put it immediately before `storage:` — the one top-level
+  // key every generated config ends with — rather than guessing a position.
+  const anchor = /(^|\n)([ \t]*)storage[ \t]*:/.exec(source);
+  if (!anchor) {
+    throw new Error('config-writer: config has no `forms:` and no `storage:` to anchor a new one to');
+  }
+  const indent = anchor[2];
+  const at = anchor.index + anchor[1].length;
+  return source.slice(0, at) + `${indent}forms: ${literal},\n` + source.slice(at);
 }
 
 /** Guardrail: never persist a result that lost defineConfig or a collection. */
@@ -178,6 +240,49 @@ async function writeGitHubFile(owner: string, repo: string, filePath: string, co
  * `config` is kept for signature stability; it is no longer needed to
  * reconstruct top-level fields (they're preserved from the source directly).
  */
+/**
+ * Write the `forms` array of a cms.config.ts, preserving every other byte.
+ * Same shape and same guards as writeConfigCollections.
+ */
+export async function writeConfigForms(
+  configPath: string,
+  _config: CmsConfig,
+  forms: FormDef[],
+): Promise<void> {
+  const guard = (original: string, updated: string) => {
+    if (!updated.includes('defineConfig')) {
+      throw new Error('config-writer: refusing to write — result no longer contains defineConfig');
+    }
+    // The forms rewrite must never cost a collection. Checked against the
+    // ORIGINAL, so this catches a bracket-matching slip that ate a neighbour.
+    for (const m of original.matchAll(/defineCollection\(\{\s*\n\s*name:\s*["']([^"']+)["']/g)) {
+      if (!new RegExp(`name:\\s*["']${escapeRegExp(m[1])}["']`).test(updated)) {
+        throw new Error(`config-writer: refusing to write — collection "${m[1]}" missing from result`);
+      }
+    }
+    for (const f of forms) {
+      if (!new RegExp(`name:\\s*["']${escapeRegExp(f.name)}["']`).test(updated)) {
+        throw new Error(`config-writer: refusing to write — form "${f.name}" missing from result`);
+      }
+    }
+  };
+
+  const gh = parseGitHubPath(configPath);
+  if (gh) {
+    const token = await getGitHubToken();
+    const { content: original, sha } = await readGitHubFile(gh.owner, gh.repo, gh.path, token);
+    const updated = replaceFormsArray(original, forms);
+    guard(original, updated);
+    await writeGitHubFile(gh.owner, gh.repo, gh.path, updated, sha, token);
+  } else {
+    const original = readFileSync(configPath, 'utf-8');
+    const updated = replaceFormsArray(original, forms);
+    guard(original, updated);
+    writeFileSync(configPath + '.bak', original, 'utf-8');
+    writeFileSync(configPath, updated, 'utf-8');
+  }
+}
+
 export async function writeConfigCollections(
   configPath: string,
   _config: CmsConfig,

@@ -13,7 +13,7 @@
  */
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import type { CmsConfig } from "@webhouse/cms";
-import type { CollectionDef } from "../config-writer";
+import type { CollectionDef, FormDef } from "../config-writer";
 
 // buildConfigContent isn't exported; round-trip via writeConfigCollections
 // against an in-memory mock of node:fs.
@@ -32,11 +32,13 @@ let writeConfigCollections: (
   collections: CollectionDef[],
 ) => Promise<void>;
 let replaceCollectionsArray: (source: string, collections: CollectionDef[]) => string;
+let writeConfigForms: (configPath: string, config: CmsConfig, forms: FormDef[]) => Promise<void>;
 
 beforeAll(async () => {
   const mod = await import("../config-writer");
   writeConfigCollections = mod.writeConfigCollections;
   replaceCollectionsArray = mod.replaceCollectionsArray;
+  writeConfigForms = mod.writeConfigForms;
 });
 
 const minimalConfig: CmsConfig = {
@@ -266,5 +268,132 @@ export default defineConfig({
 
   it("throws (does not corrupt) when collections array is absent", () => {
     expect(() => replaceCollectionsArray("export default defineConfig({});", [])).toThrow();
+  });
+});
+
+
+/**
+ * F159.2 — a form field defined in a site's repo could not reach the running
+ * admin at all: /api/schema/sync moved collections only, and the admin UI
+ * refuses by design to touch a form defined in code. The cost was not a
+ * missing field but a SILENT one — the submit route keeps only the fields the
+ * definition knows, so a phone number posted to an admin that had never heard
+ * of the field was dropped with a 200 and a green receipt.
+ */
+describe("writeConfigForms", () => {
+  const SOURCE = `import { defineConfig, defineCollection } from '@webhouse/cms';
+
+export default defineConfig({
+  locales: ['da', 'en'],
+  defaultLocale: 'da',
+  blocks: [myBlock],
+  autolinks: { enabled: true },
+  collections: [
+    defineCollection({
+      name: "pages",
+      label: "Pages",
+      fields: [
+        { name: "title", type: "text", required: true },
+      ],
+    }),
+  ],
+  forms: [
+    {
+      name: "contact",
+      label: "Contact",
+      fields: [
+        { name: "name", type: "text", label: "Name", required: true },
+        { name: "email", type: "email", label: "Email", required: true },
+      ],
+      notifications: { email: ["cb@webhouse.dk"] },
+      spam: { honeypot: true, rateLimit: 10 },
+    },
+  ],
+  storage: {
+    adapter: "filesystem",
+    filesystem: { contentDir: "/data/cms-admin/beam-sites/x/content" },
+  },
+});
+`;
+
+  const withPhone: FormDef = {
+    name: "contact",
+    label: "Contact",
+    fields: [
+      { name: "name", type: "text", label: "Name", required: true },
+      { name: "email", type: "email", label: "Email", required: true },
+      { name: "phone", type: "phone", label: "Phone", required: true },
+    ],
+    notifications: { email: ["cb@webhouse.dk"] },
+    spam: { honeypot: true, rateLimit: 10 },
+  };
+
+  it("writes the new field", async () => {
+    const path = "/tmp/forms-1.ts";
+    seed(path, SOURCE);
+    await writeConfigForms(path, minimalConfig, [withPhone]);
+    const out = read(path);
+    expect(out).toContain('name: "phone"');
+    expect(out).toContain('type: "phone"');
+    expect(out).toContain("required: true");
+  });
+
+  // The whole point of the module. A rewrite that costs the absolute /data
+  // storage path is the broberg-ai content-wipe bug all over again.
+  it("preserves every other top-level field", async () => {
+    const path = "/tmp/forms-2.ts";
+    seed(path, SOURCE);
+    await writeConfigForms(path, minimalConfig, [withPhone]);
+    const out = read(path);
+    expect(out).toContain("locales: ['da', 'en']");
+    expect(out).toContain("defaultLocale: 'da'");
+    expect(out).toContain("blocks: [myBlock]");
+    expect(out).toContain("autolinks: { enabled: true }");
+    expect(out).toContain('contentDir: "/data/cms-admin/beam-sites/x/content"');
+    expect(out).toContain('defineCollection({');
+    expect(out).toContain('name: "pages"');
+  });
+
+  it("touches nothing outside the forms array", async () => {
+    const path = "/tmp/forms-3.ts";
+    seed(path, SOURCE);
+    await writeConfigForms(path, minimalConfig, [withPhone]);
+    const out = read(path);
+    const before = (src: string) => src.slice(0, src.indexOf("  forms: ["));
+    const after = (src: string) => src.slice(src.indexOf("  storage: {"));
+    expect(before(out)).toBe(before(SOURCE));
+    expect(after(out)).toBe(after(SOURCE));
+  });
+
+  it("keeps the notification address and the spam settings", async () => {
+    const path = "/tmp/forms-4.ts";
+    seed(path, SOURCE);
+    await writeConfigForms(path, minimalConfig, [withPhone]);
+    const out = read(path);
+    expect(out).toContain('email: ["cb@webhouse.dk"]');
+    expect(out).toContain("honeypot: true");
+    expect(out).toContain("rateLimit: 10");
+  });
+
+  it("adds a forms array to a config that has none", async () => {
+    const path = "/tmp/forms-5.ts";
+    seed(path, SOURCE.replace(/  forms: \[[\s\S]*?\n  \],\n/, ""));
+    await writeConfigForms(path, minimalConfig, [withPhone]);
+    const out = read(path);
+    expect(out).toContain("forms: [");
+    expect(out).toContain('name: "phone"');
+    expect(out).toContain('contentDir: "/data/cms-admin/beam-sites/x/content"');
+  });
+
+  it("leaves the collections in place when only forms change", async () => {
+    const path = "/tmp/forms-6.ts";
+    seed(path, SOURCE);
+    // A form whose own name is fine, but the guard compares against the
+    // original — so a rewrite that ate `pages` must throw, not persist.
+    const broken = { ...withPhone };
+    const original = read(path);
+    await writeConfigForms(path, minimalConfig, [broken]);
+    expect(read(path)).toContain('name: "pages"');
+    expect(original).toContain('name: "pages"');
   });
 });
