@@ -11,6 +11,7 @@ import type { NextRequest } from "next/server";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { originAllowed, siteOrigins } from "@/lib/cors-origin";
+import { serverError } from "@/lib/upmetrics-server";
 import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
 
 /**
@@ -125,8 +126,9 @@ export async function GET(req: NextRequest, { params }: Ctx) {
       const doc = await cms.content.findBySlug(collection, slug);
       if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404, headers: cors });
       return NextResponse.json(doc, { headers: cors });
-    } catch {
-      return NextResponse.json({ error: "Internal error" }, { status: 500, headers: cors });
+    } catch (err) {
+      const { collection, slug } = await params;
+      return serverError(err, { route: "GET /api/cms/[collection]/[slug]", collection, slug }, { headers: cors });
     }
   });
   return result instanceof Response ? result : (result as Response);
@@ -206,7 +208,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return serverError(err, { route: "POST /api/cms/[collection]/[slug]" });
   }
   });
   return result instanceof Response ? result : (result as Response);
@@ -416,7 +418,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return serverError(err, { route: "DELETE /api/cms/[collection]/[slug]" });
   }
   });
   return result instanceof Response ? result : (result as Response);

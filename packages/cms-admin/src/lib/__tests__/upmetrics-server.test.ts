@@ -145,3 +145,36 @@ describe("onRequestError", () => {
     expect(calls.captured).toHaveLength(0);
   });
 });
+
+/**
+ * The gap `onRequestError` alone leaves. 137 places across 108 files catch
+ * their own error and return a 500 — Next never sees those, so the hook cannot
+ * either. Measured on production 25 Aug 2026: a forced 500 produced no issue
+ * at all, because the route swallowed its own error.
+ */
+describe("serverError", () => {
+  it("reports the error AND still answers 500", async () => {
+    process.env.UPMETRICS_DSN = "https://key@upmetrics.org/1";
+    const m = await fresh();
+    const res = m.serverError(new Error("boom"), { route: "GET /api/x" });
+    expect(res.status).toBe(500);
+    expect(calls.captured).toHaveLength(1);
+    expect((calls.captured[0] as { ctx: { route: string } }).ctx.route).toBe("GET /api/x");
+  });
+
+  it("keeps the caller's headers — dropping CORS here would break the browser save", async () => {
+    process.env.UPMETRICS_DSN = "https://key@upmetrics.org/1";
+    const m = await fresh();
+    const res = m.serverError(new Error("boom"), {}, { headers: { "access-control-allow-origin": "https://www.webhouse.dk" } });
+    expect(res.headers.get("access-control-allow-origin")).toBe("https://www.webhouse.dk");
+    expect(res.status).toBe(500);
+  });
+
+  it("still answers 500 when reporting is off", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const m = await fresh();
+    const res = m.serverError(new Error("boom"));
+    expect(res.status).toBe(500);
+    expect(calls.captured).toHaveLength(0);
+  });
+});

@@ -67,3 +67,25 @@ export function captureServerError(err: unknown, ctx?: Record<string, unknown>):
     // Reporting an error must never become an error.
   }
 }
+
+/**
+ * Report an error a route CAUGHT itself, then answer 500.
+ *
+ * `onRequestError` only sees what Next.js catches — an unhandled throw. This
+ * codebase almost never has one: 137 places across 108 files catch their own
+ * error and return `{error:"Internal error"}, {status:500}`. Those are exactly
+ * the failures that matter (a save that dies, an upload that vanishes), and
+ * neither Next's hook nor the SDK's process handlers can see a single one of
+ * them. Server reporting would have been ON and blind.
+ *
+ * Measured 25 Aug 2026: a forced 500 on production produced no issue at all,
+ * because the route swallowed its own error. That is what this exists for.
+ */
+export function serverError(
+  err: unknown,
+  ctx?: Record<string, unknown>,
+  init?: ResponseInit,
+): Response {
+  captureServerError(err, ctx);
+  return Response.json({ error: "Internal error" }, { status: 500, ...init });
+}
