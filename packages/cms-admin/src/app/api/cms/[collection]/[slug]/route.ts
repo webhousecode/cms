@@ -115,6 +115,27 @@ async function dispatchAutoDeployOnSave(revalidationDispatched: boolean) {
   console.log(`[auto-deploy] ${result.status}${result.error ? ` — ${result.error}` : ""}`);
 }
 
+/**
+ * 404 when the collection does not exist on this site, instead of letting the
+ * engine's `getCollection()` throw into the catch-all and become a 500.
+ *
+ * Measured on production 2026-08-26: an unknown SLUG answered 404 correctly,
+ * while an unknown COLLECTION answered 500 "Internal error". Since F171 the
+ * server reports its 500s, so every typo, stale bookmark and crawler probe was
+ * raising a FALSE error report — the noise that makes an ops surface stop being
+ * read, which hides real failures more thoroughly than having no reporting at
+ * all. Reported by the sanne session, who hit it as /api/cms/sites/<slug>.
+ *
+ * Only this one lookup is reclassified. Anything else that throws stays a 500
+ * and stays reported; the point is to stop lying about which kind of error it
+ * is, not to go quiet.
+ */
+async function collectionMissing(collection: string, cors: HeadersInit): Promise<NextResponse | null> {
+  const config = await getAdminConfig();
+  if (config.collections.some((c) => c.name === collection)) return null;
+  return NextResponse.json({ error: "Collection not found" }, { status: 404, headers: cors });
+}
+
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
 export async function GET(req: NextRequest, { params }: Ctx) {
@@ -122,6 +143,8 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const result = await runScoped(req, async () => {
     try {
       const { collection, slug } = await params;
+      const missing = await collectionMissing(collection, cors);
+      if (missing) return missing;
       const cms = await getAdminCms();
       const doc = await cms.content.findBySlug(collection, slug);
       if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404, headers: cors });
@@ -142,6 +165,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const result = await runScoped(req, async () => {
   try {
     const { collection, slug } = await params;
+    const missing = await collectionMissing(collection, {});
+    if (missing) return missing;
     const body = await req.json() as { action?: string };
     const cms = await getAdminCms();
 
@@ -223,6 +248,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   const result = await runScoped(req, async () => {
   try {
     const { collection, slug } = await params;
+    const missing = await collectionMissing(collection, cors);
+    if (missing) return missing;
     const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; translationGroup?: string; publishAt?: string | null; unpublishAt?: string | null; slug?: string };
     const cms = await getAdminCms();
 
@@ -356,7 +383,14 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ ...updated, _deployTriggered: willDeploy }, { headers: cors });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500, headers: cors });
+    // PATCH is the SAVE path — every inline edit and every document save lands
+    // here — and it was the one verb that answered 500 without reporting it.
+    // F171 turned server reporting on, and the route that matters most stayed
+    // invisible: a failing save showed the editor a red pill and left no trace
+    // anywhere an operator looks. Found 2026-08-26 while fixing F157.12, by a
+    // test that asserted all four verbs report and found only three did.
+    const { collection, slug } = await params;
+    return serverError(err, { route: "PATCH /api/cms/[collection]/[slug]", collection, slug }, { headers: cors });
   }
   });
   return result instanceof Response ? result : (result as Response);
@@ -370,6 +404,8 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
   const result = await runScoped(req, async () => {
   try {
     const { collection, slug } = await params;
+    const missing = await collectionMissing(collection, {});
+    if (missing) return missing;
     const permanent = req.nextUrl.searchParams.get("permanent") === "true";
     const cms = await getAdminCms();
     const doc = await cms.content.findBySlug(collection, slug);
