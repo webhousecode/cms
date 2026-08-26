@@ -1268,7 +1268,7 @@ function serializeBlockChildren(parent: Node): string {
       const s = serializeBlock(node).trim();
       if (s) blocks.push(s);
     } else {
-      inlineRun += serializeInlineNode(node);
+      inlineRun = joinInline(inlineRun, serializeInlineNode(node));
     }
   });
   flushInline();
@@ -1393,10 +1393,59 @@ function preservedLinkAttrs(el: Element): string[] {
   return out;
 }
 
+/** Markdown's hard line break: two spaces then a newline. */
+const HARD_BREAK = "  \n";
+
+/**
+ * Normalise one run of whitespace to the ONE thing Markdown can carry here: a
+ * hard line break if the run contained a newline, otherwise a single space.
+ */
+function edgeWhitespace(ws: string): string {
+  if (!ws) return "";
+  return /\n/.test(ws) ? HARD_BREAK : " ";
+}
+
+/**
+ * Wrap emphasis, moving the mark's OWN outer whitespace outside the delimiters
+ * instead of deleting it.
+ *
+ * `**text **` is not valid Markdown emphasis, so the whitespace genuinely has
+ * to leave the delimiters — but the previous `inner.trim()` threw it away, and
+ * a browser routinely puts it there. Pressing Shift+Enter with the caret at the
+ * end of bold text inserts the <br> INSIDE the still-active <strong>, so the
+ * author's line break was silently deleted on save (sanneandersen 2026-08-26:
+ * 13 occurrences on two public pages, "**Mulig økonomisk støtte**I visse
+ * tilfælde" — no break, no space, the two sentences glued together). The same
+ * trim ate a plain space on webhouse.dk a day earlier ("noget**exceptionelt**?").
+ */
+function wrapEmphasis(inner: string, delimiter: string): string {
+  const core = inner.trim();
+  if (!core) return "";
+  const lead = edgeWhitespace(inner.slice(0, inner.length - inner.trimStart().length));
+  const trail = edgeWhitespace(inner.slice(inner.trimEnd().length));
+  return lead + delimiter + core + delimiter + trail;
+}
+
+/**
+ * Append one serialised inline piece, collapsing a whitespace collision at the
+ * seam. Needed because wrapEmphasis now emits the mark's edge whitespace and
+ * the neighbouring text node usually carries one of its own — and two spaces at
+ * the end of a line ARE a hard break in Markdown, so a duplicate would invent a
+ * line break nobody typed. A real break always wins over a plain space.
+ */
+function joinInline(out: string, piece: string): string {
+  if (!piece) return out;
+  const outTail = /\s*$/.exec(out)![0];
+  const pieceHead = /^\s*/.exec(piece)![0];
+  if (!outTail || !pieceHead) return out + piece;
+  const merged = /\n/.test(outTail + pieceHead) ? HARD_BREAK : " ";
+  return out.slice(0, out.length - outTail.length) + merged + piece.slice(pieceHead.length);
+}
+
 function serializeInline(node: Node): string {
   let out = "";
   node.childNodes.forEach((child) => {
-    out += serializeInlineNode(child);
+    out = joinInline(out, serializeInlineNode(child));
   });
   return out;
 }
@@ -1424,11 +1473,11 @@ function serializeInlineNode(child: Node): string {
     switch (tag) {
       case "strong":
       case "b":
-        out += inner.trim() ? `**${inner.trim()}**` : "";
+        out += wrapEmphasis(inner, "**");
         break;
       case "em":
       case "i":
-        out += inner.trim() ? `*${inner.trim()}*` : "";
+        out += wrapEmphasis(inner, "*");
         break;
       case "code":
         out += "`" + inner + "`";

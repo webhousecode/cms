@@ -1,7 +1,7 @@
 {
   "name": "@broberg/cms-inline-edit",
-  "version": "0.5.4",
-  "description": "Click-to-edit inline editing for live @webhouse/cms-powered sites \u2014 copy-owned, framework-agnostic",
+  "version": "0.5.5",
+  "description": "Click-to-edit inline editing for live @webhouse/cms-powered sites — copy-owned, framework-agnostic",
   "type": "module",
   "license": "MIT",
   "main": "./dist/index.cjs",

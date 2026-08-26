@@ -218,3 +218,79 @@ describe("htmlToMarkdown — a link keeps what makes it that link", () => {
     expect(md).toContain('title="ok"');
   });
 });
+
+describe("htmlToMarkdown — whitespace at the edge of an inline mark", () => {
+  // sanneandersen, 2026-08-26 (reported by the sanne session, 13 occurrences
+  // across two live pages): an editor put the caret at the end of a bold
+  // sub-heading and pressed Shift+Enter. The browser inserts the <br> INSIDE
+  // the still-active <strong>, and serializeInlineNode wrote the mark as
+  // `**${inner.trim()}**` — so .trim() deleted the line break outright and the
+  // two sentences came back glued together with no separator at all.
+  //
+  // The trim itself is required: `** bold **` is not valid Markdown emphasis.
+  // The bug is that the whitespace was DROPPED instead of MOVED outside the
+  // delimiters.
+  it("keeps a hard break that sits inside <strong> (the live corruption)", () => {
+    const md = htmlToMarkdown(
+      "<p><strong>Mulig økonomisk støtte<br></strong>I visse tilfælde.</p>",
+    );
+    expect(md).toBe("**Mulig økonomisk støtte**  \nI visse tilfælde.\n");
+  });
+
+  it("keeps a hard break that sits inside <em>", () => {
+    expect(htmlToMarkdown("<p><em>Linje et<br></em>Linje to.</p>")).toBe(
+      "*Linje et*  \nLinje to.\n",
+    );
+  });
+
+  it("keeps a hard break inside nested <strong><em>", () => {
+    expect(htmlToMarkdown("<p><strong><em>Linje et<br></em></strong>Linje to.</p>")).toBe(
+      "***Linje et***  \nLinje to.\n",
+    );
+  });
+
+  // Same defect, plain space instead of a line break. Measured on webhouse.dk
+  // 2026-08-25: "noget exceptionelt?" came back as "noget**exceptionelt**?"
+  // because the space lived inside the <strong>.
+  it("keeps a trailing space that sits inside <strong>", () => {
+    expect(htmlToMarkdown("<p><strong>Mulig støtte </strong>I visse.</p>")).toBe(
+      "**Mulig støtte** I visse.",
+    );
+  });
+
+  it("keeps a leading space that sits inside <strong>", () => {
+    expect(htmlToMarkdown("<p>Noget<strong> exceptionelt</strong>?</p>")).toBe(
+      "Noget **exceptionelt**?",
+    );
+  });
+
+  // The space must not be emitted twice when the neighbouring text already
+  // carries one — a stray double space at the end of a line IS a hard break in
+  // Markdown, so duplicating it would invent line breaks nobody typed.
+  it("does not double a space that already sits outside the mark", () => {
+    expect(htmlToMarkdown("<p>Noget <strong> exceptionelt</strong>?</p>")).toBe(
+      "Noget **exceptionelt**?",
+    );
+    expect(htmlToMarkdown("<p><strong>Mulig støtte </strong> I visse.</p>")).toBe(
+      "**Mulig støtte** I visse.",
+    );
+  });
+
+  // A break at the very end of a paragraph means nothing — the block trim must
+  // still strip it, or every save would grow trailing whitespace.
+  it("does not leave trailing whitespace when the break ends the block", () => {
+    expect(htmlToMarkdown("<p><strong>Mulig støtte<br></strong></p>")).toBe(
+      "**Mulig støtte**",
+    );
+  });
+
+  // Guard the reason the trim exists in the first place: `** fed **` is not
+  // valid Markdown emphasis, so the whitespace must end up OUTSIDE the
+  // delimiters — moved, never kept inside. Asserted by exact equality, because
+  // a "does it contain" check passes on both the right and the wrong answer.
+  it("never leaves whitespace inside the emphasis delimiters", () => {
+    expect(htmlToMarkdown("<p><strong> fed </strong>x</p>")).toBe("**fed** x");
+    expect(htmlToMarkdown("<p><em> kursiv </em>x</p>")).toBe("*kursiv* x");
+    expect(htmlToMarkdown("<p><strong>fed<br></strong>x</p>")).toBe("**fed**  \nx\n");
+  });
+});
