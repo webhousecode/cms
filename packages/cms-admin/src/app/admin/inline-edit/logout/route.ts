@@ -3,6 +3,7 @@ import { COOKIE_NAME } from "@/lib/auth";
 import { readSiteConfig } from "@/lib/site-config";
 import { loadRegistry } from "@/lib/site-registry";
 import { withSiteContext } from "@/lib/site-context";
+import { originAllowed, siteOriginsWithSiblings } from "@/lib/cors-origin";
 
 /**
  * F157 — end the webhouse.app session from a connected site's own /admin.
@@ -66,8 +67,10 @@ export async function GET(request: NextRequest) {
     const origin = safeOrigin(returnUrl);
     if (!origin) return false;
     try {
+      // Same gate as connect — every host the site answers on. If they drift,
+      // an editor can get IN on the new domain and not back OUT.
       const cfg = await readSiteConfig();
-      if (cfg.previewSiteUrl && new URL(cfg.previewSiteUrl).origin === origin) return true;
+      if (originAllowed(origin, siteOriginsWithSiblings(cfg))) return true;
     } catch {
       /* no site config */
     }

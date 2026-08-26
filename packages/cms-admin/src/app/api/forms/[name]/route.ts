@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { siteOriginsWithSiblings } from "@/lib/cors-origin";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { getAllForms } from "@/lib/forms/store";
 import { readSiteConfig } from "@/lib/site-config";
@@ -22,8 +23,13 @@ function corsHeaders(origin: string | null, allowed: string[]): Record<string, s
 async function getAllowedOrigins(): Promise<string[]> {
   const origins: string[] = [];
   try {
+    // Every host the site answers on. Reading previewSiteUrl alone meant a site
+    // that moved to its real domain rejected every form submission from it —
+    // silently, with the visitor seeing a failed send. Found alongside the
+    // inline-edit gate on sanneandersen.dk's launch day; nobody had reported
+    // this half, because a form that stops working reports nothing.
     const siteConfig = await readSiteConfig();
-    if (siteConfig.previewSiteUrl) origins.push(siteConfig.previewSiteUrl);
+    origins.push(...siteOriginsWithSiblings(siteConfig));
   } catch { /* no site config */ }
   // In dev, allow localhost on common ports
   if (process.env.NODE_ENV !== "production") {

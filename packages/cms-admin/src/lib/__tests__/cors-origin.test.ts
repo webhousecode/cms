@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { originAllowed, siteOrigins } from "../cors-origin";
+import { originAllowed, siteOrigins, siteOriginsWithSiblings } from "../cors-origin";
 
 describe("originAllowed", () => {
   // The regression this fixes: a browser Origin header never has a trailing
@@ -81,5 +81,60 @@ describe("siteOrigins", () => {
     expect(
       siteOrigins({ previewSiteUrl: "https://a.dk", deployProductionUrl: "https://a.dk" }),
     ).toEqual(["https://a.dk"]);
+  });
+});
+
+describe("siteOriginsWithSiblings", () => {
+  // sanneandersen.dk, launch day 2026-08-26. The site moved from its fly.dev
+  // address to the real domain and three separate browser-facing gates still
+  // read previewSiteUrl alone: inline editing refused the new domain outright
+  // ("return origin not allowed"), and the contact form would have refused
+  // every submission from it — silently, the visitor just sees a failed send.
+  it("accepts the live domain while the staging address keeps working", () => {
+    const origins = siteOriginsWithSiblings({
+      previewSiteUrl: "https://sanneandersen-site.fly.dev",
+      deployCustomDomain: "sanneandersen.dk",
+    });
+    expect(originAllowed("https://sanneandersen.dk", origins)).toBe(true);
+    expect(originAllowed("https://sanneandersen-site.fly.dev", origins)).toBe(true);
+  });
+
+  it("accepts deployProductionUrl too, not only the other two", () => {
+    const origins = siteOriginsWithSiblings({ deployProductionUrl: "https://prod.example.dk" });
+    expect(originAllowed("https://prod.example.dk", origins)).toBe(true);
+  });
+
+  // A site that redirects www -> apex (or the reverse) would otherwise work or
+  // fail depending on which form the editor happened to type.
+  it("pairs a domain with its www sibling, both directions", () => {
+    const apex = siteOriginsWithSiblings({ deployCustomDomain: "sanneandersen.dk" });
+    expect(originAllowed("https://www.sanneandersen.dk", apex)).toBe(true);
+
+    const www = siteOriginsWithSiblings({ previewSiteUrl: "https://www.example.dk" });
+    expect(originAllowed("https://example.dk", www)).toBe(true);
+  });
+
+  // The widening is bounded: same registrable domain, literal "www." only.
+  it("still refuses a foreign origin that merely looks similar", () => {
+    const origins = siteOriginsWithSiblings({ deployCustomDomain: "sanneandersen.dk" });
+    for (const bad of [
+      "https://sanneandersen.dk.angriber.dk",
+      "https://andensanneandersen.dk",
+      "https://evil.dk",
+      "http://sanneandersen.dk.co",
+    ]) {
+      expect(originAllowed(bad, origins), bad).toBe(false);
+    }
+  });
+
+  it("does not invent a www sibling for an arbitrary subdomain", () => {
+    const origins = siteOriginsWithSiblings({ previewSiteUrl: "https://app.example.dk" });
+    expect(originAllowed("https://www.app.example.dk", origins)).toBe(false);
+    expect(originAllowed("https://app.example.dk", origins)).toBe(true);
+  });
+
+  it("returns nothing when the site has no configured host", () => {
+    expect(siteOriginsWithSiblings({})).toEqual([]);
+    expect(originAllowed("https://anything.dk", siteOriginsWithSiblings({}))).toBe(false);
   });
 });

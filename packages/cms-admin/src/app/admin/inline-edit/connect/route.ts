@@ -8,6 +8,7 @@ import { getSessionUser } from "@/lib/auth";
 import { readSiteConfig } from "@/lib/site-config";
 import { loadRegistry } from "@/lib/site-registry";
 import { withSiteContext } from "@/lib/site-context";
+import { originAllowed, siteOriginsWithSiblings } from "@/lib/cors-origin";
 
 /**
  * F157/F158 (site-wide) — "Log ind for at redigere" connect flow.
@@ -47,8 +48,12 @@ async function isReturnAllowed(returnUrl: string): Promise<boolean> {
     return false;
   }
   try {
+    // EVERY host the site answers on — not previewSiteUrl alone. A site has a
+    // staging address AND a live domain (and often a www sibling) at the same
+    // time; reading one field made the gate refuse the site's own domain the
+    // day it changed. sanneandersen.dk, launch day 2026-08-26.
     const cfg = await readSiteConfig();
-    if (cfg.previewSiteUrl && new URL(cfg.previewSiteUrl).origin === origin) return true;
+    if (originAllowed(origin, siteOriginsWithSiblings(cfg))) return true;
   } catch {
     /* no site config */
   }
