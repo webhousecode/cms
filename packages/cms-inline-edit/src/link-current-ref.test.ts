@@ -80,8 +80,22 @@ describe("renderLinkList — both paths pre-select", () => {
     // Resolved from THIS file, not process.cwd(): CI runs vitest from the
     // repo root, where "src/index.ts" does not exist.
     const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "index.ts"), "utf-8");
-    const body = src.slice(src.indexOf("function renderLinkList("));
-    const cached = body.slice(body.indexOf("if (linkPages) {"), body.indexOf("fetchLinkablePages()"));
+
+    // Positive control FIRST. A source guard that scans nothing reports the
+    // same "no violations" as one that scans everything and finds none — and
+    // it can stop scanning for reasons other than a wrong path (a renamed
+    // function, a narrowed filter). Assert every anchor was actually found, so
+    // the guard fails loudly instead of passing vacuously. The class was named
+    // by the sanne session after this same test shipped red-in-CI/green-locally.
+    const fnAt = src.indexOf("function renderLinkList(");
+    const body = fnAt >= 0 ? src.slice(fnAt) : "";
+    const cachedAt = body.indexOf("if (linkPages) {");
+    const fetchAt = body.indexOf("fetchLinkablePages()");
+    expect(fnAt, "renderLinkList not found — guard scanned nothing").toBeGreaterThanOrEqual(0);
+    expect(cachedAt, "cached-list branch not found — guard scanned nothing").toBeGreaterThanOrEqual(0);
+    expect(fetchAt, "fetch branch not found — guard scanned nothing").toBeGreaterThan(cachedAt);
+
+    const cached = body.slice(cachedAt, fetchAt);
     expect(cached).toContain("preselect(linkPages)");
     expect(cached.indexOf("preselect(linkPages)")).toBeLessThan(cached.indexOf("return;"));
   });
