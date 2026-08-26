@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { resolveExistingRef, renderCurrentRefLine } from "./index";
 
 const PAGES = [
@@ -76,7 +77,9 @@ describe("renderCurrentRefLine", () => {
 // the structure instead — stated plainly, it is a source guard, not a run.
 describe("renderLinkList — both paths pre-select", () => {
   it("pre-selects on the cached path, not only after a fetch", () => {
-    const src = readFileSync(join(process.cwd(), "src/index.ts"), "utf-8");
+    // Resolved from THIS file, not process.cwd(): CI runs vitest from the
+    // repo root, where "src/index.ts" does not exist.
+    const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "index.ts"), "utf-8");
     const body = src.slice(src.indexOf("function renderLinkList("));
     const cached = body.slice(body.indexOf("if (linkPages) {"), body.indexOf("fetchLinkablePages()"));
     expect(cached).toContain("preselect(linkPages)");
