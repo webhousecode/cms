@@ -798,6 +798,52 @@ async function fetchLinkablePages(): Promise<LinkablePage[]> {
   return linkPages;
 }
 
+/**
+ * Place a fixed-position popover so it stays fully inside the viewport.
+ *
+ * The link dialog used to be pinned at `rect.bottom + gap` unconditionally,
+ * with `overflow:hidden` and no max-height. On a short laptop screen the
+ * dialog's footer — where Gem and Annullér live — sat below the bottom edge
+ * with no way to reach it: the dialog could not scroll and the page behind it
+ * did not move. The editor could open the dialog and fill it in, but not save.
+ * (Reported from production 2026-08-26.)
+ *
+ * Order matters: the element has to be laid out before its height can be
+ * measured, so display is switched on first and the final `top` written after.
+ *
+ * @param width  the popover's own fixed width, used to clamp `left`.
+ */
+export function positionPopover(
+  el: HTMLElement,
+  rect: { top: number; bottom: number; left: number },
+  gap: number,
+  width: number,
+): void {
+  const MARGIN = 8;
+  const vh = window.innerHeight;
+  const vw = window.innerWidth;
+
+  el.style.maxHeight = `${Math.max(120, vh - MARGIN * 2)}px`;
+  el.style.overflowY = "auto";
+  el.style.display = "block";
+
+  const h = el.getBoundingClientRect().height || el.offsetHeight || 0;
+
+  let top = rect.bottom + gap;
+  if (top + h > vh - MARGIN) {
+    const above = rect.top - gap - h;
+    // Flip above the selection when it fits there; otherwise pin to the bottom
+    // edge, which the max-height above guarantees is reachable by scrolling.
+    top = above >= MARGIN ? above : vh - MARGIN - h;
+  }
+  el.style.top = `${Math.max(MARGIN, top)}px`;
+
+  // Clamp right edge FIRST, left edge LAST, so MARGIN always wins. The previous
+  // order (min after max) produced a negative left on any viewport narrower
+  // than the popover, putting it off the left edge instead.
+  el.style.left = `${Math.max(MARGIN, Math.min(rect.left, vw - width - MARGIN))}px`;
+}
+
 function toggleLinkDialog(anchor: HTMLElement): void {
   if (linkDialog && linkDialog.style.display === "block") {
     hideLinkDialog();
@@ -809,9 +855,14 @@ function toggleLinkDialog(anchor: HTMLElement): void {
   if (!linkDialog) linkDialog = buildLinkDialog();
   renderLinkDialog();
   const rect = anchor.getBoundingClientRect();
-  linkDialog.style.top = `${rect.bottom + 8}px`;
-  linkDialog.style.left = `${Math.min(Math.max(8, rect.left - 180), window.innerWidth - 400)}px`;
-  linkDialog.style.display = "block";
+  // Explicit object, NOT a spread: a DOMRect's top/left/bottom are prototype
+  // accessors, so `{ ...rect }` comes back empty in a real browser.
+  positionPopover(
+    linkDialog,
+    { top: rect.top, bottom: rect.bottom, left: rect.left - 180 },
+    8,
+    392,
+  );
 }
 
 function buildLinkDialog(): HTMLElement {
@@ -1083,9 +1134,7 @@ function toggleEmojiPicker(anchor: HTMLElement): void {
   const sel = window.getSelection();
   if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
   const rect = anchor.getBoundingClientRect();
-  emojiPicker.style.top = `${rect.bottom + 6}px`;
-  emojiPicker.style.left = `${Math.min(rect.left, window.innerWidth - 240)}px`;
-  emojiPicker.style.display = "block";
+  positionPopover(emojiPicker, rect, 6, 230);
 }
 
 function hideEmojiPicker(): void {
