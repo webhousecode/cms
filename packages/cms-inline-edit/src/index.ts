@@ -49,6 +49,7 @@ export interface InlineEditLabels {
   linkNo?: string;
   linkEmpty?: string;
   linkLoading?: string;
+  linkCurrent?: string;
 }
 
 export interface InlineEditOptions {
@@ -116,6 +117,7 @@ const DEFAULT_LABELS: Required<InlineEditLabels> = {
   linkNo: "Nej",
   linkEmpty: "Ingen sider fundet",
   linkLoading: "Henter sider…",
+  linkCurrent: "Linker til",
 };
 
 // Set once from resolved options in initInlineEdit(); read by the (singleton)
@@ -899,6 +901,7 @@ function renderLinkDialog(): void {
     '<div style="padding:10px 12px 12px">' +
     `<div data-pane="page" style="display:${onPageTab ? "block" : "none"}">` +
     `<input data-testid="inline-link-search" data-role="search" placeholder="${L.linkSearch}" style="${fieldCss()}">` +
+    `<div data-role="current" data-testid="inline-link-current" style="display:none;margin-top:8px;padding:7px 10px;background:rgba(0,178,255,.08);border:1px solid rgba(0,178,255,.28);border-radius:8px;font-size:11.5px;color:#c9d1dd;line-height:1.45"></div>` +
     `<div data-role="list" data-testid="inline-link-list" style="margin-top:8px;max-height:196px;overflow-y:auto;border:1px solid #3a3f4a;border-radius:8px;background:#141821"></div>` +
     "</div>" +
     `<div data-pane="url" style="display:${onPageTab ? "none" : "block"}">` +
@@ -980,6 +983,57 @@ function buildRemoveLink(): HTMLElement {
   return wrap;
 }
 
+/**
+ * Find the page an existing `data-cms-ref` points at.
+ *
+ * A slug may itself contain a colon, so only the FIRST segment is the
+ * collection and everything after it is the slug.
+ */
+export function resolveExistingRef(
+  ref: string | null | undefined,
+  pages: LinkablePage[],
+): LinkablePage | null {
+  if (!ref) return null;
+  const [collection, ...rest] = ref.split(":");
+  const slug = rest.join(":");
+  if (!collection || !slug) return null;
+  return pages.find((p) => p.collection === collection && p.slug === slug) ?? null;
+}
+
+/**
+ * Render the "currently points at" line for the link being edited.
+ *
+ * Pure over its arguments so the wording can be pinned by a test. Reading the
+ * highlighted row is not enough on its own: it can sit outside the list's 196px
+ * window, and a reference to a page that is no longer linkable has no row to
+ * highlight at all. Christian, 2026-08-26: "når jeg redigerer et eksisterende
+ * link til egen side skal den også vise hvilken vi linker til." A missing page
+ * shows its raw reference rather than saying nothing.
+ */
+export function renderCurrentRefLine(
+  box: HTMLElement,
+  ref: string | null | undefined,
+  pages: LinkablePage[],
+): void {
+  if (!ref) {
+    box.style.display = "none";
+    box.innerHTML = "";
+    return;
+  }
+  const label = escapeHtml(uiLabels.linkCurrent as string);
+  const page = resolveExistingRef(ref, pages);
+  box.style.display = "block";
+  box.innerHTML = page
+    ? `${label}: <strong>${escapeHtml(page.title)}</strong> ` +
+      `<span style="color:#9aa3b2;font-family:ui-monospace,Menlo,monospace">${escapeHtml(page.path)}</span>`
+    : `${label}: <span style="font-family:ui-monospace,Menlo,monospace">${escapeHtml(ref)}</span>`;
+}
+
+function paintCurrentRef(pages: LinkablePage[] | null): void {
+  const box = linkDialog?.querySelector('[data-role="current"]') as HTMLElement | null;
+  if (box) renderCurrentRefLine(box, linkEditing?.getAttribute("data-cms-ref"), pages ?? []);
+}
+
 function renderLinkList(filter: string): void {
   const d = linkDialog;
   if (!d) return;
@@ -1012,22 +1066,30 @@ function renderLinkList(filter: string): void {
         syncLinkDialog();
       };
       list.appendChild(row);
+      // A highlighted row that sits outside the list's 196px window is a
+      // selection nobody can see.
+      if (on) row.scrollIntoView?.({ block: "nearest" });
     });
   };
 
+  // Pre-select the page an existing reference already points at. This used to
+  // live inside the fetch callback below, so it ran the FIRST time the dialog
+  // opened and never again — every later open in the same page-load hit the
+  // cached-list early return and showed no selection at all.
+  const preselect = (pages: LinkablePage[]) => {
+    if (!linkPicked) linkPicked = resolveExistingRef(linkEditing?.getAttribute("data-cms-ref"), pages);
+    paintCurrentRef(pages);
+  };
+
   if (linkPages) {
+    preselect(linkPages);
     paint(linkPages);
     return;
   }
   list.innerHTML = `<div style="padding:10px;font-size:12.5px;color:#9aa3b2">${uiLabels.linkLoading}</div>`;
   fetchLinkablePages()
     .then((pages) => {
-      // Pre-select the page an existing reference already points at.
-      const ref = linkEditing?.getAttribute("data-cms-ref");
-      if (ref && !linkPicked) {
-        const [c, ...rest] = ref.split(":");
-        linkPicked = pages.find((p) => p.collection === c && p.slug === rest.join(":")) ?? null;
-      }
+      preselect(pages);
       paint(pages);
       syncLinkDialog();
     })
