@@ -1,4 +1,5 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { checkDocumentRequired, type RequiredCheckField } from "@/lib/required-fields";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
@@ -84,6 +85,22 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     // create+publish-in-one-call (silent: API returned 201 but live URL stayed
     // 404 because no revalidation webhook fires for drafts).
     const status: "draft" | "published" = body.status === "published" ? "published" : "draft";
+
+    // F174 — "required" means required. Only on PUBLISHED documents: enforcing
+    // on every save would stop an editor saving a half-finished draft, which is
+    // a worse failure than the one this fixes. Same function the form route
+    // uses, so there is one rule and no second copy to drift.
+    const requiredCheck = checkDocumentRequired(
+      (colConfig.fields ?? []) as RequiredCheckField[],
+      body.data ?? {},
+      status,
+    );
+    if (!requiredCheck.ok) {
+      return NextResponse.json(
+        { error: requiredCheck.errors.join(", "), fields: requiredCheck.errors },
+        { status: 400 },
+      );
+    }
 
     const locale = body.locale ?? config.defaultLocale;
     const doc = await cms.content.create(collection, {

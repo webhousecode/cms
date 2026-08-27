@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requiredFieldErrors, type RequiredCheckField } from "@/lib/required-fields";
 import { siteOriginsWithSiblings } from "@/lib/cors-origin";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { getAllForms } from "@/lib/forms/store";
@@ -107,9 +108,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
   for (const field of form.fields) {
     if (field.type === "hidden") continue; // hidden fields are optional
     const val = body[field.name];
-    if (field.required && (val === undefined || val === null || val === "")) {
-      errors.push(`${field.label || field.name} is required`);
-    }
+    // Required-ness is decided by the shared rule (F174), not re-implemented
+    // here. This route is where the check was ORIGINALLY written, and it never
+    // reached the content write path — a second copy is exactly the bug.
+    errors.push(...requiredFieldErrors([field as RequiredCheckField], body));
     if (val !== undefined && val !== "") {
       // Built-in format check by field type — runs even without a custom
       // validation.pattern, so "email"/"phone" fields are never accepted

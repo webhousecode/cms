@@ -1,4 +1,5 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { checkDocumentRequired, type RequiredCheckField } from "@/lib/required-fields";
 import { saveRevision } from "@/lib/revisions";
 import { removeQueueItemsBySlug } from "@/lib/curation";
 import { dispatchRevalidation } from "@/lib/revalidation";
@@ -273,6 +274,25 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const nextStatus = (body.status as string) ?? doc.status;
     // Manually publishing clears any pending schedule
     const publishAt = nextStatus === "published" ? null : body.publishAt;
+
+    // F174 — validate the MERGED state, never the request. A PATCH is partial:
+    // an edit that touches one field does not resend the rest, so checking the
+    // body would reject every partial edit of a perfectly valid document. The
+    // storage adapter merges ({...existing.data, ...input.data}), so this is
+    // what will actually be stored.
+    const colDef = (await getAdminConfig()).collections.find((c) => c.name === collection);
+    const mergedForCheck = { ...(doc.data ?? {}), ...(body.data ?? {}) } as Record<string, unknown>;
+    const requiredCheck = checkDocumentRequired(
+      ((colDef?.fields ?? []) as RequiredCheckField[]),
+      mergedForCheck,
+      nextStatus,
+    );
+    if (!requiredCheck.ok) {
+      return NextResponse.json(
+        { error: requiredCheck.errors.join(", "), fields: requiredCheck.errors },
+        { status: 400, headers: cors },
+      );
+    }
 
     // Track who made this edit
     const editedData = {
