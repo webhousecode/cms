@@ -12,11 +12,18 @@ export async function GET() {
     }
   }
   const config = await getAdminConfig();
-  const collections = config.collections.map((col) => ({
-    name: col.name,
-    label: col.label,
-    urlPrefix: (col as { urlPrefix?: string }).urlPrefix,
-    fields: col.fields,
-  }));
-  return NextResponse.json({ collections });
+  // The WHOLE collection, not a hand-picked subset.
+  //
+  // This used to return four properties — name, label, urlPrefix, fields — and
+  // silently omit everything else. Measured on 27 Aug 2026 while syncing a new
+  // collection to sanneandersen: `kind`, `sourceLocale` and the editor-facing
+  // `description` were written correctly to cms.config.ts and absent from this
+  // response, so the peer session verifying the sync would have concluded it
+  // failed. `previewable`, `urlPattern`, `nested`, `defaultSort` and every
+  // property a future collection gains were in the same hole.
+  //
+  // The POST route in this same feature already carries the lesson —
+  // "keep existing collections as full objects (no prop reduction)" — for the
+  // write path. The read path never got it. Instance closed, class left open.
+  return NextResponse.json({ collections: config.collections });
 }
