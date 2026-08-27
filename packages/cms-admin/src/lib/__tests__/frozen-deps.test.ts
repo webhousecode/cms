@@ -43,7 +43,10 @@ const LEDGER: Record<string, string> = {
 
   // ── Knowingly behind. Each has a card; none is a shrug. ──
   "@broberg/ai-sdk":
-    "Bumped 0.28.0 → 0.31.0 on 2026-08-27. 0.31.0 turns prompt caching ON BY " +
+    "Bumped 0.28.0 → 0.34.0 (0.31.0 on 27 Aug, 0.34.0 on 28 Aug). 0.34.0 moves " +
+    "the `vision` tier from mistral-small to mistral-medium — measured before/" +
+    "after and it does NOT touch us: image-analysis.ts pins pixtral-large-latest " +
+    "through an explicit override and never reads the tier. 0.31.0 turns prompt caching ON BY " +
     "DEFAULT, which is the whole reason to be current: our chat resends the same " +
     "6,619-token system instruction on every message, and ai-sdk measured the " +
     "cached call at $0.000458 against $0.004411 — 90% off, with no code change. " +

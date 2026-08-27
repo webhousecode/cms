@@ -51,7 +51,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@broberg/ai-sdk": "^0.31.0",
+    "@broberg/ai-sdk": "^0.34.0",
     "@webhouse/cms": "workspace:*",
     "zod": "^3.24.1"
   },
