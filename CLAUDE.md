@@ -740,9 +740,12 @@ const { text, usage } = await ai.chat({ prompt: "Hej", tier: "smart" });
 ```
 
 **Route by tier, not by model-string.** Tiers → current model (overridable per call):
-`fast`=claude-haiku-4-5 · `smart`=claude-sonnet-4-6 · `powerful`=claude-opus-4-8 · `cheap`=mistral-small-latest (cheapest GDPR-safe cloud model) · `vision`=claude-sonnet-4-6 · `video`=gemini-2.5-flash-lite · `embedding`=text-embedding-3-small.
+**Every text tier is Mistral EU** (F030, v0.21+) — Claude is override-only:
+`fast`=mistral-small-latest · `smart`=mistral-large-latest · `powerful`=mistral-large-latest · `cheap`=mistral-small-latest · `vision`=mistral-small-latest · `video`=gemini-2.5-flash-lite (US) · `embedding`=text-embedding-3-small (US).
 
-**Cost & provider policy.** Anthropic/Claude is what we **build and code with** (Claude Code) — it is *not* the reflexive API default. For cost-sensitive / high-volume cloud-API workloads, default to the **cheapest model that's good enough** (start cheap, only move up if a real test shows it's needed) — that's what the `cheap` tier is for. `claude -p` is retired as a route; don't reach for the Anthropic API just because it's familiar. The quality tiers (`smart`/`powerful`) resolve to Claude because that's the quality bar — override down for volume.
+> This block named Claude for `smart`/`powerful`/`vision` for ~3 months after F030 moved them. Nobody was endangered — it UNDERSTATED how EU-safe the defaults are — but the same drift also lived in code (`resolveModel('smart')` answered claude-sonnet-4-6 while the call went to Mistral), and there it was dangerous: that lookup is what a reasonable person would use to show or decide where data goes. Fixed in v0.29 by deriving the registry's tier aliases from the router. **`video` and `embedding` still leave the EU** — do not send personal data through them.
+
+**Cost & provider policy.** Anthropic/Claude is what we **build and code with** (Claude Code) — it is *not* the reflexive API default. For cost-sensitive / high-volume cloud-API workloads, default to the **cheapest model that's good enough** (start cheap, only move up if a real test shows it's needed) — that's what the `cheap` tier is for. `claude -p` is retired as a route; don't reach for the Anthropic API just because it's familiar. The quality tiers (`smart`/`powerful`) resolve to **Mistral Large** (EU), not Claude — reach for Claude only via an explicit `override`, and never for personal data.
 
 **Model-availability gate (F022, v0.11+).** Before launching/spawning on a model, gate it — a suspended tier (e.g. Fable 5, globally disabled 2026-06-12) then degrades instead of erroring at the user:
 ```ts
@@ -750,6 +753,39 @@ import { resolveModel, listModels } from "@broberg/ai-sdk";          // browser 
 const r = resolveModel("fable", { fallback: "claude-opus-4-8" });    // sync, zero-I/O → { ok, model, fellBack, status, reason }
 listModels();  // [{ id, alias?, provider, available, status, note? }] — grey out dead tiers in a picker
 ```
+
+**If you are GATING, pass `requireKnown: true` (v0.29+).** By default an id the
+registry does not track is fail-open — `ok:true`, `status:"unknown"`, and `model`
+is your own input echoed back. That is right for liveness (never block a model we
+simply do not track) and wrong for a gate: cms measured a consumer following the
+instruction above, passing the gate, and then sending the literal string `"cheap"`
+to a provider as a model id. A success-shaped non-answer is worse than an error,
+because an error gets handled and a shape does not.
+```ts
+resolveModel("smrt", { requireKnown: true });  // → { ok:false, status:"unknown", reason: "…not a model this registry knows…" }
+```
+
+**`resolveModel` does NOT tell you where data goes.** It reports provider + model,
+never region — and `video`/`embedding` leave the EU. For residency, read
+`usage.provider`/`usage.model` off the RESPONSE (the route that actually answered);
+a response with no `tier` means a fallback was taken.
+
+**Prompt caching is ON by default (v0.31+).** Mistral caches a repeated prompt prefix
+at 10% of the input rate, but only when the request carries a cache key — we used to
+drop it, so every consumer paid full price for an identical system instruction on every
+message. Now the SDK derives one automatically from the system prompt's content
+(content-derived on purpose: a key collision then implies the content was identical, so
+sharing a cached prefix cannot leak). Measured: an 8,810-token instruction costs
+$0.004411 the first time and $0.000458 every time after — **90% off**.
+```ts
+ai.chat({ system, prompt })                              // cached automatically
+ai.chat({ system, prompt, promptCache: false })          // opt out for this call
+ai.chat({ system, prompt, promptCacheKey: `${tenant}:${conversation}` })  // your own key
+createAI({ promptCache: false })                         // opt out client-wide
+```
+**Pass your own key when one system prompt serves several tenants** — the key is a
+shared-prefix identity, so derive it from (tenant, conversation), never the conversation
+alone. Only Mistral takes a key; openai/deepseek/gemini cache automatically.
 
 **GDPR:** for any client/personal/health data, use the EU tier — `override:{ provider:"mistral", model:"mistral-large-latest" }` (Mistral, Paris-hosted, no Schrems II). Never route personal data through US/CN models.
 
