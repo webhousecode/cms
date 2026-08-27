@@ -31,8 +31,35 @@ jobs:
       - name: Typecheck
         run: pnpm lint
 
-      - name: Run tests
-        run: pnpm test:run || echo "⚠️ Tests with native modules skipped on CI"
+      # F178.1 — the step that gates a deploy must run the suites that actually
+      # work, and a failure must LOOK like one.
+      #
+      # It read `pnpm test:run || echo "⚠️ Tests with native modules skipped on CI"`,
+      # written into the very first deployment commit rather than in response to
+      # an observed failure. Two things were wrong with it, and the second is
+      # the one that mattered:
+      #
+      #   1. `||` swallowed EVERY failure, so a real regression was reported in
+      #      the same reassuring words as a limitation someone chose to live with.
+      #   2. `pnpm test:run` from the repo ROOT has never worked. Measured
+      #      28 Aug 2026: 45 test FILES fail to load (exit 1) while 1505 tests
+      #      pass — the root workspace collects Playwright e2e specs and stale
+      #      `.next/standalone` build artefacts as if they were unit tests, and
+      #      cms-admin's own suite does not load at all because the `@/` alias
+      #      is not applied. So this step has never once run the tests it names.
+      #
+      # These are the per-package commands test.yml already runs green. Still
+      # NON-BLOCKING (see `continue-on-error`) — arming the gate is F178.3, and
+      # it waits until the ~1-in-10 unexplained cms-admin failure is named
+      # (F178.2). A gate that cries wolf gets switched off, which is worse than
+      # no gate.
+      - name: CMS core tests
+        continue-on-error: true
+        run: cd packages/cms && npx vitest run
+
+      - name: CMS admin tests
+        continue-on-error: true
+        run: cd packages/cms-admin && npx vitest run
 
   deploy:
     name: Deploy to Fly.io
