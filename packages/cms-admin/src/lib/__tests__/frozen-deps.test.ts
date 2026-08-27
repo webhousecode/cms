@@ -43,7 +43,13 @@ const LEDGER: Record<string, string> = {
 
   // ── Knowingly behind. Each has a card; none is a shrug. ──
   "@broberg/ai-sdk":
-    "Bumped 0.28.0 → 0.29.0 on 2026-08-27, which closes two faults cms measured " +
+    "Bumped 0.28.0 → 0.31.0 on 2026-08-27. 0.31.0 turns prompt caching ON BY " +
+    "DEFAULT, which is the whole reason to be current: our chat resends the same " +
+    "6,619-token system instruction on every message, and ai-sdk measured the " +
+    "cached call at $0.000458 against $0.004411 — 90% off, with no code change. " +
+    "The cache key derives from the system prompt's CONTENT, so a schema edit " +
+    "changes the bucket and we cannot hit a cache for an instruction that no " +
+    "longer applies. 0.29.0 closed two faults cms measured " +
     "and reported that day: resolveModel() answered ok:true for `cheap` and " +
     "`vision` by returning the TIER NAME as the model id, and had no way to " +
     "refuse a name it did not know. 0.29.0 adds requireKnown. We do not call it " +
