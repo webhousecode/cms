@@ -121,7 +121,17 @@ export async function buildChatTools(userPermissions?: string[]): Promise<ToolPa
     },
   });
 
-  return allTools.filter((t) => !t.permission || hasPermission(perms, t.permission));
+  // DENY BY DEFAULT (F176). This used to read `!t.permission || hasPermission(…)`
+  // — a tool that declared no permission was KEPT. Measured 27 Aug 2026: 60 of
+  // 64 tools declared none, so a VIEWER (content.read, forms.read, media.read)
+  // was handed 61 tools, 30 of them mutating — create/publish/trash/bulk_publish/
+  // trigger_deploy/translate_site. And the handlers call getAdminCms() directly,
+  // so none of the requirePermission gates on /api/cms/* were in the path.
+  //
+  // Forgetting to declare a permission must close the door, not open it. A new
+  // tool with no `permission` now reaches nobody, which is a bug someone
+  // notices — the old default was a bug nobody could see.
+  return allTools.filter((t) => !!t.permission && hasPermission(perms, t.permission));
 }
 
 /** Build headers for internal API calls — service token + site context */
@@ -145,6 +155,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
         description: "Get an overview of the site: name, adapter, collections with document counts, and configuration.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "content.read",
       handler: async () => {
         const [cms, config, siteConfig] = await Promise.all([
           getAdminCms(),
@@ -212,6 +223,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection"],
         },
       },
+      permission: "content.read",
       handler: async (input) => {
         const collection = String(input.collection);
         const statusFilter = String(input.status ?? "all");
@@ -253,6 +265,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection", "slug"],
         },
       },
+      permission: "content.read",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -312,6 +325,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["query"],
         },
       },
+      permission: "content.read",
       handler: async (input) => {
         const query = String(input.query);
         const q = query.toLowerCase();
@@ -390,6 +404,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection"],
         },
       },
+      permission: "content.read",
       handler: async (input) => {
         const collection = String(input.collection);
         const config = await getAdminConfig();
@@ -417,6 +432,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           "List all draft (unpublished) documents across all collections.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "content.read",
       handler: async () => {
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
 
@@ -447,6 +463,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           "Get the site configuration: name, adapter, deploy settings, AI settings, and more.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "content.read",
       handler: async () => {
         const siteConfig = await readSiteConfig();
         // Remove sensitive keys
@@ -465,6 +482,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           "Compare cms-admin's content tree against the live site's /api/admin/content-tree. Returns a drift report: which collections/docs exist on only one side. Use when the operator suspects content out-of-sync between CMS and live site.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "content.read",
       handler: async () => {
         try {
           const { diffActiveSiteContent } = await import("@/lib/content-diff");
@@ -559,6 +577,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           },
         },
       },
+      permission: "media.read",
       handler: async (input) => {
         const typeFilter = String(input.type ?? "all");
         const limit = Math.min(Number(input.limit ?? 50), 200);
@@ -621,6 +640,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["query"],
         },
       },
+      permission: "media.read",
       handler: async (input) => {
         const query = String(input.query).toLowerCase();
         const typeFilter = String(input.type ?? "image");
@@ -737,6 +757,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection", "slug"],
         },
       },
+      permission: "content.edit",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -809,6 +830,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection", "data"],
         },
       },
+      permission: "content.create",
       handler: async (input) => {
         const collection = String(input.collection);
         const data = (input.data ?? {}) as Record<string, unknown>;
@@ -1025,6 +1047,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection", "slug", "data"],
         },
       },
+      permission: "content.edit",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -1065,6 +1088,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection", "slug"],
         },
       },
+      permission: "content.publish",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -1097,6 +1121,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection", "slug"],
         },
       },
+      permission: "content.publish",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -1128,6 +1153,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: [],
         },
       },
+      permission: "deploy.trigger",
       handler: async () => {
         try {
           const { getActiveSitePaths } = await import("@/lib/site-paths");
@@ -1181,6 +1207,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection", "slug"],
         },
       },
+      permission: "content.delete",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -1221,6 +1248,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection", "slug", "field", "prompt"],
         },
       },
+      permission: "content.create",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -1288,6 +1316,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["collection", "slug", "field", "instruction"],
         },
       },
+      permission: "content.edit",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -1351,6 +1380,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           required: ["title", "description"],
         },
       },
+      permission: "content.create",
       handler: async (input) => {
         const title = String(input.title);
         const description = String(input.description);
@@ -1421,6 +1451,7 @@ DESIGN GUIDELINES:
         description: "List all content scheduled for future publishing or unpublishing. Shows the content calendar.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "content.read",
       handler: async () => {
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
         const items: string[] = [];
@@ -1448,6 +1479,7 @@ DESIGN GUIDELINES:
         description: "List all AI agents configured for this site. Shows name, role, target collection, and status.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "agents.run",
       handler: async () => {
         const { listAgents } = await import("@/lib/agents");
         const agents = await listAgents();
@@ -1508,6 +1540,7 @@ DESIGN GUIDELINES:
           required: ["agentId", "prompt"],
         },
       },
+      permission: "agents.run",
       handler: async (input) => {
         const { runAgent } = await import("@/lib/agent-runner");
         const result = await runAgent(
@@ -1531,6 +1564,7 @@ DESIGN GUIDELINES:
           },
         },
       },
+      permission: "curation.review",
       handler: async (input) => {
         const { listQueueItems, getQueueStats } = await import("@/lib/curation");
         const status = input.status ? String(input.status) : undefined;
@@ -1561,6 +1595,7 @@ DESIGN GUIDELINES:
           required: ["id"],
         },
       },
+      permission: "curation.review",
       handler: async (input) => {
         const { approveQueueItem } = await import("@/lib/curation");
         const item = await approveQueueItem(String(input.id), input.asDraft === true);
@@ -1582,6 +1617,7 @@ DESIGN GUIDELINES:
           required: ["id", "feedback"],
         },
       },
+      permission: "curation.review",
       handler: async (input) => {
         const { rejectQueueItem } = await import("@/lib/curation");
         const item = await rejectQueueItem(String(input.id), String(input.feedback));
@@ -1596,6 +1632,7 @@ DESIGN GUIDELINES:
         description: "Deploy the site to the configured provider (GitHub Pages, Fly.io, etc.).",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "deploy.trigger",
       handler: async () => {
         const { triggerDeploy } = await import("@/lib/deploy-service");
         const result = await triggerDeploy();
@@ -1613,6 +1650,7 @@ DESIGN GUIDELINES:
         description: "Rebuild the static site (regenerates all pages in dist/). Use before deploy or to refresh preview.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "deploy.trigger",
       handler: async () => {
         const { runBuild } = await import("@webhouse/cms");
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
@@ -1640,6 +1678,7 @@ DESIGN GUIDELINES:
           required: ["collection", "slug"],
         },
       },
+      permission: "content.read",
       handler: async (input) => {
         const { listRevisions } = await import("@/lib/revisions");
         const revisions = await listRevisions(String(input.collection), String(input.slug));
@@ -1664,6 +1703,7 @@ DESIGN GUIDELINES:
           required: ["collection", "slug"],
         },
       },
+      permission: "content.create",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -1691,6 +1731,7 @@ DESIGN GUIDELINES:
         description: "List all trashed documents across all collections.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "content.read",
       handler: async () => {
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
         const items: string[] = [];
@@ -1733,6 +1774,7 @@ DESIGN GUIDELINES:
           required: ["collection", "slug"],
         },
       },
+      permission: "content.delete",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -1792,6 +1834,7 @@ DESIGN GUIDELINES:
         description: "Check all links across the site for broken URLs. Returns results summary.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "deploy.trigger",
       handler: async () => {
         const { readLinkCheckResult } = await import("@/lib/link-check-store");
         // Return last results if recent (< 1 hour), otherwise suggest running
@@ -1831,6 +1874,7 @@ DESIGN GUIDELINES:
         description: "Get content statistics: word counts, document counts, AI vs human content ratio, recent activity.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "content.read",
       handler: async () => {
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
         let totalDocs = 0;
@@ -1869,6 +1913,7 @@ DESIGN GUIDELINES:
         description: "Show recent deployment history.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "content.read",
       handler: async () => {
         const { listDeploys } = await import("@/lib/deploy-service");
         const deploys = await listDeploys();
@@ -1896,6 +1941,7 @@ DESIGN GUIDELINES:
           },
         },
       },
+      permission: "content.publish",
       handler: async (input) => {
         const targetCollection = input.collection ? String(input.collection) : null;
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
@@ -1953,6 +1999,7 @@ DESIGN GUIDELINES:
           required: ["collection", "field", "value"],
         },
       },
+      permission: "content.edit",
       handler: async (input) => {
         const collection = String(input.collection);
         const field = String(input.field);
@@ -2017,6 +2064,7 @@ DESIGN GUIDELINES:
           required: ["collection", "slug"],
         },
       },
+      permission: "content.publish",
       handler: async (input) => {
         const collection = String(input.collection);
         const slug = String(input.slug);
@@ -2065,6 +2113,7 @@ DESIGN GUIDELINES:
           required: ["collection", "slug", "targetLocale"],
         },
       },
+      permission: "content.edit",
       handler: async (input: any) => {
         const { collection, slug, targetLocale, publish } = input;
         const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
@@ -2096,6 +2145,7 @@ DESIGN GUIDELINES:
           required: ["targetLocale"],
         },
       },
+      permission: "content.edit",
       handler: async (input: any) => {
         const { targetLocale, publish } = input;
         const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
@@ -2138,6 +2188,7 @@ DESIGN GUIDELINES:
           },
         },
       },
+      permission: "content.read",
       handler: async (input) => {
         const { getHistory } = await import("@/lib/lighthouse/history");
         const history = await getHistory();
@@ -2184,6 +2235,7 @@ DESIGN GUIDELINES:
           "Get the latest Lighthouse/PageSpeed Insights scores for the site. Shows performance, accessibility, SEO, and best practices scores plus Core Web Vitals and top improvement opportunities.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "content.read",
       handler: async () => {
         const { getLatestBoth } = await import("@/lib/lighthouse/history");
         const { mobile, desktop } = await getLatestBoth();
@@ -2242,6 +2294,7 @@ DESIGN GUIDELINES:
           "Run a Lighthouse/PageSpeed Insights scan on the site right now. Takes 10-20 seconds. Returns performance, accessibility, SEO, and best practices scores.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "deploy.trigger",
       handler: async () => {
         try {
           const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
@@ -2311,6 +2364,7 @@ DESIGN GUIDELINES:
           },
         },
       },
+      permission: "forms.read",
       handler: async () => {
         try {
           const { FormService } = await import("@/lib/forms/service");
@@ -2360,6 +2414,7 @@ DESIGN GUIDELINES:
           "Get form submission statistics: total count, unread count, and breakdown by form and status.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "forms.read",
       handler: async () => {
         try {
           const { FormService } = await import("@/lib/forms/service");
@@ -2408,6 +2463,7 @@ DESIGN GUIDELINES:
           required: ["form", "id"],
         },
       },
+      permission: "forms.read",
       handler: async (input) => {
         try {
           const { FormService } = await import("@/lib/forms/service");
@@ -2450,6 +2506,7 @@ DESIGN GUIDELINES:
           required: ["query"],
         },
       },
+      permission: "chat.use",
       handler: async (input: any) => {
         const { queryMemories } = await import("@/lib/chat/memory-search");
         const results = await queryMemories(input.query, 15);
@@ -2485,6 +2542,7 @@ DESIGN GUIDELINES:
           required: ["fact", "category"],
         },
       },
+      permission: "chat.use",
       handler: async (input: any) => {
         const { addMemory } = await import("@/lib/chat/memory-store");
         const memory = await addMemory({
@@ -2513,6 +2571,7 @@ DESIGN GUIDELINES:
           required: ["query"],
         },
       },
+      permission: "chat.use",
       handler: async (input: any) => {
         const { queryMemories } = await import("@/lib/chat/memory-search");
         const { deleteMemory } = await import("@/lib/chat/memory-store");
@@ -2536,6 +2595,7 @@ DESIGN GUIDELINES:
           "List all agent workflows on this site. A workflow is an ordered chain of agents that runs as a single pipeline (e.g. Writer → SEO → Translator). Returns the workflow name, the chained agent ids, schedule status, and run stats.",
         input_schema: { type: "object", properties: {} },
       },
+      permission: "agents.run",
       handler: async () => {
         const { listWorkflows } = await import("@/lib/agent-workflows");
         const workflows = await listWorkflows();
@@ -2568,6 +2628,7 @@ DESIGN GUIDELINES:
           required: ["name", "agentIds"],
         },
       },
+      permission: "agents.manage",
       handler: async (input) => {
         const { createWorkflow } = await import("@/lib/agent-workflows");
         const agentIds = (input.agentIds as string[]) ?? [];
@@ -2604,6 +2665,7 @@ DESIGN GUIDELINES:
           required: ["workflowId", "prompt"],
         },
       },
+      permission: "agents.run",
       handler: async (input) => {
         const { runWorkflow } = await import("@/lib/workflow-runner");
         const result = await runWorkflow(String(input.workflowId), String(input.prompt));
@@ -2629,6 +2691,7 @@ DESIGN GUIDELINES:
           required: ["workflowId"],
         },
       },
+      permission: "agents.manage",
       handler: async (input) => {
         const { deleteWorkflow, getWorkflow } = await import("@/lib/agent-workflows");
         const wf = await getWorkflow(String(input.workflowId));
@@ -2651,6 +2714,7 @@ DESIGN GUIDELINES:
           },
         },
       },
+      permission: "agents.run",
       handler: async (input) => {
         const { cookies } = await import("next/headers");
         const cookieStore = await cookies();
@@ -2699,6 +2763,7 @@ DESIGN GUIDELINES:
           required: ["templateId"],
         },
       },
+      permission: "agents.manage",
       handler: async (input) => {
         const templateId = String(input.templateId);
         const { cookies } = await import("next/headers");
@@ -2743,6 +2808,7 @@ DESIGN GUIDELINES:
           required: ["agentId"],
         },
       },
+      permission: "agents.manage",
       handler: async (input) => {
         const { cookies } = await import("next/headers");
         const cookieStore = await cookies();
@@ -2780,6 +2846,7 @@ DESIGN GUIDELINES:
           required: ["agentId"],
         },
       },
+      permission: "agents.manage",
       handler: async (input) => {
         const { getAgent, updateAgent } = await import("@/lib/agents");
         const agent = await getAgent(String(input.agentId));
@@ -2814,6 +2881,7 @@ DESIGN GUIDELINES:
           required: ["agentId", "locale"],
         },
       },
+      permission: "agents.manage",
       handler: async (input) => {
         const { getAgent, updateAgent } = await import("@/lib/agents");
         const agent = await getAgent(String(input.agentId));
@@ -2839,6 +2907,7 @@ DESIGN GUIDELINES:
           required: ["agentId", "enabled"],
         },
       },
+      permission: "agents.manage",
       handler: async (input) => {
         const { getAgent, updateAgent } = await import("@/lib/agents");
         const agent = await getAgent(String(input.agentId));
@@ -2865,6 +2934,7 @@ DESIGN GUIDELINES:
           required: ["agentId"],
         },
       },
+      permission: "agents.run",
       handler: async (input) => {
         const { readFeedback } = await import("@/lib/agent-feedback");
         const all = await readFeedback(String(input.agentId));

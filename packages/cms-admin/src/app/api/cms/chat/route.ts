@@ -8,7 +8,7 @@ import { extractMemories } from "@/lib/chat/memory-extractor";
 import { getConversation } from "@/lib/chat/conversation-store";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { readSiteConfig } from "@/lib/site-config";
-import { resolvePermissions } from "@/lib/permissions-shared";
+import { resolvePermissions, hasPermission } from "@/lib/permissions-shared";
 import type { UserRole } from "@/lib/auth";
 import { getModel } from "@/lib/ai/model-resolver";
 import { resolveChatModel } from "@/lib/chat/resolve-chat-model";
@@ -23,6 +23,12 @@ interface ChatRequestMessage {
 export async function POST(request: NextRequest) {
   const session = await getSessionWithSiteRole();
   if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  // F176 — `chat.use` exists as a permission and was never asked for. Being
+  // logged in was the whole gate, so a viewer could open the chat and then be
+  // handed every tool that declared no permission of its own.
+  if (!hasPermission(resolvePermissions(session.siteRole as UserRole), "chat.use")) {
+    return NextResponse.json({ error: "No access" }, { status: 403 });
+  }
 
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
@@ -51,7 +57,12 @@ export async function POST(request: NextRequest) {
   try {
     siteContext = await gatherSiteContext();
     systemPrompt = buildChatSystemPrompt(siteContext);
-    const userPerms = resolvePermissions((session.siteRole ?? "admin") as UserRole);
+    // No role ⇒ NO permissions. This defaulted to "admin", so a session that
+    // arrived without a siteRole got the full tool set — a fail-open default in
+    // the one line that decides what the model is allowed to reach for.
+    const userPerms = session.siteRole
+      ? resolvePermissions(session.siteRole as UserRole)
+      : [];
     toolPairs = await buildChatTools(userPerms);
 
     // Inject relevant memories from past conversations
