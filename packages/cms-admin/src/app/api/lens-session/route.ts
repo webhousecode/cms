@@ -84,6 +84,13 @@ async function resolveActiveSite(
  * The two secrets must differ. If someone sets them to the same value the
  * look-only key silently gains write access, which is exactly what the split
  * exists to prevent — so that configuration is refused, loudly.
+ *
+ * NOTE vs the fleet contract (cardmem F213): the canonical mint endpoint
+ * distinguishes the two principals by the request BODY alone, on one shared
+ * bearer. We honour that body contract so the Lens daemon drives us unchanged,
+ * but we additionally require a SEPARATE bearer for write mode — Christian's
+ * explicit decision, and strictly stronger: with one shared secret, leaking the
+ * look-only key would also hand out write sessions.
  */
 function resolveLensKey(bearer: string | null): "none" | "read" | "write" {
   const read = process.env.LENS_MINT_SECRET;
@@ -111,21 +118,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => null)) as { org?: string; site?: string } | null;
+  const body = (await request.json().catch(() => null)) as
+    | { org?: string; site?: string; mode?: string; writes?: boolean; flow?: string }
+    | null;
+
+  // Fleet contract (cardmem F213): write mode is asked for explicitly, and
+  // `mode:"write"` WITHOUT `writes:true` is refused rather than quietly
+  // downgraded. Silently handing back a read-only session would hide a broken
+  // write flow; silently minting a write session is the footgun. An unclear
+  // request fails loudly instead of guessing either way.
+  const wantsWrite = body?.mode === "write";
+  if (wantsWrite && body?.writes !== true) {
+    return NextResponse.json({ error: "write_mode_requires_writes_true" }, { status: 400 });
+  }
+  if (wantsWrite && kind !== "write") {
+    return NextResponse.json({ error: "write_mode_requires_write_key" }, { status: 403 });
+  }
+  // The write key alone does not make a session writable — the caller must ASK.
+  // So a flow that only looks cannot write by accident just because it was
+  // handed the stronger key.
+  const writeSession = wantsWrite && kind === "write";
+  if (writeSession) {
+    console.log(
+      `[lens] write session minted — flow=${body?.flow ?? "(unnamed)"} ` +
+        `site=${body?.site ?? "(default)"} at ${new Date().toISOString()}`,
+    );
+  }
 
   const now = Math.floor(Date.now() / 1000);
   const expires = now + TTL_SECONDS;
   const token = await new SignJWT({
     sub: "lens",
-    email: "lens@webhouse.app",
-    name: "Lens",
+    // A SEPARATE identity for the write principal, per the fleet contract —
+    // not the same user with a flag, so an audit trail can tell them apart.
+    email: writeSession
+      ? process.env.LENS_WRITE_PRINCIPAL_EMAIL || "lens-write@webhouse.app"
+      : "lens@webhouse.app",
+    name: writeSession ? "Lens (write)" : "Lens",
     role: "admin",
     // ADDITIVE on purpose: a write session carries lens:true TOO, so everything
     // that identifies a Lens session by `lens === true` keeps working. Changing
     // `lens` to a string instead would have quietly altered the meaning of every
     // existing comparison, and that kind of mistake is silent.
     lens: true,
-    ...(kind === "write" ? { lensWrite: true } : {}),
+    ...(writeSession ? { lensWrite: true } : {}),
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt(now)

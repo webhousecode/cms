@@ -19,7 +19,39 @@ describe("two Lens keys — look-only and look-and-save", () => {
   // instead would silently alter the meaning of every existing comparison.
   it("the write session is additive — it keeps lens:true", () => {
     expect(mint).toContain("lens: true");
-    expect(mint).toContain('...(kind === "write" ? { lensWrite: true } : {})');
+    expect(mint).toContain("...(writeSession ? { lensWrite: true } : {})");
+  });
+
+  // Fleet contract (cardmem F213): the daemon asks with {mode:"write",
+  // writes:true}. An unclear request must fail loudly in BOTH directions —
+  // never quietly downgraded to read-only (that hides a broken write flow),
+  // never quietly upgraded to write (that is the footgun).
+  it("mode:write without writes:true is refused, not downgraded", () => {
+    expect(mint).toContain("write_mode_requires_writes_true");
+    expect(mint).toContain("status: 400");
+  });
+
+  // Our addition on top of the fleet contract, and the whole point of the
+  // second key: asking for write mode with the look-only bearer is refused.
+  it("asking for write mode with the look-only key is refused", () => {
+    expect(mint).toContain("write_mode_requires_write_key");
+  });
+
+  // Holding the stronger key is not the same as asking to use it.
+  it("the write key alone does not make a session writable — it must be asked for", () => {
+    expect(mint).toContain("const writeSession = wantsWrite && kind === \"write\";");
+  });
+
+  it("the write principal is a separate identity, not the same user with a flag", () => {
+    expect(mint).toContain("LENS_WRITE_PRINCIPAL_EMAIL");
+    expect(mint).toContain('"Lens (write)"');
+  });
+
+  it("every write mint is logged with flow and target", () => {
+    const block = mint.slice(mint.indexOf("if (writeSession) {"));
+    expect(block).toContain("write session minted");
+    expect(block).toContain("flow=");
+    expect(block).toContain("site=");
   });
 
   it("ships dark — no LENS_WRITE_SECRET means no write session can be minted", () => {
