@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 import { decodeJwt } from "jose";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { POST } from "@/app/api/lens-session/route";
+import { resolveLensKey } from "@/lib/lens-keys";
 
 /**
  * The key gate, RUN rather than read.
@@ -180,5 +184,138 @@ describe("a refused write request leaves no write trace", () => {
     await mint(WRITE_KEY, WRITE_REQUEST); //         200 — the only real one
 
     expect(logged).toHaveLength(1);
+  });
+});
+
+/**
+ * The ORDER in which the two keys are identified is a security property.
+ *
+ * cardmem measured the difference across the two implementations of this
+ * contract (#22866). Asking "is this the WRITE key?" first answers yes when the
+ * two secrets happen to be equal, and hands write access to the weak key.
+ * Asking "is this the LOOK-ONLY key?" first refuses by name, so a collapsed
+ * configuration makes write mode USELESS rather than OPEN.
+ *
+ * Generalised: identifying the key that must NOT work is stronger than
+ * recognising the one that may. The first fails closed, the second fails open —
+ * and the second is the common shape, which is what makes this worth a test
+ * rather than a comment.
+ */
+describe("the gate fails closed when the configuration collapses", () => {
+  it("refuses write mode with the specific reason when both secrets are one value", async () => {
+    vi.stubEnv("LENS_WRITE_SECRET", READ_KEY);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await mint(READ_KEY, WRITE_REQUEST);
+    expect(res.status).toBe(403);
+    // cardmem's error code, so the Lens daemon handles both implementations
+    // identically. "wrong key" is not actionable; "you set both to the same
+    // value" is.
+    expect(await res.json()).toEqual({ error: "write_key_must_differ_from_read_key" });
+  });
+
+  it("still mints a LOOK-ONLY session when the secrets collide — only write is barred", async () => {
+    // Failing closed must not mean failing off. Lens still has to be able to
+    // look, or a misconfiguration takes visual verification down entirely.
+    vi.stubEnv("LENS_WRITE_SECRET", READ_KEY);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const claims = await claimsOf(await mint(READ_KEY, {}));
+    expect(claims?.lens).toBe(true);
+    expect(claims?.lensWrite).toBeUndefined();
+  });
+
+  it("identifies the look-only key BEFORE the write key", () => {
+    // Called DIRECTLY, not through the handler. Through HTTP this cannot be
+    // pinned: the collision gate returns 403 first, so the first version of
+    // this test passed with the order reversed — a different gate caught it,
+    // which is the exact trap we had just warned cardmem about. Found by
+    // mutation-checking our own new test an hour later.
+    vi.stubEnv("LENS_WRITE_SECRET", READ_KEY);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    expect(resolveLensKey(READ_KEY)).toBe("read");
+  });
+
+  it("the ordering holds with no collision at all", () => {
+    // The positive side: with two genuinely different secrets, each key is
+    // still identified as itself. Without this, "always read" would pass above.
+    expect(resolveLensKey(READ_KEY)).toBe("read");
+    expect(resolveLensKey(WRITE_KEY)).toBe("write");
+    expect(resolveLensKey("neither")).toBe("none");
+  });
+});
+
+/**
+ * The comparison changed from `===` to constant-time.
+ *
+ * STATED PLAINLY: these cases do NOT prove it is timing-safe. `===` and
+ * timingSafeEqual return the same VALUE — only the duration differs — so
+ * restoring `===` leaves every case below green. Measured, not assumed.
+ * The timing property is pinned by the source guard at the bottom of this file,
+ * which is the honest tool for a property that is invisible at runtime.
+ *
+ * What these DO prove is the half that would otherwise go unchecked: the new
+ * comparison still judges correctly. A boundary that is beautifully timing-safe
+ * and accepts the wrong key is worse than the one it replaced.
+ *
+ * The unequal-length case is the one that would throw: `timingSafeEqual` rejects
+ * mismatched buffers, which is why both sides are hashed to a fixed 32 bytes
+ * first. Catching the throw instead would leak the length through control flow.
+ */
+describe("constant-time comparison still judges correctly", () => {
+  it("accepts the right key", async () => {
+    expect(await claimsOf(await mint(WRITE_KEY, WRITE_REQUEST))).not.toBeNull();
+  });
+
+  it("rejects a wrong key of the SAME length", async () => {
+    const wrong = "test-read-secret-zzzz";
+    // The premise of this case, asserted rather than assumed: same length,
+    // differing only in the last bytes — the shape `===` short-circuits on.
+    expect(wrong.length).toBe(READ_KEY.length);
+    expect(wrong).not.toBe(READ_KEY);
+    expect((await mint(wrong, {})).status).toBe(401);
+  });
+
+  it("rejects a wrong key of a DIFFERENT length without throwing", async () => {
+    expect((await mint("x", {})).status).toBe(401);
+    expect((await mint(`${READ_KEY}-and-more`, {})).status).toBe(401);
+    expect((await mint("", {})).status).toBe(401); // empty bearer, not a match
+  });
+});
+
+/**
+ * The one property here that a behavioural test genuinely cannot reach.
+ *
+ * Timing-safety is not observable from a return value, and a real timing
+ * measurement in a unit test is a flake generator. So this reads the source —
+ * the same tool F151.3 removed eight of, kept HERE for the reason that
+ * justified keeping the proxy scan: the file itself is the only place the
+ * property exists.
+ *
+ * The positive control matters more than usual: a guard that scans nothing
+ * reports "no violations" and looks identical to a guard that passed.
+ */
+describe("no secret is compared with ===", () => {
+  const src = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "..", "lens-keys.ts"),
+    "utf-8",
+  );
+
+  it("scanned the file it thinks it scanned", () => {
+    expect(src.length, "lens-keys.ts empty — guard scanned nothing").toBeGreaterThan(500);
+    expect(src).toContain("export function resolveLensKey");
+  });
+
+  it("compares through timingSafeEqual, not an equality operator", () => {
+    expect(src).toContain("timingSafeEqual");
+    const fn = src.slice(src.indexOf("export function secretEquals"));
+    const body = fn.slice(0, fn.indexOf("\n}"));
+    expect(body, "secretEquals fell back to an equality operator")
+      .not.toMatch(/[!=]==/);
+  });
+
+  it("no comparison operator touches either secret variable anywhere", () => {
+    // Not just inside secretEquals — a caller that short-circuits with
+    // `bearer === read` before calling it would undo the whole thing.
+    expect(src).not.toMatch(/(bearer|presented)\s*[!=]==\s*(read|write|secret)\b/);
+    expect(src).not.toMatch(/(read|write|secret)\s*[!=]==\s*(bearer|presented)\b/);
   });
 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
+import { resolveLensKey, lensKeysCollide } from "@/lib/lens-keys";
 
 /**
  * F151 — Lens mint-endpoint (fleet `mintEndpoint` standard).
@@ -92,24 +93,6 @@ async function resolveActiveSite(
  * explicit decision, and strictly stronger: with one shared secret, leaking the
  * look-only key would also hand out write sessions.
  */
-function resolveLensKey(bearer: string | null): "none" | "read" | "write" {
-  const read = process.env.LENS_MINT_SECRET;
-  const write = process.env.LENS_WRITE_SECRET;
-  if (!bearer) return "none";
-  if (write && read && write === read) {
-    console.error(
-      "[lens] LENS_WRITE_SECRET is identical to LENS_MINT_SECRET — refusing to mint a " +
-        "write session. The two keys exist to be different; set a distinct value.",
-    );
-    return read === bearer ? "read" : "none";
-  }
-  // Ship dark: with no LENS_WRITE_SECRET set, a write session cannot be minted
-  // at all, so a machine that never opted in cannot hand one out.
-  if (write && bearer === write) return "write";
-  if (read && bearer === read) return "read";
-  return "none";
-}
-
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   const bearer = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
@@ -130,6 +113,15 @@ export async function POST(request: NextRequest) {
   const wantsWrite = body?.mode === "write";
   if (wantsWrite && body?.writes !== true) {
     return NextResponse.json({ error: "write_mode_requires_writes_true" }, { status: 400 });
+  }
+  // More specific first: "you set both keys to the same value" is actionable,
+  // "wrong key" is not. Same error code as cardmem's implementation of this
+  // contract so the Lens daemon can handle both identically.
+  if (wantsWrite && lensKeysCollide()) {
+    return NextResponse.json(
+      { error: "write_key_must_differ_from_read_key" },
+      { status: 403 },
+    );
   }
   if (wantsWrite && kind !== "write") {
     return NextResponse.json({ error: "write_mode_requires_write_key" }, { status: 403 });
