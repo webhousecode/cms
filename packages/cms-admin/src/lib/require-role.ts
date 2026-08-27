@@ -27,11 +27,42 @@ export async function getSiteRole(): Promise<UserRole | null> {
   // F151: the lens principal (sub "lens") has no team membership; its admin role
   // comes from the minted JWT so it can render every surface (read-only is the
   // proxy.ts write-guard's job, not the role's).
-  if (session.sub === "dev-token" || session.sub === "service-token" || session.sub === "lens") return session.role;
+  if (isSelfDescribingPrincipal(session.sub)) return session.role;
 
   const members = await getTeamMembers();
   const membership = members.find((m) => m.userId === session.sub);
   return membership?.role ?? null;
+}
+
+/**
+ * The principals whose role comes from their own JWT, with no team-membership
+ * row to look up: the dev token, internal service calls, and Lens.
+ *
+ * Exported because three PAGES hand-rolled this lookup and each knew only about
+ * "dev-token" — so the Lens principal was refused from Settings and from the
+ * Docker deploy page while `getSiteRole()` ten lines away handled it correctly.
+ * Measured 2026-08-27: Lens could not reach Settings at all
+ * (GET /api/admin/profile → 404 "User not found" → redirect to /admin), which
+ * is what blocked browser-verifying a save. The shared answer existed; the
+ * copies of the old pattern stayed. Same class three days running.
+ */
+export function isSelfDescribingPrincipal(sub: string | undefined | null): boolean {
+  return sub === "dev-token" || sub === "service-token" || sub === "lens";
+}
+
+/**
+ * The effective role for a session: its own claim for the principals above,
+ * otherwise the team-membership row. Returns null when there is no membership —
+ * an ordinary user without one is still refused, which is what makes the Lens
+ * exception meaningful rather than an open door.
+ */
+export function resolveMembershipRole(
+  session: { sub?: string; role?: string } | null | undefined,
+  members: { userId: string; role: string }[],
+): string | null {
+  if (!session?.sub) return null;
+  if (isSelfDescribingPrincipal(session.sub)) return session.role ?? null;
+  return members.find((m) => m.userId === session.sub)?.role ?? null;
 }
 
 /**

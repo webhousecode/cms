@@ -72,11 +72,42 @@ async function resolveActiveSite(
   return org && site ? { org, site } : null;
 }
 
+/**
+ * Which of the two Lens keys was presented (F151.2).
+ *
+ * Christian asked for "one that can only look and one that can only write".
+ * A write-only key cannot exist here: Lens drives a browser, so it must READ
+ * the page to find the button and read the value back to prove the save. So the
+ * split is look-only vs look-and-save, and the value of the split is untouched —
+ * a leaked look-only secret still costs only looking.
+ *
+ * The two secrets must differ. If someone sets them to the same value the
+ * look-only key silently gains write access, which is exactly what the split
+ * exists to prevent — so that configuration is refused, loudly.
+ */
+function resolveLensKey(bearer: string | null): "none" | "read" | "write" {
+  const read = process.env.LENS_MINT_SECRET;
+  const write = process.env.LENS_WRITE_SECRET;
+  if (!bearer) return "none";
+  if (write && read && write === read) {
+    console.error(
+      "[lens] LENS_WRITE_SECRET is identical to LENS_MINT_SECRET — refusing to mint a " +
+        "write session. The two keys exist to be different; set a distinct value.",
+    );
+    return read === bearer ? "read" : "none";
+  }
+  // Ship dark: with no LENS_WRITE_SECRET set, a write session cannot be minted
+  // at all, so a machine that never opted in cannot hand one out.
+  if (write && bearer === write) return "write";
+  if (read && bearer === read) return "read";
+  return "none";
+}
+
 export async function POST(request: NextRequest) {
-  const secret = process.env.LENS_MINT_SECRET;
   const authHeader = request.headers.get("authorization");
   const bearer = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
-  if (!secret || !bearer || bearer !== secret) {
+  const kind = resolveLensKey(bearer);
+  if (kind === "none") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -89,7 +120,12 @@ export async function POST(request: NextRequest) {
     email: "lens@webhouse.app",
     name: "Lens",
     role: "admin",
+    // ADDITIVE on purpose: a write session carries lens:true TOO, so everything
+    // that identifies a Lens session by `lens === true` keeps working. Changing
+    // `lens` to a string instead would have quietly altered the meaning of every
+    // existing comparison, and that kind of mistake is silent.
     lens: true,
+    ...(kind === "write" ? { lensWrite: true } : {}),
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt(now)

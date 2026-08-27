@@ -405,7 +405,14 @@ export async function proxy(request: NextRequest) {
     // F151: the Lens principal is read-only — block every mutating method.
     // No-op for all real users (no `lens` claim); the only read-only boundary
     // for the minted lens session (its role is admin so surfaces still render).
-    if (payload.lens === true && ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
+    //
+    // F151.2: EXCEPT a session minted with the separate write key, which carries
+    // `lensWrite`. A run that must prove a save works has to be able to save —
+    // a green run that never wrote anything proves nothing about saving. The
+    // two keys stay separate so an ordinary visual run still cannot write, and
+    // a leaked look-only secret still costs only looking.
+    const lensReadOnly = payload.lens === true && payload.lensWrite !== true;
+    if (lensReadOnly && ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
       return NextResponse.json({ error: "Lens session is read-only" }, { status: 403 });
     }
     return forwardOk();

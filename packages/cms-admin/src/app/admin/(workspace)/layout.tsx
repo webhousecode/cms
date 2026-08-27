@@ -20,6 +20,7 @@ import { redirect } from "next/navigation";
 import { loadRegistry, findSite, findOrg } from "@/lib/site-registry";
 import { readUserState } from "@/lib/user-state";
 import type { Metadata } from "next";
+import { resolveMembershipRole } from "@/lib/require-role";
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -150,8 +151,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     const message = err instanceof Error ? err.message : "";
     if (message.includes("GitHub not connected")) {
       const members = await getTeamMembers();
-      const membership = session?.sub === "dev-token" ? { role: "admin" } : (session ? members.find((m) => m.userId === session.sub) : null);
-      if (membership?.role === "admin") {
+      const role = resolveMembershipRole(session, members);
+      if (role === "admin") {
         return <ConnectGitHubGate />;
       }
       return <ConnectGitHubGate message="An administrator needs to connect GitHub for this site before you can access it." showButton={false} />;

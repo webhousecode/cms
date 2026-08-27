@@ -28,6 +28,7 @@ import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
 import { redirect } from "next/navigation";
 import { SettingsAnchorScroll } from "@/components/settings/settings-anchor";
+import { resolveMembershipRole } from "@/lib/require-role";
 
 export default async function SettingsPage({
   searchParams,
@@ -39,8 +40,8 @@ export default async function SettingsPage({
   const session = await getSessionUser(cookieStore);
   if (!session) redirect("/admin/login");
   const members = await getTeamMembers();
-  const membership = session.sub === "dev-token" ? { role: "admin" } : members.find((m) => m.userId === session.sub);
-  if (!membership || membership.role !== "admin") {
+  const role = resolveMembershipRole(session, members);
+  if (role !== "admin") {
     redirect("/admin");
   }
 
