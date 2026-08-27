@@ -14,6 +14,7 @@ import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
 import { ToolsSettingsPanel } from "@/components/settings/tools-settings-panel";
 import { CapabilitiesSettingsPanel } from "@/components/settings/capabilities-settings-panel";
 import { DeploySettingsPanel } from "@/components/settings/deploy-settings-panel";
+import { SiteDomainsPanel } from "@/components/settings/site-domains-panel";
 import { BuildSettingsPanel } from "@/components/settings/build-settings-panel";
 import { GeoSettingsPanel } from "@/components/settings/geo-settings-panel";
 import { BackupSettingsPanel } from "@/components/settings/backup-settings-panel";
@@ -283,6 +284,11 @@ export default async function SettingsPage({
           <div className="max-w-lg" data-testid="settings-panel-deploy">
             <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-deploy" variant="compact" /></div>
             <DeploySettingsPanel />
+            {/* Which addresses the site is trusted on. Lives beside the deploy
+                settings because that is where a person looks for "what are this
+                site's addresses" — even though the list governs live editing and
+                form submissions, not deploys. */}
+            <div style={{ marginTop: "1.5rem" }}><SiteDomainsPanel /></div>
           </div>
         )}
 

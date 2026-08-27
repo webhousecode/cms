@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { originAllowed, siteOrigins, siteOriginsWithSiblings } from "../cors-origin";
+import {
+  originAllowed,
+  siteOrigins,
+  siteOriginsWithSiblings,
+  normalizeDomainEntry,
+  normalizeDomainList,
+} from "../cors-origin";
 
 describe("originAllowed", () => {
   // The regression this fixes: a browser Origin header never has a trailing
@@ -136,5 +142,84 @@ describe("siteOriginsWithSiblings", () => {
   it("returns nothing when the site has no configured host", () => {
     expect(siteOriginsWithSiblings({})).toEqual([]);
     expect(originAllowed("https://anything.dk", siteOriginsWithSiblings({}))).toBe(false);
+  });
+});
+
+describe("siteDomains — the operator-maintained list (F157.13)", () => {
+  // The whole point of the field: a site that keeps its old domain alive, or
+  // gains a fourth address, had nowhere to put it. Adding it here must make
+  // the gate accept it — otherwise the self-service panel writes to a value
+  // nothing reads, which is the failure this repo keeps meeting.
+  it("a self-added domain is accepted by the gate", () => {
+    const origins = siteOriginsWithSiblings({
+      previewSiteUrl: "https://site.fly.dev",
+      siteDomains: ["https://gammelt-domaene.dk"],
+    });
+    expect(originAllowed("https://gammelt-domaene.dk", origins)).toBe(true);
+    expect(originAllowed("https://site.fly.dev", origins)).toBe(true);
+  });
+
+  it("a self-added domain gets its www sibling too", () => {
+    const origins = siteOriginsWithSiblings({ siteDomains: ["https://kampagne.dk"] });
+    expect(originAllowed("https://www.kampagne.dk", origins)).toBe(true);
+  });
+
+  it("still refuses everything that was not added", () => {
+    const origins = siteOriginsWithSiblings({ siteDomains: ["https://kampagne.dk"] });
+    expect(originAllowed("https://kampagne.dk.angriber.dk", origins)).toBe(false);
+    expect(originAllowed("https://evil.dk", origins)).toBe(false);
+  });
+
+  // Existing sites have no such field. They must behave exactly as before.
+  it("a site without the field behaves exactly as before", () => {
+    const before = siteOriginsWithSiblings({ previewSiteUrl: "https://site.fly.dev" });
+    const after = siteOriginsWithSiblings({ previewSiteUrl: "https://site.fly.dev", siteDomains: [] });
+    expect(after).toEqual(before);
+  });
+});
+
+describe("normalizeDomainEntry", () => {
+  it("accepts a bare host and gives it a scheme", () => {
+    expect(normalizeDomainEntry("eksempel.dk")).toEqual({ origin: "https://eksempel.dk" });
+  });
+
+  it("accepts a full URL and keeps its scheme", () => {
+    expect(normalizeDomainEntry("http://eksempel.dk")).toEqual({ origin: "http://eksempel.dk" });
+  });
+
+  it("tolerates the trailing slash an address bar produces", () => {
+    expect(normalizeDomainEntry("https://eksempel.dk/")).toEqual({ origin: "https://eksempel.dk" });
+  });
+
+  // Rejected rather than silently dropped: a domain someone typed and saw
+  // vanish teaches nothing, and one silently accepted in a shape that can never
+  // match an Origin header looks configured while doing nothing.
+  it.each([
+    ["", "tom"],
+    ["*.eksempel.dk", "wildcard"],
+    ["eksempel.dk/shop", "sti"],
+    ["https://eksempel.dk/shop?a=1", "sti med query"],
+    ["ikkeetdomæne", "uden punktum"],
+  ])("refuses %s (%s) with a reason", (input) => {
+    const r = normalizeDomainEntry(input);
+    expect(r).toHaveProperty("error");
+    expect((r as { error: string }).error.length).toBeGreaterThan(5);
+  });
+});
+
+describe("normalizeDomainList", () => {
+  it("collapses two spellings of the same host into one entry", () => {
+    expect(normalizeDomainList(["eksempel.dk", "https://eksempel.dk/"]))
+      .toEqual({ domains: ["https://eksempel.dk"] });
+  });
+
+  it("fails the whole list on one bad entry, naming it", () => {
+    const r = normalizeDomainList(["god.dk", "*.slem.dk"]);
+    expect(r).toHaveProperty("error");
+    expect((r as { error: string }).error).toContain("*.slem.dk");
+  });
+
+  it("an empty list is valid — that is how you clear it", () => {
+    expect(normalizeDomainList([])).toEqual({ domains: [] });
   });
 });

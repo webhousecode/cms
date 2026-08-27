@@ -43,9 +43,17 @@ export function siteOrigins(config: {
   previewSiteUrl?: string;
   deployProductionUrl?: string;
   deployCustomDomain?: string;
+  siteDomains?: string[];
 }): string[] {
   const out: string[] = [];
-  for (const raw of [config.previewSiteUrl, config.deployProductionUrl, config.deployCustomDomain]) {
+  // siteDomains is the EXPLICIT list an operator maintains (F157.13); the other
+  // three are hosts the site happens to have for other reasons.
+  for (const raw of [
+    ...(config.siteDomains ?? []),
+    config.previewSiteUrl,
+    config.deployProductionUrl,
+    config.deployCustomDomain,
+  ]) {
     const v = raw?.trim();
     if (!v) continue;
     const withScheme = /^https?:\/\//i.test(v) ? v : `https://${v}`;
@@ -94,6 +102,7 @@ export function siteOriginsWithSiblings(config: {
   previewSiteUrl?: string;
   deployProductionUrl?: string;
   deployCustomDomain?: string;
+  siteDomains?: string[];
 }): string[] {
   const out = siteOrigins(config).map((o) => {
     try {
@@ -107,4 +116,58 @@ export function siteOriginsWithSiblings(config: {
     if (sib && !out.includes(sib)) out.push(sib);
   }
   return out;
+}
+
+/**
+ * Normalise one operator-entered domain to a browser origin, or explain why it
+ * cannot be one.
+ *
+ * Rejects rather than silently dropping: a domain someone typed and saw
+ * disappear teaches nothing, and a domain silently accepted in a form that
+ * never matches an Origin header is worse — it looks configured and is not.
+ *
+ * - wildcards are not origins; a browser never sends one
+ * - a path is never part of an Origin header, so "example.dk/shop" would match
+ *   nothing while reading as if it did
+ * - a bare host is the normal way a person writes one, so it gets https://
+ */
+export function normalizeDomainEntry(raw: string): { origin: string } | { error: string } {
+  const v = (raw ?? "").trim();
+  if (!v) return { error: "Domænet er tomt" };
+  if (v.includes("*")) return { error: `Wildcards kan ikke bruges som domæne: "${v}"` };
+
+  const withScheme = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+  let u: URL;
+  try {
+    u = new URL(withScheme);
+  } catch {
+    return { error: `Ikke et gyldigt domæne: "${v}"` };
+  }
+  if (!u.hostname || !u.hostname.includes(".")) {
+    return { error: `Ikke et gyldigt domæne: "${v}"` };
+  }
+  // A trailing "/" is what a browser's address bar gives you, so accept it —
+  // anything more is a path and would never match an Origin header.
+  if (u.pathname !== "/" || u.search || u.hash) {
+    return { error: `Et domæne kan ikke indeholde en sti: "${v}"` };
+  }
+  return { origin: u.origin };
+}
+
+/**
+ * Normalise a whole list, keeping the first spelling of each origin.
+ *
+ * "example.dk" and "https://example.dk/" are the same host written two ways;
+ * storing both would show an operator two entries that do the same thing.
+ */
+export function normalizeDomainList(
+  raw: string[],
+): { domains: string[] } | { error: string } {
+  const out: string[] = [];
+  for (const entry of raw) {
+    const r = normalizeDomainEntry(entry);
+    if ("error" in r) return { error: r.error };
+    if (!out.includes(r.origin)) out.push(r.origin);
+  }
+  return { domains: out };
 }

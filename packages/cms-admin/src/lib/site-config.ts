@@ -6,6 +6,19 @@ import { SECRET_FIELDS, clearRedactedSecrets } from "./beam/types";
 
 export interface SiteConfig {
   previewSiteUrl: string;
+  /**
+   * Extra hosts this site answers on, beyond previewSiteUrl /
+   * deployProductionUrl / deployCustomDomain.
+   *
+   * Those three each exist for another purpose (a preview target, a deploy
+   * target), and the fact that together they also decide which origins may
+   * save content and post forms here is a coincidence, not something anyone can
+   * read off. Three fields also means three hosts: a site that keeps its old
+   * domain alive, or runs a campaign domain, had nowhere to put a fourth.
+   * Stored as full origins ("https://example.dk"); empty for every existing
+   * site, so behaviour is unchanged until someone writes here.
+   */
+  siteDomains: string[];
   previewInIframe: boolean;
   trashRetentionDays: number;
   curationRetentionDays: number;
@@ -189,6 +202,7 @@ async function defaults(): Promise<SiteConfig> {
   const { previewUrl } = await getActiveSitePaths();
   return {
     previewSiteUrl: previewUrl,
+    siteDomains: [],
     previewInIframe: process.env.NEXT_PUBLIC_PREVIEW_IN_IFRAME === "true",
     trashRetentionDays: parseInt(process.env.TRASH_RETENTION_DAYS ?? "30", 10),
     curationRetentionDays: 30,

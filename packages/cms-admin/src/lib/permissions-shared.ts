@@ -29,6 +29,11 @@ export const PERMISSIONS = {
   "agents.run": "Run agents manually",
   "agents.manage": "Create / edit agents + workflows",
   "settings.edit": "Change site settings",
+  // The trusted-domain list decides which foreign pages may save content and
+  // post forms to this site — it is a security boundary, not a content
+  // setting. Deliberately NOT in ROLE_PERMISSIONS.editor: an editor may change
+  // what the site says, not who is allowed to talk to it.
+  "site.domains": "Manage the site's trusted domains",
   "capabilities.manage": "Manage feature capabilities (per-tenant toggles)",
   "backup.manage": "Create / restore backups",
   "beam.transfer": "Beam sites",
