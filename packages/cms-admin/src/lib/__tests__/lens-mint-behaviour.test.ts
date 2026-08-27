@@ -294,28 +294,75 @@ describe("constant-time comparison still judges correctly", () => {
  * reports "no violations" and looks identical to a guard that passed.
  */
 describe("no secret is compared with ===", () => {
-  const src = readFileSync(
+  const raw = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "..", "lens-keys.ts"),
     "utf-8",
   );
 
+  /**
+   * Comments are prose ABOUT the code, not the code. Stripping them is what
+   * lets this file document the forbidden pattern without tripping its own
+   * guard — the first version had no stripper, and adding the sentence "never
+   * write bearer === read here" to lens-keys.ts turned the suite red. A guard
+   * that punishes documenting the hazard teaches people to delete the guard.
+   *
+   * cardmem hit the mirror of this (#22878): their stripper was anchored at
+   * `^\s*`, so it removed only WHOLE comment lines and a trailing `// …` after
+   * code survived to be scanned as code. Both directions are the instrument
+   * being wrong before the subject is.
+   */
+  const stripComments = (src: string) =>
+    src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
+
+  const code = stripComments(raw);
+
   it("scanned the file it thinks it scanned", () => {
-    expect(src.length, "lens-keys.ts empty — guard scanned nothing").toBeGreaterThan(500);
-    expect(src).toContain("export function resolveLensKey");
+    expect(raw.length, "lens-keys.ts empty — guard scanned nothing").toBeGreaterThan(500);
+    expect(code, "comment stripper removed the code too").toContain(
+      "export function resolveLensKey",
+    );
   });
 
-  it("compares through timingSafeEqual, not an equality operator", () => {
-    expect(src).toContain("timingSafeEqual");
-    const fn = src.slice(src.indexOf("export function secretEquals"));
-    const body = fn.slice(0, fn.indexOf("\n}"));
-    expect(body, "secretEquals fell back to an equality operator")
-      .not.toMatch(/[!=]==/);
+  it("the comment stripper actually strips — both shapes", () => {
+    // Without this the guard could be scanning the raw file and nobody would
+    // know until it went red on a sentence. The trailing form is the one
+    // cardmem's stripper missed, so it is named explicitly.
+    expect(stripComments("const a = 1; // x === y")).not.toContain("===");
+    expect(stripComments("/* x === y */ const a = 1;")).not.toContain("===");
+    expect(stripComments("const a = 1; // x === y")).toContain("const a = 1;");
   });
 
-  it("no comparison operator touches either secret variable anywhere", () => {
-    // Not just inside secretEquals — a caller that short-circuits with
-    // `bearer === read` before calling it would undo the whole thing.
-    expect(src).not.toMatch(/(bearer|presented)\s*[!=]==\s*(read|write|secret)\b/);
-    expect(src).not.toMatch(/(read|write|secret)\s*[!=]==\s*(bearer|presented)\b/);
+  it("compares through timingSafeEqual", () => {
+    expect(code).toContain("timingSafeEqual");
+  });
+
+  /**
+   * ZERO equality operators in this module — not "none against a variable
+   * called `bearer`".
+   *
+   * The first version of this guard matched on NAMES:
+   *
+   *     expect(src).not.toMatch(/(bearer|presented)\s*[!=]==\s*(read|write)/)
+   *
+   * Renaming the parameter to `token` and writing `token === read` passed all
+   * twenty tests. Measured, not imagined: a plain `===` on a secret, invisible
+   * to the guard written to forbid exactly that. A guard anchored on identifiers
+   * is only as strong as nobody renaming them — and renaming is the one thing
+   * every refactor does.
+   *
+   * This module exists solely to compare secrets, so it has no legitimate use
+   * for `===` at all. The current code contains none, and any future one is
+   * suspect by construction. That makes the rule name-independent, and it is
+   * the reason the logic lives in a small dedicated module rather than inline
+   * in the route: the rule is only this simple because the module is this
+   * narrow.
+   */
+  it("contains no equality operator at all — the module is secret handling only", () => {
+    const offenders = code
+      .split("\n")
+      .map((line, i) => ({ line: line.trim(), n: i + 1 }))
+      .filter((l) => /[!=]==/.test(l.line));
+    expect(offenders, `equality operator in lens-keys.ts: ${JSON.stringify(offenders)}`)
+      .toEqual([]);
   });
 });
