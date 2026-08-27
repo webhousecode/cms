@@ -145,3 +145,13 @@ Hvis dokumenttallet nogensinde bliver dyrt, er det på en adapter over netværk 
 ## Risiko ved at gøre det
 
 At skrive værdierne ind i prompten kan ikke bryde noget — det er tilføjet tekst. Kontrollen på skrivevejen kan derimod afvise indhold der bliver gemt i dag. Derfor skal den måles først: findes der eksisterende dokumenter med en ulovlig valgfelt-værdi? Hvis ja, er de fundet med det samme, og de skal rettes før kontrollen slås til — samme rækkefølge som F174 (tæl først, ryd op, håndhæv derefter).
+
+---
+
+## Stories
+
+| # | Titel | Prioritet |
+|---|---|---|
+| F177.1 | Chattens prompt skal fortælle hvilke værdier et valgfelt tillader | high |
+| F177.2 | Tæl først, ryd op, håndhæv så — en ulovlig valgfelt-værdi skal afvises på skrivevejen | high |
+| F177.3 | Et loft over systemprompten, så et stort site ikke stille vokser ud af sin egen kontekst | low |
