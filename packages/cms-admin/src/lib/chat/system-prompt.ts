@@ -92,25 +92,35 @@ export async function gatherSiteContext(): Promise<SiteContext> {
 }
 
 /** Build the full system prompt for the chat interface */
+/**
+ * One collection's block in the Site Schema section.
+ *
+ * Exported so the size report (F177.3) can attribute weight per collection
+ * using the SAME text the prompt carries. A second renderer that only
+ * approximated it would name the wrong collection as the heavy one, which is
+ * worse than naming none.
+ */
+export function renderCollectionBlock(c: SiteContext["collections"][number]): string {
+  const fieldList = c.fields
+    .map((f) => {
+      const lbl = f.label && f.label !== f.name ? ` — ${f.label}` : "";
+      // F177 — a select field states its legal values here. Same wording the
+      // agents get; imported, never copied.
+      const constraint = describeSelectOptions(f);
+      const opts = constraint ? ` — ${constraint}` : "";
+      return `    - \`${f.name}\` (${f.type})${f.required ? " *required" : ""}${lbl}${opts}`;
+    })
+    .join("\n");
+  // F127 — inject kind badge and description per collection
+  const kindLabel = c.kind ? ` · ${c.kind}` : "";
+  const headerLine = `  ### ${c.label} ('${c.name}')${kindLabel} — ${c.documentCount} documents`;
+  const descLine = c.description ? `  > ${c.description}\n` : "";
+  return `${headerLine}\n${descLine}${fieldList}`;
+}
+
 export function buildChatSystemPrompt(context: SiteContext): string {
   const collectionDescriptions = context.collections
-    .map((c) => {
-      const fieldList = c.fields
-        .map((f) => {
-          const lbl = f.label && f.label !== f.name ? ` — ${f.label}` : "";
-          // F177 — a select field states its legal values here. Same wording the
-          // agents get; imported, never copied.
-          const constraint = describeSelectOptions(f);
-          const opts = constraint ? ` — ${constraint}` : "";
-          return `    - \`${f.name}\` (${f.type})${f.required ? " *required" : ""}${lbl}${opts}`;
-        })
-        .join("\n");
-      // F127 — inject kind badge and description per collection
-      const kindLabel = c.kind ? ` · ${c.kind}` : "";
-      const headerLine = `  ### ${c.label} ('${c.name}')${kindLabel} — ${c.documentCount} documents`;
-      const descLine = c.description ? `  > ${c.description}\n` : "";
-      return `${headerLine}\n${descLine}${fieldList}`;
-    })
+    .map(renderCollectionBlock)
     .join("\n\n");
 
   // F127 — behavioral instructions derived from collection kinds present in this site

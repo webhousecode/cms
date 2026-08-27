@@ -3,6 +3,7 @@ import type { ChatInput, ContentPart, Message, Tool, ToolCall } from "@broberg/a
 import { getApiKey } from "@/lib/ai-config";
 import { getAI, mistralModel } from "@/lib/ai/client";
 import { gatherSiteContext, buildChatSystemPrompt, getMemoryContext } from "@/lib/chat/system-prompt";
+import { measurePromptSize, promptSizeComplaint } from "@/lib/chat/prompt-size";
 import { buildChatTools } from "@/lib/chat/tools";
 import { extractMemories } from "@/lib/chat/memory-extractor";
 import { getConversation } from "@/lib/chat/conversation-store";
@@ -71,6 +72,15 @@ export async function POST(request: NextRequest) {
       const { section } = await getMemoryContext(lastUserMsg.content);
       if (section) systemPrompt += section;
     }
+
+    // F177.3 — the alarm on the half that does NOT grow with the conversation.
+    // A fixture test cannot notice a REAL site's schema doubling; only this can.
+    // Measured BEFORE the memory section is counted would understate it, so it
+    // runs here, on what is actually sent. Warns, never blocks: at this size
+    // nothing breaks, and taking a customer's chat down over a big schema
+    // trades a quiet cost for a loud outage.
+    const complaint = promptSizeComplaint(measurePromptSize(systemPrompt, siteContext));
+    if (complaint) console.warn(`[chat] ${complaint}`);
   } catch (initErr) {
     console.error("[chat] Init error:", initErr instanceof Error ? initErr.stack : initErr);
     return NextResponse.json(
