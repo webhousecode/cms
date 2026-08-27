@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requiredFieldErrors, type RequiredCheckField } from "@/lib/required-fields";
+import { requiredFieldErrors, type RequiredCheckField } from "@/lib/document-schema";
 import { siteOriginsWithSiblings } from "@/lib/cors-origin";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { getAllForms } from "@/lib/forms/store";

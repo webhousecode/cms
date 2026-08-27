@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 /**
  * The PATCH route must judge required fields on the MERGED document.
  *
- * This is the half `required-fields.test.ts` cannot see. That file proves the
+ * This is the half `document-schema.test.ts` cannot see. That file proves the
  * RULE tells merged-state and request-body apart; it says nothing about which
  * one the route hands it. Get that wrong and every ordinary edit of a valid
  * published document starts failing — a partial PATCH does not resend the

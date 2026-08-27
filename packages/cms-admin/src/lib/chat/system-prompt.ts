@@ -6,6 +6,7 @@ import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { queryMemories } from "@/lib/chat/memory-search";
 import { bumpMemoryHits } from "@/lib/chat/memory-store";
 import { cookies } from "next/headers";
+import { describeSelectOptions, type SelectOption } from "@/lib/select-options";
 
 export interface SiteContext {
   siteName: string;
@@ -13,7 +14,7 @@ export interface SiteContext {
   collections: Array<{
     name: string;
     label: string;
-    fields: Array<{ name: string; type: string; label?: string; required?: boolean }>;
+    fields: Array<{ name: string; type: string; label?: string; required?: boolean; options?: SelectOption[] }>;
     documentCount: number;
     /** F127 — what this collection is for */
     kind?: "page" | "snippet" | "data" | "form" | "global";
@@ -68,6 +69,9 @@ export async function gatherSiteContext(): Promise<SiteContext> {
         type: f.type,
         label: f.label,
         required: f.required,
+        // F177 — without these the prompt says a field is a select and never
+        // says what may go in it, and the model fills the gap by inventing.
+        options: f.options,
       })),
       documentCount: documents.filter((d: any) => d.status !== "trashed").length,
       kind: (col as any).kind,
@@ -94,7 +98,11 @@ export function buildChatSystemPrompt(context: SiteContext): string {
       const fieldList = c.fields
         .map((f) => {
           const lbl = f.label && f.label !== f.name ? ` — ${f.label}` : "";
-          return `    - \`${f.name}\` (${f.type})${f.required ? " *required" : ""}${lbl}`;
+          // F177 — a select field states its legal values here. Same wording the
+          // agents get; imported, never copied.
+          const constraint = describeSelectOptions(f);
+          const opts = constraint ? ` — ${constraint}` : "";
+          return `    - \`${f.name}\` (${f.type})${f.required ? " *required" : ""}${lbl}${opts}`;
         })
         .join("\n");
       // F127 — inject kind badge and description per collection

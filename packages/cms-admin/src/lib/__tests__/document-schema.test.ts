@@ -7,7 +7,7 @@ import {
   requiredFieldErrors,
   checkDocumentRequired,
   type RequiredCheckField,
-} from "../required-fields";
+} from "../document-schema";
 
 /**
  * "Required" in a schema was a promise nobody kept.
@@ -133,7 +133,7 @@ describe("no second copy of the rule", () => {
 
   it("every write path imports the shared rule", () => {
     for (const r of routes) {
-      expect(read(r), `${r} does not use the shared rule`).toContain("required-fields");
+      expect(read(r), `${r} does not use the shared rule`).toContain("document-schema");
     }
   });
 

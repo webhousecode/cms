@@ -1,5 +1,5 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import { checkDocumentRequired, type RequiredCheckField } from "@/lib/required-fields";
+import { checkDocumentSchema, type SchemaCheckField } from "@/lib/document-schema";
 import { saveRevision } from "@/lib/revisions";
 import { removeQueueItemsBySlug } from "@/lib/curation";
 import { dispatchRevalidation } from "@/lib/revalidation";
@@ -282,14 +282,17 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     // what will actually be stored.
     const colDef = (await getAdminConfig()).collections.find((c) => c.name === collection);
     const mergedForCheck = { ...(doc.data ?? {}), ...(body.data ?? {}) } as Record<string, unknown>;
-    const requiredCheck = checkDocumentRequired(
-      ((colDef?.fields ?? []) as RequiredCheckField[]),
+    // F177 — the select half is judged on what THIS write carries, not on the
+    // merge: a bad value stored earlier must not block an unrelated edit today.
+    const schemaCheck = checkDocumentSchema(
+      ((colDef?.fields ?? []) as SchemaCheckField[]),
       mergedForCheck,
+      (body.data ?? {}) as Record<string, unknown>,
       nextStatus,
     );
-    if (!requiredCheck.ok) {
+    if (!schemaCheck.ok) {
       return NextResponse.json(
-        { error: requiredCheck.errors.join(", "), fields: requiredCheck.errors },
+        { error: schemaCheck.errors.join(", "), fields: schemaCheck.errors },
         { status: 400, headers: cors },
       );
     }

@@ -1,5 +1,5 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import { checkDocumentRequired, type RequiredCheckField } from "@/lib/required-fields";
+import { checkDocumentSchema, type SchemaCheckField } from "@/lib/document-schema";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
@@ -90,14 +90,17 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     // on every save would stop an editor saving a half-finished draft, which is
     // a worse failure than the one this fixes. Same function the form route
     // uses, so there is one rule and no second copy to drift.
-    const requiredCheck = checkDocumentRequired(
-      (colConfig.fields ?? []) as RequiredCheckField[],
+    // F177 added the second half: a select value must be one the field
+    // declares. On a create the written data IS the whole document.
+    const schemaCheck = checkDocumentSchema(
+      (colConfig.fields ?? []) as SchemaCheckField[],
+      body.data ?? {},
       body.data ?? {},
       status,
     );
-    if (!requiredCheck.ok) {
+    if (!schemaCheck.ok) {
       return NextResponse.json(
-        { error: requiredCheck.errors.join(", "), fields: requiredCheck.errors },
+        { error: schemaCheck.errors.join(", "), fields: schemaCheck.errors },
         { status: 400 },
       );
     }

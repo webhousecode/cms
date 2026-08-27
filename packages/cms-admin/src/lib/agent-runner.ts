@@ -12,6 +12,7 @@ import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/
 import { loadFeedbackForPrompt, loadRejectionsForPrompt } from "@/lib/agent-feedback";
 import { checkAgentBudget, budgetExceededMessage } from "@/lib/agent-budget";
 import { calculateSeoScore, type SeoFields } from "@/lib/seo/score";
+import { describeSelectOptions, type SelectOption } from "@/lib/select-options";
 
 interface FeedbackExample {
   original: string;
@@ -46,17 +47,15 @@ type AgentConfigForRaw = Awaited<ReturnType<typeof getAgent>> extends infer A
   ? A extends null ? never : A
   : never;
 
-interface SelectOption { label: string; value: string }
 interface FieldDef { name: string; type: string; required?: boolean; label?: string; options?: SelectOption[] }
 
 function buildSchemaInstructions(fields: FieldDef[]): string {
   const fieldList = fields
     .map((f) => {
-      let hint = `<${f.type}>`;
-      if (f.type === "select" && f.options && f.options.length > 0) {
-        const validValues = f.options.map((o) => `"${o.value}"`).join(" | ");
-        hint = `<select: MUST be one of ${validValues}>`;
-      }
+      // The legal values come from the shared rule, not a local copy — the chat
+      // prompt renders the same constraint and the two must not drift.
+      const constraint = describeSelectOptions(f);
+      const hint = constraint ? `<select: ${constraint}>` : `<${f.type}>`;
       const req = f.required ? " (required)" : "";
       const lbl = f.label ? ` — ${f.label}` : "";
       return `  "${f.name}": ${hint}${req}${lbl}`;
