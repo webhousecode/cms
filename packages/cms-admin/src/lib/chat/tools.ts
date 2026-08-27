@@ -43,8 +43,28 @@ async function dispatchChatRevalidation(
 interface ToolPair {
   definition: ToolDefinition;
   handler: ToolHandler;
-  /** If set, tool is only included when the user has this permission. */
-  permission?: string;
+  /**
+   * REQUIRED — the permission a caller must hold to be offered this tool.
+   *
+   * It was optional, and the doc comment said "if set, tool is only included
+   * when the user has this permission". Both were true of the OLD filter, which
+   * read `!t.permission || hasPermission(…)` — a tool that declared nothing
+   * passed to everyone. Measured 27 Aug 2026: 60 of 64 declared nothing, so a
+   * viewer was handed 61 tools, 30 of them mutating (F176).
+   *
+   * F176 flipped the filter to deny-by-default and gave all 64 a permission.
+   * That closed the instance and left the CLASS open: the type still allowed a
+   * new tool without one, and the failure merely changed direction — such a
+   * tool now vanishes from EVERY caller's list, admins included, with no error
+   * anywhere. Silently invisible instead of silently exposed. Both are the same
+   * bug: the declaration was wrong and nothing said so.
+   *
+   * Required here means the compiler refuses tool number 65 if it forgets.
+   * Deliberately the same contract `defineTool()` in `@broberg/chat` enforces
+   * (it throws on a tool without a permission), so adopting that module is a
+   * rename rather than a redesign.
+   */
+  permission: string;
 }
 
 /**
@@ -77,6 +97,9 @@ export async function buildChatTools(userPermissions?: string[]): Promise<ToolPa
       allTools.push({
         definition: webTool.definition,
         handler: webTool.handler as ToolHandler,
+        // Reads the public web, never this site's data — so the gate is
+        // "may you chat at all", the same permission the route itself checks.
+        permission: "chat.use",
       });
     }
   } catch (err) {
@@ -96,6 +119,8 @@ export async function buildChatTools(userPermissions?: string[]): Promise<ToolPa
         required: ["url"],
       },
     },
+    // Same reasoning as web_search: the public web, not this site's data.
+    permission: "chat.use",
     handler: async (input: any) => {
       const url = String(input.url ?? "");
       if (!url.match(/^https?:\/\//)) {

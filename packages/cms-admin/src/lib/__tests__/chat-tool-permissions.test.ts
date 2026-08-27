@@ -142,3 +142,73 @@ describe("deny by default", () => {
     expect(src, 'a missing role still falls back to admin').not.toContain('?? "admin"');
   });
 });
+
+
+/**
+ * F177 follow-up — the class, not the instance.
+ *
+ * F176 flipped the filter to deny-by-default and gave the 64 tools in the main
+ * array a permission. It missed the two that are PUSHED conditionally
+ * (`web_search`, `web_fetch`), because they live outside that array — so from
+ * the moment F176 shipped they were dropped for EVERY caller, admins included,
+ * while the system prompt went on advertising both by name.
+ *
+ * The security hole became a silently dead feature. Same declaration bug,
+ * opposite direction, and nothing said so either time. `permission` is now
+ * required on the type, so the compiler refuses tool number 65 — and this test
+ * guards the half a type cannot: that the prompt does not promise a tool the
+ * registry will not hand over.
+ */
+describe("no tool can enter the registry without a permission", () => {
+  const read = (p: string) => readFileSync(join(process.cwd(), "src/lib", p), "utf8");
+
+  it("every allTools.push() carries a permission", () => {
+    // THE INVARIANT THAT ACTUALLY BROKE. The 64 tools in the main array are now
+    // guarded by the type (`permission: string`, required). The two that are
+    // PUSHED conditionally — web_search, web_fetch — are built elsewhere and
+    // spread in, so a missing permission there was a type error only after the
+    // type was tightened, and before that it was nothing at all.
+    //
+    // My first version of this test grepped tools.ts for `name: "web_search"`.
+    // It does not appear: that tool is constructed in web-search.ts and spread
+    // in by reference. The test failed for the right reason and proved my
+    // anchor was wrong, not the code — the same too-narrow guard I have found
+    // five times this week, this time in my own test.
+    const src = read("chat/tools.ts");
+    const pushes = [...src.matchAll(/allTools\.push\(\{/g)].map((m) => m.index!);
+    expect(pushes.length, "no allTools.push found — the anchor has moved").toBeGreaterThan(0);
+
+    for (const at of pushes) {
+      // Bounded to the pushed object: from the push to the next `});` at that
+      // indentation, so a later tool's permission cannot satisfy it by accident.
+      const end = src.indexOf("\n  });", at);
+      const block = src.slice(at, end > at ? end : at + 2000);
+      expect(block, `an allTools.push() at index ${at} declares no permission — deny-by-default drops it for EVERYONE, admins included, with no error anywhere`)
+        .toMatch(/permission: "/);
+    }
+  });
+
+  it("web_search and web_fetch specifically — the two F176 silently dropped", () => {
+    // F176 flipped the filter to deny-by-default and gave the main array its
+    // permissions. These two live outside it, so from that moment they were
+    // offered to nobody while the system prompt went on naming both. The
+    // security hole became a dead feature: same declaration bug, opposite
+    // direction, silent both times.
+    const src = read("chat/tools.ts");
+    const fetchAt = src.indexOf('name: "web_fetch"');
+    expect(fetchAt, "web_fetch not found").toBeGreaterThan(-1);
+    expect(src.slice(fetchAt, fetchAt + 1600)).toMatch(/permission: "chat\.use"/);
+
+    // web_search is built in web-search.ts and pushed by reference, so it is
+    // the PUSH that must carry the permission.
+    const searchAt = src.indexOf("definition: webTool.definition");
+    expect(searchAt, "web_search push not found").toBeGreaterThan(-1);
+    expect(src.slice(searchAt, searchAt + 400)).toMatch(/permission: "chat\.use"/);
+  });
+
+  it("the system prompt still advertises both, so they must exist", () => {
+    const prompt = read("chat/system-prompt.ts");
+    expect(prompt).toContain("**web_search**");
+    expect(prompt).toContain("**web_fetch**");
+  });
+});
