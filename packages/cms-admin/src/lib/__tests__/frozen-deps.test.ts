@@ -31,8 +31,10 @@ const LEDGER: Record<string, string> = {
   "@upmetrics/sdk":
     "Bumped to 0.4.1 on 2026-08-25. Fleet-owned; upmetrics tells us when to move.",
   "@broberg/mail":
-    "Pinned EXACTLY on 0.1.0 while 0.5.0 exists. Not looked at — the mail gate " +
-    "was hardened against 0.1.0's behaviour, so the bump is its own piece of work.",
+    "Bumped 0.1.0 → 0.7.1 on 2026-08-27 (F172.3). The only semantic change in " +
+    "the whole span is 0.3.0 flipping `live`'s default to false, which we were " +
+    "already immune to — we pass it explicitly. The gate tests ran UNCHANGED " +
+    "and green on 0.7.1, which is what proves the behaviour is the same.",
   "@broberg/cms-chat-client":
     "0.4.14 vs 0.4.20 — same minor, so the caret DOES reach it. Not frozen.",
   "class-variance-authority": "On the newest version (0.7.1).",

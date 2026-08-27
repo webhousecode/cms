@@ -4,9 +4,12 @@ import { getMailer, assertMailGateSane } from "../mailer";
 /**
  * The one line that stands between a dev box and a customer's inbox.
  *
- * @broberg/mail defaults `live` to `!!apiKey` — so ANY environment holding a
- * Resend key delivers to real recipients unless the caller says otherwise.
- * mailer.ts says otherwise, explicitly:
+ * Up to @broberg/mail 0.2.x, `live` defaulted to `!!apiKey` — so ANY environment
+ * holding a Resend key delivered to real recipients unless the caller said
+ * otherwise. 0.3.0 changed that default to `false`, and we upgraded to 0.7.1 in
+ * F172.3, so the package now fails safe on its own. This line is what made cms
+ * safe BEFORE it did, and it stays because MAIL_LIVE=1 and the boot check both
+ * read it. mailer.ts says it explicitly:
  *
  *     live: process.env.NODE_ENV === "production" || process.env.MAIL_LIVE === "1"
  *

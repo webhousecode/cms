@@ -79,8 +79,13 @@ export async function POST(request: NextRequest) {
       const result = await sendEmail({ to: body.email, subject, html });
       emailSent = result.ok;
       if (!result.ok) emailError = result.error;
-    } catch {
-      // Email sending failed — invitation still created
+    } catch (err) {
+      // The invitation is still created and the copy-link still works, so this
+      // must not fail the request — but it must not be silent either. An empty
+      // catch left the admin with "not sent" and no reason at all, which is the
+      // same dead end as the old "sent" that had not been.
+      emailSent = false;
+      emailError = err instanceof Error ? err.message : "Mailen kunne ikke sendes.";
     }
 
     return NextResponse.json({ invitation, emailSent, emailError });

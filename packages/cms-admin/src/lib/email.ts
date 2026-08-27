@@ -1,4 +1,4 @@
-import { getMailer, buildFrom } from "./mailer";
+import { getMailer, buildFrom, explainSkippedSend } from "./mailer";
 import { readSiteConfig } from "./site-config";
 
 export interface SendEmailOptions {
@@ -16,12 +16,17 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ ok: boolean; 
   const fromEmail = config.emailFrom || "noreply@webhouse.app";
   const fromName = config.emailFromName || "webhouse.app";
 
-  const r = await getMailer(apiKey).send({
+  const mailer = getMailer(apiKey);
+  const r = await mailer.send({
     from: buildFrom(fromName, fromEmail),
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
   });
+  // A SKIPPED send is `{ ok: true, skipped: true }` — success-shaped, and it
+  // used to be reported as a sent mail. It is not one: nothing left the
+  // building. Callers get a false here so they cannot tell anyone otherwise.
+  if (r.skipped) return { ok: false, error: explainSkippedSend(mailer.mode, opts.to) };
   return r.ok ? { ok: true } : { ok: false, error: r.error };
 }
 

@@ -254,8 +254,8 @@ importers:
         specifier: ^0.4.14
         version: 0.4.14
       '@broberg/mail':
-        specifier: 0.1.0
-        version: 0.1.0
+        specifier: 0.7.1
+        version: 0.7.1
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1114,8 +1114,8 @@ packages:
   '@broberg/lens-engine@0.4.0':
     resolution: {integrity: sha512-/blOeHkjo6kxxQE7d9y9BFSqaoyFE3k8+Gbu6UcGLXAf9HmEJ0T0zhdbbbWQX4mejtpRKr0CzpwhiiwAoSLoaw==}
 
-  '@broberg/mail@0.1.0':
-    resolution: {integrity: sha512-H8Trh+EN3tqCFdZrfRQsWQJFjVeg8S7se1hJbIEjxiez6zlN9PMdjsD9QuOiUNsShyWdw9MGzihqMdQfx5IIZg==}
+  '@broberg/mail@0.7.1':
+    resolution: {integrity: sha512-UjOFan+y2vBbIbH4iSYaHu74ngkiatu7QtZ2THoTcokF0Pt3PtIsKSP7RePL9PMx6efXojHEsz/vsDkPEozu9Q==}
 
   '@capacitor/android@8.3.0':
     resolution: {integrity: sha512-EQy6ByUuKayQBJmMm/e0byJiHavqsQHrvW23BuT2GNVQvenAvipqwaePiJHzrv2PZr7A0T0+se4kgDCeROj0mQ==}
@@ -7132,7 +7132,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@broberg/mail@0.1.0': {}
+  '@broberg/mail@0.7.1': {}
 
   '@capacitor/android@8.3.0(@capacitor/core@8.3.0)':
     dependencies:
