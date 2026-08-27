@@ -15,60 +15,17 @@ describe("two Lens keys — look-only and look-and-save", () => {
     expect(proxy.length, "proxy empty — guard scanned nothing").toBeGreaterThan(1000);
   });
 
-  // A write session must carry lens:true TOO. Changing `lens` to a string
-  // instead would silently alter the meaning of every existing comparison.
-  it("the write session is additive — it keeps lens:true", () => {
-    expect(mint).toContain("lens: true");
-    expect(mint).toContain("...(writeSession ? { lensWrite: true } : {})");
-  });
-
-  // Fleet contract (cardmem F213): the daemon asks with {mode:"write",
-  // writes:true}. An unclear request must fail loudly in BOTH directions —
-  // never quietly downgraded to read-only (that hides a broken write flow),
-  // never quietly upgraded to write (that is the footgun).
-  it("mode:write without writes:true is refused, not downgraded", () => {
-    expect(mint).toContain("write_mode_requires_writes_true");
-    expect(mint).toContain("status: 400");
-  });
-
-  // Our addition on top of the fleet contract, and the whole point of the
-  // second key: asking for write mode with the look-only bearer is refused.
-  it("asking for write mode with the look-only key is refused", () => {
-    expect(mint).toContain("write_mode_requires_write_key");
-  });
-
-  // Holding the stronger key is not the same as asking to use it.
-  it("the write key alone does not make a session writable — it must be asked for", () => {
-    expect(mint).toContain("const writeSession = wantsWrite && kind === \"write\";");
-  });
-
-  it("the write principal is a separate identity, not the same user with a flag", () => {
-    expect(mint).toContain("LENS_WRITE_PRINCIPAL_EMAIL");
-    expect(mint).toContain('"Lens (write)"');
-  });
-
-  it("every write mint is logged with flow and target", () => {
-    const block = mint.slice(mint.indexOf("if (writeSession) {"));
-    expect(block).toContain("write session minted");
-    expect(block).toContain("flow=");
-    expect(block).toContain("site=");
-  });
-
-  it("ships dark — no LENS_WRITE_SECRET means no write session can be minted", () => {
-    const fn = mint.slice(mint.indexOf("function resolveLensKey("));
-    expect(fn).toContain('if (write && bearer === write) return "write";');
-    // The `write &&` is the whole ship-dark guarantee: unset → never matches.
-    expect(fn).not.toMatch(/if \(bearer === write\)/);
-  });
-
-  // Same value for both keys would silently hand the look-only key write
-  // access — exactly what the split exists to prevent.
-  it("refuses to mint a write session when the two keys are identical", () => {
-    const fn = mint.slice(mint.indexOf("function resolveLensKey("));
-    expect(fn).toContain("write === read");
-    expect(fn).toContain("console.error");
-  });
-
+  /**
+   * The eight cases that used to live here are gone — not weakened, RUN.
+   * lens-mint-behaviour.test.ts calls POST and judges the decoded claims, so
+   * "the look-only key cannot mint write" is now a fact about the route rather
+   * than about a string in it. Keeping both would read as double coverage while
+   * one half could not see the bug it described (cardmem #22851).
+   *
+   * What stays here is what the FILE genuinely is the contract for: the proxy
+   * write-guard runs as middleware, in its own module instance, and is not
+   * reachable from a unit test the way the route is.
+   */
   it("the proxy blocks writes for a look-only session and allows them with the write claim", () => {
     expect(proxy).toContain("payload.lens === true && payload.lensWrite !== true");
     const guard = proxy.slice(proxy.indexOf("const lensReadOnly ="));
