@@ -116,17 +116,63 @@ Prisen er små: Sanne har 7 valgfelter i alt.
 
 Prompten er en høflighed, ikke en kontrol — nøjagtig samme argument som ved samtykke-spærren på Sannes booking. Så længe motoren tager imod `"giftcard"`, er vi kun ét dårligt gæt fra en fil med noget i der ikke findes. Hører hjemme samme sted som F174's kontrol af påkrævede felter, så der er ét sted der ejer "opfylder dokumentet sit eget skema".
 
-### 3. Sæt et loft over prompten (oprydning, ikke hastende)
+### 3. To størrelser uden bremse — og kun den ene vokser med samtalen
 
-Skema-delen er 56% af prompten på Sanne og skalerer lineært med sitets størrelse. Der er ingen bremse. Målt:
+*Rettet 27/8 efter Christians spørgsmål: "HVORFOR vokser chat per besked?" Mit
+oprindelige punkt dækkede kun den halvdel der ikke er problemet.*
+
+**Instruktionen vokser IKKE per besked.** Den har fast størrelse for et givet
+site og sendes uændret hver gang. Den vokser med *sitets* skema:
 
 | Site | Samlinger / felter | Faktiske input-tokens |
 |---|---|---|
 | tomt skelet | 0 / 0 | ~2.500 |
 | example-blog | 9 / 39 | ~2.900 |
-| **sanneandersen** | **19 / 143** | **6.619** |
+| **sanneandersen** | **19 / 143** | **6.619** (56% skema) |
 
-Et site med tre gange Sannes skema ville ligge omkring 15.000 tokens — hver eneste besked, før samtalen overhovedet begynder. Ingen ville opdage det før regningen eller et sammenbrud. En prøve der fejler når prompten overstiger et loft gør størrelsen synlig, før den bliver et problem.
+**Historikken vokser per besked, og den har ingen bremse overhovedet.**
+`chat-interface.tsx:166` bygger `apiMessages` af hele `updatedMessages` — der er
+ingen `slice`, intet vindue, ingen komprimering, hverken i klienten eller i
+ruten. Besked nr. 20 bærer alle 19 foregående plus de 6.619 faste.
+
+Så regnestykket er `fast instruktion + hele samtalen indtil nu`.
+
+#### Fejltilstanden, målt i koden
+
+`maxTokens` i `route.ts:149` er **output**-grænsen. Der findes intet der
+håndterer input-overløb. Når samtalen overstiger modellens kontekstvindue,
+400'er Mistral og `route.ts:244` sender providerens rå fejltekst videre.
+
+Og fordi intet afkorter, **sender et retry den samme for store nyttelast igen**.
+Samtalen er permanent ubrugelig fra det øjeblik. Brugeren kan kun starte forfra
+og mister alt.
+
+#### Hvordan andre løser det
+
+Fire standardtræk, og de fleste produktions-chats bruger to af dem sammen:
+
+| | Hvad det gør | Pris |
+|---|---|---|
+| **Prompt-caching** | Provideren cacher den uændrede start (instruktion + gammel historik); genafsendelse koster en brøkdel | Fjerner *omkostningen*, ikke væksten. Løser ikke overløb |
+| **Glidende vindue** | Behold kun de sidste N ture | Simplest. Glemmer hårdt og synligt |
+| **Komprimering** | Lad en model resumere de gamle ture, behold de nye ordret | Det Claude Code selv gør (`/compact`). Bedst bevarede kontekst, koster et ekstra kald |
+| **RAG over historik** | Gem alt, hent kun de relevante gamle ture frem | Tungest at bygge; god ved meget lange forløb |
+
+Vi har ingen af dem.
+
+#### Hvem retter hvad — de to halvdele hører ikke samme sted hjemme
+
+- **Instruktionens størrelse er CMS's egen.** Det er vores skema og vores
+  prompt-bygger. Ingen andre kan røre den. Loftet bygges her.
+- **Historik-håndtering er generisk.** Hver eneste chat i flåden har præcis
+  samme problem — det er ikke noget særligt ved CMS. Den hører i components'
+  delte chat-modul (deres F079), ikke hjemmerullet her. Det er reuse-first-reglen
+  ordret: en hjemmerullet kopi er drift der venter på at ske.
+
+Derfor bygger dette kort **CMS-halvdelen plus et midlertidigt gulv** — en
+forståelig advarsel før overløb i stedet for providerens rå 400, og en vej
+videre der ikke smider samtalen væk — og **historik-strategien files til
+components med vores målinger**. Når deres modul lander, erstatter det gulvet.
 
 ### 4. Rør IKKE de 19 opslag (min anbefaling: lad være)
 
