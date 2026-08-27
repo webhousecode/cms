@@ -43,9 +43,14 @@ const LEDGER: Record<string, string> = {
 
   // ── Knowingly behind. Each has a card; none is a shrug. ──
   "@broberg/ai-sdk":
-    "Bumped 0.13.0 → 0.28.0 on 2026-08-25 (F172.2). Cost tracking stays on OUR " +
-    "explicit sink — from 0.24 a bare createAI() auto-attaches its own, and two " +
-    "sinks would count every call twice in production with no error anywhere.",
+    "Bumped 0.28.0 → 0.29.0 on 2026-08-27, which closes two faults cms measured " +
+    "and reported that day: resolveModel() answered ok:true for `cheap` and " +
+    "`vision` by returning the TIER NAME as the model id, and had no way to " +
+    "refuse a name it did not know. 0.29.0 adds requireKnown. We do not call it " +
+    "— our resolveModel is our own, reading site config — so this is currency, " +
+    "not a fix we needed. Cost tracking still stays on OUR explicit sink: from " +
+    "0.24 a bare createAI() auto-attaches its own, and two sinks would count " +
+    "every call twice in production with no error anywhere.",
   "drizzle-orm":
     "FROZEN on 0.38.x, newest 0.45.2. F172 — touches the database; cms and " +
     "cms-admin must move together and the schema re-checked.",
