@@ -968,3 +968,45 @@ Each project has a **Decision Register**: a short list of choices the owner has 
 The four do not compete — a decision can be registered AND have its reasoning saved in Trail. What must not happen is a fourth overlapping store nobody maintains. The register stays small on purpose (only `active` entries are delivered, capped, pinned first) precisely so it stays read: a long register is not more coverage, it is a list nobody reads that still LOOKS like coverage.
 
 **Never DELETE a reversed decision** — supersede it, pointing at what replaced it, so a session that finds the old entry is told where the truth moved. `revisit` marks "no longer trusted" without pretending the decision was never made.
+
+## Communications — a draft belongs in cardmem, never in TextMate (F011.6)
+
+> **Canonical section per F057 multi-project convention.** Copied verbatim into every
+> cardmem-compatible repo (owner rule, Christian 2026-08-25).
+
+**Anything you write for a human OUTSIDE the fleet — a mail to a customer, a letter,
+an offer, a reply to a supplier — goes into that project's Assets → Comms folder, and
+you hand Christian the cardmem link.** Not a `.md` file on your machine. Not TextMate.
+Not Read.md.
+
+```
+cardmem_create_communication({ project_id, session_id, title, markdown, status: 'draft' })
+  → { id, name, open_in_cardmem }      ← give him THAT link (/assets#asset=<id>)
+cardmem_list_communications({ project_id })   ← read what we have already written
+cardmem_mark_communication({ asset_id, status: 'sent' })   ← once it has actually gone
+```
+
+**The folder is not a parameter.** The tool files it, so a draft cannot land somewhere
+he will not look. That is deliberate: the fleet already had a tool that *could* file it
+correctly, and what was missing was one where filing it wrongly is impossible.
+
+**Why the old habit was wrong even when it worked.** Opening a draft in TextMate meant
+the only copy lived on one Mac, in a window that had to be verified to exist, with no
+history and nothing the next session could find. The precedent this rule replaces is on
+the books: a customer mail was written, revised three times, reported "ready, waiting
+only for your GO" — and existed solely in a session scratchpad. Christian went looking
+for it and there was nothing to find.
+
+**The original is immutable.** Editing a communication in cardmem writes version 2, 3 …
+and v1 — what we first wrote — can never be overwritten or rotated away. So a correction
+is always visible AS a correction, and "what did we actually send them?" has an answer.
+
+**It is a record, not an outbox.** A communication that has been sent STAYS, marked
+`sent`. Before writing a new one to the same person, read what was already said —
+`cardmem_list_communications` exists for exactly that, and a follow-up that contradicts
+the last letter is worse than a slow one.
+
+**Unchanged:** outgoing customer mail is still sent only on Christian's direct order,
+and he still gets a copy of everything that leaves the house (`cc: cb@webhouse.dk`).
+This rule changes WHERE the draft lives while he reads it — nothing else.
+
