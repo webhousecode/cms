@@ -159,7 +159,33 @@ export function createCmsChat(opts: {
  * something `assertProviderTranscript` can be pointed at.
  */
 export function toProviderMessages(
-  messages: readonly { role: string; content: string; toolCallId?: string; toolCalls?: unknown }[],
+  messages: readonly {
+    role: string;
+    content: string;
+    toolCallId?: string;
+    toolCalls?: { id: string; name: string; args?: Record<string, unknown> }[];
+  }[],
 ): unknown[] {
-  return messages.map((m) => ({ ...m }));
+  return messages.map((m) =>
+    m.toolCalls?.length
+      ? {
+          ...m,
+          // TWO CONTRACTS, TWO FIELD NAMES. @broberg/chat emits `args`;
+          // @broberg/ai-sdk's ToolCall requires `arguments`. Passing the
+          // package's shape straight through 400s on the SDK's own validation:
+          //
+          //   invalid_type · expected object · received undefined
+          //   path: messages.1.toolCalls.0.arguments · "Required"
+          //
+          // Measured live in production on 0.5.0, minutes after the previous
+          // outage was fixed. The old repairToolPairing built `arguments` by
+          // hand and was therefore right; deleting it lost the rename with it.
+          //
+          // And `assertProviderTranscript` cannot see this: it validates the
+          // PACKAGE's shape and ordering, not our downstream SDK's field names.
+          // A strict double is only strict about the contract it was told about.
+          toolCalls: m.toolCalls.map((c) => ({ id: c.id, name: c.name, arguments: c.args ?? {} })),
+        }
+      : { ...m },
+  );
 }

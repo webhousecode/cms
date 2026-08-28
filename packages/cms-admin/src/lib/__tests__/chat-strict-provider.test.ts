@@ -101,3 +101,45 @@ describe("what WE hand the provider is a transcript a provider would accept", ()
     expect(() => assertProviderTranscript(stripped as never)).toThrow(InvalidTranscriptError);
   });
 });
+
+
+describe("the SDK's field names, which the strict double cannot see", () => {
+  // SECOND OUTAGE, SAME DAY, ONE LAYER DOWN. 0.5.0 emits `toolCalls: [{id,name,args}]`;
+  // @broberg/ai-sdk requires `arguments`. Passing the package's shape straight
+  // through 400s on the SDK's own validation, live:
+  //
+  //   invalid_type · expected object · received undefined
+  //   path: messages.1.toolCalls.0.arguments · "Required"
+  //
+  // `assertProviderTranscript` was green throughout — it validates the PACKAGE's
+  // shape and the providers' ORDERING, and knows nothing about the SDK we hand
+  // the result to. A strict double is only strict about the contract it was
+  // told about, and there were two contracts here.
+  it("renames args → arguments on the way out", () => {
+    const out = toProviderMessages([
+      { role: "user", content: "x" },
+      { role: "assistant", content: "", toolCalls: [{ id: "c1", name: "site_summary", args: { a: 1 } }] },
+      { role: "tool", content: "y", toolCallId: "c1" },
+    ]) as { toolCalls?: Record<string, unknown>[] }[];
+
+    const call = out[1].toolCalls?.[0];
+    expect(call, "the assistant turn lost its tool calls entirely").toBeDefined();
+    expect(call, "the SDK requires `arguments`; `args` is the package's name")
+      .toEqual({ id: "c1", name: "site_summary", arguments: { a: 1 } });
+    expect(call).not.toHaveProperty("args");
+  });
+
+  it("a call with no arguments still carries an object, not undefined", () => {
+    // The live failure was `received: undefined`, so the empty case is the one
+    // that actually broke — a tool taking no parameters is the common case.
+    const out = toProviderMessages([
+      { role: "assistant", content: "", toolCalls: [{ id: "c1", name: "site_summary" }] },
+    ]) as { toolCalls?: Record<string, unknown>[] }[];
+    expect(out[0].toolCalls?.[0].arguments).toEqual({});
+  });
+
+  it("leaves a message with no tool calls exactly as it was", () => {
+    const plain = [{ role: "user", content: "hej" }];
+    expect(toProviderMessages(plain)).toEqual(plain);
+  });
+});
