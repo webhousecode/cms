@@ -3,6 +3,22 @@ name: Deploy webhouse.app
 on:
   push:
     branches: [main]
+    # A deploy RESTARTS the single production machine, and anyone mid-request
+    # loses it. Measured 28 Aug 2026: Christian was reading a chat answer on
+    # webhouse.app when a DOCUMENTATION commit (93d4ca92) deployed. His answer
+    # stopped mid-sentence at "###" and the site went unreachable for ~50s.
+    # It happened twice in one evening; the second time nothing shipped that
+    # could possibly change the running app.
+    #
+    # So a change that cannot affect the running app must not restart it. Note
+    # this is paths-IGNORE, not paths: the default is still to deploy. A new
+    # directory nobody thought about ships, rather than silently not shipping —
+    # the failure we can afford is an unnecessary deploy, not a missing one.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - ".claude/**"
+      - "LICENSE"
   workflow_dispatch:
 
 permissions:
