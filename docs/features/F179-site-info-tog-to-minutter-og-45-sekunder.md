@@ -127,3 +127,44 @@ AC lød «under 30 sekunder og højst 3 værktøjskald».
 Grænsen var sat af mig, ikke af Christian, og den betyder intet i praksis: han rammer cachen og venter 25 ms. Men de 34 sekunder er reelle første gang efter et deploy, og de skrives som de er frem for som «cirka 30». Vil man under 30, er næste skridt at bygge site-info-svaret uden om modellen helt — det er en anden beslutning, truffet på dette tal.
 
 Kortet lukkes på Christians ordre med den afvigelse noteret.
+
+---
+
+## Efterspil: jeg målte ét site og erklærede det løst
+
+Slutmålingen ovenfor er `webhouse-site`. **Jeg målte aldrig `sanneandersen`** — det største site, 269 dokumenter — før jeg skrev «prøv den». Christian fandt det i stedet, og hans ord var de rigtige: *«Test dine ting ordentligt.»*
+
+Målt bagefter, på Sannes site:
+
+```
+sanneandersen · site-info, kold
+  TOTAL  55,4 s      (webhouse-site: 34,1 s)
+  tegn   10.159
+  1 værktøjskald
+```
+
+Så rettelsen virker — 165 s → 55 s, ét opslag i stedet for ti — men **55 sekunder er stadig for langt**, og det tal ville jeg have kendt før udrulningen hvis jeg havde målt mere end det ene site.
+
+Reglen der mangler i mit eget arbejde: **mål på det største, ikke på det nemmeste.** En forbedring der skalerer med indholdsmængden skal måles dér hvor indholdsmængden er størst, ellers måler man præcis det tilfælde der ikke gør ondt.
+
+## Og det der faktisk væltede hans session
+
+Han så svaret stoppe midt i en sætning på `###`, og derefter at serveren var væk. Det var **ikke** chatten.
+
+```
+deploy 56415aa    19:46:38 → 19:53:21 UTC    maskine-genstart 19:52:51
+deploy 93d4ca92   20:30:12 → 20:31:58 UTC    ← en plan-doc, intet andet
+hans skærmbillede              20:30:32 UTC   ← midt i vinduet
+```
+
+webhouse.app kører på én maskine. Et deploy genstarter den, og alt igangværende dør med den. Anden gang shippede der ikke en linje der kunne ændre den kørende app.
+
+Udelukket undervejs, så det ikke forveksles: hukommelsen var aldrig presset (189 MB af 962, uændret efter en fuld kørsel), og svaret fuldfører server-side.
+
+Rettet i `22dd859`: `docs/**`, `**/*.md`, `.claude/**` udløser ikke længere et deploy. Bevidst `paths-ignore` og ikke `paths` — standarden skal blive ved med at være «deploy», så en ny mappe ingen har tænkt på bliver shippet frem for tavst at holde op. Forseglet af `deploy-not-triggered-by-docs.test.ts`, mutations-bevist mod netop i aftens tilstand.
+
+## Det der stadig står åbent
+
+**Koldt site-info på sanneandersen tager 55 sekunder.** Cachen dækker det — men kun til næste indholdsændring, og så er den kold igen.
+
+Den nærliggende løsning er at vise det gamle svar straks og hente et nyt bagved. **Det er ikke truffet**, fordi det er en produktafvejning og ikke en teknisk: så kan man se et tal der er et minut gammelt lige efter man har rettet noget, og det kan ligne at CMS'et ikke registrerede ændringen. Den beslutning er Christians.
