@@ -160,6 +160,7 @@ export function AppSidebar({ collections }: Props) {
   }, []);
 
   // Fetch curation queue count and budget on mount
+  const canReadForms = !!ctxUser?.permissions?.includes("forms.read");
   useEffect(() => {
     fetch("/api/cms/curation?stats=true")
       .then((r) => r.json())
@@ -173,6 +174,9 @@ export function AppSidebar({ collections }: Props) {
     function fetchFormCounts() {
       // Skip polling when tab is hidden — no point wasting requests
       if (document.visibilityState === "hidden") return;
+      // A viewer may not read the form inbox, so there is nothing here to
+      // count for them. UX layer only — the route is the boundary.
+      if (!canReadForms) return;
       fetch("/api/admin/forms")
         .then((r) => r.json())
         .then((data: { forms?: Array<{ unread: number }> }) => {
@@ -185,7 +189,7 @@ export function AppSidebar({ collections }: Props) {
     const formPoll = setInterval(fetchFormCounts, 30_000);
 
     return () => clearInterval(formPoll);
-  }, []);
+  }, [canReadForms]);
 
   return (
     <Sidebar collapsible="offcanvas" data-testid="sidebar">

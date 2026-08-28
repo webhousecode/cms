@@ -5,6 +5,10 @@ import { requirePermission } from "@/lib/permissions";
 
 /** GET /api/admin/forms/[name] — full form config (for the builder). */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
+  // Had NO check at all — not even "is anyone logged in". `forms.read` and not
+  // `forms.manage`: an editor holds read but not manage, and reading a form's
+  // configuration is what the builder page does before it saves.
+  const denied = await requirePermission("forms.read"); if (denied) return denied;
   const { name } = await params;
   const forms = await getAllForms();
   const form = forms.find((f) => f.name === name);

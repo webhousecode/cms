@@ -7,6 +7,12 @@ import { requireCapability } from "@/lib/capabilities";
 
 /** GET /api/admin/forms — list ALL forms (config + admin) + unread counts. */
 export async function GET() {
+  // The `unread` field below is a count of visitors' submissions per form —
+  // the same figure I declined to hand a viewer in the chat (`form_stats`) on
+  // the grounds that a count is worthless to someone who may open none of
+  // them. Leaving it reachable here would have made that decision incoherent:
+  // refused in one surface, served every 30 seconds in another.
+  const denied = await requirePermission("forms.read"); if (denied) return denied;
   const capDenied = await requireCapability("forms"); if (capDenied) return capDenied;
   const allForms = await getAllForms();
   const { dataDir } = await getActiveSitePaths();

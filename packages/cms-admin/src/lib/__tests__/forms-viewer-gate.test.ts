@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
+import { execFileSync } from "node:child_process";
 import { resolvePermissions } from "@/lib/permissions-shared";
 
 /**
@@ -44,7 +45,10 @@ const codeLines = (p: string) => {
     const t = l.trim();
     return t && !t.startsWith("//") && !t.startsWith("*") && !t.startsWith("/*");
   });
-  expect(lines.length, `${p}: no code lines — the guard scanned nothing`).toBeGreaterThan(5);
+  // Floor of 1, not 5. It was 5 — written when this only read big files — and a
+  // genuinely short route then failed with "the guard scanned nothing" instead
+  // of "this GET is ungated". The sanity check was masking the finding.
+  expect(lines.length, `${p}: no code lines — the guard scanned nothing`).toBeGreaterThan(1);
   return lines.join("\n");
 };
 
@@ -65,26 +69,44 @@ describe("the viewer role", () => {
   });
 });
 
-describe("every door onto a submission asks for forms.read", () => {
-  // The permission is the decision; THESE are the security boundary. Listed by
-  // hand on purpose: a new read route must be added here deliberately, which is
-  // the moment someone has to think about who may see it.
-  const DOORS = [
-    "app/api/admin/forms/[name]/submissions/route.ts",
-    "app/api/admin/forms/[name]/submissions/[id]/route.ts",
-    "app/api/admin/forms/[name]/export/route.ts",
-  ];
+describe("every door onto the form inbox asks for forms.read", () => {
+  // DERIVED FROM DISK, never a hand-list. The first version of this test named
+  // three routes by hand and asserted each one was gated. It passed — and it
+  // was blind to the two it did not name: `GET /api/admin/forms` (which serves
+  // the per-form UNREAD COUNT, the very thing I had just declined to give a
+  // viewer in the chat) and `GET /api/admin/forms/[name]` (no check of any kind).
+  //
+  // components put the principle exactly right on 28 Aug 2026: assert the
+  // COUNT, not the identities. "These three were as expected" cannot see a
+  // fourth; "every GET under this directory is gated" can. Same distinction as
+  // counting rows rather than counting failures.
+  const DIR = join(SRC, "app/api/admin/forms");
+  const routes = execFileSync("find", [DIR, "-name", "route.ts"], { encoding: "utf8" })
+    .trim().split("\n").filter(Boolean)
+    .map((abs) => relative(SRC, abs)).sort();
 
-  for (const door of DOORS) {
-    it(`${door} gates its GET on forms.read`, () => {
+  it("found the routes it thinks it found", () => {
+    // A glob that silently matches nothing turns the whole loop below into
+    // "0 of 0 passed" wearing a green tick.
+    expect(routes.length, `only found: ${routes.join(", ")}`).toBeGreaterThanOrEqual(5);
+  });
+
+  for (const door of routes) {
+    it(`${door} — GET is gated on forms.read`, () => {
       const code = codeLines(door);
-      // Anchored on the CALL, not the import — an import line satisfying a
-      // guard is precisely how a vacuous guard passes while gating nothing.
-      expect(code, `${door}: no requirePermission("forms.read") call`)
+      const at = code.indexOf("export async function GET");
+      if (at === -1) return; // write-only route; its own permission is its business
+      const end = code.indexOf("\nexport ", at + 1);
+      const body = code.slice(at, end === -1 ? undefined : end);
+
+      // Anchored on the CALL inside the GET body, not on the import and not
+      // merely somewhere in the file — a sibling POST's permission satisfying
+      // a GET is exactly how a vacuous guard passes while gating nothing.
+      expect(body, `${door}: GET does not call requirePermission("forms.read")`)
         .toMatch(/requirePermission\(\s*"forms\.read"\s*\)/);
-      // And the bare "is anyone logged in" check must be gone, or the strict
+      // And the loose "is anyone logged in" check must be gone, or the strict
       // gate can sit above a door the loose one already opened.
-      expect(code, `${door}: still falls back to a bare role check`)
+      expect(body, `${door}: still falls back to a bare role check`)
         .not.toMatch(/if\s*\(\s*!role\s*\)/);
     });
   }
@@ -95,5 +117,27 @@ describe("every door onto a submission asks for forms.read", () => {
       .toMatch(/"forms\.read"/);
     expect(code, "capability gate lost — the F153 tenant switch must survive")
       .toMatch(/hasCapability/);
+  });
+
+  it("the sidebar does not poll the inbox for someone who may not read it", () => {
+    // UX layer, not the boundary — but a viewer's browser was firing this every
+    // 30 seconds, and before the route was gated it came back with the count.
+    const code = codeLines("components/sidebar.tsx");
+    const at = code.indexOf("function fetchFormCounts");
+    expect(at, "fetchFormCounts is gone — the anchor has moved").toBeGreaterThan(-1);
+    // Two assertions, because one is not enough: that the poll is guarded, AND
+    // that the flag guarding it is derived from the permission. My first
+    // version looked for the literal "forms.read" inside the poll body — which
+    // went red the moment the check was hoisted out of the closure, i.e. on a
+    // CORRECT fix. The anchor was wrong, not the code.
+    expect(code.slice(at, at + 600), "the poll is unconditional")
+      .toMatch(/if\s*\(!canReadForms\)\s*return;/);
+    expect(code, "canReadForms no longer traces to the permission")
+      .toMatch(/const canReadForms =[^\n]*"forms\.read"/);
+    // And it must be in the effect's deps: ctxUser arrives from an async fetch,
+    // so a closure captured with [] reads `false` forever and the badge never
+    // appears FOR ANYONE — a fix that silently breaks the admin instead.
+    expect(code, "the effect does not re-run when the permission lands")
+      .toMatch(/\}, \[canReadForms\]\);/);
   });
 });
