@@ -20,9 +20,20 @@ export function PwaRegister() {
         });
         return;
       }
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        /* install prompt just won't show — non-critical */
-      });
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((reg) => {
+          // Ask for a fresh sw.js on every load. Without this the browser may
+          // sit on a cached worker for up to 24h — and the worker we are
+          // replacing is one that could leave a tab permanently unable to reach
+          // the site (see the comment in public/sw.js). A stale copy of THAT
+          // must not survive a whole day just because nobody navigated hard
+          // enough.
+          reg.update().catch(() => {});
+        })
+        .catch(() => {
+          /* install prompt just won't show — non-critical */
+        });
     }
   }, []);
   return null;

@@ -25,10 +25,33 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Pass all fetch requests through (no caching, no offline).
-self.addEventListener("fetch", (event) => {
-  event.respondWith(fetch(event.request));
-});
+/**
+ * DO NOT call event.respondWith() here.
+ *
+ * This handler used to be `event.respondWith(fetch(event.request))` — a
+ * pass-through that adds nothing and takes over everything. Once a service
+ * worker answers a request, the browser's own networking is out of the loop:
+ * if that inner fetch() rejects (server restarting, network blip), the page
+ * dies, and it keeps dying, because a service worker SURVIVES A HARD RELOAD.
+ *
+ * Measured 28 Aug 2026: a deploy restarted the single production machine for
+ * ~50s. Christian's browser was stuck on a dead webhouse.app afterwards and ten
+ * hard reloads did not help — while the same URLs answered 200 in under 200ms
+ * for everyone else, including an authenticated request to the very page he was
+ * on. The server was healthy the whole time; the worker in his tab was not.
+ *
+ * The file's own comment already said this caused "dead pages" — but the fix
+ * only ever landed for DEV (pwa-register.tsx unregisters the worker when
+ * NODE_ENV !== production). Production, where a deploy actually happens, kept
+ * the hazard.
+ *
+ * An empty listener still satisfies the installability check that wanted a
+ * fetch handler, without intercepting a single request: with no respondWith,
+ * the browser handles the request itself, including retries and its own error
+ * page. Nothing here should ever grow a respondWith without an offline cache
+ * AND a fallback for the rejected case.
+ */
+self.addEventListener("fetch", () => {});
 
 // ── Web Push ───────────────────────────────────────────────────
 
