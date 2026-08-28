@@ -166,7 +166,8 @@ describe("the engine marker cannot drift from the engine", () => {
   // day of the swap. [^;] keeps the match inside one statement so an earlier
   // unrelated `import` cannot reach across into this one.
   const importsEngine = (lines: string[]) =>
-    /^import(?:[^;]*?)from\s*["']@broberg\/chat["']/m.test(lines.join("\n"));
+    /^(?:import\b[^;\n]*|\s*\}[^;\n]*)from\s*["']@broberg\/chat["']/m.test(lines.join("\n"))
+    || /^import\s*["']@broberg\/chat["']/m.test(lines.join("\n"));
 
   it("the import predicate answers both ways", () => {
     expect(importsEngine(['import { defineTool } from "@broberg/chat";'])).toBe(true);
@@ -180,6 +181,26 @@ describe("the engine marker cannot drift from the engine", () => {
     expect(importsEngine(['const s = "@broberg/chat";'])).toBe(false);
     // And an earlier unrelated import must not reach across a statement break.
     expect(importsEngine(['import { a } from "x";', 'const s = "@broberg/chat";'])).toBe(false);
+
+    // BOTH OF THESE WERE WRONG in the previous version, and components found
+    // the first by reasoning about semicolons — ESM does not require them, so
+    // any anchor that leans on one leans on a style setting.
+    //
+    // Their own example did NOT actually trip it (the `from` anchor they
+    // recommended was already there), but one step over from it did: with no
+    // semicolon to stop the scan, an `import` on one line could reach into a
+    // STRING on a later line that happens to contain `from "@broberg/chat"`.
+    expect(importsEngine(['import { a } from "foo"', 'const s = `imported from "@broberg/chat"`']),
+      "a string containing the phrase counted as an import").toBe(false);
+    // And the gap nobody had mentioned, same class as the multi-line miss: a
+    // side-effect import has no `from` at all, so a `from`-anchored predicate
+    // cannot see a real import.
+    expect(importsEngine(['import "@broberg/chat";']),
+      "side-effect import not recognised").toBe(true);
+    // Anchoring on line starts rather than punctuation, so these still work:
+    expect(importsEngine(['import chat from "@broberg/chat";'])).toBe(true);
+    expect(importsEngine(['import * as chat from "@broberg/chat";'])).toBe(true);
+    expect(importsEngine(['import { a } from "foo"', 'import { b } from "@broberg/chat"'])).toBe(true);
   });
 
   // DEFERRED, AND SAID OUT LOUD. components, 28 Aug 2026: an unreachable
