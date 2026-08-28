@@ -23,6 +23,7 @@
  * key, no network and no config.
  */
 import { createChat, defineTool, type ChatTool, type ModelFn, type Chat } from "@broberg/chat";
+import type { HistoryConfig } from "@broberg/chat/history";
 import { hasPermission } from "@/lib/permissions-shared";
 import type { ToolDefinition, ToolHandler } from "@/lib/tools";
 
@@ -117,6 +118,8 @@ export function createCmsChat(opts: {
   model?: ModelFn;
   systemPrompt?: string;
   maxRounds?: number;
+  /** Omitted when only listing tools; the route always passes one. */
+  history?: HistoryConfig;
 }): Chat<void, Caller> {
   return createChat<void, Caller>({
     // Listing tools never calls the model. A chat that RUNS gets a real one
@@ -133,5 +136,6 @@ export function createCmsChat(opts: {
     can,
     systemPrompt: opts.systemPrompt,
     maxRounds: opts.maxRounds,
+    history: opts.history,
   });
 }

@@ -46,6 +46,16 @@ export interface SiteConfig {
   aiChatMaxTokens: number;
   /** Max tool iterations per chat message (how many tools the AI can call in sequence) */
   aiChatMaxToolIterations: number;
+  /**
+   * How long a conversation may get before the oldest turns are SUMMARISED.
+   *
+   * Per site because the need is not the same: CMS builds multilingual content
+   * over hours; a visitor on a clinic's site asks three questions and leaves.
+   * Christian's decision, 28 Aug 2026. Unset ⇒ "long-authoring", which is the
+   * right default for the admin's own chat and the wrong one for a public site
+   * — a customer site should set "visitor-qa" and pay less per message.
+   */
+  aiChatHistoryProfile?: "long-authoring" | "standard" | "visitor-qa";
   /** Resend API key for transactional email */
   resendApiKey: string;
   /** Sender email for outgoing emails (must be verified in Resend) */

@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { ChatInput, ContentPart, Message, Tool, ToolCall } from "@broberg/ai-sdk";
+import type { ChatMessage } from "@broberg/chat";
 import { getApiKey } from "@/lib/ai-config";
-import { getAI, mistralModel } from "@/lib/ai/client";
 import { gatherSiteContext, buildChatSystemPrompt, getMemoryContext } from "@/lib/chat/system-prompt";
 import { measurePromptSize, promptSizeComplaint } from "@/lib/chat/prompt-size";
-import { buildChatTools } from "@/lib/chat/tools";
+import { buildAllToolPairs } from "@/lib/chat/tools";
+import { toChatTools, createCmsChat, cmsModel } from "@/lib/chat/engine";
+import { buildHistoryConfig, resolveProfile } from "@/lib/chat/history-config";
+import { frameToEvents } from "@/lib/chat/frames";
 import { extractMemories } from "@/lib/chat/memory-extractor";
 import { getConversation } from "@/lib/chat/conversation-store";
 import { getSessionWithSiteRole } from "@/lib/require-role";
@@ -49,12 +51,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "messages required" }, { status: 400 });
   }
 
-  const ai = await getAI();
-
   // Build system prompt with full site context + memory injection
   let siteContext;
   let systemPrompt: string;
   let toolPairs;
+  let callerPerms: string[] = [];
   try {
     siteContext = await gatherSiteContext();
     systemPrompt = buildChatSystemPrompt(siteContext);
@@ -64,7 +65,11 @@ export async function POST(request: NextRequest) {
     const userPerms = session.siteRole
       ? resolvePermissions(session.siteRole as UserRole)
       : [];
-    toolPairs = await buildChatTools(userPerms);
+    // EVERY tool — `run()` filters per caller via the engine's `can`. The route
+    // no longer decides who gets what; passing the caller is now the only way
+    // to get a tool at all, so there is no path that forgets to filter.
+    toolPairs = await buildAllToolPairs();
+    callerPerms = userPerms;
 
     // Inject relevant memories from past conversations
     const lastUserMsg = messages.filter((m) => m.role === "user").pop();
@@ -88,32 +93,6 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-  const sdkTools: Tool[] = toolPairs.map((t) => ({
-    name: t.definition.name,
-    description: t.definition.description,
-    parameters: t.definition.input_schema as Record<string, unknown>,
-  }));
-  const handlers = new Map(toolPairs.map((t) => [t.definition.name, t.handler]));
-
-  // Convert incoming message content (string, or Anthropic-format content
-  // blocks for vision images) to the SDK's Message/ContentPart shape.
-  function toSdkContent(content: unknown): string | ContentPart[] {
-    if (typeof content === "string") return content;
-    if (Array.isArray(content)) {
-      return content.map((b): ContentPart => {
-        const block = b as Record<string, unknown>;
-        if (block.type === "image") {
-          const source = block.source as { type?: string; media_type?: string; data?: string } | undefined;
-          if (source?.type === "base64" && source.data) {
-            return { type: "image", image: Buffer.from(source.data, "base64"), mimeType: source.media_type };
-          }
-        }
-        return { type: "text", text: typeof block.text === "string" ? block.text : "" };
-      });
-    }
-    return String(content);
-  }
-
   // Read configurable limits from site config (inherits from org)
   const siteConfig = await readSiteConfig();
   const chatMaxTokens = Math.min(siteConfig.aiChatMaxTokens || 16384, 32768);
@@ -129,7 +108,53 @@ export async function POST(request: NextRequest) {
     await getModel("code"),
   );
 
-  // SSE stream
+  // ── The conversation loop is @broberg/chat's, not ours ──────────────────
+  //
+  // What was here: our own for-loop over ai.chatStream, executing tool calls,
+  // pushing assistant + tool messages, up to N rounds. It worked. It was also
+  // the same loop every repo in the fleet had written separately, and the
+  // permission filter it fed from was one character from handing a read-only
+  // user 30 mutating tools.
+  //
+  // `run()` yields typed frames; this route's only job now is to translate
+  // them into the SSE events the client already speaks. Frames the client has
+  // no vocabulary for (history, limit) are turned into something a HUMAN can
+  // read rather than dropped — a user must never be answered from half a
+  // conversation, or told nothing because a ceiling was reached.
+  // How long this site's conversations may get. Per site, because the need is
+  // not the same: CMS builds multilingual content over hours, a visitor on a
+  // clinic's site asks three questions. Christian's decision, 28 Aug 2026 —
+  // summarise the oldest rather than drop it, long by default here.
+  const historyProfile = resolveProfile(siteConfig.aiChatHistoryProfile);
+  const chat = createCmsChat({
+    tools: toChatTools(toolPairs),
+    model: cmsModel({ resolvedModel, maxTokens: chatMaxTokens, purpose: "chat.agent" }),
+    systemPrompt,
+    maxRounds: chatMaxIterations,
+    history: buildHistoryConfig({
+      profile: historyProfile,
+      maxOutputTokens: chatMaxTokens,
+      // The summary is a model call, and it is OURS to make — the package
+      // deliberately makes none. Cheap tier: condensing what was already said
+      // does not need the model that wrote it.
+      summarise: async (older) => {
+        const { getAI, mistralModel } = await import("@/lib/ai/client");
+        const ai = await getAI();
+        const { text } = await ai.chat({
+          ...mistralModel(resolvedModel),
+          maxTokens: 1024,
+          system:
+            "Sammenfat samtalen nedenfor på dansk. Bevar konkrete beslutninger, " +
+            "navne, slugs, sprogvalg og instrukser brugeren har givet — det er dem " +
+            "resten af samtalen bygger på. Udelad høflighedsfraser. Max 300 ord.",
+          prompt: older.map((m) => `${m.role}: ${m.content}`).join("\n\n"),
+          purpose: "chat.compact",
+        });
+        return text ?? "";
+      },
+    }),
+  });
+
   const encoder = new TextEncoder();
   const readable = new ReadableStream({
     async start(controller) {
@@ -140,107 +165,22 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Convert incoming messages to the SDK Message shape (supports both
-        // string content and Anthropic-format content blocks for vision images)
-        const chatMessages: Message[] = messages.map((m) => ({
+        const chatMessages: ChatMessage[] = messages.map((m) => ({
           role: m.role,
-          content: toSdkContent(m.content),
+          content: typeof m.content === "string" ? m.content : JSON.stringify(m.content),
         }));
 
-        for (let i = 0; i < chatMaxIterations; i++) {
-          // Stream this turn token-by-token: emit each text delta as a `text`
-          // event (the client accumulates them) so the answer appears live
-          // instead of arriving in one lump after the whole 30-60s turn. The
-          // full text + tool calls are accumulated for the agentic loop below.
-          // Cast bridges the SDK's hand-written Message type and its stricter
-          // zod-inferred ChatInput.messages; the runtime values are correct.
-          const turnReq = {
-            ...mistralModel(resolvedModel),
-            maxTokens: chatMaxTokens,
-            system: systemPrompt,
-            messages: chatMessages as ChatInput["messages"],
-            tools: sdkTools,
-            purpose: "chat.agent",
-          };
-          let text = "";
-          const toolCalls: ToolCall[] = [];
-          let emitted = false;
-          try {
-            for await (const ev of ai.chatStream(turnReq)) {
-              if (ev.type === "text") {
-                text += ev.delta;
-                if (ev.delta) { sendEvent("text", { text: ev.delta }); emitted = true; }
-              } else if (ev.type === "tool_call") {
-                toolCalls.push({ id: ev.id, name: ev.name, arguments: ev.args });
-              } else if (ev.type === "error") {
-                throw new Error(ev.message);
-              }
-              // `usage` / `finish` events don't affect loop control.
-            }
-          } catch (streamErr) {
-            // No naked cutover: if streaming fails BEFORE any output, fall back to
-            // the non-streaming path (the answer just arrives in one lump). A
-            // half-streamed turn can't be safely retried, so re-throw those.
-            if (emitted || toolCalls.length) throw streamErr;
-            const res = await ai.chat(turnReq);
-            text = res.text ?? "";
-            if (res.toolCalls?.length) toolCalls.push(...res.toolCalls);
-            if (text && !toolCalls.length) sendEvent("text", { text });
-          }
-
-          // No tool calls → the streamed text WAS the final answer; done.
-          if (toolCalls.length === 0) break;
-
-          // Execute tool calls; each result becomes its own `tool` message
-          const toolResultMessages: Message[] = [];
-          for (const tc of toolCalls) {
-            sendEvent("tool_call", {
-              tool: tc.name,
-              input: tc.arguments,
-            });
-
-            const handler = handlers.get(tc.name);
-            let result: string;
-            if (handler) {
-              try {
-                result = await handler(tc.arguments);
-              } catch (err) {
-                result = `Error: ${err instanceof Error ? err.message : "unknown error"}`;
-              }
-            } else {
-              result = `Unknown tool: ${tc.name}`;
-            }
-
-            // Check for inline form response
-            if (result.startsWith("__INLINE_FORM__")) {
-              const formJson = result.slice("__INLINE_FORM__".length);
-              sendEvent("form", JSON.parse(formJson));
-              result = "Showing edit form for the user.";
-            }
-
-            // Check for artifact (interactive HTML)
-            if (result.startsWith("__ARTIFACT__")) {
-              const artifactJson = result.slice("__ARTIFACT__".length);
-              sendEvent("artifact", JSON.parse(artifactJson));
-              result = "Interactive generated and displayed.";
-            }
-
-            sendEvent("tool_result", {
-              tool: tc.name,
-              result: result.slice(0, 3000),
-            });
-
-            toolResultMessages.push({
-              role: "tool",
-              toolCallId: tc.id,
-              content: result,
-            });
-          }
-
-          // Continue the conversation: assistant turn (with its tool calls) +
-          // one tool-result message per call.
-          chatMessages.push({ role: "assistant", content: text, toolCalls });
-          chatMessages.push(...toolResultMessages);
+        for await (const frame of chat.run({
+          messages: chatMessages,
+          caller: callerPerms,
+          ctx: undefined,
+        })) {
+          if (frame.type === "history") console.warn(`[chat] history ${frame.action}: ${frame.note}`);
+          // The translation is a pure function in chat/frames.ts so every frame
+          // the package can emit has an assertion — inside this loop it could
+          // only be exercised by running a real conversation against a model.
+          for (const ev of frameToEvents(frame)) sendEvent(ev.event, ev.data);
+          if (frame.type === "done") break;
         }
 
         sendEvent("done", {});

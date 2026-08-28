@@ -106,6 +106,35 @@ interface ToolPair {
  */
 export async function buildChatTools(userPermissions?: string[]): Promise<ToolPair[]> {
   const perms = userPermissions ?? ["*"];
+  const allTools = await buildAllToolPairs();
+
+  // THE ENGINE DECIDES WHO GETS WHAT — not this file. `toolsFor()` returns the
+  // tools this caller may use; a denied tool is ABSENT, never flagged, so there
+  // is nothing downstream that could un-deny it. The old line lived here:
+  //
+  //     allTools.filter((t) => !!t.permission && hasPermission(perms, t.permission))
+  //
+  // correct as written, and one character from the version that handed a
+  // read-only user 30 mutating tools. `defineTool()` now throws on a tool with
+  // no permission, so tool number 66 cannot repeat it in any repo.
+  const granted = await createCmsChat({ tools: toChatTools(allTools) }).toolsFor(perms);
+
+  // Back to our own shape for callers that still want pairs (the tool matrix).
+  // The ORDER of `allTools` is preserved rather than the engine's, so nothing
+  // downstream can depend on a listing order that just changed underneath it.
+  const allow = new Set(granted.map((t) => t.name));
+  return allTools.filter((t) => allow.has(t.definition.name));
+}
+
+/**
+ * EVERY tool, unfiltered — the registry before anyone is asked who they are.
+ *
+ * The route hands these to `createCmsChat()` and lets `run()` do the filtering
+ * per caller, so the permission decision happens in exactly one place instead
+ * of once here and once there. Nothing outside the engine should ever consume
+ * this list directly.
+ */
+export async function buildAllToolPairs(): Promise<ToolPair[]> {
   // Capture active org/site from cookies ONCE at build time. All tool handlers
   // need to forward this to internal HTTP calls so site context is preserved.
   const { cookies } = await import("next/headers");
@@ -181,22 +210,7 @@ export async function buildChatTools(userPermissions?: string[]): Promise<ToolPa
   // Forgetting to declare a permission must close the door, not open it. A new
   // tool with no `permission` now reaches nobody, which is a bug someone
   // notices — the old default was a bug nobody could see.
-  // THE ENGINE DECIDES WHO GETS WHAT — not this file. `toolsFor()` returns the
-  // tools this caller may use; a denied tool is ABSENT, never flagged, so there
-  // is nothing downstream that could un-deny it. The old line lived here:
-  //
-  //     allTools.filter((t) => !!t.permission && hasPermission(perms, t.permission))
-  //
-  // correct as written, and one character from the version that handed a
-  // read-only user 30 mutating tools. `defineTool()` now throws on a tool with
-  // no permission, so tool number 66 cannot repeat it in any repo.
-  const granted = await createCmsChat({ tools: toChatTools(allTools) }).toolsFor(perms);
-
-  // Back to our own shape so the route is untouched by this round. The ORDER of
-  // `allTools` is preserved rather than the engine's, so nothing downstream can
-  // depend on a listing order that just changed underneath it.
-  const allow = new Set(granted.map((t) => t.name));
-  return allTools.filter((t) => allow.has(t.definition.name));
+  return allTools;
 }
 
 /** Build headers for internal API calls — service token + site context */
