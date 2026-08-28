@@ -51,14 +51,21 @@ export function frameToEvents(frame: ChatFrame): SseEvent[] {
       // "warned" is for our logs — there is still room, and telling the user
       // their conversation is 80% full mid-answer is noise. "reduced" and
       // "failed" changed what the model saw, so the user is told.
-      return frame.action === "warned"
-        ? []
-        : [{ event: "text", data: { text: `\n\n_${frame.note}_\n\n` } }];
+      //
+      // IN DANISH, AND NOT THE PACKAGE'S NOTE. `frame.note` is English —
+      // measured live in the production container, the user would have been
+      // shown "This turn is too large on its own and cannot be shortened by
+      // removing older ones." in the middle of a Danish conversation. The note
+      // is written for a developer reading a log, not for the person whose
+      // conversation just got shorter. It still goes to the log; the sentence
+      // the user reads is ours.
+      return frame.action === "warned" ? [] : [{ event: "text", data: { text: historyNote(frame) } }];
 
     case "limit":
       // Reaching a ceiling is an ANSWER. Sent as text so the user reads a
       // sentence rather than watching the stream stop for no stated reason.
-      return [{ event: "text", data: { text: `\n\n${frame.note}` } }];
+      // Danish for the same reason as above.
+      return [{ event: "text", data: { text: "\n\nJeg måtte stoppe her: samtalen har nået sin grænse for denne omgang. Start en ny samtale, så kan vi fortsætte." } }];
 
     case "error":
       return [{ event: "error", data: { message: frame.message, scope: frame.scope } }];
@@ -81,4 +88,19 @@ function safeJson(raw: string): unknown {
   } catch {
     return { error: "malformed payload" };
   }
+}
+
+
+/** What the USER reads when their conversation was shortened. Danish, short,
+ *  and it says what it means for them — not what the mechanism did. */
+function historyNote(frame: { action: string; dropped?: number }): string {
+  if (frame.action === "reduced") {
+    const n = frame.dropped;
+    return `\n\n_Samtalen er blevet lang, så jeg har sammenfattet det ældste${n ? ` (${n} beskeder)` : ""}. Det nyeste er uændret._\n\n`;
+  }
+  // "failed" — the transcript could NOT be shortened. Measured cause in
+  // practice: one single turn is larger than the whole ceiling, so removing
+  // older ones cannot help. Telling the user to shorten THIS message is the
+  // only advice that works, and it is advice they can act on.
+  return `\n\n_Din seneste besked er for lang til at jeg kan behandle den. Prøv at dele den op i mindre dele._\n\n`;
 }

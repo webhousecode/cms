@@ -47,15 +47,37 @@ describe("every frame the engine can emit reaches the user as something", () => 
     expect(JSON.stringify(ev[0].data)).toContain("sammenfattet");
   });
 
+  it("and it tells them in DANISH, not the package's English note", () => {
+    // Measured live in the production container: `frame.note` reads "This turn
+    // is too large on its own and cannot be shortened by removing older ones."
+    // — an English developer sentence, dropped into the middle of a Danish
+    // conversation. The note is for the log; the user gets our words.
+    const failed = frameToEvents({
+      type: "history", action: "failed",
+      note: "This turn is too large on its own and cannot be shortened by removing older ones.",
+    } as never);
+    const text = JSON.stringify(failed[0].data);
+    expect(text, "the package's English note reached the user").not.toContain("This turn is too large");
+    expect(text, "the user is not told what to do about it").toContain("dele den op");
+
+    const limit = frameToEvents({ type: "limit", reason: "cap-reached" as never, note: "Spend cap reached." });
+    expect(JSON.stringify(limit[0].data)).not.toContain("Spend cap");
+  });
+
   it("but a mere warning is not shown mid-answer", () => {
     // There is still room; interrupting an answer to say "80% full" is noise.
     expect(frameToEvents({ type: "history", action: "warned", note: "80%" })).toEqual([]);
   });
 
   it("reaching the ceiling is an ANSWER, not a dead stream", () => {
+    // The sentence is OURS and in Danish — the package's `note` is an English
+    // developer line, and this used to pass it straight through to the user.
     const ev = frameToEvents(sample("limit"));
     expect(ev[0].event).toBe("text");
-    expect(JSON.stringify(ev[0].data)).toContain("Grænsen er nået");
+    expect(JSON.stringify(ev[0].data), "the user is not told the conversation stopped")
+      .toContain("nået sin grænse");
+    expect(JSON.stringify(ev[0].data), "and not told what to do next")
+      .toContain("ny samtale");
   });
 
   it("an empty text delta produces nothing — a blank turn reads as no answer", () => {
