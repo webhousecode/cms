@@ -122,6 +122,13 @@ describe("the chat tool matrix — the baseline the engine swap must not move", 
   });
 });
 
+describe("the swap itself — what this file cannot yet prove", () => {
+  // The baseline records engine="legacy-inline" because that is what answered.
+  // Nothing here has ever measured the matrix THROUGH @broberg/chat, and no
+  // green run should be read as if it had.
+  it.todo("the 195 decisions are measured through @broberg/chat — deferred until the swap is wired");
+});
+
 describe("the engine marker cannot drift from the engine", () => {
   // The marker alone is a label someone types. The source check alone cannot
   // see a runtime flag. Neither is worth much; together they cannot both be
@@ -143,17 +150,46 @@ describe("the engine marker cannot drift from the engine", () => {
   // assertion nobody has read. The predicate is pure, so both halves are
   // proven below on synthetic input, and the real file then only has to pick
   // a branch that is known to work.
+  // Judged on the JOINED source, not line by line. The first version tested
+  // each line for /^import .*"@broberg\/chat"/ and could not see a multi-line
+  // import — which is how a real one is usually written once it pulls in more
+  // than one name:
+  //
+  //     import {
+  //       defineTool,
+  //     } from "@broberg/chat";
+  //
+  // No single line both starts with `import` AND names the package, so the
+  // predicate answered "not imported" on a file that imports it. It fails
+  // LOUD rather than silent (the marker check goes red), but red for the
+  // wrong reason is still a wrong answer, and it would have arrived on the
+  // day of the swap. [^;] keeps the match inside one statement so an earlier
+  // unrelated `import` cannot reach across into this one.
   const importsEngine = (lines: string[]) =>
-    lines.some((l) => /^import .*"@broberg\/chat"/.test(l));
+    /^import(?:[^;]*?)from\s*["']@broberg\/chat["']/m.test(lines.join("\n"));
 
   it("the import predicate answers both ways", () => {
     expect(importsEngine(['import { defineTool } from "@broberg/chat";'])).toBe(true);
+    expect(importsEngine(["import {", "  defineTool,", '} from "@broberg/chat";']),
+      "multi-line import not recognised").toBe(true);
+    expect(importsEngine(['import type { T } from "@broberg/chat";'])).toBe(true);
     expect(importsEngine(['import { x } from "@/lib/cms";'])).toBe(false);
-    // Not fooled by the word appearing in prose or in a re-export of something
-    // else — the earlier version of this file mentions @broberg/chat in a
-    // comment, and a substring match would have called that an import.
+    // Not fooled by the package name in prose or in a string — this very file
+    // names @broberg/chat in a comment, so a substring match would have called
+    // that an import and been green and wrong on its own source.
     expect(importsEngine(['const s = "@broberg/chat";'])).toBe(false);
+    // And an earlier unrelated import must not reach across a statement break.
+    expect(importsEngine(['import { a } from "x";', 'const s = "@broberg/chat";'])).toBe(false);
   });
+
+  // DEFERRED, AND SAID OUT LOUD. components, 28 Aug 2026: an unreachable
+  // branch is not covered, it is deferred — and the deferral has to be visible
+  // rather than swallowed by a green suite. @broberg/chat is not a dependency
+  // here, so against the REAL file only the legacy branch can ever run. The
+  // predicate is proven both ways above; what is unproven is the wiring — that
+  // the real file's imports drive the non-legacy branch. This line is what
+  // stops "no reds" from reading as "all covered".
+  it.todo("the non-legacy branch runs against the real file — deferred until @broberg/chat is a dependency");
 
   it("says 'legacy-inline' only while the file really is the hand-rolled registry", () => {
     const importsBroberg = importsEngine(codeLines);
