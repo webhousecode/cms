@@ -6,3 +6,4 @@ node_modules/
 
 # Playwright E2E fixture state (registry/users for the examples/blog run)
 .e2e-data/
+.next-e2e

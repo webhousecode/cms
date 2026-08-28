@@ -88,22 +88,32 @@ test.describe("Site Settings", () => {
 });
 
 // ── Org & Site Switching ─────────────────────────────────────────
-// NOTE: These tests require a multi-org/multi-site setup with real login.
-// They use credential-based login because org/site switching does full page reloads.
-// Skipped by default in CI — run locally with: npx playwright test --grep "Org"
+// These tests require a multi-org/multi-site setup and a REAL password login —
+// org/site switching does full page reloads, so the cookie fixture is not
+// enough. The fixture site in this repo has one org, and CI has no password.
+//
+// The comment here used to say "Skipped by default in CI". They were not.
+// Nothing skipped them: they ran, failed on an empty password, and were two of
+// the thirty-four failures that kept the E2E job red on 100 consecutive runs —
+// while the line above told every reader they were already handled. A note
+// claiming a guard exists is worse than no note; it stops people looking.
+//
+// Now the skip is real and carries its reason into the report. Run them with:
+//   CMS_DEV_PASSWORD=… npx playwright test --grep "Org"
 
 import { test as base } from "@playwright/test";
 
-const BASE_URL = "http://localhost:3010";
+import { BASE_URL } from "../fixtures/base-url";
+
 const EMAIL = "cb@webhouse.dk";
-const PASSWORD = (process.env.CMS_DEV_PASSWORD ?? "");
+const PASSWORD = process.env.CMS_DEV_PASSWORD;
 
 async function loginWithCredentials(page: import("@playwright/test").Page) {
   await page.goto(`${BASE_URL}/admin/login`, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(3000);
   if (!page.url().includes("/admin/login")) return;
   await page.fill('input[type="email"]', EMAIL);
-  await page.fill('input[type="password"]', PASSWORD);
+  await page.fill('input[type="password"]', PASSWORD!);
   await page.click('button[type="submit"]');
   await page.waitForURL("**/admin**", { timeout: 15000 });
   await page.waitForTimeout(3000);
@@ -140,6 +150,13 @@ async function switchOrg(page: import("@playwright/test").Page, orgName: string)
 
 base.describe("Org & Site Switching", () => {
   base.setTimeout(90000);
+
+  // Not `describe.skip` — that hides them unconditionally, including from the
+  // machine that CAN run them. The condition is the missing credential itself.
+  base.skip(
+    !PASSWORD,
+    "CMS_DEV_PASSWORD not set — org switching needs a real password login",
+  );
 
   base.beforeEach(async ({ page }) => {
     await loginWithCredentials(page);

@@ -3,6 +3,19 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Standalone output for Docker — self-contained server without node_modules
   output: "standalone",
+
+  // F178.4 — the E2E suite needs its own build directory, not a preference.
+  //
+  // `next dev` takes an exclusive lock on `.next/dev/lock`. The suite boots a
+  // SECOND dev server (port 3011, see e2e/fixtures/base-url.ts) from this same
+  // directory, so while Christian's cms-admin is running on 3010 the suite's
+  // server cannot start at all: every test dies on ERR_CONNECTION_REFUSED.
+  //
+  // That is why nobody caught that the E2E job had never once been green —
+  // running it locally to check was impossible, and killing the server on 3010
+  // to make room is forbidden by a repo hard rule. Set NEXT_DIST_DIR and the
+  // two instances stop contending. Unset, this is exactly the old behaviour.
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   serverExternalPackages: ["better-sqlite3", "@webhouse/cms", "jiti"],
 
   // F143: tsx + provided build deps are spawned at runtime via execFileSync /

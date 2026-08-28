@@ -1,5 +1,6 @@
 import { defineConfig } from "@playwright/test";
 import path from "node:path";
+import { BASE_URL, E2E_PORT as PORT } from "./e2e/fixtures/base-url";
 
 // Playwright loads this config as CommonJS, so __dirname is the right handle
 // here — `import.meta.url` throws "exports is not defined in ES module scope".
@@ -11,9 +12,13 @@ const here = __dirname;
  * config used to point here with reuseExistingServer:true, so running the suite
  * locally aimed tests that seed and DELETE documents at whatever site he had
  * open. Override with E2E_PORT when you need a different one.
+ *
+ * F178.4: the value moved to e2e/fixtures/base-url.ts and is imported here, so
+ * the config and the spec files cannot disagree about it. They did for months —
+ * this file was corrected and three specs kept their own hardcoded 3010, which
+ * is why the E2E job had never once been green.
  */
-const PORT = Number(process.env.E2E_PORT ?? 3011);
-const BASE_URL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
+// (imported at the top of this file)
 
 /**
  * The suite runs against a site that lives IN THE REPO, so a fresh clone
@@ -49,6 +54,9 @@ export default defineConfig({
     env: {
       CMS_CONFIG_PATH: FIXTURE_CONFIG,
       WEBHOUSE_DATA_DIR: FIXTURE_DATA_DIR,
+      // Its own build dir, or it cannot boot beside a running dev server —
+      // `next dev` holds an exclusive lock on .next/dev/lock. See next.config.ts.
+      NEXT_DIST_DIR: process.env.NEXT_DIST_DIR ?? ".next-e2e",
     },
   },
 });

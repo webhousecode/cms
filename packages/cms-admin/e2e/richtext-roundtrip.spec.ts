@@ -5,9 +5,17 @@
  * 1. Save (Cmd+S)
  * 2. Tab navigation (switch to another page and back)
  * 3. Page reload
+ *
+ * NOT RUN BY THE SUITE. playwright.config.ts matches "suites/**\/*.spec.ts",
+ * and this file sits a directory above — `--list` reports zero tests from it.
+ * suites/03-richtext.spec.ts is its live successor. Left in place rather than
+ * deleted (that is not this card's call), but its host was hardcoded to
+ * localhost:3010 and its cleanup step is a PATCH, so running it by explicit
+ * path wrote into Christian's live dev server. Pointed at the shared BASE_URL.
  */
 import { test, expect, type Page, type BrowserContext } from "@playwright/test";
 import { SignJWT } from "jose";
+import { BASE_URL } from "./fixtures/base-url";
 import { resolveJwtSecret } from "../src/lib/dev-jwt-secret";
 
 const JWT_SECRET = resolveJwtSecret();
@@ -148,13 +156,13 @@ test.describe("Richtext editor content roundtrip", () => {
     await login(context);
     const page = await context.newPage();
     try {
-      const res = await page.request.get(`http://localhost:3010/api/cms/${COLLECTION}/${TEST_SLUG}`);
+      const res = await page.request.get(`${BASE_URL}/api/cms/${COLLECTION}/${TEST_SLUG}`);
       if (res.ok()) {
         const doc = await res.json();
         const body = String(doc.data?.body ?? "");
         const cleaned = body.split("\n").filter((line: string) => !line.includes("E2E-ROUNDTRIP-")).join("\n");
         if (cleaned !== body) {
-          await page.request.patch(`http://localhost:3010/api/cms/${COLLECTION}/${TEST_SLUG}`, {
+          await page.request.patch(`${BASE_URL}/api/cms/${COLLECTION}/${TEST_SLUG}`, {
             data: { data: { ...doc.data, body: cleaned } },
           });
         }

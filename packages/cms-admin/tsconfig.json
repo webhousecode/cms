@@ -33,10 +33,16 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next-e2e/types/**/*.ts",
+    ".next-e2e/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "src/lib/deploy/fly-live-assets/server.ts"
+    "src/lib/deploy/fly-live-assets/server.ts",
+    // F178.4 — the E2E dev server's own build dir (NEXT_DIST_DIR). Next writes
+    // generated route types in there; tsc reads them as project sources and the
+    // typecheck job fails on machine-generated code nobody wrote.
+    ".next-e2e"
   ]
 }

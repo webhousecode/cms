@@ -4,21 +4,43 @@
  * Verifies that ALL preview entry points construct correct URLs
  * and that the preview target responds 200 (not 404).
  *
- * Tests against CMS Docs site (localhost:3036) which uses:
+ * Tests against the CMS Docs site, which uses:
  * - Flat routing: /docs/{slug} (no category in URL)
  * - Locale in slug: introduction-da (not /da/introduction)
  * - localeStrategy: "none"
  *
- * Prerequisites:
- * - CMS admin running on localhost:3010
- * - CMS Docs dev server on localhost:3036
- * - CMS Docs site registered in CMS admin with previewSiteUrl=http://localhost:3036
+ * REQUIRES A SECOND SERVER THAT NOTHING BOOTS. The docs site has to be running
+ * and registered in cms-admin as `cms-docs` with previewSiteUrl pointing at it.
+ * CI has never started one, so every test in this file failed there — eleven of
+ * the thirty-four failures that kept the E2E job red on 100 consecutive runs.
+ *
+ * F178.4: it now SKIPS, with the reason in the report. A test that cannot pass
+ * in the environment it runs in must say so out loud; failing quietly in the
+ * crowd makes "we are missing a prerequisite" and "the product is broken" look
+ * identical, and then nobody reads either. Point E2E_DOCS_URL at a running docs
+ * site to run them.
  */
 import { test, expect } from "../fixtures/auth";
 import { gotoAdmin } from "../fixtures/helpers";
 
-const BASE = "http://localhost:3010";
-const DOCS_PREVIEW = "http://localhost:3036";
+import { BASE_URL as BASE } from "../fixtures/base-url";
+
+const DOCS_PREVIEW = process.env.E2E_DOCS_URL;
+
+/** Reachability is checked ONCE, not assumed from the variable being set — a
+ *  stale E2E_DOCS_URL would otherwise turn "no docs site" back into a wall of
+ *  connection errors, which is the state this replaced. */
+let docsReachable: boolean | null = null;
+async function requireDocsSite(page: import("@playwright/test").Page) {
+  test.skip(!DOCS_PREVIEW, "E2E_DOCS_URL not set — no CMS Docs site to preview against");
+  if (docsReachable === null) {
+    docsReachable = await page.request
+      .get(DOCS_PREVIEW!, { timeout: 5_000 })
+      .then((r) => r.status() < 500)
+      .catch(() => false);
+  }
+  test.skip(!docsReachable, `CMS Docs site at ${DOCS_PREVIEW} is not answering`);
+}
 
 // Helper: switch to CMS Docs site
 async function switchToCmsDocs(page: import("@playwright/test").Page) {
@@ -39,6 +61,7 @@ async function assertUrl200(page: import("@playwright/test").Page, url: string) 
 test.describe("Preview URL construction", () => {
 
   test.beforeEach(async ({ authedPage: page }) => {
+    await requireDocsSite(page);
     await switchToCmsDocs(page);
   });
 
@@ -89,6 +112,7 @@ test.describe("Preview URL construction", () => {
 test.describe("Editor preview button", () => {
 
   test.beforeEach(async ({ authedPage: page }) => {
+    await requireDocsSite(page);
     await switchToCmsDocs(page);
   });
 
@@ -141,6 +165,7 @@ test.describe("Editor preview button", () => {
 test.describe("Collection list preview", () => {
 
   test.beforeEach(async ({ authedPage: page }) => {
+    await requireDocsSite(page);
     await switchToCmsDocs(page);
   });
 
@@ -166,6 +191,7 @@ test.describe("Collection list preview", () => {
 test.describe("Dashboard preview", () => {
 
   test.beforeEach(async ({ authedPage: page }) => {
+    await requireDocsSite(page);
     await switchToCmsDocs(page);
   });
 
@@ -189,6 +215,7 @@ test.describe("Dashboard preview", () => {
 test.describe("Top bar preview", () => {
 
   test.beforeEach(async ({ authedPage: page }) => {
+    await requireDocsSite(page);
     await switchToCmsDocs(page);
   });
 

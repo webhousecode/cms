@@ -10,6 +10,7 @@
  * @see docs/features/F99-e2e-testing-suite.md
  */
 import { test, expect } from "../fixtures/auth";
+import { BASE_URL } from "../fixtures/base-url";
 import {
   waitForEditor,
   getEditorText,
@@ -101,7 +102,7 @@ test.describe("Richtext editor content roundtrip", () => {
 
     try {
       const res = await page.request.get(
-        `http://localhost:3010/api/cms/${COLLECTION}/${TEST_SLUG}`,
+        `${BASE_URL}/api/cms/${COLLECTION}/${TEST_SLUG}`,
       );
       if (res.ok()) {
         const doc = await res.json();
@@ -112,7 +113,7 @@ test.describe("Richtext editor content roundtrip", () => {
           .join("\n");
         if (cleaned !== body) {
           await page.request.patch(
-            `http://localhost:3010/api/cms/${COLLECTION}/${TEST_SLUG}`,
+            `${BASE_URL}/api/cms/${COLLECTION}/${TEST_SLUG}`,
             { data: { data: { ...doc.data, body: cleaned } } },
           );
         }
