@@ -50,8 +50,35 @@ export function frameToEvents(frame: ChatFrame): SseEvent[] {
       // theirs: their try-block contains only the call to OUR summarise. That
       // one turned out to be inside @broberg/ai-sdk, but looking for it found
       // this — a real crash of the same family, in our code, one frame over.
-      const raw = typeof frame.result === "string" ? frame.result : JSON.stringify(frame.result);
-      let result = raw ?? "";
+      // The THREE ways a handler says nothing — undefined, null, and an empty
+      // string — are one thing to the model, so they are one thing here.
+      // Relying on the stringified form's truthiness is not enough: JSON turns
+      // null into the STRING "null", which is truthy and is a JavaScript
+      // artefact leaking into a prompt.
+      const saidNothing =
+        frame.result === undefined || frame.result === null || frame.result === "";
+      const raw = saidNothing
+        ? null
+        : typeof frame.result === "string"
+          ? frame.result
+          : JSON.stringify(frame.result);
+      // AN EMPTY ANSWER MUST SAY SO. Measured against mistral-small in the
+      // production container, 5 runs per candidate, asking "how many documents
+      // are on the site?" with the tool answering:
+      //
+      //   ""              → INVENTED A NUMBER in 3 of 5 ("Der er pt. 12
+      //                     dokumenter på sitet.") — stated as fact
+      //   "(intet svar)"  → 0 of 5. "Jeg kan desværre ikke se antallet."
+      //   "undefined"     → 0 of 5. Same honest answer.
+      //
+      // The empty string is the dangerous one, and it is the one that looks
+      // safest. It gives the model nothing to contradict, so it fills the gap.
+      // My own first fix chose `?? ""` and would have turned a visible crash
+      // into an invisible fabrication — which is the worse trade.
+      //
+      // Covers BOTH a handler returning nothing AND one genuinely returning an
+      // empty string: to the model those are the same, and both invite this.
+      let result = raw ? raw : "(intet svar)";
       if (result.startsWith(INLINE_FORM)) {
         out.push({ event: "form", data: safeJson(result.slice(INLINE_FORM.length)) });
         result = "Showing edit form for the user.";

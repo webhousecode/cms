@@ -214,10 +214,27 @@ describe("a tool that returns nothing must not take the turn down", () => {
     });
   }
 
+  it("an empty answer SAYS so — an empty string invites the model to invent one", () => {
+    // MEASURED, mistral-small, production container, 5 runs each, asking how
+    // many documents are on the site with the tool answering:
+    //   ""             → invented a number in 3 of 5 ("Der er pt. 12 …")
+    //   "(intet svar)" → 0 of 5, answered honestly
+    // The empty string is the dangerous one and the one that looks safest.
+    // Covers undefined AND a genuine "" — to the model they are the same.
+    for (const empty of [undefined, null, ""]) {
+      const ev = frameToEvents({ type: "tool-result", id: "1", name: "t", result: empty } as never);
+      expect(JSON.stringify(ev[0].data), `a tool answering ${JSON.stringify(empty)} sent the model nothing`)
+        .toContain("intet svar");
+    }
+  });
+
   it("and 0 / false are not silently turned into nothing", () => {
     // A falsy-but-real answer is a different thing from no answer, and a
     // `|| ""` here would merge them. Measured: `0` is a legitimate count.
     const zero = JSON.stringify(frameToEvents({ type: "tool-result", id: "1", name: "t", result: 0 } as never));
     expect(zero, "a tool answering 0 lost its answer").toContain('"0"');
+    expect(zero, "0 was mistaken for no answer at all").not.toContain("intet svar");
+    const f = JSON.stringify(frameToEvents({ type: "tool-result", id: "1", name: "t", result: false } as never));
+    expect(f).toContain("false");
   });
 });
