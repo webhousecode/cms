@@ -74,27 +74,6 @@ export function cmsModel(opts: {
   maxTokens: number;
   purpose?: string;
 }): ModelFn {
-  // WHAT THE PACKAGE'S MESSAGE TYPE CANNOT CARRY, and why this map exists.
-  //
-  // `ChatMessage` is `{ role, content, toolCallId? }`. An ASSISTANT message has
-  // nowhere to say WHICH tool calls it made — only the following `tool` message
-  // knows its own id, and nothing knows the name or the arguments. Every major
-  // provider requires the pairing: a tool result must answer an assistant turn
-  // that requested it.
-  //
-  // Measured in production, 28 Aug 2026, by actually running a turn:
-  //
-  //   Unexpected role 'tool' after role 'user'   (mistral 400, code 3230)
-  //
-  // The tool ran, its answer came back, and the next round was refused. 1,283
-  // green tests did not see it, because a stub model accepts any message shape.
-  //
-  // We are the only layer that knows the pairing — we yielded the tool calls —
-  // so the adapter remembers them and rebuilds it. Reported to components: the
-  // real fix is a message type that can represent a tool call, and this comes
-  // out when it lands.
-  const calls = new Map<string, { name: string; args: Record<string, unknown> }>();
-
   return async function* (req) {
     const { getAI, mistralModel } = await import("@/lib/ai/client");
     const ai = await getAI();
@@ -102,7 +81,7 @@ export function cmsModel(opts: {
       ...mistralModel(opts.resolvedModel),
       maxTokens: opts.maxTokens,
       system: req.system,
-      messages: repairToolPairing(req.messages, calls) as never,
+      messages: toProviderMessages(req.messages) as never,
       tools: req.tools.map((t) => ({
         name: t.name,
         description: t.description,
@@ -114,8 +93,6 @@ export function cmsModel(opts: {
       if (ev.type === "text") {
         if (ev.delta) yield { type: "text", text: ev.delta };
       } else if (ev.type === "tool_call") {
-        // Remembered so the NEXT round can pair the tool result with this call.
-        calls.set(ev.id, { name: ev.name, args: (ev.args ?? {}) as Record<string, unknown> });
         yield { type: "tool-call", id: ev.id, name: ev.name, args: ev.args as Record<string, unknown> };
       } else if (ev.type === "error") {
         // The core has no error frame from the model side other than throwing;
@@ -165,41 +142,24 @@ export function createCmsChat(opts: {
 
 
 /**
- * Put the assistant's tool calls back on the assistant turn.
+ * The messages we hand the provider — a NAMED seam, so it can be asserted.
  *
- * Walks the transcript; every `tool` message must be preceded by an assistant
- * message declaring the call it answers. If that assistant turn is missing (the
- * model streamed no text before calling, so its content was empty and nothing
- * carried it), one is inserted. If it is there, the call is attached to it.
+ * Until 0.5.0 this had to rebuild the assistant/tool pairing by hand, because
+ * `ChatMessage` had nowhere to record which calls an assistant turn made. That
+ * cost us ~40 minutes of production: the tool ran, and the round that would
+ * have turned its answer into a sentence was refused with
+ * `Unexpected role 'tool' after role 'user'`. 0.5.0 carries `toolCalls`, so the
+ * repair is gone and this is a pass-through.
  *
- * A tool message whose id we never saw is left exactly as it is rather than
- * guessed at — a fabricated pairing would be a different wrong answer, and the
- * provider's own error is more useful than our invention.
+ * It stays a FUNCTION rather than an inline expression for one reason: my first
+ * strict test passed the package's own model straight into `createCmsChat`, so
+ * `cmsModel` never ran and stripping the pairing out of it turned nothing red.
+ * The test proved the ENGINE emits a valid transcript and proved nothing about
+ * OUR handoff — which is precisely where the outage lived. A named seam is
+ * something `assertProviderTranscript` can be pointed at.
  */
-export function repairToolPairing(
-  messages: { role: string; content: string; toolCallId?: string }[],
-  calls: Map<string, { name: string; args: Record<string, unknown> }>,
+export function toProviderMessages(
+  messages: readonly { role: string; content: string; toolCallId?: string; toolCalls?: unknown }[],
 ): unknown[] {
-  const out: Record<string, unknown>[] = [];
-  for (const m of messages) {
-    if (m.role !== "tool" || !m.toolCallId) {
-      out.push({ ...m });
-      continue;
-    }
-    const call = calls.get(m.toolCallId);
-    if (!call) {
-      out.push({ ...m });
-      continue;
-    }
-    const entry = { id: m.toolCallId, name: call.name, arguments: call.args };
-    const prev = out[out.length - 1];
-    if (prev && prev.role === "assistant") {
-      const existing = (prev.toolCalls as typeof entry[] | undefined) ?? [];
-      if (!existing.some((c) => c.id === entry.id)) prev.toolCalls = [...existing, entry];
-    } else {
-      out.push({ role: "assistant", content: "", toolCalls: [entry] });
-    }
-    out.push({ ...m });
-  }
-  return out;
+  return messages.map((m) => ({ ...m }));
 }
