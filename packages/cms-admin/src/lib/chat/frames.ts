@@ -91,16 +91,46 @@ function safeJson(raw: string): unknown {
 }
 
 
-/** What the USER reads when their conversation was shortened. Danish, short,
- *  and it says what it means for them — not what the mechanism did. */
-function historyNote(frame: { action: string; dropped?: number }): string {
+/**
+ * What the USER reads when their conversation was shortened.
+ *
+ * FOUR SENTENCES FROM THE CODES, NEVER FROM `note`. 0.6.0 forwards `reason` and
+ * `strategy` on these frames precisely so a consumer can say the right thing —
+ * before that, all three failure states arrived as one `action` and the note was
+ * the only distinguishing text, in English. We reported it; they shipped the
+ * codes and deliberately shipped NO user text, because they do not know our
+ * language, tone or audience. The codes are theirs; the words are ours.
+ *
+ * Each sentence says what it means for HER and what she can do — never what the
+ * mechanism did. "cannot_reduce" and "compaction_failed" are different advice:
+ * shorten THIS message vs. try again. Merging them would send her to fix the
+ * wrong thing.
+ */
+function historyNote(frame: {
+  action: string;
+  dropped?: number;
+  reason?: string;
+  strategy?: string;
+}): string {
   if (frame.action === "reduced") {
     const n = frame.dropped;
-    return `\n\n_Samtalen er blevet lang, så jeg har sammenfattet det ældste${n ? ` (${n} beskeder)` : ""}. Det nyeste er uændret._\n\n`;
+    // `strategy` distinguishes "I summarised it" from "I dropped it" — and they
+    // are not the same promise to make. Measured live: with `window` the model
+    // forgot the whole conversation and said so politely, with zero errors.
+    return frame.strategy === "window"
+      ? `\n\n_Samtalen er blevet lang, så de ældste beskeder${n ? ` (${n})` : ""} er ikke længere med. Det nyeste er uændret._\n\n`
+      : `\n\n_Samtalen er blevet lang, så jeg har sammenfattet det ældste${n ? ` (${n} beskeder)` : ""}. Det nyeste er uændret._\n\n`;
   }
-  // "failed" — the transcript could NOT be shortened. Measured cause in
-  // practice: one single turn is larger than the whole ceiling, so removing
-  // older ones cannot help. Telling the user to shorten THIS message is the
-  // only advice that works, and it is advice they can act on.
-  return `\n\n_Din seneste besked er for lang til at jeg kan behandle den. Prøv at dele den op i mindre dele._\n\n`;
+  switch (frame.reason) {
+    case "cannot_reduce":
+      return `\n\n_Din seneste besked er for lang til at jeg kan behandle den. Prøv at dele den op i mindre dele._\n\n`;
+    case "compaction_failed":
+      return `\n\n_Jeg kunne ikke sammenfatte den tidligere del af samtalen. Prøv igen, eller start en ny samtale hvis det bliver ved._\n\n`;
+    case "overhead_exceeds_limit":
+      // Not the user's doing at all — nothing she writes can fix it, so she is
+      // not asked to try. This is ours to notice in the log.
+      return `\n\n_Der er ikke plads til denne samtale i den nuværende opsætning. Det er ikke noget du kan gøre ved — vi kigger på det._\n\n`;
+    default:
+      return `\n\n_Samtalen kunne ikke forkortes. Prøv at starte en ny samtale._\n\n`;
+  }
 }

@@ -52,8 +52,10 @@ describe("every frame the engine can emit reaches the user as something", () => 
     // is too large on its own and cannot be shortened by removing older ones."
     // — an English developer sentence, dropped into the middle of a Danish
     // conversation. The note is for the log; the user gets our words.
+    // `reason` is required to reach the right sentence as of 0.6.0 — without it
+    // this measured the fallback branch, not the case it names.
     const failed = frameToEvents({
-      type: "history", action: "failed",
+      type: "history", action: "failed", reason: "cannot_reduce",
       note: "This turn is too large on its own and cannot be shortened by removing older ones.",
     } as never);
     const text = JSON.stringify(failed[0].data);
@@ -149,5 +151,44 @@ describe("how long a conversation may get", () => {
     expect(cfg.strategy, "Christian chose summarise over forget, 28 Aug 2026").toBe("compact");
     expect(cfg.keepRecent, "the turn the user just wrote could be paraphrased away").toBeGreaterThan(0);
     expect(cfg.estimate, "the package's English estimator is back").toBe(estimateDanish);
+  });
+});
+
+
+describe("the four states get four different sentences, from the CODES", () => {
+  // THE TEST WE COULD NOT HAVE WRITTEN AGAINST 0.5.2. Until 0.6.0 all three
+  // failure states arrived as one `action`, and the only text that told them
+  // apart was the package's English `note` — which we were passing straight to
+  // the user. components shipped the codes and, deliberately, no user text.
+  const say = (reason: string) =>
+    JSON.stringify(frameToEvents({ type: "history", action: "failed", note: "x", reason } as never));
+
+  it("names all four, and they are DIFFERENT sentences", () => {
+    const sentences = ["cannot_reduce", "compaction_failed", "overhead_exceeds_limit", "something_new"].map(say);
+    expect(new Set(sentences).size, `a mapping that answers the same thing to everything: ${sentences.join(" | ")}`)
+      .toBe(4);
+  });
+
+  it("sends the user to fix the right thing", () => {
+    // These two are opposite advice. Merging them is the failure this replaces:
+    // "shorten THIS message" vs "try again" — one of them is always wrong.
+    expect(say("cannot_reduce")).toContain("dele den op");
+    expect(say("compaction_failed")).toContain("Prøv igen");
+    // And the one she cannot do anything about does not ask her to try.
+    expect(say("overhead_exceeds_limit")).not.toContain("Prøv");
+  });
+
+  it("distinguishes summarised from dropped — they are different promises", () => {
+    const dropped = JSON.stringify(frameToEvents({ type: "history", action: "reduced", note: "x", dropped: 4, strategy: "window" } as never));
+    const kept = JSON.stringify(frameToEvents({ type: "history", action: "reduced", note: "x", dropped: 4, strategy: "compact" } as never));
+    expect(dropped).toContain("ikke længere med");
+    expect(kept).toContain("sammenfattet");
+    expect(dropped).not.toEqual(kept);
+  });
+
+  it("never leaks the package's English note", () => {
+    for (const r of ["cannot_reduce", "compaction_failed", "overhead_exceeds_limit"]) {
+      expect(say(r), "the developer note reached the user").not.toContain('"x"');
+    }
   });
 });
