@@ -6,6 +6,11 @@ import { requirePermission } from "@/lib/permissions";
 const RETENTION_DAYS = parseInt(process.env.TRASH_RETENTION_DAYS ?? "30");
 
 export async function GET() {
+  // Had NO check at all — not even "is anyone logged in". It leaned on proxy.ts
+  // protecting /api/*, which answers a different question: authenticated, not
+  // permitted. Deleted content is a decision about the site, not something
+  // published for a reader.
+  const denied = await requirePermission("content.history"); if (denied) return denied;
   try {
     const [cms, config, media] = await Promise.all([getAdminCms(), getAdminConfig(), getMediaAdapter()]);
     const cutoff = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000);

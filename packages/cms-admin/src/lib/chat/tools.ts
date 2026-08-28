@@ -1757,7 +1757,9 @@ DESIGN GUIDELINES:
           required: ["collection", "slug"],
         },
       },
-      permission: "content.read",
+      // Old versions are the trace of how the published text came to be —
+      // including what was written and taken back. Not for a reader.
+      permission: "content.history",
       handler: async (input) => {
         const { listRevisions } = await import("@/lib/revisions");
         const revisions = await listRevisions(String(input.collection), String(input.slug));
@@ -1810,7 +1812,9 @@ DESIGN GUIDELINES:
         description: "List all trashed documents across all collections.",
         input_schema: { type: "object", properties: {} },
       },
-      permission: "content.read",
+      // Deleted content is a decision someone made about the site, not
+      // something published for a reader to see.
+      permission: "content.history",
       handler: async () => {
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
         const items: string[] = [];

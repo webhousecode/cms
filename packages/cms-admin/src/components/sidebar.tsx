@@ -618,7 +618,12 @@ export function AppSidebar({ collections }: Props) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
-            {siteRole !== "viewer" && (
+            {/* Permission, not a role comparison. `siteRole !== "viewer"` was a
+                bare role check — invisible to the permission system and
+                impossible to reason about alongside the others, which is the
+                rule this repo already had. UX layer only; the gate is the
+                trash layout and the routes. */}
+            {ctxUser?.permissions?.includes("content.history") && (
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={pathname === "/admin/trash"}

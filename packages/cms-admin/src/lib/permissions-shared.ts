@@ -18,6 +18,20 @@ export const PERMISSIONS = {
   "content.publish": "Publish / unpublish",
   "content.delete": "Trash documents",
   "content.trash.empty": "Empty entire trash",
+  /**
+   * Trash and old versions — the record of how the published thing came to be.
+   *
+   * Christian, 28 Aug 2026: «ja, læser må ikke se slettet indhold og gamle
+   * versioner.» Third visibility question that day, third identical answer —
+   * which components named as ONE rule about the DATA rather than three about
+   * features: a reader may read what is PUBLISHED, never the protocol behind
+   * it. A submission, a deletion and an overwritten draft are all traces of how
+   * the published thing was made, and none of them is written for that reader.
+   *
+   * Deliberately NOT folded into `content.read`: a viewer needs that for the
+   * one job they have. This is the narrower thing they must not have.
+   */
+  "content.history": "View trash and old versions",
   "media.read": "View media library",
   "media.upload": "Upload files",
   "media.delete": "Delete files",
@@ -56,6 +70,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "content.edit",
     "content.publish",
     "content.delete",
+    "content.history",
     "media.*",
     "deploy.trigger",
     "curation.*",

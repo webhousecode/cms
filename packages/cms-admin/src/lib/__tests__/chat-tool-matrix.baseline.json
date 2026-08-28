@@ -208,9 +208,7 @@
       "list_documents",
       "list_drafts",
       "list_media",
-      "list_revisions",
       "list_scheduled",
-      "list_trash",
       "search_content",
       "search_media",
       "site_summary"
