@@ -33,7 +33,7 @@ Samme mønster tre steder mere:
 | `deploy.yml` | 35 | `\|\| echo` på hele suiten — deploy til Fly |
 | `publish.yml` | 58 | samme på npm-udgivelsesvejen |
 | `_release-build.yml` | 87 | `continue-on-error: true` på cms-admins 1246 tests |
-| `test.yml` | 61, 67 | kører korrekt — men **intet afhænger af den** |
+| `test.yml` | 61, 67 | **kører ikke grønt** — se F178.4 — og intet afhænger af den |
 
 Så: alle 1246 tests kan være røde, og både deploy og npm-udgivelse går igennem.
 
@@ -69,13 +69,20 @@ At et fejlnavn aldrig printes peger på at en **proces dør** frem for at en ass
 
 **Armer man porten før det er forstået, blokeres ca. hver tiende deploy tilfældigt.** Og en port man slår fra igen efter en uges falske alarmer er værre end ingen port — den lærer folk at ignorere den.
 
+## Rettelse 28/8 aften — den suite porten skulle armes på, var selv rød
+
+Sætningen ovenfor om at `test.yml` "kører korrekt" var forkert, og det er den halvdel hele kortet hviler på. Målt samme aften: **99 failure og 0 success** af de seneste 100 kørsler. Hver gang er det E2E-jobbet.
+
+Havde porten været armet på den, ville **hvert eneste deploy** være blevet blokeret — ikke ca. hvert tiende som flakeren i F178.2 giver, men alle. Årsagen står i **F178.4** og er nu rettet.
+
 ## Rækkefølgen
 
-1. **Forstå flakeren.** Den skal kunne navngives før noget armes.
-2. **Gør fejlen synlig uden at blokere** — fjern den beroligende tekst, så en rød suite ser rød ud i logfilen selv mens den ikke stopper noget. Dette trin er ufarligt og kan tages med det samme.
-3. **Arm porten** — deploy og publish afhænger af en test-kørsel der faktisk kan fejle.
+1. **Få suiten grøn.** → **F178.4** (rettet 28/8 aften; resten af fejlene skal navngives)
+2. **Forstå flakeren.** Den skal kunne navngives før noget armes. → F178.2
+3. **Gør fejlen synlig uden at blokere** — fjern den beroligende tekst, så en rød suite ser rød ud i logfilen selv mens den ikke stopper noget. Dette trin er ufarligt og kan tages med det samme. → F178.1
+4. **Arm porten** — deploy og publish afhænger af en test-kørsel der faktisk kan fejle. → F178.3
 
-Trin 2 før trin 1 er fint. Trin 3 før trin 1 er ikke.
+Trin 3 kan tages når som helst. **Trin 4 før trin 1 og 2 er ikke bare uklogt — det stopper alt.**
 
 ## Afgrænsning
 
