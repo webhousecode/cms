@@ -7,6 +7,7 @@ import { buildAllToolPairs } from "@/lib/chat/tools";
 import { toChatTools, createCmsChat, cmsModel } from "@/lib/chat/engine";
 import { buildHistoryConfig, resolveProfile } from "@/lib/chat/history-config";
 import { frameToEvents } from "@/lib/chat/frames";
+import { summariseTurns } from "@/lib/chat/summarise";
 import { extractMemories } from "@/lib/chat/memory-extractor";
 import { getConversation } from "@/lib/chat/conversation-store";
 import { getSessionWithSiteRole } from "@/lib/require-role";
@@ -137,21 +138,7 @@ export async function POST(request: NextRequest) {
       // The summary is a model call, and it is OURS to make — the package
       // deliberately makes none. Cheap tier: condensing what was already said
       // does not need the model that wrote it.
-      summarise: async (older) => {
-        const { getAI, mistralModel } = await import("@/lib/ai/client");
-        const ai = await getAI();
-        const { text } = await ai.chat({
-          ...mistralModel(resolvedModel),
-          maxTokens: 1024,
-          system:
-            "Sammenfat samtalen nedenfor på dansk. Bevar konkrete beslutninger, " +
-            "navne, slugs, sprogvalg og instrukser brugeren har givet — det er dem " +
-            "resten af samtalen bygger på. Udelad høflighedsfraser. Max 300 ord.",
-          prompt: older.map((m) => `${m.role}: ${m.content}`).join("\n\n"),
-          purpose: "chat.compact",
-        });
-        return text ?? "";
-      },
+      summarise: (older) => summariseTurns(older, resolvedModel),
     }),
   });
 
