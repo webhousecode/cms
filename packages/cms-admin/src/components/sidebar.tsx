@@ -387,7 +387,7 @@ export function AppSidebar({ collections }: Props) {
                 <span>Media</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {canUse("forms") && (
+            {canUse("forms") && ctxUser?.permissions?.includes("forms.read") && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/forms")}

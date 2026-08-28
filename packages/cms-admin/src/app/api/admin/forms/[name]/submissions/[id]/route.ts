@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { FormService } from "@/lib/forms/service";
 import { denyViewers } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 /** GET — single submission. */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ name: string; id: string }> }) {
+  // This handler had NO check at all — not even "is anyone logged in". It leaned
+  // entirely on proxy.ts protecting /api/admin/*, which answers a different
+  // question: authenticated, not permitted.
+  const denied = await requirePermission("forms.read"); if (denied) return denied;
   const { name, id } = await params;
   const { dataDir } = await getActiveSitePaths();
   const svc = new FormService(dataDir);

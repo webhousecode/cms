@@ -63,10 +63,15 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "chat.use",
     "agents.run",
   ],
+  // A viewer may not read visitors' form submissions. Christian, 28 Aug 2026:
+  // «Ja til at læser ikke må se formular-indsendelser.» A form submission is a
+  // member of the public writing to the site — on a clinic's site it is often a
+  // client — and "viewer" is the role you hand someone you have not yet made a
+  // decision about. Registered in the Decision Register: if you are here
+  // because a viewer cannot open the form inbox, that is the CHOICE, not a gap.
   viewer: [
     "content.read",
     "media.read",
-    "forms.read",
   ],
 };
 

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { FormService } from "@/lib/forms/service";
-import { getSiteRole } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 /** GET /api/admin/forms/[name]/export — CSV export of all submissions. */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
-  const role = await getSiteRole();
-  if (!role) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  // The widest door of the four: every field of every submission in one file.
+  const denied = await requirePermission("forms.read"); if (denied) return denied;
   const { name } = await params;
   const { dataDir } = await getActiveSitePaths();
   const svc = new FormService(dataDir);

@@ -32,8 +32,13 @@ vi.mock("@/lib/site-paths", () => ({ getActiveSitePaths: async () => ({}) }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 
 const { buildChatTools } = await import("@/lib/chat/tools");
+const { resolvePermissions } = await import("@/lib/permissions-shared");
 
-const VIEWER = ["content.read", "forms.read", "media.read"];
+// DERIVED, never copied. This list was a hardcoded ["content.read",
+// "forms.read", "media.read"] — so when forms.read left the viewer role on
+// 28 Aug 2026 the test went on measuring a viewer who no longer exists, and
+// would have stayed green over the exact regression it is here to catch.
+const VIEWER = resolvePermissions("viewer");
 const EDITOR = [
   "agents.run", "chat.use", "content.create", "content.delete", "content.edit",
   "content.publish", "content.read", "deploy.trigger", "forms.read",

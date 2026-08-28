@@ -80,8 +80,10 @@ describe("resolvePermissions", () => {
     const perms = resolvePermissions("viewer");
     expect(perms).toContain("content.read");
     expect(perms).toContain("media.read");
-    expect(perms).toContain("forms.read");
 
+    // Visitors' form submissions are not "read-only content" — Christian,
+    // 28 Aug 2026. See forms-viewer-gate.test.ts for the doors this closes.
+    expect(perms).not.toContain("forms.read");
     expect(perms).not.toContain("content.create");
     expect(perms).not.toContain("media.upload");
     expect(perms).not.toContain("deploy.trigger");
