@@ -35,7 +35,23 @@ export function frameToEvents(frame: ChatFrame): SseEvent[] {
 
     case "tool-result": {
       const out: SseEvent[] = [];
-      let result = typeof frame.result === "string" ? frame.result : JSON.stringify(frame.result);
+      // `?? ""`, and it is not belt-and-braces. JSON.stringify(undefined)
+      // returns UNDEFINED, not the string "undefined" — so a tool handler that
+      // returns nothing (an early `return;`, a void function, a caught error
+      // path) produced `undefined` here and the next line threw
+      // "Cannot read properties of undefined (reading \'startsWith\')".
+      //
+      // That throw escapes into the route\'s outer catch, which ends the SSE
+      // stream with "Chat error" — over an answer that was already half
+      // written and perfectly fine. One tool returning nothing takes down the
+      // whole turn.
+      //
+      // Found while chasing a `.slice` TypeError components proved was not
+      // theirs: their try-block contains only the call to OUR summarise. That
+      // one turned out to be inside @broberg/ai-sdk, but looking for it found
+      // this — a real crash of the same family, in our code, one frame over.
+      const raw = typeof frame.result === "string" ? frame.result : JSON.stringify(frame.result);
+      let result = raw ?? "";
       if (result.startsWith(INLINE_FORM)) {
         out.push({ event: "form", data: safeJson(result.slice(INLINE_FORM.length)) });
         result = "Showing edit form for the user.";

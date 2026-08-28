@@ -192,3 +192,32 @@ describe("the four states get four different sentences, from the CODES", () => {
     }
   });
 });
+
+
+describe("a tool that returns nothing must not take the turn down", () => {
+  // JSON.stringify(undefined) is UNDEFINED, not "undefined". A handler with an
+  // early `return;` therefore produced undefined here, and `.startsWith` threw
+  // — escaping into the route's outer catch, which ends the stream with "Chat
+  // error" over an answer that was already half written and fine.
+  const cases: [string, unknown][] = [
+    ["undefined", undefined],
+    ["null", null],
+    ["a number", 0],
+    ["false", false],
+    ["an object", { a: 1 }],
+  ];
+
+  for (const [label, value] of cases) {
+    it(`survives a tool returning ${label}`, () => {
+      const ev = frameToEvents({ type: "tool-result", id: "1", name: "t", result: value } as never);
+      expect(ev.map((e) => e.event)).toEqual(["tool_result"]);
+    });
+  }
+
+  it("and 0 / false are not silently turned into nothing", () => {
+    // A falsy-but-real answer is a different thing from no answer, and a
+    // `|| ""` here would merge them. Measured: `0` is a legitimate count.
+    const zero = JSON.stringify(frameToEvents({ type: "tool-result", id: "1", name: "t", result: 0 } as never));
+    expect(zero, "a tool answering 0 lost its answer").toContain('"0"');
+  });
+});
