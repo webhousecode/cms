@@ -17,9 +17,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ key
   if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
   const { key } = await params;
   const result = await peekQuick(key);
-  // Cold miss on a known key → warm it in the background so the next click is
-  // instant (fire-and-forget, deduped + ship-dark inside scheduleLazyRegen).
-  if (!result.cached) {
+  // Regen when we have nothing OR when what we have is stale.
+  //
+  // `!result.cached` alone was correct until stale answers started being served:
+  // a stale hit returns cached:true, so that condition would have stopped
+  // scheduling the refresh — the answer would be shown instantly, for ever, and
+  // never get newer. The change that made it fast would have quietly made it
+  // permanently wrong.
+  if (!result.cached || result.stale) {
     const site = await getActiveSiteEntry().catch(() => null);
     if (site?.id) scheduleLazyRegen(key, site.id);
   }
