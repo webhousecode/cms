@@ -183,7 +183,11 @@ export async function POST(request: NextRequest) {
           if (frame.type === "done") break;
         }
 
-        sendEvent("done", {});
+        // NOT sent again here: the engine's own `done` frame is translated by
+        // frameToEvents, so emitting one more produced TWO `done` events on
+        // every turn — seen in the production stream while diagnosing the tool
+        // pairing. Harmless to our client, and exactly the kind of thing that
+        // becomes load-bearing for the next one.
 
         // Extract memories in background after conversation ends
         if (conversationId) {
