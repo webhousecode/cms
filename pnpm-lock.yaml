@@ -252,7 +252,7 @@ importers:
         version: 0.34.0
       '@broberg/chat':
         specifier: '>=0.5.0 <1'
-        version: 0.5.0
+        version: 0.5.2
       '@broberg/cms-chat-client':
         specifier: ^0.4.14
         version: 0.4.14
@@ -1111,8 +1111,8 @@ packages:
     resolution: {integrity: sha512-1YAzBaCtQQ/o9m2exMJoausbwbkNb/8rphe+zyCG88x17P35B9w9b3VVI/aVpl4fJTN4sMkmB4skI5B337I6pA==}
     engines: {bun: '>=1.3.0'}
 
-  '@broberg/chat@0.5.0':
-    resolution: {integrity: sha512-+2IP49OLrkIVjQgrXwXP3GD2Xlaroh8u+BTIKDC4Xc5jbiYF9QE0M5Jrwxc/8ZSNudCb5Qi1zEEgX1qI7v4Owg==}
+  '@broberg/chat@0.5.2':
+    resolution: {integrity: sha512-5OCx7c+3E9SxCJy6au0n5pHm5HX/Rphm1u1aC8/HGflrj+0HqQWw2Ygken3gGbceljbDa/j7fqI7wQhibF3/NA==}
 
   '@broberg/cms-chat-client@0.4.14':
     resolution: {integrity: sha512-SPFV9DoFhkGtrQdUN+MV6LUT5eYCEaUiUx3vnp/pM1SqQyONwFeZtmQYF9KCq2ob4i+YhDp4dxPeJYMuUP154A==}
@@ -7122,7 +7122,7 @@ snapshots:
     dependencies:
       zod: 3.25.76
 
-  '@broberg/chat@0.5.0': {}
+  '@broberg/chat@0.5.2': {}
 
   '@broberg/cms-chat-client@0.4.14': {}
 
