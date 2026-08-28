@@ -6,4 +6,6 @@ node_modules/
 
 # Playwright E2E fixture state (registry/users for the examples/blog run)
 .e2e-data/
-.next-e2e
+# Any alternate Next build dir (NEXT_DIST_DIR) — the E2E suite uses .next-e2e,
+# an ad-hoc probe may use another. One pattern so a new one cannot leak into git.
+.next-*
