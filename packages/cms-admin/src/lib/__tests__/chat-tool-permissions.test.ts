@@ -135,10 +135,21 @@ describe("deny by default", () => {
         return t && !t.startsWith("//") && !t.startsWith("*") && !t.startsWith("/*");
       });
     expect(code.length, "no code lines — guard scanned nothing").toBeGreaterThan(100);
-    const filterLine = code.find((l) => l.includes("allTools.filter"));
-    expect(filterLine, "the tool filter is gone").toBeTruthy();
-    expect(filterLine).toContain("!!t.permission &&");
-    expect(filterLine, "the permissive form is back").not.toContain("!t.permission ||");
+
+    // ANCHORED ON THE PROPERTY, NOT ON THE LINE. This used to require the
+    // literal `!!t.permission &&` on the filter line — and went red on 28 Aug
+    // 2026 when the gating MOVED into @broberg/chat, which is a correct change.
+    // Fourth test this week bound to where a check is written rather than to
+    // whether it holds; a test like that breaks on tidying and passes on a move.
+    //
+    // What must be true now: the permissive form exists nowhere, and the
+    // decision is delegated to the engine, whose `defineTool()` throws on a
+    // tool with no permission (mutation-proven: blanking one turns the tool
+    // matrix red with the package's own message).
+    expect(code.join("\n"), "the permissive form is back")
+      .not.toContain("!t.permission ||");
+    expect(code.join("\n"), "tool gating no longer goes through the engine")
+      .toMatch(/toolsFor\(/);
   });
 
   it("the route asks for chat.use and never defaults a missing role to admin", () => {

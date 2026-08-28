@@ -250,6 +250,9 @@ importers:
       '@broberg/ai-sdk':
         specifier: 0.34.0
         version: 0.34.0
+      '@broberg/chat':
+        specifier: '>=0.3.0 <1'
+        version: 0.3.0
       '@broberg/cms-chat-client':
         specifier: ^0.4.14
         version: 0.4.14
@@ -1107,6 +1110,9 @@ packages:
   '@broberg/ai-sdk@0.34.0':
     resolution: {integrity: sha512-1YAzBaCtQQ/o9m2exMJoausbwbkNb/8rphe+zyCG88x17P35B9w9b3VVI/aVpl4fJTN4sMkmB4skI5B337I6pA==}
     engines: {bun: '>=1.3.0'}
+
+  '@broberg/chat@0.3.0':
+    resolution: {integrity: sha512-OqqTRA64MdfnwHgWIIae3z0vRpVXFotQFXqG3RvMAxI1IlijMrkfhlAdKl7k5vqBXOOuZY68dHz7ahfZ7tC0Rg==}
 
   '@broberg/cms-chat-client@0.4.14':
     resolution: {integrity: sha512-SPFV9DoFhkGtrQdUN+MV6LUT5eYCEaUiUx3vnp/pM1SqQyONwFeZtmQYF9KCq2ob4i+YhDp4dxPeJYMuUP154A==}
@@ -7115,6 +7121,8 @@ snapshots:
   '@broberg/ai-sdk@0.34.0':
     dependencies:
       zod: 3.25.76
+
+  '@broberg/chat@0.3.0': {}
 
   '@broberg/cms-chat-client@0.4.14': {}
 

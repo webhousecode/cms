@@ -122,26 +122,38 @@ describe("the chat tool matrix — the baseline the engine swap must not move", 
   });
 });
 
-describe("the swap itself — what this file cannot yet prove", () => {
-  // The baseline records engine="legacy-inline" because that is what answered.
-  // Nothing here has ever measured the matrix THROUGH @broberg/chat, and no
-  // green run should be read as if it had.
-  it.todo("the 195 decisions are measured through @broberg/chat — deferred until the swap is wired");
-});
-
 describe("the engine marker cannot drift from the engine", () => {
   // The marker alone is a label someone types. The source check alone cannot
   // see a runtime flag. Neither is worth much; together they cannot both be
   // wrong in the same direction without someone noticing.
   const SRC = join(dirname(fileURLToPath(import.meta.url)), "..");
-  const src = readFileSync(join(SRC, "chat/tools.ts"), "utf8");
-  const codeLines = src.split("\n").filter((l) => {
-    const t = l.trim();
-    return t && !t.startsWith("//") && !t.startsWith("*") && !t.startsWith("/*");
+  const lines = (p: string) =>
+    readFileSync(join(SRC, p), "utf8").split("\n").filter((l) => {
+      const t = l.trim();
+      return t && !t.startsWith("//") && !t.startsWith("*") && !t.startsWith("/*");
+    });
+
+  // THE CHAIN, not one file. tools.ts does not import @broberg/chat itself — it
+  // delegates to engine.ts, which does. The first version of this guard read
+  // only tools.ts and went red on a CORRECT swap, saying "the marker was
+  // flipped without the swap" when the swap was one file away.
+  //
+  // The fix is to FOLLOW the delegation, never to widen the check to "any file
+  // that mentions the package" — that would pass on a comment in a file nobody
+  // calls. Both links are asserted: tools.ts really imports ./engine, and
+  // engine.ts really imports @broberg/chat.
+  const toolsLines = lines("chat/tools.ts");
+  const engineLines = lines("chat/engine.ts");
+  const codeLines = [...toolsLines, ...engineLines];
+
+  it("read the sources it thinks it read", () => {
+    expect(toolsLines.length, "tools.ts: no code lines — this guard scanned nothing").toBeGreaterThan(1);
+    expect(engineLines.length, "engine.ts: no code lines — this guard scanned nothing").toBeGreaterThan(1);
   });
 
-  it("read the source it thinks it read", () => {
-    expect(codeLines.length, "no code lines — this guard scanned nothing").toBeGreaterThan(1);
+  it("tools.ts really delegates to engine.ts — the chain has no missing link", () => {
+    expect(toolsLines.join("\n"), "tools.ts no longer reaches engine.ts, so scanning it proves nothing about tools.ts")
+      .toMatch(/from "\.\/engine"/);
   });
 
   // Extracted so BOTH branches can be exercised. @broberg/chat is not a
@@ -203,14 +215,10 @@ describe("the engine marker cannot drift from the engine", () => {
     expect(importsEngine(['import { a } from "foo"', 'import { b } from "@broberg/chat"'])).toBe(true);
   });
 
-  // DEFERRED, AND SAID OUT LOUD. components, 28 Aug 2026: an unreachable
-  // branch is not covered, it is deferred — and the deferral has to be visible
-  // rather than swallowed by a green suite. @broberg/chat is not a dependency
-  // here, so against the REAL file only the legacy branch can ever run. The
-  // predicate is proven both ways above; what is unproven is the wiring — that
-  // the real file's imports drive the non-legacy branch. This line is what
-  // stops "no reds" from reading as "all covered".
-  it.todo("the non-legacy branch runs against the real file — deferred until @broberg/chat is a dependency");
+  // NO LONGER DEFERRED. @broberg/chat is a dependency as of 28 Aug 2026 and
+  // engine.ts imports it, so the non-legacy branch is the one that now runs
+  // against the real chain — the two it.todo() lines that stood here were
+  // written for exactly this moment and are gone because the moment arrived.
 
   it("says 'legacy-inline' only while the file really is the hand-rolled registry", () => {
     const importsBroberg = importsEngine(codeLines);

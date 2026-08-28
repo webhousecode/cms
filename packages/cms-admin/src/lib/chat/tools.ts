@@ -12,6 +12,7 @@ import type { ToolDefinition, ToolHandler } from "@/lib/tools";
 import { buildWebSearchTool } from "@/lib/tools/web-search";
 import { hasPermission } from "@/lib/permissions-shared";
 import { resolveJwtSecret } from "../dev-jwt-secret";
+import { toChatTools, createCmsChat } from "./engine";
 
 /**
  * WHICH ENGINE ACTUALLY BUILT THE TOOL LIST.
@@ -29,7 +30,13 @@ import { resolveJwtSecret } from "../dev-jwt-secret";
  * a stale marker is caught by the source check, a source-only check is caught
  * by the marker. Change this string as PART of the swap, never after it.
  */
-export const CHAT_TOOL_ENGINE = "legacy-inline";
+// Typed `string`, not the literal. TypeScript narrowed the const and then
+// reported the drift guard's `=== "legacy-inline"` as provably false — the
+// legacy branch became dead code the moment the marker flipped. That is the
+// unreachable-branch problem again, in the other direction, and this time the
+// compiler found it rather than a reviewer. The marker is a runtime value that
+// changes; saying so in its type keeps both branches of the guard expressible.
+export const CHAT_TOOL_ENGINE: string = "broberg-chat";
 
 /**
  * Fire-and-forget ICD webhook for any chat tool that mutates a published
@@ -174,7 +181,22 @@ export async function buildChatTools(userPermissions?: string[]): Promise<ToolPa
   // Forgetting to declare a permission must close the door, not open it. A new
   // tool with no `permission` now reaches nobody, which is a bug someone
   // notices — the old default was a bug nobody could see.
-  return allTools.filter((t) => !!t.permission && hasPermission(perms, t.permission));
+  // THE ENGINE DECIDES WHO GETS WHAT — not this file. `toolsFor()` returns the
+  // tools this caller may use; a denied tool is ABSENT, never flagged, so there
+  // is nothing downstream that could un-deny it. The old line lived here:
+  //
+  //     allTools.filter((t) => !!t.permission && hasPermission(perms, t.permission))
+  //
+  // correct as written, and one character from the version that handed a
+  // read-only user 30 mutating tools. `defineTool()` now throws on a tool with
+  // no permission, so tool number 66 cannot repeat it in any repo.
+  const granted = await createCmsChat({ tools: toChatTools(allTools) }).toolsFor(perms);
+
+  // Back to our own shape so the route is untouched by this round. The ORDER of
+  // `allTools` is preserved rather than the engine's, so nothing downstream can
+  // depend on a listing order that just changed underneath it.
+  const allow = new Set(granted.map((t) => t.name));
+  return allTools.filter((t) => allow.has(t.definition.name));
 }
 
 /** Build headers for internal API calls — service token + site context */

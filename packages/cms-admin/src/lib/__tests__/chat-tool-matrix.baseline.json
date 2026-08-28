@@ -1,5 +1,5 @@
 {
-  "engine": "legacy-inline",
+  "engine": "broberg-chat",
   "tools": [
     "add_memory",
     "approve_queue_item",
