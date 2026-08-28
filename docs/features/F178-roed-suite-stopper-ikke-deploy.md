@@ -75,9 +75,11 @@ Sætningen ovenfor om at `test.yml` "kører korrekt" var forkert, og det er den 
 
 Havde porten været armet på den, ville **hvert eneste deploy** være blevet blokeret — ikke ca. hvert tiende som flakeren i F178.2 giver, men alle. Årsagen står i **F178.4** og er nu rettet.
 
+Målt på CI efter rettelsen (`09e0302d`): **7 passed · 21 failed · 15 skipped**, mod 7 · 34 · 2 før. De 21 er ikke skjult — de får navn i **F178.5**, og porten kan først armes derefter.
+
 ## Rækkefølgen
 
-1. **Få suiten grøn.** → **F178.4** (rettet 28/8 aften; resten af fejlene skal navngives)
+1. **Få suiten grøn.** → **F178.4** (porten rettet 28/8 aften) → **F178.5** (de 21 resterende røde skal navngives)
 2. **Forstå flakeren.** Den skal kunne navngives før noget armes. → F178.2
 3. **Gør fejlen synlig uden at blokere** — fjern den beroligende tekst, så en rød suite ser rød ud i logfilen selv mens den ikke stopper noget. Dette trin er ufarligt og kan tages med det samme. → F178.1
 4. **Arm porten** — deploy og publish afhænger af en test-kørsel der faktisk kan fejle. → F178.3
