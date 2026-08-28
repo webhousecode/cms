@@ -57,6 +57,19 @@ export async function generateQuickAnswer(key: string, siteId: string): Promise<
   const flightKey = `${siteId}:${key}`;
   if (inFlight.has(flightKey)) return false; // dedupe concurrent regens
   inFlight.add(flightKey);
+
+  // Every failure below used to return a bare `false`. Five different things
+  // can go wrong and they were indistinguishable — so when site-info started
+  // taking 165s against a 180s timeout, the pre-warm aborted, the cache stayed
+  // cold forever, and the ONLY symptom a human could see was that a button was
+  // slow. Christian sat through 2m45s per click for days with nothing in any
+  // log. It still never throws; it just says which of the five it was.
+  const started = Date.now();
+  const fail = (why: string) => {
+    console.warn(`[chat/quick-prewarm] ${siteId}/${key} not cached after ${Date.now() - started}ms: ${why}`);
+    return false;
+  };
+
   try {
     const base = selfBase();
     const site = encodeURIComponent(siteId);
@@ -66,9 +79,9 @@ export async function generateQuickAnswer(key: string, siteId: string): Promise<
       body: JSON.stringify({ messages: [{ role: "user", content: action.prompt }] }),
       signal: AbortSignal.timeout(CHAT_TIMEOUT_MS),
     });
-    if (!chatRes.ok) return false;
+    if (!chatRes.ok) return fail(`chat responded ${chatRes.status}`);
     const markdown = parseChatSseText(await chatRes.text());
-    if (!markdown.trim()) return false;
+    if (!markdown.trim()) return fail("chat streamed no text (tool-only turn, or an error frame)");
 
     const storeRes = await fetch(`${base}/api/cms/chat/quick/${key}?site=${site}`, {
       method: "POST",
@@ -76,9 +89,15 @@ export async function generateQuickAnswer(key: string, siteId: string): Promise<
       body: JSON.stringify({ markdown }),
       signal: AbortSignal.timeout(STORE_TIMEOUT_MS),
     });
-    return storeRes.ok;
-  } catch {
-    return false;
+    if (!storeRes.ok) return fail(`store responded ${storeRes.status}`);
+    return true;
+  } catch (err) {
+    // The timeout lands here as an AbortError/TimeoutError — name it, because
+    // "the answer takes longer than we allow" is a different problem from
+    // "the request broke", and they were the same silence before.
+    const name = err instanceof Error ? err.name : "unknown";
+    const timedOut = name === "TimeoutError" || name === "AbortError";
+    return fail(timedOut ? `timed out (limit ${CHAT_TIMEOUT_MS}ms)` : `${name}: ${err instanceof Error ? err.message : String(err)}`);
   } finally {
     inFlight.delete(flightKey);
   }

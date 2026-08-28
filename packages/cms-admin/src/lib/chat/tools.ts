@@ -228,10 +228,38 @@ function siteHeaders(activeOrg?: string, activeSite?: string): Record<string, st
 async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<ToolPair[]> {
   return [
     // ── site_summary ──────────────────────────────────────────
+    /**
+     * ONE call must answer "tell me everything about my site".
+     *
+     * Christian, 28 Aug 2026: «Site info er latterligt langsom, det er der INGEN
+     * der gider vente på at se.» Measured against production before changing
+     * anything — the cached quick-action for site-info was cold on every site,
+     * so each click ran the full agentic turn:
+     *
+     *   ttft 15.0s · TOTAL 165.2s · 10 tool calls · 12.5 tok/s
+     *   site_summary, get_site_config, content_stats,
+     *   list_documents ×7   ← one per collection, each a full model round-trip
+     *
+     * The model was not slow (12.5 tok/s is normal). ~145 of the 165 seconds
+     * were the NINE round-trips between tool calls. And the collection scan was
+     * being repeated the whole way: site_summary walked every collection,
+     * content_stats walked them all again, then list_documents walked each one
+     * a third time — the same reads, nine times, with a model call between each.
+     *
+     * So site_summary now returns what the question actually needs — fields,
+     * stats, settings and a sample of real documents — from a SINGLE scan. The
+     * separate tools stay for targeted use; nothing was removed. The point is
+     * that the model has no reason left to enumerate collections by hand.
+     *
+     * Output is bounded on purpose (fields, sample titles, total length): a tool
+     * result is fed back into the next request, so an unbounded summary trades
+     * round-trips for prompt size and wins nothing.
+     */
     {
       definition: {
         name: "site_summary",
-        description: "Get an overview of the site: name, adapter, collections with document counts, and configuration.",
+        description:
+          "COMPLETE overview of the site in ONE call: name, adapter, every collection with its FIELDS and document counts, content statistics, settings and deploy config, plus recent document titles per collection. Use this alone to answer broad questions about the site — do NOT follow it with list_documents/content_stats/get_site_config unless you need something specific it did not return.",
         input_schema: { type: "object", properties: {} },
       },
       permission: "content.read",
@@ -256,12 +284,13 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           }
         } catch { /* fallback */ }
 
-        const lines: string[] = [
-          `Site: ${siteName}`,
-          `Adapter: ${adapter}`,
-          `Collections:`,
-        ];
+        const MAX_FIELDS = 25;      // a wide collection must not crowd out the rest
+        const MAX_SAMPLE = 5;       // enough to recognise the content, not a listing
+        const lines: string[] = [`Site: ${siteName}`, `Adapter: ${adapter}`, ``, `Collections:`];
 
+        let totalDocs = 0, totalPublished = 0, totalDrafts = 0, totalWords = 0;
+
+        // ONE pass over every collection. Everything below is derived from it.
         for (const col of config.collections) {
           if (col.kind === "global") continue;
           const { documents } = await cms.content
@@ -270,10 +299,52 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           const active = documents.filter((d: any) => d.status !== "trashed");
           const published = active.filter((d: any) => d.status === "published");
           const drafts = active.filter((d: any) => d.status === "draft");
+
+          totalDocs += active.length;
+          totalPublished += published.length;
+          totalDrafts += drafts.length;
+          for (const d of active) {
+            const content = String(d.data?.content ?? d.data?.body ?? "");
+            totalWords += content.split(/\s+/).filter(Boolean).length;
+          }
+
           lines.push(
             `  - ${col.label ?? col.name} (${col.name}): ${active.length} total (${published.length} published, ${drafts.length} drafts)`
           );
+
+          const fields = (col.fields ?? []) as Array<Record<string, any>>;
+          if (fields.length) {
+            const shown = fields.slice(0, MAX_FIELDS).map((f) => {
+              const req = f.required ? "*" : "";
+              return `${f.name}${req}:${f.type}`;
+            });
+            const more = fields.length > MAX_FIELDS ? ` (+${fields.length - MAX_FIELDS} more)` : "";
+            lines.push(`      fields: ${shown.join(", ")}${more}`);
+          }
+
+          const sample = active.slice(0, MAX_SAMPLE)
+            .map((d: any) => String(d.data?.title ?? d.slug ?? "").trim())
+            .filter(Boolean);
+          if (sample.length) {
+            const more = active.length > MAX_SAMPLE ? `, +${active.length - MAX_SAMPLE} more` : "";
+            lines.push(`      recent: ${sample.join(", ")}${more}`);
+          }
         }
+
+        lines.push(``, `Content stats:`);
+        lines.push(`  ${totalDocs} documents (${totalPublished} published, ${totalDrafts} drafts), ${totalWords.toLocaleString()} words`);
+        try {
+          const { getContentRatio } = await import("@/lib/analytics");
+          const ratio = await getContentRatio();
+          const pct = Math.round((ratio.aiEdits / Math.max(ratio.totalEdits, 1)) * 100);
+          lines.push(`  AI content ratio: ${pct}% (${ratio.aiEdits} AI / ${ratio.humanEdits} human edits)`);
+        } catch { /* analytics unavailable — the rest of the summary still stands */ }
+
+        // Settings, minus the secrets get_site_config also strips.
+        const safe = { ...siteConfig } as Record<string, unknown>;
+        delete safe.anthropicApiKey;
+        delete safe.openaiApiKey;
+        lines.push(``, `Settings:`, JSON.stringify(safe, null, 2));
 
         if (siteConfig.deployProvider && siteConfig.deployProvider !== "off") {
           lines.push(`Deploy: ${siteConfig.deployProvider}`);
