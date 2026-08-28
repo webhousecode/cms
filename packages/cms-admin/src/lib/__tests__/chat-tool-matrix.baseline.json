@@ -1,4 +1,5 @@
 {
+  "engine": "legacy-inline",
   "tools": [
     "add_memory",
     "approve_queue_item",

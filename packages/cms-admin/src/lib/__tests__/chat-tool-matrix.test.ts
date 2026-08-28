@@ -30,12 +30,12 @@ vi.mock("@/lib/cms", () => ({
 vi.mock("@/lib/site-paths", () => ({ getActiveSitePaths: async () => ({}) }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
 
-const { buildChatTools } = await import("@/lib/chat/tools");
+const { buildChatTools, CHAT_TOOL_ENGINE } = await import("@/lib/chat/tools");
 const { resolvePermissions, ROLE_PERMISSIONS } = await import("@/lib/permissions-shared");
 
 const BASELINE = join(dirname(fileURLToPath(import.meta.url)), "chat-tool-matrix.baseline.json");
 
-type Matrix = { tools: string[]; roles: string[]; grants: Record<string, string[]> };
+type Matrix = { engine: string; tools: string[]; roles: string[]; grants: Record<string, string[]> };
 
 async function measure(): Promise<Matrix> {
   // Every role the permission system defines — not three names I typed.
@@ -49,7 +49,9 @@ async function measure(): Promise<Matrix> {
   }
   // The full tool population = what an unrestricted principal is offered.
   const tools = (await buildChatTools(["*"])).map((t) => t.definition.name).sort();
-  return { tools, roles, grants };
+  // Provenance travels WITH the measurement, so a run cannot report agreement
+  // without saying what it agreed about.
+  return { engine: CHAT_TOOL_ENGINE, tools, roles, grants };
 }
 
 describe("the chat tool matrix — the baseline the engine swap must not move", () => {
@@ -87,6 +89,14 @@ describe("the chat tool matrix — the baseline the engine swap must not move", 
 
     const base = JSON.parse(readFileSync(BASELINE, "utf8")) as Matrix;
 
+    // WHO ANSWERED. components, 28 Aug 2026 — the last hole in this proof:
+    // comparing the old path against ITSELF also yields 0 of 195. If the flag
+    // was never set in the test environment, if the import still resolves to
+    // the old registry, if the new builder was never called, the run is green
+    // and empty. So the engine is part of the comparison, not a footnote.
+    expect(m.engine, `the engine that answered changed: "${base.engine}" → "${m.engine}". If you swapped to @broberg/chat, update the baseline deliberately. If you MEANT to swap and this still says "${base.engine}", the new path was never exercised and the 0 below means nothing.`)
+      .toBe(base.engine);
+
     // THE COUNT. Every (tool, role) pair is one decision, and the assertion is
     // on how many were compared — so a shrunken registry or a lost role cannot
     // pass by simply having fewer rows to disagree about.
@@ -109,5 +119,54 @@ describe("the chat tool matrix — the baseline the engine swap must not move", 
     }
     expect(diffs.length, `${diffs.length} of ${cells} decisions moved:\n  ${diffs.join("\n  ")}`)
       .toBe(0);
+  });
+});
+
+describe("the engine marker cannot drift from the engine", () => {
+  // The marker alone is a label someone types. The source check alone cannot
+  // see a runtime flag. Neither is worth much; together they cannot both be
+  // wrong in the same direction without someone noticing.
+  const SRC = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const src = readFileSync(join(SRC, "chat/tools.ts"), "utf8");
+  const codeLines = src.split("\n").filter((l) => {
+    const t = l.trim();
+    return t && !t.startsWith("//") && !t.startsWith("*") && !t.startsWith("/*");
+  });
+
+  it("read the source it thinks it read", () => {
+    expect(codeLines.length, "no code lines — this guard scanned nothing").toBeGreaterThan(1);
+  });
+
+  // Extracted so BOTH branches can be exercised. @broberg/chat is not a
+  // dependency yet, so against the real file only the "legacy" branch can
+  // ever run — and a conditional whose other half has never executed is an
+  // assertion nobody has read. The predicate is pure, so both halves are
+  // proven below on synthetic input, and the real file then only has to pick
+  // a branch that is known to work.
+  const importsEngine = (lines: string[]) =>
+    lines.some((l) => /^import .*"@broberg\/chat"/.test(l));
+
+  it("the import predicate answers both ways", () => {
+    expect(importsEngine(['import { defineTool } from "@broberg/chat";'])).toBe(true);
+    expect(importsEngine(['import { x } from "@/lib/cms";'])).toBe(false);
+    // Not fooled by the word appearing in prose or in a re-export of something
+    // else — the earlier version of this file mentions @broberg/chat in a
+    // comment, and a substring match would have called that an import.
+    expect(importsEngine(['const s = "@broberg/chat";'])).toBe(false);
+  });
+
+  it("says 'legacy-inline' only while the file really is the hand-rolled registry", () => {
+    const importsBroberg = importsEngine(codeLines);
+    if (CHAT_TOOL_ENGINE === "legacy-inline") {
+      expect(importsBroberg,
+        'CHAT_TOOL_ENGINE still says "legacy-inline" but the file imports @broberg/chat — ' +
+        "the marker is stale, so the matrix would report the wrong provenance.")
+        .toBe(false);
+    } else {
+      expect(importsBroberg,
+        `CHAT_TOOL_ENGINE says "${CHAT_TOOL_ENGINE}" but the file does not import @broberg/chat — ` +
+        "the marker was flipped without the swap, which is the exact false-green it exists to prevent.")
+        .toBe(true);
+    }
   });
 });

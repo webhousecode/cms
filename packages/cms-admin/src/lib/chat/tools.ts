@@ -14,6 +14,24 @@ import { hasPermission } from "@/lib/permissions-shared";
 import { resolveJwtSecret } from "../dev-jwt-secret";
 
 /**
+ * WHICH ENGINE ACTUALLY BUILT THE TOOL LIST.
+ *
+ * The tool matrix (chat-tool-matrix.test.ts) asserts that the @broberg/chat
+ * swap moves 0 of 195 permission decisions. components made the point that
+ * closes the last hole in that proof, 28 Aug 2026: comparing the OLD path
+ * against itself also yields 0 of 195 — if a flag was not set in the test
+ * environment, if the import still resolves to this file, if the new
+ * registry was never called. Zero moved cells means something only when
+ * something proves anyone looked.
+ *
+ * So the matrix records this value, and the test cross-checks it against
+ * whether the source actually imports @broberg/chat. Two independent signals:
+ * a stale marker is caught by the source check, a source-only check is caught
+ * by the marker. Change this string as PART of the swap, never after it.
+ */
+export const CHAT_TOOL_ENGINE = "legacy-inline";
+
+/**
  * Fire-and-forget ICD webhook for any chat tool that mutates a published
  * document. Without this, chat-driven create/publish/update writes only land
  * on the CMS volume — webhouse-dk (or any consumer) never receives the
