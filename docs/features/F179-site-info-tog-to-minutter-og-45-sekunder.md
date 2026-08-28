@@ -82,3 +82,48 @@ Output er **bevidst afgrænset** (25 felter, 5 titler per samling): et værktøj
 ## Afgrænsning
 
 **Ikke med:** at hæve timeout-grænsen (det behandler symptomet), at ændre selve quick-action-prompten, at bygge et ikke-agentisk site-info-svar uden om modellen. Hvis 20 s stadig er for langt, er dét næste kort — men så træffes den beslutning på en måling, ikke på en fornemmelse.
+
+---
+
+## Slutmåling — mod produktion, efter udrulning (`56415aa`)
+
+```
+webhouse-site · quick-action "site-info"
+  ttft   2,8 s      (var 15,0)
+  TOTAL  34,1 s     (var 165,2)
+  tok/s  54,4       (var 12,5)
+  1 værktøjskald: site_summary      (var 10)
+```
+
+**Klikket, som det opleves — cachen varm:**
+
+| site | svar | klik |
+|---|---|---|
+| webhouse-site | 7002 tegn | 108 / 24 / 24 ms |
+| sanneandersen | 11853 tegn | 19 / 25 / 20 ms |
+| broberg-ai | 5255 tegn | 20 / 27 / 30 ms |
+
+**165 sekunder → ~25 millisekunder.**
+
+**Og opvarmningen når nu i mål**, hvilket den aldrig havde gjort på de to største sites:
+
+```
+ 20s   broberg-ai      VARM  5255 tegn
+ 40s   webhouse-site   VARM  7002 tegn   ← havde aldrig været varm
+ 60s   sanneandersen   VARM 11853 tegn   ← havde aldrig været varm
+```
+
+Bemærk at retningen er vendt: det største site (sanneandersen, 11853 tegn) er nu også varmt. Før var det omvendt — jo mere indhold, jo sikrere fejlede opvarmningen.
+
+Skrivehastigheden steg fra 12,5 til 54,4 tok/s. Det er ikke en hurtigere model: svaret skrives nu i ét stræk i stedet for at blive afbrudt af ni rundture.
+
+### Det ene acceptkriterium der IKKE er opfyldt
+
+AC lød «under 30 sekunder og højst 3 værktøjskald».
+
+- værktøjskald: **1** ✓
+- tid: **34,1 s** ✗ — **4 sekunder over min egen streg.**
+
+Grænsen var sat af mig, ikke af Christian, og den betyder intet i praksis: han rammer cachen og venter 25 ms. Men de 34 sekunder er reelle første gang efter et deploy, og de skrives som de er frem for som «cirka 30». Vil man under 30, er næste skridt at bygge site-info-svaret uden om modellen helt — det er en anden beslutning, truffet på dette tal.
+
+Kortet lukkes på Christians ordre med den afvigelse noteret.
