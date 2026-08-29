@@ -187,7 +187,7 @@ test.describe("F48 i18n — Collection list locale filter", () => {
 // ── Settings page locale config ───────────────────────────────
 
 test.describe("F48 i18n — Settings page language config", () => {
-  test.skip("language section shows configured locales", async ({ authedPage: page }) => {
+  test("language section shows configured locales", async ({ authedPage: page }) => {
     // Navigate to settings and wait for Site Settings to load
     await page.goto("/admin/settings");
     await page.waitForTimeout(3000);

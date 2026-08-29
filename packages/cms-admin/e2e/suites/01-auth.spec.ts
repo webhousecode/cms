@@ -114,7 +114,10 @@ viewerTest.describe("Viewer RBAC", () => {
     await page.goto("/admin/pages");
     const firstDoc = page.locator('a[href^="/admin/pages/"]').first();
     if ((await firstDoc.count()) === 0) {
-      viewerTest.skip();
+      // Data-dependent, so it carries its reason: a bare skip() reports as
+      // "skipped" with nothing said, which is indistinguishable from a test
+      // someone switched off.
+      viewerTest.skip(true, "no documents in /admin/pages to open as a viewer");
       return;
     }
     await firstDoc.click();

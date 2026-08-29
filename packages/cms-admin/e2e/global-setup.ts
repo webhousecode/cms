@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { E2E_DATA_DIR, FIXTURE_CONFIG, FIXTURE_SITE_ID } from "./fixtures/base-url";
 import { TEST_PRINCIPAL } from "../src/lib/dev-jwt-secret";
@@ -120,4 +120,83 @@ export default function globalSetup() {
       2,
     ),
   );
+
+  seedOnboardingComplete();
+  seedTeamMembership();
+}
+
+/**
+ * Mark the test user's onboarding tour as already taken.
+ *
+ * This is what the last seven red tests actually were. A fresh user gets the
+ * 7-step welcome tour 800ms after the admin mounts, and it renders a full-area
+ * overlay inside <main>. Playwright's default action timeout is 0 — no limit —
+ * so a click on anything underneath retried until the 90s test budget ran out.
+ *
+ * It presented as seven unrelated feature failures ("agent detail fields",
+ * "Media content", "Tools group expands"), every one of them reporting only
+ * `Test timeout of 90000ms exceeded.` with no locator error — because the click
+ * never gave up long enough to produce one. The page snapshot taken at timeout
+ * showed the whole page rendered correctly, which is what made it read like
+ * flakiness: the element WAS there, WAS visible, and could not be reached. The
+ * tell was one line at the very bottom of that snapshot: `3 / 7`.
+ *
+ * The tour starts unless the stored state says otherwise (`tourCompleted` OR
+ * `firstLoginAt`), and that state is per-site JSON under {dataDir}/user-state/.
+ * All three seeded sites share examples/blog as their projectDir, so one file
+ * covers them. Both flags are written: `tourCompleted` is the honest one, and
+ * `firstLoginAt` keeps it shut if the start condition is ever narrowed to that.
+ */
+function seedOnboardingComplete() {
+  const dir = path.join(path.dirname(FIXTURE_CONFIG), "_data", "user-state");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(
+    path.join(dir, `${TEST_PRINCIPAL}.json`),
+    JSON.stringify(
+      {
+        onboarding: {
+          tourCompleted: true,
+          firstLoginAt: new Date(0).toISOString(),
+        },
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+/**
+ * Give the test user an admin membership on the fixture site.
+ *
+ * `/api/auth/me` derives `siteRole` from team.json — the per-site membership
+ * list — not from the user's global role. It auto-bootstraps the oldest user as
+ * admin ONLY when that list is empty, and examples/blog's list has not been
+ * empty since April 2026: it holds two userIds from someone's dogfooding
+ * session, neither of them ours. So the bootstrap never ran, `siteRole` came
+ * back null, and every sidebar item behind `siteRole === "admin"` was correctly
+ * hidden from a user who genuinely had no role on that site.
+ *
+ * That is why "Tools group expands" failed on `nav-link-backup` while
+ * `nav-link-link-checker` — same group, no role gate — was visible, and why the
+ * backup PAGE loaded fine in its own test. Nothing was broken; the test user was
+ * a stranger to the site.
+ *
+ * Appends rather than replaces: this file is real local fixture data, and a
+ * suite run should not quietly delete whoever is in it.
+ */
+function seedTeamMembership() {
+  const file = path.join(path.dirname(FIXTURE_CONFIG), "_data", "team.json");
+  let members: { userId: string; role: string; addedAt?: string }[] = [];
+  if (existsSync(file)) {
+    try {
+      const parsed = JSON.parse(readFileSync(file, "utf-8"));
+      if (Array.isArray(parsed)) members = parsed;
+    } catch {
+      // Unreadable list — start clean rather than fail the whole run.
+    }
+  }
+  if (!members.some((m) => m.userId === TEST_PRINCIPAL)) {
+    members.push({ userId: TEST_PRINCIPAL, role: "admin", addedAt: new Date(0).toISOString() });
+    writeFileSync(file, JSON.stringify(members, null, 2));
+  }
 }

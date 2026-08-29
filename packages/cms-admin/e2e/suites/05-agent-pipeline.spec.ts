@@ -20,9 +20,11 @@ async function goToFirstAgent(page: import("@playwright/test").Page) {
     .first();
   await expect(agentLink).toBeVisible({ timeout: 10_000 });
   await agentLink.click();
-  await expect(page.getByTestId("nav-link-agents")).toBeVisible({
-    timeout: 10_000,
-  });
+  // Confirm we actually LANDED on an agent — not that some sidebar link exists.
+  // The original asserted `text="agents"` (matched the nav, not the page); my
+  // first replacement asserted the nav TESTID, which is the same mistake with a
+  // better selector. What the helper is for is the navigation.
+  await expect(page).toHaveURL(/\/agents\/[^/]+$/, { timeout: 15_000 });
 }
 
 test.describe("Agent detail page", () => {
@@ -67,12 +69,18 @@ test.describe("Agent detail page", () => {
     await goToFirstAgent(page);
     await page.waitForTimeout(1500);
 
-    // Ensure at least one target collection is set
-    const addPicker = page.getByText("— add a collection —");
+    // Ensure at least one target collection is set.
+    //
+    // This drove the picker by its TEXT NODE and read options by
+    // `[data-slot="custom-select-option"]`. The span is not the control, so the
+    // click waited for a text node to become "visible, enabled and stable" and
+    // retried 156 times until the 90s budget ran out. CustomSelect's own anchors
+    // are custom-select-trigger and custom-select-option-<value>.
+    const addPicker = page.getByTestId("custom-select-trigger").first();
     if (await addPicker.isVisible()) {
       await addPicker.click();
       const options = page.locator(
-        '[data-slot="custom-select-option"]:not(:has-text("— add"))',
+        '[data-testid^="custom-select-option-"]:not([data-testid$="custom-select-option-"])',
       );
       if ((await options.count()) > 0) {
         await options.first().click();

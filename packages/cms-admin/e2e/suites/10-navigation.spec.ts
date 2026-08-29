@@ -31,7 +31,12 @@ test.describe("Tab navigation", () => {
     await gotoAdmin(page, "/media");
     await page.waitForTimeout(1000);
 
-    await expect(page.getByTestId("media-root").or(page.getByTestId("nav-link-media"))).toBeVisible({ timeout: 10_000 });
+    // Assert the PAGE, not the nav link that leads to it. The `.or(nav-link-media)`
+    // hedge here did two wrong things at once: strict mode rejects an `.or()`
+    // where both sides match (they always did — the sidebar is on every page),
+    // and a visible nav link would have proved nothing about whether Media
+    // actually rendered, which is the whole claim in this test's name.
+    await expect(page.getByTestId("media-root")).toBeVisible({ timeout: 10_000 });
   });
 
   test("browser title includes site name", async ({ authedPage: page }) => {
