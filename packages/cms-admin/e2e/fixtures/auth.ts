@@ -43,6 +43,13 @@ export const test = base.extend<AuthFixtures>({
 
     await context.addCookies([
       { name: "cms-session", value: token, domain: "localhost", path: "/" },
+      // F178.5 — the sidebar is `collapsible="offcanvas"` and remembers its
+      // state in this cookie. A fresh browser has none, so every authed test
+      // opened onto a page whose nav is in the DOM but not VISIBLE, and
+      // `toBeVisible()` on any nav item failed. That is not what those tests
+      // are about; setting the cookie puts the workspace in the state a
+      // returning user actually has.
+      { name: "sidebar_state", value: "true", domain: "localhost", path: "/" },
       { name: "cms-active-org", value: "default", domain: "localhost", path: "/" },
       { name: "cms-active-site", value: "default", domain: "localhost", path: "/" },
     ]);

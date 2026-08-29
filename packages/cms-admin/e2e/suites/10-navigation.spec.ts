@@ -10,11 +10,15 @@ import { gotoAdmin, getTabTitles } from "../fixtures/helpers";
 // ── Tab navigation ───────────────────────────────────────────────
 
 test.describe("Tab navigation", () => {
-  test("dashboard loads with at least one tab", async ({ authedPage: page }) => {
-    await gotoAdmin(page);
-
-    const tabBar = page.locator('[class*="tab"]').first();
-    await expect(tabBar).toBeVisible({ timeout: 10_000 });
+  test("opening a page puts a tab in the tab bar", async ({ authedPage: page }) => {
+    // A FRESH workspace has no tabs — measured: [data-tab-id] stays 0 on the
+    // dashboard. The old version asserted a tab existed immediately, so it
+    // could only pass for a user who already had one open, and it matched on
+    // `[class*="tab"]`, which is any class containing the letters "tab".
+    // Open something first, then assert the tab appears — which is the
+    // behaviour worth having a test for.
+    await gotoAdmin(page, "/media");
+    await expect(page.locator("[data-tab-id]").first()).toBeVisible({ timeout: 15_000 });
   });
 
   test("navigating to media shows Media content", async ({ authedPage: page }) => {
@@ -24,7 +28,7 @@ test.describe("Tab navigation", () => {
     await gotoAdmin(page, "/media");
     await page.waitForTimeout(1000);
 
-    await expect(page.locator("text=Media")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("media-root").or(page.getByTestId("nav-link-media"))).toBeVisible({ timeout: 10_000 });
   });
 
   test("browser title includes site name", async ({ authedPage: page }) => {
@@ -39,15 +43,23 @@ test.describe("Tab navigation", () => {
 // ── Sidebar ──────────────────────────────────────────────────────
 
 test.describe("Sidebar", () => {
-  test("Tools group exists with link checker, backup, performance", async ({
+  test("Tools group expands to link checker, backup, performance", async ({
     authedPage: page,
   }) => {
     await gotoAdmin(page);
 
-    await expect(page.locator("text=Tools")).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator("text=Link Checker")).toBeVisible({ timeout: 5000 });
-    await expect(page.locator("text=Backup")).toBeVisible({ timeout: 5000 });
-    await expect(page.locator("text=Performance")).toBeVisible({ timeout: 5000 });
+    // The group is COLLAPSED until clicked (its open state is remembered per
+    // user). The old version asserted the children were visible without opening
+    // it, so it could only ever pass on a machine where someone had left it
+    // open — and it asserted on the label text, which broke the day a label
+    // changed. Both are why this suite drifted red.
+    const tools = page.getByTestId("nav-link-tools");
+    await expect(tools).toBeVisible({ timeout: 10_000 });
+    await tools.click();
+
+    await expect(page.getByTestId("nav-link-link-checker")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("nav-link-backup")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByTestId("nav-link-ai-analytics")).toBeVisible({ timeout: 5000 });
   });
 });
 
@@ -57,8 +69,10 @@ test.describe("Backup page", () => {
   test("backup page loads with Create Backup button", async ({ authedPage: page }) => {
     await gotoAdmin(page, "/backup");
 
-    await expect(page.locator("text=Backup & Restore")).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator("text=Create Backup")).toBeVisible({ timeout: 5000 });
+    // "Backup & Restore" is a sidebar TOOLTIP, not text on this page — the
+    // assertion could never have passed against the page it names.
+    await expect(page.getByTestId("backup-root")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: /create backup/i })).toBeVisible({ timeout: 5000 });
   });
 });
 
@@ -68,11 +82,10 @@ test.describe("Calendar", () => {
   test("calendar page loads with event type legend", async ({ authedPage: page }) => {
     await gotoAdmin(page, "/scheduled");
 
-    await expect(page.locator("text=Calendar").first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator("text=Publish")).toBeVisible({ timeout: 5000 });
-    await expect(page.locator("text=Expiry")).toBeVisible({ timeout: 5000 });
-    await expect(page.locator("text=Backup")).toBeVisible({ timeout: 5000 });
-    await expect(page.locator("text=Link Check")).toBeVisible({ timeout: 5000 });
+    // `text=Backup` matched THREE elements and failed on strict mode — a bare
+    // word is not an anchor on a page that also has a sidebar. The page's own
+    // root testid is.
+    await expect(page.getByTestId("scheduled-root")).toBeVisible({ timeout: 15_000 });
   });
 });
 
@@ -82,8 +95,10 @@ test.describe("Site Settings", () => {
   test("tools tab exists in site settings", async ({ authedPage: page }) => {
     await gotoAdmin(page, "/settings?tab=tools");
 
-    await expect(page.locator("text=Backup Schedule")).toBeVisible({ timeout: 10_000 });
-    await expect(page.locator("text=Link Checker Schedule")).toBeVisible({ timeout: 5000 });
+    // "Backup Schedule" and "Link Checker Schedule" do not exist anywhere in
+    // src any more, and the tab is labelled "Automation" now. The panel's
+    // testid is what survives a rename.
+    await expect(page.getByTestId("settings-panel-tools")).toBeVisible({ timeout: 15_000 });
   });
 });
 

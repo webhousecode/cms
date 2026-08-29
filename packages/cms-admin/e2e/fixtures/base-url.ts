@@ -26,3 +26,19 @@ export const E2E_PORT = Number(process.env.E2E_PORT ?? 3011);
 /** Absolute origin of the server under test — no trailing slash. */
 export const BASE_URL =
   process.env.E2E_BASE_URL ?? `http://localhost:${E2E_PORT}`;
+
+/**
+ * Where the fixture's registry, users and per-site state live, and which site
+ * the suite runs against. Shared so playwright.config.ts and global-setup.ts
+ * cannot disagree about it — the reason this file exists at all.
+ */
+import path from "node:path";
+
+export const E2E_DATA_DIR =
+  process.env.E2E_DATA_DIR ?? path.join(__dirname, "..", ".e2e-data");
+
+export const FIXTURE_CONFIG =
+  process.env.E2E_CMS_CONFIG_PATH ??
+  path.resolve(__dirname, "../../../../examples/blog/cms.config.ts");
+
+export const FIXTURE_SITE_ID = process.env.E2E_SITE_ID ?? "default";

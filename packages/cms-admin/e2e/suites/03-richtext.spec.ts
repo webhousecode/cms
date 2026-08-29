@@ -19,13 +19,17 @@ import {
 } from "../fixtures/helpers";
 import { resolveJwtSecret, TEST_PRINCIPAL } from "../../src/lib/dev-jwt-secret";
 
-const TEST_SLUG = "cms-chronicle-00-why-we-are-building-this";
+// A document that EXISTS in the fixture site. The old slug
+// ("cms-chronicle-00-why-we-are-building-this") belongs to a different site
+// entirely and is not in examples/blog — so the editor never rendered and all
+// three tests failed waiting for a contenteditable that was never coming.
+const TEST_SLUG = "hello-world";
 const COLLECTION = "posts";
 const UNIQUE_MARKER = `E2E-ROUNDTRIP-${Date.now()}`;
 
 test.describe("Richtext editor content roundtrip", () => {
   test("content survives save", async ({ authedPage: page }) => {
-    await page.goto(`/admin/${COLLECTION}/${TEST_SLUG}`);
+    await page.goto(`/admin/content/${COLLECTION}/${TEST_SLUG}`);
     await page.waitForLoadState("domcontentloaded");
 
     await typeInEditor(page, UNIQUE_MARKER);
@@ -41,7 +45,7 @@ test.describe("Richtext editor content roundtrip", () => {
   });
 
   test("content survives tab navigation", async ({ authedPage: page }) => {
-    await page.goto(`/admin/${COLLECTION}/${TEST_SLUG}`);
+    await page.goto(`/admin/content/${COLLECTION}/${TEST_SLUG}`);
     await page.waitForLoadState("domcontentloaded");
 
     await typeInEditor(page, UNIQUE_MARKER);
@@ -55,7 +59,7 @@ test.describe("Richtext editor content roundtrip", () => {
     await page.goto("/admin/media");
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(1000);
-    await page.goto(`/admin/${COLLECTION}/${TEST_SLUG}`);
+    await page.goto(`/admin/content/${COLLECTION}/${TEST_SLUG}`);
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(3000);
 
@@ -64,7 +68,7 @@ test.describe("Richtext editor content roundtrip", () => {
   });
 
   test("content survives full page reload", async ({ authedPage: page }) => {
-    await page.goto(`/admin/${COLLECTION}/${TEST_SLUG}`);
+    await page.goto(`/admin/content/${COLLECTION}/${TEST_SLUG}`);
     await page.waitForLoadState("domcontentloaded");
 
     await typeInEditor(page, UNIQUE_MARKER);

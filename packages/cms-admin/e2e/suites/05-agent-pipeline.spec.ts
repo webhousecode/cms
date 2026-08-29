@@ -13,12 +13,14 @@ import { collectConsoleErrors } from "../fixtures/helpers";
 async function goToFirstAgent(page: import("@playwright/test").Page) {
   await page.goto("/admin/agents");
 
+  // F146 prefixes admin links with the site slug (/admin/<site>/agents/...),
+  // so an href that pinned "/admin/agents/" matched nothing any more.
   const agentLink = page
-    .locator('a[href*="/admin/agents/"]:not([href$="/new"])')
+    .locator('a[href*="/agents/"]:not([href$="/new"])')
     .first();
   await expect(agentLink).toBeVisible({ timeout: 10_000 });
   await agentLink.click();
-  await expect(page.locator('text="agents"').first()).toBeVisible({
+  await expect(page.getByTestId("nav-link-agents")).toBeVisible({
     timeout: 10_000,
   });
 }
