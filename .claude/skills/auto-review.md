@@ -1,6 +1,6 @@
 ---
 name: auto-review
-description: The Full Auto Review gate (F095). Walk the Review column and, per card, run all four checks LOCALLY ($0) — Lens (visual) + AC (contract) + code-review + security-review — aggregate via cardmem_card_verdict, and flip Review→Done ONLY when ready_for_done, attaching a review report. On any fail, fix the findings in-session and re-handoff to Review (the review→fix→re-review loop), bounded by the project's max-fix-rounds cap — then escalate to the human. Never flips without all-green + evidence.
+description: The Full Auto Review gate (F095). Walk the Review column and, per card, run all five checks LOCALLY ($0) — Lens (visual) + AC (contract) + code-review + security-review + design-drift — aggregate via cardmem_card_verdict, and flip Review→Done ONLY when ready_for_done, attaching a review report. On any fail, fix the findings in-session and re-handoff to Review (the review→fix→re-review loop), bounded by the project's max-fix-rounds cap — then escalate to the human. Never flips without all-green + evidence.
 argument-hint: "[F<n>]  (omit to sweep the whole Review column)"
 ---
 
@@ -57,6 +57,26 @@ For each card (`cardmem_list_cards({column:"review"})`, or the one you were give
 
 4. **Security review** — run `/security-review <F-number>` (records `type:"security"`).
 
+4b. **Design drift (F280.3)** — if the card touched `apps/web/src`, run
+   `node apps/web/scripts/design-drift.mjs`. It compares off-token colour + radius
+   literals against the recorded baseline in `apps/web/design-drift-baseline.json`
+   and names every offender `file:line`.
+
+   - **Count ROSE** → this card added drift. `cardmem_record_review({type:"design",
+     status:"failed", summary:"drift <n> > baseline <b>", findings:[…file:line…]})`.
+     That **blocks** `ready_for_done`, so fix it: use the token the report names, or —
+     only when a token genuinely cannot reach the site (a third-party brand mark, a
+     canvas, a standalone document) — mark the site with `design-token-exception` and
+     write the reason there. **Never a file-level exemption**; the marker covers the
+     construct it sits in and nothing else.
+   - **Count FELL** → good. Write the new number into the baseline file, in the same
+     commit, then record the pillar `passed`.
+   - **Unchanged and non-zero** → `status:"flagged"`. That is **advisory**: it appears
+     in the verdict's `advisories`, it does NOT block, and it does not need fixing on
+     this card. Do not "fix" it by raising the baseline — the number may only go down.
+   - **Card touched no web UI** → skip it. A missing `design` row is non-blocking, the
+     same as a missing lens row.
+
 5. **Aggregate + decide** — `cardmem_card_verdict({card_id_or_slug})` returns
    `ready_for_done`, plus the fix-loop cap: `fix_rounds` (how many times this card has
    re-entered Review after a failed pass), `max_fix_rounds` (the project setting), and
@@ -90,11 +110,16 @@ For each card (`cardmem_list_cards({column:"review"})`, or the one you were give
 ## Hard rules
 
 - **Never flip a card to Done without `ready_for_done === true`** — i.e. AC gate
-  satisfied AND code + security passed AND any recorded lens/ac passed AND nothing
-  failed/flagged. The AC gate (F017.1) still blocks Done independently.
+  satisfied AND code + security passed AND any recorded lens/ac/design passed AND nothing
+  blocking (see the design-pillar asymmetry below). The AC gate (F017.1) still blocks Done independently.
 - **Every tick carries evidence** — a tool-result, a value, or a Lens run id. Never
   tick an AC or pass a check you didn't prove ("aldrig påstå noget virker uden bevis").
-- **$0, local, all four pillars.** No metered API, no billed harness, no `ultrareview`.
+- **$0, local, all five pillars.** No metered API, no billed harness, no `ultrareview`.
+- **The design pillar is the one place `flagged` does NOT block.** `failed` (drift rose)
+  blocks; `flagged` (drift at or below baseline) is advisory. That asymmetry is what lets
+  the pillar exist at all — 152 pre-existing off-token values would otherwise turn every
+  card red on day one, and a gate switched off on day one still looks like coverage.
+  For every OTHER pillar, `flagged` still blocks.
 - **The fix loop is bounded.** Auto-fixing on a failed pass is allowed (F095.11), but ONLY
   while `escalate === false`. The moment `fix_rounds ≥ max_fix_rounds`, stop and hand to
   the human — never loop past the cap. Always re-`cardmem_card_verdict` after a re-handoff;
