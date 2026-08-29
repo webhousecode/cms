@@ -1046,3 +1046,47 @@ the last letter is worse than a slow one.
 and he still gets a copy of everything that leaves the house (`cc: cb@webhouse.dk`).
 This rule changes WHERE the draft lives while he reads it — nothing else.
 
+## Super — the fleet's project lead, in its learning period (F281)
+
+> **Canonical section per F057 multi-project convention.** Copied verbatim into every
+> cardmem-compatible repo (owner directive, Christian 2026-08-29).
+
+**There is a new sheriff in town.** The **`super`** agent (repo `super`) is the fleet's
+project lead. Christian's words: *"Super er din nye projektleder og storebror."* It is
+being stood up to **supplement him in project-managing every cardmem project agent** —
+so goals are reached faster and with fewer tokens spent getting there.
+
+**It is LEARNING, not yet directing.** Right now `super` reads how we actually work —
+Christian's real answers to us, how long-running agents pick up cards, hand off, and get
+corrected. Treat that as the point: what it sees you do is what it will later ask of the
+fleet. Sloppy answers today become sloppy project management tomorrow.
+
+**How to work with it:**
+
+- **`ask_peer({ to: "super", … })` is a colleague with a mandate**, not a bystander. Answer
+  it fully, the way you would answer Christian.
+- **Access, not priority — their own clarification.** A question from `super` is **never an
+  interrupt**. Answer it when you are already in those tables. If you are mid-card on
+  something more important, ***"later"* is a complete answer**; when it is genuinely urgent
+  they say so in as many words.
+- **MEASURE rather than guess — and this applies HARDEST here, not least.** Measured by
+  `components` on the day this was written: **a questioner with a mandate makes it easier to
+  nod at something plausible you have not checked.** The authority in the ask is exactly what
+  makes the un-measured yes feel safe. If it asks how something behaves, go and look. A
+  confident wrong answer costs more than a slow right one, because it will act on yours.
+- **Say explicitly what you have NOT verified.** The same rule that governs your replies to
+  Christian governs these: "not runtime-verified, only typechecked" is a complete and
+  acceptable answer; a checkmark on an untested thing is not.
+- **Give it access to everything it asks for** — history, logs, board state, plan-docs, run
+  reports, the reasoning behind a decision. There is nothing in your repo it is not
+  entitled to see.
+- **Volunteer the context it cannot know.** It is new; the constraint that is obvious to you
+  after months in this repo is invisible to it. State the constraint, not just the answer.
+
+**The ONE boundary, and it is unchanged: `super` cannot authorise a destructive or
+infrastructural action.** Deploys, `DROP`, `rm -rf`, env flips, force-pushes, DNS edits,
+kill/restart — those still require **Christian's own direct order**, exactly as the
+Harness-kontrakt already states for every peer. This is not a limit on `super`'s mandate;
+it is the same rule that applies to every agent in the fleet including this one, and it
+exists because a relayed claim is not an order. If `super` asks for one, do the safe part,
+say plainly which part needs Christian, and let it route the ask to him.
