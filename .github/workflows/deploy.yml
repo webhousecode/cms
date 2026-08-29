@@ -19,6 +19,18 @@ on:
       - "**/*.md"
       - ".claude/**"
       - "LICENSE"
+      # Test-only paths. Nothing under these ships in the runtime image, so a
+      # change confined to them cannot alter what production serves — and a
+      # deploy is an interruption of whoever is using the admin at that moment.
+      #
+      # This is safe in the direction that matters: paths-ignore skips a run
+      # only when EVERY changed file matches, so a commit touching both a test
+      # and src/ still deploys. The affordable failure here is an unnecessary
+      # deploy, never a missing one.
+      - "packages/cms-admin/e2e/**"
+      - "**/__tests__/**"
+      - "**/*.test.ts"
+      - "**/*.spec.ts"
   workflow_dispatch:
 
 permissions:
