@@ -6,7 +6,7 @@
   "data": {
     "title": "Hello, World!",
     "excerpt": "My first blog post powered by @webhouse/cms.",
-    "content": "# Hello, World!\n\nWelcome to this blog, powered by **@webhouse/cms** — an AI-native CMS engine.\n\n## Features\n\n- Schema-driven content modeling\n- Static site generation\n- REST API for content management\n- AI-friendly manifest endpoint\n\n## Getting Started\n\nDefine your collections in `cms.config.ts`, add content, and run `cms build`.\n\n```typescript\n\nE2E-ROUNDTRIP-1788012378105\nE2E-ROUNDTRIP-1788012378105\nE2E-ROUNDTRIP-1788012378105\nE2E-ROUNDTRIP-1788011902844\nE2E-ROUNDTRIP-1788011902844\nE2E-ROUNDTRIP-1788011902844\nE2E-ROUNDTRIP-1788011673719import { defineConfig, defineCollection } from '@webhouse/cms';\n\nexport default defineConfig({\n  collections: [\n    defineCollection({\n      name: 'posts',\n      fields: [\n        { name: 'title', type: 'text', required: true },\n        { name: 'content', type: 'richtext' },\n      ],\n    }),\n  ],\n});\n```\n\nHappy building!",
+    "content": "# Hello, World!\n\nWelcome to this blog, powered by **@webhouse/cms** — an AI-native CMS engine.\n\n## Features\n\n- Schema-driven content modeling\n- Static site generation\n- REST API for content management\n- AI-friendly manifest endpoint\n\n## Getting Started\n\nDefine your collections in `cms.config.ts`, add content, and run `cms build`.\n\n```typescript\n\nE2E-ROUNDTRIP-1788013716943\nE2E-ROUNDTRIP-1788013716943\nE2E-ROUNDTRIP-1788013716943\nE2E-ROUNDTRIP-1788012912274\nE2E-ROUNDTRIP-1788012912274\nE2E-ROUNDTRIP-1788012912274\nE2E-ROUNDTRIP-1788012378105\nE2E-ROUNDTRIP-1788012378105\nE2E-ROUNDTRIP-1788012378105\nE2E-ROUNDTRIP-1788011902844\nE2E-ROUNDTRIP-1788011902844\nE2E-ROUNDTRIP-1788011902844\nE2E-ROUNDTRIP-1788011673719import { defineConfig, defineCollection } from '@webhouse/cms';\n\nexport default defineConfig({\n  collections: [\n    defineCollection({\n      name: 'posts',\n      fields: [\n        { name: 'title', type: 'text', required: true },\n        { name: 'content', type: 'richtext' },\n      ],\n    }),\n  ],\n});\n```\n\nHappy building!",
     "date": "2026-03-09T00:00:00.000Z",
     "author": "webhouse",
     "_seo": {
@@ -25,11 +25,11 @@
       "userId": "dev-token",
       "name": "Test Admin",
       "email": "cb@webhouse.dk",
-      "at": "2026-08-29T14:06:45.676Z"
+      "at": "2026-08-29T14:29:01.600Z"
     }
   },
   "createdAt": "2026-03-09T00:00:00.000Z",
-  "updatedAt": "2026-08-29T14:06:45.677Z",
+  "updatedAt": "2026-08-29T14:29:01.601Z",
   "_fieldMeta": {},
   "locale": "da"
 }

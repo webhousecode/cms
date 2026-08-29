@@ -48,7 +48,11 @@ export default defineConfig({
   // first hit, so whichever test reached a page first paid the compile and
   // timed out — and it moved around between runs, which reads as flakiness
   // rather than as a budget problem.
-  timeout: 60_000,
+  // 90s, not 60: the agent detail page and the Tools group are the heaviest
+  // routes in the suite and still lost the race against a first-hit Turbopack
+  // compile late in a long run. Generous on purpose — a budget that fails on
+  // machine speed teaches people to ignore the colour.
+  timeout: 90_000,
   retries: 0,
   // ONE worker. Two workers share a single Next DEV server, and Turbopack
   // compiling a route for worker A stalls worker B past its budget: the i18n

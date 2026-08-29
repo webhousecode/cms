@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { E2E_DATA_DIR, FIXTURE_CONFIG, FIXTURE_SITE_ID } from "./fixtures/base-url";
+import { TEST_PRINCIPAL } from "../src/lib/dev-jwt-secret";
 
 /**
  * F178.5 — the suite had no seeded state at all, and every failure followed.
@@ -91,16 +92,23 @@ export default function globalSetup() {
     ),
   );
 
-  // The session the auth fixture mints carries sub=TEST_PRINCIPAL and gets its
-  // role from require-role's short-circuit, so this user is not what authorises
-  // the tests. It exists so `hasUsers` is true — that is the whole job, and
-  // pretending otherwise would invite someone to "fix" auth by editing it.
+  // The user's id MUST be TEST_PRINCIPAL — the `sub` the auth fixture signs.
+  //
+  // require-role short-circuits that principal to a role, so the tests are
+  // authorised either way; what is NOT short-circuited is /api/admin/profile,
+  // which looks the sub up in this list. With any other id it answered 404, the
+  // shared header context came back empty, and the sidebar — which renders each
+  // item behind `ctxUser?.permissions?.includes(...)` — rendered NOTHING.
+  //
+  // So a wrong id here does not look like an auth failure. It looks like a
+  // missing sidebar, a missing tab bar and a dashboard stuck on skeletons, in
+  // eight tests that each name a different feature.
   writeFileSync(
     USERS,
     JSON.stringify(
       [
         {
-          id: "e2e-admin",
+          id: TEST_PRINCIPAL,
           email: "cb@webhouse.dk",
           name: "E2E Admin",
           role: "admin",

@@ -18,7 +18,10 @@ test.describe("Tab navigation", () => {
     // Open something first, then assert the tab appears — which is the
     // behaviour worth having a test for.
     await gotoAdmin(page, "/media");
-    await expect(page.locator("[data-tab-id]").first()).toBeVisible({ timeout: 15_000 });
+    // The anchor is `data-testid="tab-<id>"`. `[data-tab-id]` — what this and
+    // helpers.getTabTitles both looked for — is not in the component at all;
+    // it matched zero elements on every machine, forever.
+    await expect(page.locator('[data-testid^="tab-"]').first()).toBeVisible({ timeout: 20_000 });
   });
 
   test("navigating to media shows Media content", async ({ authedPage: page }) => {
@@ -35,8 +38,13 @@ test.describe("Tab navigation", () => {
     await gotoAdmin(page);
     await page.waitForTimeout(2000);
 
+    // The tab title is the SITE's name — which is the whole point of the test
+    // and the opposite of what it asserted. It required "webhouse.app", the
+    // product name, and got "E2E Blog". On any real customer site it would have
+    // demanded webhouse.app in the title of THEIR site.
     const title = await page.title();
-    expect(title).toContain("webhouse.app");
+    expect(title.trim().length).toBeGreaterThan(0);
+    expect(title).toContain("E2E Blog");
   });
 });
 

@@ -87,7 +87,9 @@ export async function saveDocument(page: Page) {
 
 /** Get all visible tab titles from the tab bar */
 export async function getTabTitles(page: Page): Promise<string[]> {
-  const tabs = page.locator("[data-tab-id]");
+  // `[data-tab-id]` does not exist in tab-bar.tsx; the anchor is
+  // data-testid="tab-<id>". This helper returned [] for every caller.
+  const tabs = page.locator('[data-testid^="tab-"]');
   const count = await tabs.count();
   const titles: string[] = [];
   for (let i = 0; i < count; i++) {

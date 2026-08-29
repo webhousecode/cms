@@ -89,7 +89,7 @@ test.describe("F48 i18n — Collection list locale filter", () => {
 
   // ── Locale badge on translated documents ────────────────────
 
-  test("translated document shows locale badge and translationOf link", async ({ authedPage: page }) => {
+  test("translated document shows its locale badge", async ({ authedPage: page }) => {
     await page.goto("/admin/posts");
     await page.waitForTimeout(3000);
 
@@ -99,8 +99,12 @@ test.describe("F48 i18n — Collection list locale filter", () => {
     // Locale badge is a <span> with exact "EN" text
     await expect(enRow.locator("span", { hasText: /^EN$/ })).toBeVisible();
 
-    // Should show translationOf link (→ scenario-1-da)
-    await expect(enRow.locator("text=→ scenario-1-da")).toBeVisible();
+    // The "→ scenario-1-da" link is GONE from the product on purpose: with
+    // translationGroup every locale is an equal partner, so there is no source
+    // to point back at. The character "→" does not appear in
+    // components/collection-list.tsx at all any more. Asserting it kept a
+    // removed design alive in the suite; the badge above is what still means
+    // something.
   });
 
   test("source document shows DA locale badge", async ({ authedPage: page }) => {
