@@ -53,6 +53,28 @@ Bemærk række 4: gangestykker virker, fordi JavaScript coercer. **Det er derfor
 fejlen har overlevet** — den mest brugte operation på et pristal skjuler den, og
 sammenligningen der afslører den ligger et andet sted i koden.
 
+## Omfanget, målt på ét site
+
+sanne-sessionen talte deres egen prod-volumen op — alle 26 collections, felter
+hvis navn ligner et tal:
+
+| | Antal |
+|---|---|
+| gemt som **tal** | 135 |
+| gemt som **streng** | **57** |
+
+De 57 er ikke spredt tilfældigt. Hovedparten er `products.priceDkk` (650, 150,
+2800, 160 …) — **priser i en levende webshop**.
+
+At blandingen er 135/57 og ikke 0/192 er selv en oplysning: felterne er skrevet
+over tid gennem forskellige veje (API-push, import, editoren), og kun editor-vejen
+producerer strenge. Så en migrering kan ikke antage at hele feltet er ensartet —
+den skal konvertere **pr. værdi**, ikke pr. felt.
+
+Forbrugeren har allerede en `Number()`-coercion i sin shop-kode der redder
+**købet**. Den redder ikke en **sammenligning**, og det var præcis hvad
+sanneandersens F053 var.
+
 ## Hvad der skal ske
 
 1. En `case "number"` der renderer et rigtigt talfelt og skriver et **tal**.
