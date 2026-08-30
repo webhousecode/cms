@@ -225,6 +225,34 @@ export default defineConfig({
     expect(out).toContain(`{ name: "stats", type: "array", fields: [{ name: "value", type: "text" }] }`);
   });
 
+  it("preserves an option's F180 `note` through a schema rewrite", () => {
+    // The whole point of F180 is that the rate is NOT a second copy living in
+    // the label. If the rewriter drops `note`, the reference silently reverts
+    // to a bare label the first time anyone edits the schema — and the feature
+    // evaporates without a single error. This module's own history is exactly
+    // that failure (locales in May, urlPattern + nested fields in June), so the
+    // property is pinned rather than trusted to the generic serializer.
+    const out = replaceCollectionsArray(FULL, [
+      {
+        name: "posts",
+        fields: [
+          {
+            name: "kind",
+            type: "select",
+            label: "Leveringsform (styrer satsen)",
+            options: [
+              { label: "Leveret online", value: "digital", note: "{{global.fees.digital}}%" },
+              { label: "Gavekort", value: "gift" },
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(out).toContain(`note: "{{global.fees.digital}}%"`);
+    // …and an option WITHOUT a note must not grow an empty one.
+    expect(out).toContain(`{ label: "Gavekort", value: "gift" }`);
+  });
+
   it("preserves all FieldConfig props (defaultValue, maxLength, options, features, ai)", () => {
     const out = replaceCollectionsArray(FULL, [
       {

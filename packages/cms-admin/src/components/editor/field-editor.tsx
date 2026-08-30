@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { noteCollections, readPath, resolveNote } from "@/lib/option-notes";
 
 interface Props {
   field: FieldConfig;
@@ -392,9 +393,66 @@ function SimpleStringArray({ values, onChange, locked }: { values: string[]; onC
   );
 }
 
+/**
+ * F180 — load the documents a select's option notes read from.
+ *
+ * Fetches NOTHING unless an option actually carries a `{{...}}` reference, so
+ * every other field on every other site pays nothing for this. Targets
+ * `kind: "global"` collections, which hold exactly one document per locale —
+ * hence no slug to guess and no query syntax.
+ *
+ * Failure is deliberately silent HERE and visible in `resolveNote`: a note that
+ * cannot be resolved is dropped whole, and the option keeps its label. A rate
+ * the editor cannot see must never stop them choosing a category.
+ */
+function useOptionNoteData(
+  options: Array<{ note?: string }> | undefined,
+  documentLocale?: string,
+) {
+  const keys = (options ?? []).map((o) => o.note).filter(Boolean).join("|");
+  const [data, setData] = useState<Record<string, unknown>>({});
+
+  useEffect(() => {
+    const cols = noteCollections(keys ? keys.split("|") : []);
+    if (cols.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const out: Record<string, unknown> = {};
+      for (const col of cols) {
+        try {
+          const res = await fetch(`/api/cms/${encodeURIComponent(col)}`);
+          if (!res.ok) continue;
+          const body = await res.json();
+          // This endpoint answers with a TOP-LEVEL ARRAY. Reading it as
+          // `.documents` yields undefined and looks exactly like an empty
+          // collection — a mis-parse that has previously been mistaken for a
+          // content wipe, so both shapes are handled explicitly.
+          const docs: Array<{ data?: unknown; locale?: string }> = Array.isArray(body)
+            ? body
+            : (body?.documents ?? []);
+          const hit =
+            docs.find((d) => documentLocale && d.locale === documentLocale) ?? docs[0];
+          if (hit?.data) out[col] = hit.data;
+        } catch {
+          // Network/parse failure → no note. The option still renders.
+        }
+      }
+      if (!cancelled) setData(out);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [keys, documentLocale]);
+
+  return data;
+}
+
 export function FieldEditor({ field, value, onChange, locked, blocksConfig, documentLocale }: Props) {
   const strVal = String(value ?? "");
   const testId = `field-${field.type}-${field.name}`;
+  // Called unconditionally — hooks cannot live inside the switch below — and it
+  // no-ops for every field whose options carry no note.
+  const noteData = useOptionNoteData(field.options, documentLocale);
 
   switch (field.type) {
     case "text": {
@@ -470,7 +528,16 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
           data-testid={testId}
           options={[
             { value: "", label: "— Select —" },
-            ...(field.options ?? []).map((opt) => ({ value: opt.value, label: opt.label })),
+            // F180: the label names the category; a note carries a value read
+            // from the site's own content, so the number is never a second copy
+            // living in this string. `noteData` is empty until it loads (and
+            // stays empty if it cannot), and the option renders fine either way.
+            ...(field.options ?? []).map((opt) => {
+              const note = resolveNote(opt.note, (col, path) =>
+                readPath(noteData[col], path),
+              );
+              return { value: opt.value, label: note ? `${opt.label} — ${note}` : opt.label };
+            }),
           ]}
           value={strVal || ""}
           onChange={onChange}

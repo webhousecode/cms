@@ -32,7 +32,20 @@ export interface FieldConfig {
   maxLength?: number;
   minLength?: number;
   // select
-  options?: Array<{ label: string; value: string }>;
+  /**
+   * F180 — an option may show a value that lives in the site's own content
+   * instead of repeating it inside `label`. `note` holds `{{collection.path}}`
+   * placeholders resolved against a `kind: "global"` collection on that site.
+   *
+   *   { value: "digital", label: "Leveret online — webinar, ebog, lydfil",
+   *     note: "{{global.fees.digital}}%" }
+   *
+   * The label names the category; the note carries the number, from the one
+   * place it is defined. A note is decoration on the choice, never a
+   * precondition for it — an option whose note cannot be resolved still
+   * renders and can still be picked.
+   */
+  options?: Array<{ label: string; value: string; note?: string }>;
   // relation
   collection?: string;
   multiple?: boolean;
@@ -333,7 +346,20 @@ export interface FormFieldConfig {
   label: string;
   required?: boolean;
   placeholder?: string;
-  options?: Array<{ label: string; value: string }>;
+  /**
+   * F180 — an option may show a value that lives in the site's own content
+   * instead of repeating it inside `label`. `note` holds `{{collection.path}}`
+   * placeholders resolved against a `kind: "global"` collection on that site.
+   *
+   *   { value: "digital", label: "Leveret online — webinar, ebog, lydfil",
+   *     note: "{{global.fees.digital}}%" }
+   *
+   * The label names the category; the note carries the number, from the one
+   * place it is defined. A note is decoration on the choice, never a
+   * precondition for it — an option whose note cannot be resolved still
+   * renders and can still be picked.
+   */
+  options?: Array<{ label: string; value: string; note?: string }>;
   defaultValue?: string;
   validation?: {
     pattern?: string;
