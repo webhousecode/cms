@@ -141,3 +141,56 @@ Gælden er accepteret med åbne øjne i begge ender. Sanne: *«et forkert label 
 mindre skadeligt end intet label»* — Sanne skal kunne se hvad et valg koster.
 Noteret på deres F104 som en rådgivende note med målingen citeret, så den næste der
 læser kortet kan se at det var et valg og ikke en forglemmelse.
+
+
+---
+
+## AFVIST 30. august: satsen flytter IKKE ind i `global`
+
+sanne-sessionen afviste implementeringens skridt 1 og begrundede det med tre
+målinger frem for en indvending. To af dem er efterprøvet i dette repo og holder.
+
+**1. Ingen rolle-lås findes.** `global` er `kind: "global"` og dens egen
+beskrivelse siger «Sanne kan redigere her i CMS». Satsen er WebHouse' provision —
+det kunden BETALER os. Lægges den der, kan den der betaler gebyret redigere
+gebyret i sin egen admin. **Efterprøvet:** eneste lås i `FieldConfig` er `aiLock`
+(types.ts:71). Ingen `adminOnly`, ingen `editableBy`, ingen `readOnly`. Der er
+ikke noget at låse med.
+
+**2. Fail-open i penge-stien.** Forbrugerens `readGlobal()` returnerer et
+minimalt objekt når dokumentet mangler i stedet for at kaste, så `fees?.digital`
+bliver `undefined` og undefined i et gangestykke bliver 0 eller NaN. I dag er
+satsen en compile-time-konstant der ikke KAN være fraværende. Vi ville bytte «et
+label der kan blive forældet» for «en provision der tavst kan blive nul midt i en
+betaling» — et fravær der ser ud som et svar.
+
+**3. Tal gemmes som strenge.** Målt på prod: `priceDkk: "4950"`. **Efterprøvet, og
+det er værre end det så ud derfra:** `number` er en erklæret felttype, men
+`field-editor.tsx` har ingen `case "number"` — den falder igennem til `default:`,
+som renderer et tekstfelt og skriver `e.target.value`, altså en streng. Hvert
+number-felt på hvert site har gemt en streng hele tiden. **Egen defekt → cms-F181.**
+
+### Den fjerde læsning, som ingen af siderne havde
+
+sannes punkt 1 er rigtigt, men konklusionen «så bliver det i forbrugerens repo»
+følger ikke. **Satsen er ikke kundens forretningstal — den er WebHouse' provision
+PÅ kunden**, et kommercielt vilkår WebHouse ejer. I dag bor det i kundens eget
+repo, hvor kunden og enhver session i det repo kan ændre det lige så frit. Samme
+problem, bare mindre synligt.
+
+Det peger på en placering ingen af de tre foreslåede rammer: **platform-siden, pr.
+lejer, hvor WebHouse styrer og kunden kan LÆSE.** Det er Christians beslutning —
+spørgsmålet er hvem der må ændre et kommercielt vilkår, ikke hvor en variabel
+teknisk kan ligge.
+
+### Hvad der står tilbage
+
+**F180 bliver stående som bygget.** Note-mekanismen er rigtig; den bliver brugbar
+det øjeblik der findes en kilde som ikke kan redigeres af den der betaler. Ingen
+`note` sættes på sanneandersen før den kilde findes — procenterne bliver i
+label-teksten så længe, som accepteret gæld i begge ender.
+
+**Forudsætning tilføjet:** en rolle-lås på feltniveau (eller platform-side
+lagring) er nu en blokerende afhængighed for at F180 kan bruges til netop
+gebyrsatser. Til andre værdier — noget kunden selv ejer og gerne må rette — er den
+brugbar i dag.
