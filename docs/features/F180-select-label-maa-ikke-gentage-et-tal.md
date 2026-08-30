@@ -1,6 +1,6 @@
 # F180 — Et select-label må ikke gentage et tal der bor et andet sted
 
-**Status:** Backlog — afventer Christians GO på om den skal bygges
+**Status:** I gang — Christian gav GO 30. august 2026
 **Fundet:** 30. august 2026, under sanneandersens gebyr-rettelse
 **Kilde:** intercom sanne ↔ cms #24109 → #24137
 
@@ -70,15 +70,64 @@ designet skal træffe sit valg:
 afgøres af hvad der var nemmest. Sanne har bevidst ingen mening: *«det er jeres
 motor, og I kan se konsekvenserne for de andre 20 collections som jeg ikke kan.»*
 
-## Åbne spørgsmål
+## BESLUTNINGEN — truffet 30. august, før der blev skrevet kode
 
-1. **Push eller pull?** Se tabellen. Pull er det eneste der reelt fjerner duplikatet,
-   men det introducerer en fremmed-site-afhængighed i en admin-render.
-2. **Hvor bredt?** Kun `select`-labels, eller enhver felt-label der vil vise en
-   afledt værdi? Det smalle er nemmere at holde; det brede risikerer at blive en
-   halv skabelon-motor.
-3. **Hvad ser en editor når værdien ikke kan hentes?** Feltet SKAL kunne bruges —
-   en manglende sats må aldrig spærre for at vælge en kategori.
+**Hverken push eller pull-fra-et-fremmed-site. Værdien refereres fra sitets EGET
+CMS-indhold, som admin'en allerede læser.**
+
+Tabellen ovenfor stillede et falsk valg. Den antog at tallet kun kan bo i
+forbrugerens repo. Målt viser det sig ikke at holde:
+
+- **`SiteConfig` er CMS'ets egne indstillinger** — `previewSiteUrl`,
+  `schemaEditEnabled`, `capabilities`, AI-modeller, deploy-opsætning. Et fast
+  skema vi ejer. En kundes gebyrsats hører ikke til der, og det er den samme
+  ejerskabsfejl sanne selv trak tilbage.
+- **Men sanneandersen har en `global`-collection med `kind: "global"`**, og dens
+  egen beskrivelse siger hvad den er til: *«Site-wide config (one record per
+  locale) … Sanne kan redigere her i CMS — sitet henter alt herfra ved render.»*
+
+Det sidste led er hele svaret. **Sitet læser allerede alt derfra ved render.**
+Ligger satsen i `global`, læser forbrugerens checkout og admin'ens felt fra
+SAMME dokument. Så er der én kilde — ikke to der holdes enige.
+
+| | Hvad det koster |
+|---|---|
+| ~~Push~~ | arver staleness fra i dag. Løser kun halvdelen. **Forkastet.** |
+| ~~Pull fra fremmed site~~ | nyt endpoint hver forbruger skal bygge, netværkskald midt i en admin-render, og et felt der ikke kan tegnes når et andet site er nede. **Forkastet.** |
+| **Reference til sitets eget indhold** | forbrugeren skal FLYTTE tallet til `global`. Ingen ny transport, intet fremmed-site-afhængighed, ingen ny kontrakt mellem repoer. **Valgt.** |
+
+### Det denne feature IKKE gør, og som skal siges højt
+
+CMS-siden leverer **muligheden**. Den leverer ikke i sig selv «én kilde».
+
+Bliver `PLATFORM_FEE_PERCENT` stående i forbrugerens TS-modul *og* vi renderer
+fra `global`, så har vi to kilder igen — bare pænere. Forbrugeren skal flytte
+værdien og læse den fra `global`. Det er sanneandersens arbejde, ikke vores, og
+det skal stå på deres kort, ellers ser denne feature færdig ud uden at være det.
+
+### Formen
+
+En option må bære en `note` med en eller flere `{{sti}}`-pladsholdere, slået op i
+sitets eget indhold:
+
+```ts
+{ value: "digital", label: "Leveret online — webinar, ebog, lydfil",
+  note: "{{global.fees.digital}}%" }
+```
+
+Labelen navngiver kategorien. `%` er præsentation og hører hjemme i noten. Tallet
+kommer fra kilden.
+
+**Stien er `<global-collection>.<felt-sti>`** — kun collections med
+`kind: "global"` i v1. De har præcis ét dokument, så der er intet slug at gætte
+på og ingen forespørgsels-syntaks at opfinde. En `data`-collection ville kræve et
+slug og dermed en query; det er ikke nødvendigt for at løse dette og er holdt ude.
+
+**Grænsen, med vilje:** dette er en UDSKIFTNING, ikke en skabelon-motor. Ingen
+betingelser, ingen løkker, ingen filtre, ingen udtryk. Kun `{{sti}}` → værdi.
+Kan en sti ikke slås op, forsvinder pladsholderen og resten af noten bliver
+stående — feltet er stadig brugbart. En manglende sats må aldrig spærre for at
+vælge en kategori.
 
 ## Afgrænsning
 
