@@ -160,3 +160,63 @@ resolve_repo() {
   origin=${origin%/}
   printf '%s' "$origin"
 }
+
+# ─── F287.3 — the kill switch a gate consults before it fires ───────────
+#
+# A rule ships as a COPY in every repo, so switching one off centrally reaches
+# nothing unless the copy asks. This is where it asks. session-start.sh writes
+# the list cardmem_session_start returned to .claude/rules.local.json; every
+# gate calls rule_disabled "<id>" as its FIRST act and exits 0 when told to.
+#
+# THE FAIL DIRECTION IS INVERTED HERE, and it is the whole design.
+#
+# Everywhere else in these hooks, doubt means "let the command through" — a
+# guard that blocks work on its own uncertainty gets switched off, and then it
+# is worse than no guard. Here doubt means the OPPOSITE: no file, unreadable
+# file, no jq, malformed JSON, a `disabled` that is not a list — the gate still
+# RUNS. A kill switch that silently disables a safety gate because a file was
+# missing is worse than no kill switch, and the two defaults point the same way
+# morally: never let our own uncertainty be the thing that causes the damage.
+#
+# Returns 0 (true, "yes it is disabled") ONLY on a positive, well-formed match.
+rule_disabled() {
+  local id="${1:-}"
+  [ -n "$id" ] || return 1
+  local f="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}/.claude/rules.local.json"
+  [ -r "$f" ] || return 1
+  command -v jq >/dev/null 2>&1 || return 1
+  # `index` on an explicit array, so a `disabled` that is a string or an object
+  # is a jq error (-> return 1 -> the gate runs), never a substring match. A
+  # `disabled` of "deploy-background-experiment" must not disable
+  # "deploy-background".
+  jq -e --arg id "$id" '(.disabled | arrays) as $d | $d | index($id) != null' "$f" >/dev/null 2>&1
+}
+
+# F287.3 — write the kill list the gates read, from a session_start result.
+#
+# A FUNCTION rather than eight lines inside session-start.sh, because the write
+# is the half that can silently go wrong (a stale file from another project, a
+# half-written file, an absent field mistaken for "nothing disabled") and a
+# block buried in a 200-line hook cannot be driven by a test.
+#
+# Echoes what it decided so a caller can report it. Never fails the boot.
+write_rules_local() { # $1 = the full session_start result JSON
+  local result="${1:-}" dir="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+  local f="$dir/rules.local.json"
+  command -v jq >/dev/null 2>&1 || { echo "no-jq"; return 0; }
+  local rules
+  rules=$(printf '%s' "$result" | jq -c '.disabled_rules // empty' 2>/dev/null || echo "")
+  # ABSENT is not EMPTY. A server older than this hook cannot tell us "nothing
+  # is disabled", and treating its silence as a clear would re-enable a rule the
+  # owner had switched off. So we leave whatever is there alone.
+  if [ -z "$rules" ]; then echo "absent"; return 0; fi
+  # Atomic: a gate may read this file at any moment, and half a file parses as
+  # malformed. Malformed keeps the gate ON, so it is safe — but it would make
+  # the switch look flaky for no reason.
+  if printf '{"disabled":%s}\n' "$rules" > "$f.tmp" 2>/dev/null; then
+    mv -f "$f.tmp" "$f" 2>/dev/null || { rm -f "$f.tmp"; echo "write-failed"; return 0; }
+    echo "$rules"; return 0
+  fi
+  rm -f "$f.tmp" 2>/dev/null
+  echo "write-failed"
+}

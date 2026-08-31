@@ -65,6 +65,20 @@ if [[ -z "$result" ]]; then
   exit 0
 fi
 
+# F287.3 — write the kill list the gates read. The logic lives in _common.sh
+# (write_rules_local) so it can be driven by test-rules-disabled.sh; a block
+# buried in this 200-line hook could not be.
+rules_written=$(write_rules_local "$result" "$DIR/..")
+if [[ -n "$rules_written" && "$rules_written" != "[]" && "$rules_written" != "absent" \
+      && "$rules_written" != "no-jq" && "$rules_written" != "write-failed" ]]; then
+  hook_log "session-start: rules disabled by the owner: $rules_written"
+  printf '<cardmem-rules-disabled>\n'
+  printf 'The owner has switched these harness rules OFF for this project: %s\n' "$rules_written"
+  printf 'The corresponding gates will not fire. This is deliberate — do not re-enable them\n'
+  printf 'or work around their absence; if one is missing that you think should be on, say so.\n'
+  printf '</cardmem-rules-disabled>\n'
+fi
+
 # F060.2 — adopt-forcing. If cloud says this repo's Init isn't done, INLINE the
 # full adopt skill so the session can't shortcut past reading a file. Cloud-
 # authoritative (init.required from session_start), never a local marker.
