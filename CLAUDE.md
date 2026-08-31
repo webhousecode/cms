@@ -101,6 +101,52 @@ minut, med de to artikler som eksempel: *«som med artiklerne så SKAL du bare g
 det jeg beder dig om.»* Siger han udgiv, så udgiv. Sondringen mellem at RETTE og
 at UDGIVE var min, ikke hans, og den kostede ham en ekstra tur.
 
+## Hard Rule: Tekst hører hjemme i CMS'et — ALDRIG kun i koden
+
+**Christian, 31/8-2026: «LAV ALDRIG TEKST I KODEN - ALTID I CMS.»**
+
+Enhver brugervendt tekst på et @webhouse/cms-drevet site skal EKSISTERE som en
+værdi i CMS-dokumentet. Ikke som en reservetekst i koden der renderes fordi
+feltet aldrig blev oprettet.
+
+**Hvorfor det ikke er en smagssag.** Mønsteret `g("feltnavn", "reservetekst")`
+ser ud til at gøre teksten redigerbar, og siden renderer korrekt. Men findes
+værdien ikke i dokumentet, så:
+
+- **CMS-søgningen kan ikke finde teksten.** Christian søgte på en sætning han
+  kunne se på sitet, og fik nul svar. Teksten fandtes ikke i det system han
+  søgte i.
+- **Admin-editoren viser den ikke.** Man kan ikke rette det man ikke kan se.
+- **Inline-redigering af ét sted ligner en global rettelse, men er det ikke** —
+  indtil nogen faktisk gemmer, findes værdien slet ikke.
+- **Reserveteksten bliver den rigtige tekst.** Den lever i git, ikke i CMS'et,
+  og kan kun ændres af en agent med et deploy.
+
+Det er husets gennemgående fejlform: **den grønne retning er den tavse retning.**
+En manglende CMS-værdi og en korrekt CMS-værdi renderer identisk.
+
+**Krav, når du tilføjer brugervendt tekst:**
+
+1. **Skriv værdien ind i CMS-dokumentet i SAMME tur** som du skriver koden der
+   renderer den. Ikke «næste tur» — samme tur.
+2. **Læs den tilbage fra en frisk GET** og sammenlign med streng lighed. En
+   200-status er ikke et bevis på at feltet blev gemt.
+3. **Bevis at CMS-søgningen finder den.** Det er den kontrol der fanger at
+   feltet aldrig blev oprettet — den eneste der måler fra brugerens side.
+4. **En reservetekst i koden er en NØDBREMSE, ikke et hjem.** Den må stå der, så
+   siden ikke går i stykker hvis feltet slettes — men den må aldrig være det
+   eneste sted teksten findes.
+
+**Konkret hændelse (31/8-2026, broberg.ai):** afslutningen på alle 34 artikler
+blev bygget med `g("postOutroHtml", "<fallback>")`. Jeg fortalte Christian at
+«teksten ligger ét sted i CMS'et — retter du den, slår den igennem overalt».
+Det var forkert. Målt bagefter: alle fem nye felter MANGLEDE i
+globals-dokumentet. `globals` havde oven i købet **0 erklærede felter** i
+skemaet, så ingen af dokumentets 43 værdier kunne ses i admin-editoren.
+
+**Smell test før commit:** kan jeg søge min nye tekst frem i CMS-admin og finde
+den? Kan jeg ikke det, findes den ikke i CMS'et — uanset hvad siden viser.
+
 ## Hard Rule: Preview MUST Always Work
 
 **EVERY site built with @webhouse/cms MUST have working preview — both locally and deployed. No exceptions.**
