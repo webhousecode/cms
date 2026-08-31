@@ -1192,7 +1192,11 @@ at porten maatte blokere er at arbejdet flytter sig frem for at stoppe.
 - **Lens.** En Lens-koersel er et MCP-kald, ikke et Bash-kald, saa hooken ser den
   aldrig — og et MCP-kald har intet `run_in_background`-felt at pege paa. Maalt af
   buddy 31/8 2026 over 329 transskripter: ~6.000 Lens-kald med median 6,5s (p90
-  23s) mod deploy-klassens median 53s (p90 163s). **Datoen hoerer med:** denne
+  23s) mod 67s for et deploy der koerer i FORGRUNDEN (p90 186s) — altsaa den
+  ventetid reglen findes for. **Ordet «forgrunden» er baerende:** en blandet
+  median (forgrund + baggrund) falder jo bedre reglen virker, og ville om et
+  halvt aar ligne et argument MOD den regel der skabte forbedringen. **Datoen
+  hoerer ogsaa med:** denne
   tekst staar ordret i 30 repoer, og et absolut tal bliver forkert af sig selv —
   Lens vokser ~440 kald/dag. Medianen er den baerende del og den er stabil;
   antallet viser kun at det ikke er en kantsag. Det er en anden fejlform, og
