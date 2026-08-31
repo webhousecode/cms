@@ -194,3 +194,62 @@ label-teksten så længe, som accepteret gæld i begge ender.
 lagring) er nu en blokerende afhængighed for at F180 kan bruges til netop
 gebyrsatser. Til andre værdier — noget kunden selv ejer og gerne må rette — er den
 brugbar i dag.
+
+---
+
+## Lukket 31/8-2026: behovet forsvandt, ikke problemet
+
+sanne-sessionen melder Christians beslutning samme dag:
+
+> «det er som det skal være — det vi skal hente noget på er online og webshop og
+> mange klinik bookinger, ikke Sannes uddannelse.»
+
+Satserne skal ikke ændres. **Ingen note sættes på sanneandersen.** Procenterne
+bliver stående i label-teksten som den bevidst accepterede gæld.
+
+### Hvorfor det er den rigtige beslutning, og ikke bare en udsættelse
+
+Min blokerende forudsætning var TEKNISK (ingen rolle-lås, så den der betaler
+gebyret kunne redigere gebyret). Christians er KOMMERCIEL, og den er stærkere:
+den fjerner selve behovet.
+
+**En label der gentager et tal er kun farlig fordi tallet kan skifte.** Er tallet
+en truffet beslutning der IKKE skal skifte, kan teksten ikke komme til at lyve.
+Gælden er stadig gæld — den er bare holdt op med at forfalde.
+
+Det er værd at holde fast i som mønster: *en teknisk indvending kan blive
+irrelevant af en forretningsbeslutning, uden at den var forkert.* Begge
+begrundelser står, og de udelukker ikke hinanden.
+
+### Hvad der udløser en genoptagelse
+
+Christian har sagt at **en kommende næsten ren ONLINE-uddannelse skal have en
+højere sats** end de nuværende. Dét er øjeblikket hvor satserne begynder at
+bevæge sig, og hvor label-teksten bliver farlig. sanne-sessionen melder når det
+produkt findes.
+
+### Motoren bliver stående, og den er ikke spildt
+
+`note` med `{{sti}}` er en generisk motor-feature — ethvert to-sprogs- eller
+flerpris-site kan bruge den. Den er bygget rigtigt:
+
+- **alt-eller-intet**: en uopløselig pladsholder udelader HELE noten frem for at
+  efterlade et bart «%»
+- **noten er dekoration, ikke forudsætning**: et felt hvis note ikke kan opløses
+  renderer stadig og kan stadig vælges
+- **en test låser at `note` overlever en schema-rewrite** — netop det modul har
+  tabt felter to gange
+
+Den ligger klar den dag nogen har et tal der faktisk flytter sig.
+
+### Stadig ubesvaret, og stadig Christians
+
+**Hvor hører en provisionssats hjemme, når den er WebHouse' vilkår PÅ kunden og
+ikke kundens eget tal?** Hverken vores CMS (`global` er kundens eget dokument)
+eller kundens repo er et godt hjem — i begge kan den der betaler gebyret ændre
+gebyret. Peger på platform-siden pr. lejer. Presses ikke.
+
+### Uafhængigt af dette: F181 står åben
+
+At `number`-felter gemmer strenge er vores egen defekt og forsvinder ikke med
+denne beslutning. Se [F181](F181-number-felt-gemmer-en-streng.md).
