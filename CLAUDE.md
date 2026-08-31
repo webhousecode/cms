@@ -1191,8 +1191,12 @@ at porten maatte blokere er at arbejdet flytter sig frem for at stoppe.
 - **En heredoc-krop.** Et script der NAEVNER en deploy er ikke en deploy.
 - **Lens.** En Lens-koersel er et MCP-kald, ikke et Bash-kald, saa hooken ser den
   aldrig — og et MCP-kald har intet `run_in_background`-felt at pege paa. Maalt af
-  buddy: 5.566 Lens-kald, median 5-9 sekunder mod `flyctl deploy`s 80. Det er en
-  anden fejlform, og tallene baerer ikke en ombygning nu.
+  buddy 31/8 2026 over 329 transskripter: ~6.000 Lens-kald med median 6,5s (p90
+  23s) mod deploy-klassens median 53s (p90 163s). **Datoen hoerer med:** denne
+  tekst staar ordret i 30 repoer, og et absolut tal bliver forkert af sig selv —
+  Lens vokser ~440 kald/dag. Medianen er den baerende del og den er stabil;
+  antallet viser kun at det ikke er en kantsag. Det er en anden fejlform, og
+  tallene baerer ikke en ombygning nu.
 
 ### Naar du undtagelsesvis skal have svaret med det samme
 
