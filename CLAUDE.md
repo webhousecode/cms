@@ -1125,3 +1125,76 @@ Harness-kontrakt already states for every peer. This is not a limit on `super`'s
 it is the same rule that applies to every agent in the fleet including this one, and it
 exists because a relayed claim is not an order. If `super` asks for one, do the safe part,
 say plainly which part needs Christian, and let it route the ask to him.
+
+## Udrulninger koerer i BAGGRUNDEN — sessionen maa aldrig gaa tavs (F08.9)
+
+> **Canonical section per F057 multi-project convention.** Kopieres ordret ind i
+> hvert cardmem-kompatibelt repo. Ejerens ordre, Christian 31/8 2026. Maalingerne
+> og reglen er buddys (F08.9/F08.10); cardmem distribuerer dem.
+
+**En udrulning i forgrunden goer sessionen tavs.** Ejeren kan ikke tale med
+agenten mens den koerer — og han opdager det ikke, for der er intet der siger
+«jeg venter». Han skriver, og der sker ingenting.
+
+**Maalt paa flaadens egne transskripter (31/8, 12 sessioner):**
+
+```
+                    kald   forgrund   median   DOED TID
+gh run watch         538      377       152s     20,0 t
+flyctl deploy        985      733        80s     18,0 t
+docker build/push     23       23        12s      0,4 t
+xcodebuild            41       37        16s      0,3 t
+npm/pnpm publish      30       30         3s        0 t
+----------------------------------------------------
+                   1.617    1.201                38,6 t
+```
+
+**74 % koerte i forgrunden. 38,6 timer hvor en session stod tavs.** Fordelt:
+cardmem 497 · cms 210 · buddy 145 · components 143 · fd-sundhed 129.
+
+### Reglen
+
+**Ethvert deploy-klasse Bash-kald koerer med `run_in_background: true`:**
+
+```
+flyctl/fly deploy · gh run watch · docker build|push · npm|pnpm publish
+xcodebuild · eas|expo build · vercel deploy|--prod · terraform apply
+```
+
+Kommandoen koerer videre paa tvaers af ture, sessionen bliver ved med at svare, og
+du bliver vaekket naar den er faerdig. Laes undervejs med `Read` paa den
+output-fil kaldet returnerer. **Det er ikke en subagent** — det er eet felt paa
+det Bash-kald du allerede var ved at lave.
+
+### Porten, ikke bare reglen
+
+`.claude/hooks/pre-tool-use-deploy-background.sh` (`PreToolUse`, matcher `Bash`)
+BLOKERER kaldet med exit 2 og en besked der navngiver rettelsen. Harness-
+kontrakten siger hvorfor teksten her ikke er nok: *«en gate afhaenger ikke af at
+en agent husker noget»* — 1.201 gange er praecis hvad «husk det» giver.
+
+Maalt mod de rigtige kald: **1.145 af 1.201 forgrundskald blokeres (95 %), nul af
+de 417 der allerede koerte korrekt.** Den fejler AABENT — kan den ikke afgoere
+noget, tillader den kaldet.
+
+Suiten der beviser det er `.claude/hooks/test-deploy-guard.sh`, og den kraever at
+en blokering NAVNGIVER `run_in_background` i sin besked: Christians betingelse for
+at porten maatte blokere er at arbejdet flytter sig frem for at stoppe.
+
+### Hvad der IKKE er omfattet, og hvorfor
+
+- **Laese-kommandoer:** `fly status`, `gh run list`, `docker images`, `--help`.
+- **`git commit` / `git push`.** Maalt: median 3 sekunder. En baggrunds-rundtur
+  koster mere end den sparer — og en commit skal fejle SYNLIGT (afvist hook,
+  konflikt, intet staged). Koerer den i baggrunden, gaar agenten videre i troen
+  paa at der er committet.
+- **En heredoc-krop.** Et script der NAEVNER en deploy er ikke en deploy.
+- **Lens.** En Lens-koersel er et MCP-kald, ikke et Bash-kald, saa hooken ser den
+  aldrig — og et MCP-kald har intet `run_in_background`-felt at pege paa. Maalt af
+  buddy: 5.566 Lens-kald, median 5-9 sekunder mod `flyctl deploy`s 80. Det er en
+  anden fejlform, og tallene baerer ikke en ombygning nu.
+
+### Naar du undtagelsesvis skal have svaret med det samme
+
+Sig det til ejeren foerst. Spaerren er bevidst uden en tavs bagdoer — en
+undtagelse man kan tage i stilhed er ingen spaerre.
