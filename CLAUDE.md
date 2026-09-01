@@ -1098,10 +1098,28 @@ Not Read.md.
 
 ```
 cardmem_create_communication({ project_id, session_id, title, markdown, status: 'draft' })
-  → { id, name, open_in_cardmem }      ← give him THAT link (/assets#asset=<id>)
+  → { id, name, open_in_cardmem }   ← give him THAT link (/communication#comm=<id>)
 cardmem_list_communications({ project_id })   ← read what we have already written
 cardmem_mark_communication({ asset_id, status: 'sent' })   ← once it has actually gone
 ```
+
+**And then WAIT for his decision — that is new (F288), and it is why filing a draft
+here is worth more than pasting it in chat.** He opens it in the Communication
+surface, edits it in rich text if he wants, and then:
+
+```
+approved  → you are told. It is your PERMISSION TO SEND, not a send — cardmem never
+            sends mail. Send it through @broberg/mail, cc cb@webhouse.dk, then
+            cardmem_mark_communication({ asset_id, status: 'sent' }).
+changes   → you get his REASON back. Rewrite from THAT — a rephrase of the same
+            letter is what the reason exists to prevent.
+rejected  → do not send it, and do not send a softened version either.
+```
+
+**Marking it `sent` is not bookkeeping.** A directive can be re-delivered a day
+later (measured: 107 such deliveries across the fleet in a week), and `sent` is
+what makes that replay a no-op. Skip the mark and an approval that arrives twice
+puts a second letter in a real person's inbox.
 
 **The folder is not a parameter.** The tool files it, so a draft cannot land somewhere
 he will not look. That is deliberate: the fleet already had a tool that *could* file it
@@ -1117,6 +1135,31 @@ for it and there was nothing to find.
 **The original is immutable.** Editing a communication in cardmem writes version 2, 3 …
 and v1 — what we first wrote — can never be overwritten or rotated away. So a correction
 is always visible AS a correction, and "what did we actually send them?" has an answer.
+
+**REWRITING one? Pass `revises` — do not write a second letter (F292).**
+
+```
+cardmem_create_communication({ project_id, title, markdown, revises: '<the letter's id>' })
+  → { id, revised: true, version: 2, captured_original: true, effective_version }
+```
+
+Without it you get a TWIN, and the list drowns. Measured 1 September 2026 before this
+shipped: **98 letters, 93 of them with no version history at all**, and four
+near-duplicate pairs sitting in the list as separate entries — *"udkast v2 med
+annett…"* beside *"udkast v3 klar til a…"*. Not carelessness; `create` was the only
+verb an agent had. It is not any more. **After a `changes` decision, the rewrite goes
+back into the SAME letter.**
+
+**WHICH version applies is the owner's call, and there is deliberately no agent verb
+for it.** He pins one in the Communication surface; `effective_version` on every read
+tells you which. Two consequences for you:
+
+- A revision you write is **stored** but does **not** become what the letter says
+  while an older version is pinned. The tool hands `effective_version` back so you can
+  see that rather than assume — say so to him instead of reporting it as live.
+- **When you send, state the version you sent** (`applies_version` from
+  `cardmem_list_communications`). "I sent the letter" is not answerable a week later;
+  "I sent v3" is.
 
 **It is a record, not an outbox.** A communication that has been sent STAYS, marked
 `sent`. Before writing a new one to the same person, read what was already said —
