@@ -1295,3 +1295,85 @@ at porten maatte blokere er at arbejdet flytter sig frem for at stoppe.
 
 Sig det til ejeren foerst. Spaerren er bevidst uden en tavs bagdoer — en
 undtagelse man kan tage i stilhed er ingen spaerre.
+
+## Tid er dansk tid (HARD RULE) — en tid uden zone læses i læserens egen zone
+
+> **Canonical section per F057 multi-project convention.** Copied verbatim into every
+> cardmem-compatible repo (owner rule, Christian 2026-09-01).
+
+**Christian kører på dansk tid, altid. Hvert klokkeslæt og hver dato en agent siger til
+ham er `Europe/Copenhagen` — også når tallet kom fra en server, en log, en database
+eller et API der kører UTC.** Han bad selv om reglen: *«mange gange når cc taler i TID
+så er det enten tiden på den server i USA den står på eller UTC, men jeg kører på DANSK
+TID ALTID og udsagn skal koreleres efter min tidsstandard.»*
+
+### Hvorfor det fejler i det stille, og det er hele pointen
+
+**En tid uden zone ser ikke tvetydig ud. Den bliver læst i læserens egen zone —
+lydløst, uden at læseren har noget signal om at en omregning blev sprunget over.**
+
+`09:15` og `11:15` er begge plausible tidspunkter på en arbejdsdag. Intet ved det
+forkerte ser forkert ud. Det fejler i den GRØNNE retning: sætningen læses som rigtig,
+modtageren handler på den, og fejlen dukker først op hvis nogen tilfældigvis
+krydstjekker mod et andet ur.
+
+**Målt, førstehånds, den dag reglen blev skrevet:** i en intercom-besked *om
+måledisciplin* skrev jeg at et push landede «~09:15 i dag». Det landede **11:01 dansk
+tid** (`d4aeb34b`, `09:01Z`). Jeg havde læst UTC-uret og sagt det som hans. Beskeden lå
+allerede i en anden agents kontekst, og tallets eneste formål dér var at afgøre hvis
+måling der var nyest — så præcis det felt der betød noget, var det forkerte.
+
+**Og det er allerede nået ud til en kunde.** En video-opkalds-emnelinje blev renderet
+med `toLocaleDateString('da-DK', …)` uden `timeZone`, i en Fly-container der kører UTC —
+en dansk formatering af en engelsk dag. Et opkald oprettet `22:30Z` den 21. er `00:30`
+den **22.** i København, og kunden fik at vide den 21. Det rammer kun mellem midnat og
+02:00 dansk tid: præcis det vindue hvor ingen kigger.
+
+### Reglen
+
+1. **Foretræk relativ tid.** «for tyve minutter siden», «i går sent», «for to commits
+   siden» kan ikke misforstås af nogen zone. Det meste af det en agent siger om tid
+   behøver slet ikke en urskive — og hver af de sætninger er én der ikke kan gå galt.
+   Det fjerner fejlklassen frem for at minde om den.
+2. **Skal der en urskive på, så navngiv zonen:** «kl. 11:01 (dansk tid)». Etiketten
+   koster tre ord og er det eneste der gør tallet kontrollerbart.
+3. **Omregn EKSPLICIT.** Citér aldrig et råt tidsstempel fra en log, et API, en
+   database, `date -u` eller `git log` som om det var lokalt. Disse kilder giver dig
+   UTC mens de ligner lokal tid:
+
+   | Kilde | Hvad du reelt får |
+   |---|---|
+   | En Fly-/Docker-containers ur | **UTC.** Vores prod-app inklusive |
+   | `date -u`, og enhver ISO-streng med `Z` | UTC pr. konstruktion |
+   | En DB-`created_at`, et API's `created_at` | Næsten altid UTC |
+   | En log-linje | Processens zone — altså containerens |
+   | Din egen udregning oven på ovenstående | Arver fejlen, og ligner nu noget udledt |
+
+   Den sidste række er den der bider, fordi et tal du selv har regnet ud føles som et
+   tal du har forstået.
+4. **Er du i tvivl om hvilken zone et tal står i, så sig det** frem for at gætte. «11:01
+   — det er serverens ur, jeg har ikke omregnet» er et brugbart svar; et forkert
+   klokkeslæt er ikke.
+
+### DST-fælden — hvorfor den naive rettelse er forkert et halvt år ad gangen
+
+Danmark er **UTC+1 om vinteren (CET) og UTC+2 om sommeren (CEST)**. Så «læg to timer
+til» er forkert fra slutningen af oktober til slutningen af marts, og et hardkodet
+`+02:00` er en fejl med et halvt års lunte som ingen vil koble til sin årsag.
+
+**Altid zone-NAVNET — `Europe/Copenhagen` — aldrig et fast offset.** Det er den sætning
+en velmenende forenkling sletter først («vi er jo altid +2»).
+
+### Det her handler om TALE, ikke om LAGRING
+
+**Lagring og sammenligning bliver ved med at være UTC/epoch.** Det er ikke til
+diskussion og ændrer sig ikke: rækkefølge, sammenligninger og DST-regnestykker er kun
+korrekte på et absolut tidspunkt. Læser nogen denne regel som en tilladelse til at gemme
+lokal tid i en database, har de læst den bagvendt.
+
+**Én kode-klausul, og kun én:** formaterer serveren en tid et menneske skal læse (mail,
+PDF, rapport, en emnelinje), så **navngiv zonen eksplicit** —
+`toLocaleString('da-DK', { …, timeZone: 'Europe/Copenhagen' })`. Der er ingen browser at
+falde tilbage på, og containeren er UTC. Browser-side `toLocaleString()` er derimod
+allerede rigtig: den renderer i *beskuerens* zone, hvilket for ham er dansk tid. Lad den
+være — at hardkode en zone dér ville erstatte en korrekt mekanisme med en fast en.
