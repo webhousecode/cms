@@ -257,7 +257,7 @@ importers:
         specifier: ^0.4.14
         version: 0.4.14
       '@broberg/cms-inline-edit':
-        specifier: ^0.6.3
+        specifier: '>=0.6.3 <1'
         version: 0.6.3
       '@broberg/mail':
         specifier: 0.7.1
