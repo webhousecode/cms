@@ -14,6 +14,25 @@
  *   node scripts/scan-schemeless-links.mjs --site=broberg-ai
  *
  * Auth: CMS_ADMIN_TOKEN (Bearer). Base: CMS_BASE (default https://webhouse.app).
+ *
+ * WHY THIS EXISTS ALONGSIDE THE LINK CHECKER
+ * ------------------------------------------
+ * cms-admin has a Link checker (/admin/link-checker) and it is the tool an
+ * EDITOR should use: it runs on the active site, checks images and external
+ * links too, and offers a fix. Since F183 it classifies a schemeless address
+ * with the very same `isSchemeless` this script imports, so the two cannot
+ * disagree about what is doubtful.
+ *
+ * This script keeps exactly two things the tool does not have, and if it ever
+ * loses both it should be deleted rather than maintained:
+ *
+ *   1. ALL SITES IN ONE RUN. The checker runs on the active site; an operator
+ *      auditing the whole estate would have to switch site and re-run.
+ *   2. --prove. A positive control on real data, which is what makes a zero
+ *      mean something. The checker has no equivalent.
+ *
+ * It is deliberately NOT a second opinion on broken links: it only reports
+ * addresses with no scheme, and it never fetches anything.
  */
 
 const BASE = process.env.CMS_BASE || "https://webhouse.app";
@@ -123,13 +142,29 @@ async function scan() {
   let planted = 0;
   let plantsFound = 0;
   let unread = 0;
+  let sitesScanned = 0;
 
   for (const site of targets) {
     let cols = [];
     try {
       const schema = await api(`/api/schema?site=${site}`);
       cols = (schema.collections ?? []).map((c) => c.name ?? c.slug).filter(Boolean);
-    } catch (e) { console.error(`  ! ${site}: skema utilgængeligt (${e.message})`); continue; }
+    } catch (e) {
+      // Loud AND counted. This was logged but not counted, so a site whose
+      // schema could not be read was skipped entirely and the run still exited
+      // 0 — the same hole as the per-collection one, a level up.
+      console.error(`  ! ${site}: skema utilgængeligt (${e.message}) — HELE sitet IKKE scannet`);
+      unread++;
+      continue;
+    }
+    if (cols.length === 0) {
+      // An empty collection list and a schema we failed to parse look the same
+      // from here. Name it rather than count it as a clean site.
+      console.error(`  ! ${site}: 0 samlinger i skemaet — intet scannet`);
+      unread++;
+      continue;
+    }
+    sitesScanned++;
 
     for (const col of cols) {
       let docs;
@@ -181,9 +216,21 @@ async function scan() {
     console.log(`  · ${site}: ${cols.length} samlinger`);
   }
 
-  console.log(`\nScannet: ${docsScanned} dokumenter, ${linksSeen} links, ${targets.length} sites.`);
-  if (unread) {
-    console.error(`\n\u2717 ${unread} samling(er) kunne IKKE l\u00e6ses. Et nul herunder d\u00e6kker ikke dem.`);
+  // The DENOMINATOR, stated separately. components (#24930): a positive
+  // control's arithmetic is `planted === found`, and both sides fall toward
+  // zero together when a source drops out — `0 === 0` still holds, so the
+  // control passes HARDEST when the tool looked at nothing. Reach is only ever
+  // proven for what was actually reached, so how much that was has to be its
+  // own claim.
+  console.log(
+    `\nScannet: ${docsScanned} dokumenter, ${linksSeen} links, ` +
+      `${sitesScanned} af ${targets.length} sites.`,
+  );
+  if (unread || sitesScanned !== targets.length) {
+    console.error(
+      `\n\u2717 ${unread} kilde(r) kunne IKKE l\u00e6ses, og ${sitesScanned} af ${targets.length} sites blev scannet.`,
+    );
+    console.error("  Et nul herunder d\u00e6kker ikke det der ikke blev l\u00e6st.");
     process.exitCode = 1;
   }
   if (prove) {

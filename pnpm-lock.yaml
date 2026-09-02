@@ -256,6 +256,9 @@ importers:
       '@broberg/cms-chat-client':
         specifier: ^0.4.14
         version: 0.4.14
+      '@broberg/cms-inline-edit':
+        specifier: ^0.6.3
+        version: 0.6.3
       '@broberg/mail':
         specifier: 0.7.1
         version: 0.7.1
@@ -1116,6 +1119,10 @@ packages:
 
   '@broberg/cms-chat-client@0.4.14':
     resolution: {integrity: sha512-SPFV9DoFhkGtrQdUN+MV6LUT5eYCEaUiUx3vnp/pM1SqQyONwFeZtmQYF9KCq2ob4i+YhDp4dxPeJYMuUP154A==}
+
+  '@broberg/cms-inline-edit@0.6.3':
+    resolution: {integrity: sha512-YAGWSsTMGbg/x7hZWeHdzjVjXrgNL4YuJ8dUhz6Ya2TW7NJQHqUsHerDnxVmGeC7M8/41ZkkYpr1TrBJS3t7+A==}
+    engines: {node: '>=22'}
 
   '@broberg/lens-engine@0.4.0':
     resolution: {integrity: sha512-/blOeHkjo6kxxQE7d9y9BFSqaoyFE3k8+Gbu6UcGLXAf9HmEJ0T0zhdbbbWQX4mejtpRKr0CzpwhiiwAoSLoaw==}
@@ -3107,6 +3114,7 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -6103,10 +6111,12 @@ packages:
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@9.0.1:
     resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   validate-npm-package-name@7.0.2:
@@ -7125,6 +7135,8 @@ snapshots:
   '@broberg/chat@0.6.0': {}
 
   '@broberg/cms-chat-client@0.4.14': {}
+
+  '@broberg/cms-inline-edit@0.6.3': {}
 
   '@broberg/lens-engine@0.4.0':
     dependencies:

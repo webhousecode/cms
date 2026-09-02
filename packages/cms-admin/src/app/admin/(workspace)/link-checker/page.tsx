@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Link2, Play, CheckCircle, XCircle, ArrowRight, ExternalLink, Loader2, Wrench, Check, X, ImageOff, Image as ImageIcon, Download } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, CheckCircle, Download, ExternalLink, Image as ImageIcon, ImageOff, Link2, Loader2, MinusCircle, Play, Wrench, X, XCircle } from "lucide-react";
 import type { LinkResult, ProgressEvent } from "@/app/api/check-links/route";
 import type { LinkCheckRecord } from "@/lib/link-check-store";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,12 @@ function timeAgo(iso: string): string {
 function statusIcon(status: LinkResult["status"]) {
   if (status === "ok") return <CheckCircle style={{ width: "0.875rem", height: "0.875rem", color: "#4ade80", flexShrink: 0 }} />;
   if (status === "redirect") return <ArrowRight style={{ width: "0.875rem", height: "0.875rem", color: "#facc15", flexShrink: 0 }} />;
+  // Amber, not red: a doubtful address and an unchecked one are questions, not
+  // verdicts. Painting them red is how a tool teaches people to ignore red.
+  if (status === "schemeless" || status === "unverified")
+    return <AlertTriangle style={{ width: "0.875rem", height: "0.875rem", color: "#fbbf24", flexShrink: 0 }} />;
+  if (status === "skipped")
+    return <MinusCircle style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)", flexShrink: 0 }} />;
   return <XCircle style={{ width: "0.875rem", height: "0.875rem", color: "#f87171", flexShrink: 0 }} />;
 }
 
@@ -30,6 +36,9 @@ function statusLabel(r: LinkResult) {
   if (r.status === "ok") return r.httpStatus ? `${r.httpStatus} OK` : "OK";
   if (r.status === "redirect") return `${r.httpStatus} → ${r.redirectTo}`;
   if (r.status === "broken") return r.httpStatus ? `${r.httpStatus} Broken` : r.error ?? "Not found";
+  if (r.status === "skipped") return "Ikke en adresse der kan tjekkes";
+  if (r.status === "schemeless") return r.error ?? "Mangler https://";
+  if (r.status === "unverified") return r.error ?? "Ikke verificeret";
   return r.error ?? "Error";
 }
 
@@ -162,7 +171,7 @@ export default function LinkCheckerPage() {
   const [total, setTotal] = useState(0);
   const [checked, setChecked] = useState(0);
   const [results, setResults] = useState<LinkResult[]>([]);
-  const [filter, setFilter] = useState<"all" | "broken" | "redirect" | "ok" | "broken-images">("broken");
+  const [filter, setFilter] = useState<"all" | "broken" | "redirect" | "ok" | "broken-images" | "attention">("broken");
   const [checkedAt, setCheckedAt] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const { openTab } = useTabs();
@@ -238,11 +247,16 @@ export default function LinkCheckerPage() {
   const allBroken = results.filter((r) => r.status === "broken" || r.status === "error");
   const redirects = results.filter((r) => r.status === "redirect");
   const ok = results.filter((r) => r.status === "ok");
+  // Their own bucket on purpose. Counted as broken they train the reader to
+  // ignore red; left out of every list they disappear silently — and a
+  // disappeared warning is the worse of the two.
+  const attention = results.filter((r) => r.status === "schemeless" || r.status === "unverified");
 
   const visible = filter === "all" ? results
     : filter === "broken" ? broken
     : filter === "broken-images" ? brokenImages
     : filter === "redirect" ? redirects
+    : filter === "attention" ? attention
     : ok;
 
   function exportReport() {
@@ -366,6 +380,7 @@ export default function LinkCheckerPage() {
             {[
               { key: "broken" as const, label: "Broken Links", count: broken.length, icon: <XCircle style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
               { key: "broken-images" as const, label: "Broken Images", count: brokenImages.length, icon: <ImageOff style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
+              { key: "attention" as const, label: "Se efter", count: attention.length, icon: <AlertTriangle style={{ width: "1rem", height: "1rem", color: "#fbbf24" }} /> },
               { key: "redirect" as const, label: "Redirects", count: redirects.length, icon: <ArrowRight style={{ width: "1rem", height: "1rem", color: "#facc15" }} /> },
               { key: "ok" as const, label: "OK", count: ok.length, icon: <CheckCircle style={{ width: "1rem", height: "1rem", color: "#4ade80" }} /> },
               { key: "all" as const, label: "All", count: results.length, icon: <Link2 style={{ width: "1rem", height: "1rem", color: "var(--muted-foreground)" }} /> },
@@ -408,7 +423,12 @@ export default function LinkCheckerPage() {
                     key={i}
                     style={{
                       borderBottom: i < visible.length - 1 ? "1px solid var(--border)" : "none",
-                      background: r.status === "broken" || r.status === "error" ? "rgba(248,113,113,0.04)" : undefined,
+                      background:
+                        r.status === "broken" || r.status === "error"
+                          ? "rgba(248,113,113,0.04)"
+                          : r.status === "schemeless" || r.status === "unverified"
+                            ? "rgba(251,191,36,0.05)"
+                            : undefined,
                     }}
                   >
                     <td style={{ padding: "0.5rem 0.875rem" }}>{statusIcon(r.status)}</td>
@@ -454,6 +474,8 @@ export default function LinkCheckerPage() {
                           r.status === "ok" && "bg-green-500/10 text-green-400",
                           r.status === "redirect" && "bg-yellow-500/10 text-yellow-400",
                           (r.status === "broken" || r.status === "error") && "bg-red-500/10 text-red-400",
+                          (r.status === "schemeless" || r.status === "unverified") && "bg-amber-500/10 text-amber-400",
+                          r.status === "skipped" && "bg-muted text-muted-foreground",
                         )}
                       >
                         {statusLabel(r)}
