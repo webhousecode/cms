@@ -166,9 +166,11 @@ export async function runLinkCheck(
   // F164.5 already settled the answer for the link picker — ask the sitemap.
   let sitemapPaths: Set<string> | null = null;
   let sitemapNote = "";
+  let publicBase = "";
   try {
     const siteConfig = await readSiteConfig();
     const base = (siteConfig.previewSiteUrl || siteConfig.deployProductionUrl || "").trim();
+    if (/^https?:\/\//i.test(base)) publicBase = base.replace(/\/$/, "");
     if (/^https?:\/\//i.test(base)) {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 8000);
@@ -309,10 +311,20 @@ export async function runLinkCheck(
         // The site's own list first — it is the only one that knows about
         // static routes. The document map is a fallback that can only ever
         // say "yes"; it is never trusted to say "no" on its own.
-        if (sitemapPaths) {
-          statusFields = sitemapPaths.has(p) || internalMap.has(p) || internalMap.has(p + "/")
-            ? { status: "ok" }
-            : { status: "broken", error: "Findes hverken i sitets sitemap eller som dokument" };
+        if (sitemapPaths?.has(p) || internalMap.has(p) || internalMap.has(p + "/")) {
+          statusFields = { status: "ok" };
+        } else if (sitemapPaths && publicBase) {
+          // The sitemap is a FAST PATH, not the authority — the site is. A
+          // login-gated page is correctly absent from a sitemap and still
+          // exists: /da/min-konto and /en/min-konto answer 307 and were the
+          // last two false alarms after the sitemap fix. So an internal path
+          // in neither list gets the same courtesy an external one already
+          // got: ask, then decide.
+          const probe = await checkExternal(`${publicBase}${p}`);
+          statusFields =
+            probe.status === "ok" || probe.status === "redirect"
+              ? { status: "ok", httpStatus: probe.httpStatus }
+              : { status: "broken", error: "Findes hverken i sitemap, som dokument, eller som en side sitet svarer på" };
         } else if (internalMap.has(p) || internalMap.has(p + "/")) {
           statusFields = { status: "ok" };
         } else {
