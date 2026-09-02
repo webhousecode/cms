@@ -6,7 +6,7 @@
  * (F129's attribute convention) — no per-document step.
  */
 import { applyFieldSlice } from "./field-slice";
-import { isExternalHost, isSchemeless, withHttps } from "./link-target";
+import { isDangerousUrl, isExternalHost, isSchemeless, withHttps } from "./link-target";
 export { applyFieldSlice } from "./field-slice";
 import { serializeTokenSafe, hasTokenChips, lockTokenChips } from "./token-safe";
 
@@ -44,6 +44,7 @@ export interface InlineEditLabels {
   linkNewTab?: string;
   linkSchemeless?: string;
   linkSchemelessFix?: string;
+  linkBlocked?: string;
   linkInsert?: string;
   linkSave?: string;
   linkCancel?: string;
@@ -116,6 +117,8 @@ const DEFAULT_LABELS: Required<InlineEditLabels> = {
   linkSchemeless:
     "<b>{v}</b> læses som en side på <b>dette</b> site — ikke som en adresse ude på nettet.",
   linkSchemelessFix: "Tilføj https://",
+  linkBlocked:
+    "<b>{v}</b> kan ikke bruges som link — adresser af den type kan køre kode på sitet.",
   linkInsert: "Indsæt link",
   linkSave: "Gem ændring",
   linkCancel: "Annullér",
@@ -925,8 +928,8 @@ function renderLinkDialog(): void {
     `<div data-pane="url" style="display:${onPageTab ? "none" : "block"}">` +
     `<label style="${labelCss()}">${L.linkUrl}</label>` +
     `<input data-testid="inline-link-url" data-role="url" placeholder="https://…" style="${fieldCss()}">` +
-    `<div data-role="schemeless" data-testid="inline-link-schemeless" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(255,176,32,.10);border:1px solid rgba(255,176,32,.34);border-radius:8px">` +
-    `<p data-role="schemeless-text" style="margin:0;font-size:11.5px;color:#e8d6b0;line-height:1.5"></p>` +
+    `<div data-role="schemeless" data-testid="inline-link-schemeless" style="${noticeCss("schemeless")}">` +
+    `<p data-role="schemeless-text" style="margin:0;font-size:11.5px;line-height:1.5"></p>` +
     `<button type="button" data-testid="inline-link-add-scheme" data-role="add-scheme" style="${btnCss(false)};margin-top:7px;height:26px;font-size:12px">${L.linkSchemelessFix}</button>` +
     "</div></div>" +
     `<label style="${labelCss()}">${L.linkText}</label>` +
@@ -1161,14 +1164,36 @@ function syncLinkDialog(): void {
   // any rule that "fixes" the first corrupts the second. So we ask instead of
   // guessing — and we do NOT block saving, because a relative path may well be
   // what the editor meant.
-  const doubtful = !onPage && isSchemeless(raw);
-  q<HTMLElement>("schemeless").style.display = doubtful ? "block" : "none";
-  if (doubtful) {
+  // A javascript:/data:/vbscript: address is script execution on click, in this
+  // site's own origin — where the editor's edit-session token lives. Refused
+  // outright, with the reason on screen: a control that silently does nothing
+  // reads as a broken dialog.
+  const dangerous = !onPage && isDangerousUrl(raw);
+  const doubtful = !onPage && !dangerous && isSchemeless(raw);
+  const notice = q<HTMLElement>("schemeless");
+  const show = dangerous || doubtful;
+  if (dangerous) {
+    notice.setAttribute("style", noticeCss("blocked"));
+    notice.setAttribute("data-variant", "blocked");
+    q<HTMLElement>("schemeless-text").innerHTML = (uiLabels.linkBlocked as string).replace(
+      "{v}",
+      escapeHtml(raw.trim()),
+    );
+    (q<HTMLButtonElement>("submit")).disabled = true;
+  } else if (doubtful) {
+    notice.setAttribute("style", noticeCss("schemeless"));
+    notice.setAttribute("data-variant", "schemeless");
     q<HTMLElement>("schemeless-text").innerHTML = (uiLabels.linkSchemeless as string).replace(
       "{v}",
       escapeHtml(raw.trim()),
     );
   }
+  notice.style.display = show ? "block" : "none";
+  q<HTMLElement>("schemeless-text").style.color = dangerous ? "#f5c6c6" : "#e8d6b0";
+
+  // The "add https://" button repairs a schemeless address; it cannot repair a
+  // blocked scheme, so it is hidden there rather than offered and inert.
+  q<HTMLElement>("add-scheme").style.display = doubtful ? "" : "none";
 
   // Default the new-tab box ON for an address that clearly leaves this site.
   // The default is visible IN the box, so the editor can see and change it —
@@ -1210,6 +1235,9 @@ function applyLink(): void {
   const own = q<HTMLInputElement>("text").value.trim();
   const href = onPage ? (linkPicked?.path ?? "") : q<HTMLInputElement>("url").value.trim();
   if (!href) return;
+  // Second gate. The disabled submit button is UX; this is the boundary — a
+  // paste, an autofill or a stale dialog state must not get past it.
+  if (isDangerousUrl(href)) return;
 
   const ref = onPage && linkPicked ? `${linkPicked.collection}:${linkPicked.slug}` : "";
   const label = own || (onPage ? (linkPicked?.title ?? href) : href);
@@ -1267,6 +1295,15 @@ const tabCss = (on: boolean) =>
 
 /** A checkbox drawn by us. A native one renders in the OS theme and looks
  *  nothing like the rest of this dialog. */
+/** Amber asks a question; red refuses. A blocked scheme must not look like
+ *  friendly advice the editor can click past. */
+const noticeCss = (variant: "schemeless" | "blocked") =>
+  "display:none;margin-top:8px;padding:8px 10px;border-radius:8px;background:" +
+  (variant === "blocked" ? "rgba(255,90,90,.10)" : "rgba(255,176,32,.10)") +
+  ";border:1px solid " +
+  (variant === "blocked" ? "rgba(255,90,90,.38)" : "rgba(255,176,32,.34)") +
+  ";";
+
 const checkboxCss = (on: boolean) =>
   "width:16px;height:16px;flex:0 0 16px;border-radius:4px;box-sizing:border-box;display:inline-block;" +
   (on
@@ -1711,6 +1748,14 @@ function serializeInlineNode(child: Node): string {
         // target="_blank" rel="noopener noreferrer" came back as a bare
         // Markdown link after an edit to a DIFFERENT sentence in the same
         // field. rel="noopener" is a security attribute, not decoration.
+        // Third gate, and the one that matters for content that did not come
+        // from this dialog (a paste, an import, an older save). An anchor whose
+        // href is javascript:/data:/vbscript: keeps its text and loses the link
+        // — dropping the text as well would silently delete a sentence.
+        if (isDangerousUrl(href)) {
+          out += inner;
+          break;
+        }
         const extras = preservedLinkAttrs(el);
         if (extras.length > 0) {
           out += `<a ${[`href="${escapeAttr(href)}"`, ...extras].join(" ")}>${inner}</a>`;

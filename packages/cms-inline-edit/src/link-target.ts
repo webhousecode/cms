@@ -72,3 +72,24 @@ export function extractLinkTargets(text: string): Array<{ syntax: "html" | "mark
   }
   return out;
 }
+
+/**
+ * Schemes that must never reach an `href`.
+ *
+ * `javascript:` in a link is script execution on click, in the SITE's own
+ * origin — which is where the editor's own edit-session token lives in
+ * localStorage. So one editor planting such a link, and any colleague clicking
+ * it, is a token handover. `data:` and `vbscript:` are the same class.
+ *
+ * The package ALREADY refuses these on every other attribute
+ * (preservedLinkAttrs drops `javascript:` values and every `on*` handler) —
+ * href was the one that escaped, because it is emitted separately from the
+ * attributes it sits beside.
+ *
+ * Whitespace and control characters are stripped first: browsers ignore them
+ * inside a scheme, so `java\tscript:` and ` javascript:` both run.
+ */
+export function isDangerousUrl(raw: string): boolean {
+  const v = (raw || "").replace(/[\u0000-\u0020]/g, "");
+  return /^(?:javascript|data|vbscript):/i.test(v);
+}

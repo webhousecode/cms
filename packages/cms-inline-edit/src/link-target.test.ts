@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractLinkTargets, isExternalHost, isSchemeless, withHttps } from "./link-target";
+import { extractLinkTargets, isDangerousUrl, isExternalHost, isSchemeless, withHttps } from "./link-target";
 
 describe("isSchemeless", () => {
   // Christian, 2026-09-02: typed www.trailmem.com into the free-address field
@@ -87,5 +87,45 @@ describe("extractLinkTargets", () => {
       { syntax: "html", value: "trailmem.com" },
     ]);
     expect(extractLinkTargets("ingen links her overhovedet")).toEqual([]);
+  });
+});
+
+describe("isDangerousUrl", () => {
+  // A javascript: link is script execution on click, in the SITE's own origin —
+  // which is where the editor's edit-session token lives in localStorage. The
+  // package already refused these on every OTHER attribute; href was emitted
+  // separately and escaped the check.
+  it("blocks the schemes that execute", () => {
+    for (const bad of [
+      "javascript:alert(1)",
+      "JavaScript:alert(1)",
+      "  javascript:alert(1)",
+      "java\tscript:alert(1)", // browsers ignore control chars inside a scheme
+      "java\nscript:alert(1)",
+      "data:text/html,<script>alert(1)</script>",
+      "vbscript:msgbox(1)",
+    ]) {
+      expect(isDangerousUrl(bad), bad).toBe(true);
+    }
+  });
+
+  // The negative control. A predicate that returned true for everything would
+  // pass the block-list above and refuse every legitimate link on the site.
+  it("lets every ordinary address through", () => {
+    for (const ok of [
+      "https://www.trailmem.com",
+      "http://example.com",
+      "/flagskibe/trail",
+      "#kontakt",
+      "mailto:cb@webhouse.dk",
+      "tel:+4512345678",
+      "trailmem.com",
+      "//cdn.example.com/x.js",
+      "javascriptdings.dk", // a hostname that merely STARTS with the word
+      "https://x.dk/?q=javascript:1", // the scheme appears, but not as the scheme
+      "",
+    ]) {
+      expect(isDangerousUrl(ok), ok).toBe(false);
+    }
   });
 });

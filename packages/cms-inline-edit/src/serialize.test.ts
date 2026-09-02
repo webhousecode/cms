@@ -322,3 +322,34 @@ describe("htmlToMarkdown — whitespace at the edge of an inline mark", () => {
     expect(htmlToMarkdown("<p><strong>fed<br></strong>x</p>")).toBe("**fed**  \nx\n");
   });
 });
+
+describe("htmlToMarkdown — a link that would execute", () => {
+  // Measured 2026-09-02 with this repo's own marked: BOTH render paths passed
+  // javascript: through untouched —
+  //   [klik](javascript:alert(1))                  → <a href="javascript:alert(1)">
+  //   <a href="javascript:alert(1)" target=_blank> → verbatim
+  // so a link planted by one editor executes in the site's origin for whoever
+  // clicks it, where the edit-session token lives. 0 such links existed in
+  // production (553 documents swept), so this closes the door before anything
+  // walked through it.
+  it("keeps the words and drops the link when the href would execute", () => {
+    const md = htmlToMarkdown('se <a href="javascript:alert(1)">her</a> nu');
+    expect(md).not.toContain("javascript:");
+    expect(md).not.toContain("<a ");
+    expect(md).toContain("her"); // the sentence survives; only the link is gone
+  });
+
+  it("does the same when the anchor also carries target and rel", () => {
+    const md = htmlToMarkdown('<a href="JavaScript:alert(1)" target="_blank" rel="noopener">x</a>');
+    expect(md.toLowerCase()).not.toContain("javascript:");
+    expect(md).toBe("x");
+  });
+
+  // The negative control: an ordinary link must still serialise normally, or
+  // the guard would have quietly removed every link on every save.
+  it("leaves an ordinary link completely alone", () => {
+    expect(htmlToMarkdown('se <a href="https://www.trailmem.com">Trail</a> nu')).toContain(
+      "[Trail](https://www.trailmem.com)",
+    );
+  });
+});
