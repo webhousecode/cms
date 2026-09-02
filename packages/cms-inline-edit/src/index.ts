@@ -501,6 +501,7 @@ function showIdlePill(): void {
   removeIdlePill();
   const wrap = document.createElement("div");
   wrap.setAttribute("data-cms-inline-edit-idle", "");
+  wrap.setAttribute("data-testid", "inline-edit-idle");
   wrap.style.cssText =
     "position:fixed;bottom:16px;left:16px;display:inline-flex;align-items:stretch;" +
     "z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);border-radius:999px;overflow:hidden;";
@@ -509,6 +510,7 @@ function showIdlePill(): void {
   const edit = document.createElement("button");
   edit.type = "button";
   edit.setAttribute("data-cms-inline-edit-enter", "");
+  edit.setAttribute("data-testid", "inline-edit-enter");
   edit.style.cssText =
     "display:inline-flex;align-items:center;gap:7px;background:#1c2027;color:#fff;" +
     "font:600 12px system-ui,sans-serif;padding:8px 14px;border:none;cursor:pointer;";
@@ -520,6 +522,7 @@ function showIdlePill(): void {
   const out = document.createElement("button");
   out.type = "button";
   out.setAttribute("data-cms-inline-edit-logout", "");
+  out.setAttribute("data-testid", "inline-edit-logout");
   out.textContent = options.logoutLabel;
   out.style.cssText =
     "background:#141821;color:#9aa4b2;font:600 11px system-ui,sans-serif;padding:8px 12px;" +
@@ -1795,6 +1798,7 @@ function showPill(el: HTMLElement, state: "saving" | "saved" | "error"): void {
   if (!pill) {
     pill = document.createElement("span");
     pill.setAttribute("data-cms-inline-edit-pill", "");
+  pill.setAttribute("data-testid", "inline-edit-pill");
     document.body.appendChild(pill);
     pills.set(el, pill);
   }
@@ -1828,7 +1832,13 @@ function showActiveBadge(options: ResolvedOptions): void {
   // No "Redigerer som {name}" — the whole pill is one click to leave edit mode.
   const badge = document.createElement("button");
   badge.type = "button";
+  // The readiness anchor. initInlineEdit() is async (it awaits checkEnabled),
+  // so a driver that clicks a field the instant the page loads clicks BEFORE the
+  // handlers are attached — silently, since the field is there and the click
+  // lands on nothing. Waiting for this badge is what makes the run repeatable;
+  // measured 2026-09-02, four failed Lens runs before the cause was visible.
   badge.setAttribute("data-cms-inline-edit-badge", "");
+  badge.setAttribute("data-testid", "inline-edit-badge");
   badge.style.cssText =
     "position:fixed;bottom:16px;left:16px;display:inline-flex;align-items:center;gap:7px;" +
     "background:#1c2027;color:#fff;font:600 12px system-ui,sans-serif;padding:8px 14px;" +
