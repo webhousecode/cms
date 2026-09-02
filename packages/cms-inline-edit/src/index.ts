@@ -6,6 +6,7 @@
  * (F129's attribute convention) — no per-document step.
  */
 import { applyFieldSlice } from "./field-slice";
+import { isExternalHost, isSchemeless, withHttps } from "./link-target";
 export { applyFieldSlice } from "./field-slice";
 import { serializeTokenSafe, hasTokenChips, lockTokenChips } from "./token-safe";
 
@@ -40,6 +41,9 @@ export interface InlineEditLabels {
   linkLiveHint?: string;
   linkUrlHint?: string;
   linkUrl?: string;
+  linkNewTab?: string;
+  linkSchemeless?: string;
+  linkSchemelessFix?: string;
   linkInsert?: string;
   linkSave?: string;
   linkCancel?: string;
@@ -108,6 +112,10 @@ const DEFAULT_LABELS: Required<InlineEditLabels> = {
   linkUrlHint:
     "En fri adresse peger præcis dér, du skriver. Den følger <b>ikke</b> med, hvis målet flytter sig.",
   linkUrl: "Adresse",
+  linkNewTab: "Åbn i ny fane",
+  linkSchemeless:
+    "<b>{v}</b> læses som en side på <b>dette</b> site — ikke som en adresse ude på nettet.",
+  linkSchemelessFix: "Tilføj https://",
   linkInsert: "Indsæt link",
   linkSave: "Gem ændring",
   linkCancel: "Annullér",
@@ -766,6 +774,9 @@ interface LinkablePage {
 let linkDialog: HTMLElement | null = null;
 let linkPages: LinkablePage[] | null = null;
 let linkPicked: LinkablePage | null = null;
+/** "Open in a new tab" state, plus whether the editor has actually touched it. */
+let linkNewTab = false;
+let linkNewTabTouched = false;
 let linkEditing: HTMLAnchorElement | null = null;
 
 function hideLinkDialog(): void {
@@ -890,6 +901,10 @@ function renderLinkDialog(): void {
   if (!d) return;
   const L = uiLabels;
   const editing = !!linkEditing;
+  if (!editing) {
+    linkNewTab = false;
+    linkNewTabTouched = false;
+  }
   const existingRef = linkEditing?.getAttribute("data-cms-ref") ?? "";
   const onPageTab = !editing || !!existingRef;
 
@@ -907,10 +922,15 @@ function renderLinkDialog(): void {
     `<div data-pane="url" style="display:${onPageTab ? "none" : "block"}">` +
     `<label style="${labelCss()}">${L.linkUrl}</label>` +
     `<input data-testid="inline-link-url" data-role="url" placeholder="https://…" style="${fieldCss()}">` +
-    "</div>" +
+    `<div data-role="schemeless" data-testid="inline-link-schemeless" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(255,176,32,.10);border:1px solid rgba(255,176,32,.34);border-radius:8px">` +
+    `<p data-role="schemeless-text" style="margin:0;font-size:11.5px;color:#e8d6b0;line-height:1.5"></p>` +
+    `<button type="button" data-testid="inline-link-add-scheme" data-role="add-scheme" style="${btnCss(false)};margin-top:7px;height:26px;font-size:12px">${L.linkSchemelessFix}</button>` +
+    "</div></div>" +
     `<label style="${labelCss()}">${L.linkText}</label>` +
     `<input data-testid="inline-link-text" data-role="text" placeholder="${L.linkTextAuto}" style="${fieldCss()}">` +
     `<p data-role="hint" style="font-size:11.5px;color:#9aa3b2;margin:6px 0 0;line-height:1.5"></p>` +
+    `<button type="button" data-role="newtab" data-testid="inline-link-newtab" aria-pressed="false" style="display:flex;align-items:center;gap:8px;margin-top:12px;background:none;border:none;padding:0;cursor:pointer;font-family:inherit;font-size:12.5px;color:#c9d1dd">` +
+    `<span data-role="newtab-box" style="${checkboxCss(false)}"></span><span>${L.linkNewTab}</span></button>` +
     `<div data-role="live" style="display:flex;gap:8px;margin-top:12px;padding:9px 10px;background:rgba(0,178,255,.08);border:1px solid rgba(0,178,255,.28);border-radius:8px">` +
     `<p style="margin:0;font-size:11.5px;color:#c9d1dd;line-height:1.55">${L.linkLiveHint}</p></div>` +
     '<div style="display:flex;gap:8px;align-items:center;margin-top:14px">' +
@@ -927,6 +947,11 @@ function renderLinkDialog(): void {
   if (editing) {
     text.value = linkEditing?.getAttribute("data-cms-ref-label") === "auto" ? "" : (linkEditing?.textContent ?? "");
     if (!existingRef) urlIn.value = linkEditing?.getAttribute("href") ?? "";
+    // Show what the link ACTUALLY does today, not a guess: an author who
+    // deliberately turned the new tab off must not have it turned back on
+    // by the default the moment they retype the address.
+    linkNewTab = linkEditing?.getAttribute("target") === "_blank";
+    linkNewTabTouched = true;
     q<HTMLElement>("remove").appendChild(buildRemoveLink());
   }
 
@@ -948,6 +973,18 @@ function renderLinkDialog(): void {
   urlIn.oninput = syncLinkDialog;
   q<HTMLElement>("cancel").onclick = hideLinkDialog;
   q<HTMLElement>("submit").onclick = applyLink;
+  q<HTMLElement>("newtab").onclick = () => {
+    linkNewTab = !linkNewTab;
+    linkNewTabTouched = true;
+    syncLinkDialog();
+  };
+  // The one-click repair. It fills the FIELD, so the editor sees the address
+  // they are about to save — it never rewrites the value behind their back.
+  q<HTMLElement>("add-scheme").onclick = () => {
+    urlIn.value = withHttps(urlIn.value);
+    urlIn.focus();
+    syncLinkDialog();
+  };
 
   renderLinkList("");
   syncLinkDialog();
@@ -1113,6 +1150,53 @@ function syncLinkDialog(): void {
   (q<HTMLButtonElement>("submit")).disabled = onPage
     ? !linkPicked
     : !q<HTMLInputElement>("url").value.trim();
+
+  const raw = q<HTMLInputElement>("url").value;
+
+  // An address with no scheme and no leading "/" is the one case we cannot
+  // classify: `trailmem.com` and `index.html` are syntactically identical, so
+  // any rule that "fixes" the first corrupts the second. So we ask instead of
+  // guessing — and we do NOT block saving, because a relative path may well be
+  // what the editor meant.
+  const doubtful = !onPage && isSchemeless(raw);
+  q<HTMLElement>("schemeless").style.display = doubtful ? "block" : "none";
+  if (doubtful) {
+    q<HTMLElement>("schemeless-text").innerHTML = (uiLabels.linkSchemeless as string).replace(
+      "{v}",
+      escapeHtml(raw.trim()),
+    );
+  }
+
+  // Default the new-tab box ON for an address that clearly leaves this site.
+  // The default is visible IN the box, so the editor can see and change it —
+  // and once they touch it, their choice wins over ours.
+  if (!onPage && !linkNewTabTouched) {
+    linkNewTab = isExternalHost(raw, typeof location !== "undefined" ? location.host : "");
+  }
+  const box = q<HTMLElement>("newtab-box");
+  if (box) box.setAttribute("style", checkboxCss(linkNewTab));
+  q<HTMLElement>("newtab").setAttribute("aria-pressed", String(linkNewTab));
+}
+
+/**
+ * Open-in-a-new-tab, written as ONE decision.
+ *
+ * target and rel travel together: a `_blank` link without `rel="noopener"`
+ * hands the page it opens a live handle back to ours. Setting one without the
+ * other is not a smaller version of this feature, it is a security hole — so
+ * the pair is set and cleared in one place rather than at each call site.
+ *
+ * F157.7 already taught the serializer to emit an anchor carrying extras as
+ * inline HTML, so both attributes survive a save.
+ */
+export function setLinkTarget(el: HTMLElement, newTab: boolean): void {
+  if (newTab) {
+    el.setAttribute("target", "_blank");
+    el.setAttribute("rel", "noopener");
+  } else {
+    el.removeAttribute("target");
+    el.removeAttribute("rel");
+  }
 }
 
 function applyLink(): void {
@@ -1127,12 +1211,15 @@ function applyLink(): void {
   const ref = onPage && linkPicked ? `${linkPicked.collection}:${linkPicked.slug}` : "";
   const label = own || (onPage ? (linkPicked?.title ?? href) : href);
 
+  const applyTarget = (el: HTMLElement) => setLinkTarget(el, linkNewTab);
+
   if (linkEditing) {
     linkEditing.setAttribute("href", href);
     if (ref) linkEditing.setAttribute("data-cms-ref", ref);
     else linkEditing.removeAttribute("data-cms-ref");
     if (ref && !own) linkEditing.setAttribute("data-cms-ref-label", "auto");
     else linkEditing.removeAttribute("data-cms-ref-label");
+    applyTarget(linkEditing);
     linkEditing.textContent = label;
     hideLinkDialog();
     return;
@@ -1140,6 +1227,7 @@ function applyLink(): void {
 
   const a = document.createElement("a");
   a.setAttribute("href", href);
+  applyTarget(a);
   if (ref) {
     a.setAttribute("data-cms-ref", ref);
     if (!own) a.setAttribute("data-cms-ref-label", "auto");
@@ -1173,6 +1261,15 @@ const tabCss = (on: boolean) =>
   ";color:" +
   (on ? "#fff" : "#9aa3b2") +
   ";height:32px;border-radius:7px;font-size:13px;cursor:pointer;font-weight:500;font-family:inherit;";
+
+/** A checkbox drawn by us. A native one renders in the OS theme and looks
+ *  nothing like the rest of this dialog. */
+const checkboxCss = (on: boolean) =>
+  "width:16px;height:16px;flex:0 0 16px;border-radius:4px;box-sizing:border-box;display:inline-block;" +
+  (on
+    ? "background:#00b2ff;border:1px solid #00b2ff;" +
+      "background-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M4 8.5l2.6 2.6L12 5.8' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>\");background-size:100% 100%;"
+    : "background:#141821;border:1px solid #3a3f4a;");
 
 const fieldCss = () =>
   "width:100%;background:#141821;border:1px solid #3a3f4a;color:#fff;height:34px;" +

@@ -183,6 +183,34 @@ describe("htmlToMarkdown — a link keeps what makes it that link", () => {
   // it back as a bare Markdown link, and target + rel were gone. The link still
   // worked, so nothing looked broken — it just stopped opening in a new tab and
   // lost rel="noopener noreferrer", which is a security attribute.
+  // F164.6: the same guarantee, but for the pair the DIALOG now writes. The
+  // hand-written case above proved the serializer copes with attributes that
+  // were already there; this proves the exact attributes our own new-tab
+  // control produces survive a save. Strict equality on the extracted values —
+  // a "contains" check passes on a truncated or doubled attribute.
+  it("keeps the exact target/rel pair the new-tab control writes", () => {
+    const a = document.createElement("a");
+    a.setAttribute("href", "https://www.trailmem.com");
+    a.setAttribute("target", "_blank");
+    a.setAttribute("rel", "noopener");
+    a.textContent = "Trail";
+
+    const md = htmlToMarkdown(`se <a href="${a.getAttribute("href")}" target="${a.getAttribute("target")}" rel="${a.getAttribute("rel")}">${a.textContent}</a> her`);
+
+    expect(md.match(/target="([^"]*)"/)?.[1]).toBe("_blank");
+    expect(md.match(/rel="([^"]*)"/)?.[1]).toBe("noopener");
+    expect(md.match(/href="([^"]*)"/)?.[1]).toBe("https://www.trailmem.com");
+  });
+
+  // The negative control for the pair: a link WITHOUT a new tab must not
+  // acquire target/rel from anywhere, and must stay ordinary Markdown.
+  it("adds no target or rel to a link the editor left in this tab", () => {
+    const md = htmlToMarkdown('se <a href="https://www.trailmem.com">Trail</a> her');
+    expect(md).not.toContain("target=");
+    expect(md).not.toContain("rel=");
+    expect(md).toContain("[Trail](https://www.trailmem.com)");
+  });
+
   it("keeps target and rel on a hand-written link", () => {
     const html =
       'af <a href="https://example.com/" target="_blank" rel="noopener noreferrer">@nogen</a> på Instagram';
