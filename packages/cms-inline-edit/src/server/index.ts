@@ -97,6 +97,19 @@ export type CmsLinkLookup = (
 ) => CmsLinkTarget | null | undefined;
 
 const ANCHOR_RE = /<a\b([^>]*\bdata-cms-ref="[^"]*"[^>]*)>([\s\S]*?)<\/a>/gi;
+/**
+ * Every anchor, not only the ones carrying a page reference.
+ *
+ * Quote-aware on purpose. A naive `[^>]*` ends the tag at the first `>` — but a
+ * BROWSER does not: inside a quoted attribute value `>` is ordinary text. So
+ * `<a href="data:text/html,<script>…">` was read by the regex as a tag ending
+ * mid-attribute, escaped the check, and still executed. A sanitiser that
+ * tokenises differently from the parser it protects is a bypass, not a guard.
+ * Caught by this file's own negative-case test.
+ */
+const ANY_ANCHOR_RE = /<a\b((?:"[^"]*"|'[^']*'|[^>])*)>([\s\S]*?)<\/a>/gi;
+/** href, quoted or bare — an unquoted attribute is legal HTML5. */
+const HREF_RE = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i;
 const attr = (tag: string, name: string): string => {
   const m = tag.match(new RegExp(`\\b${name}="([^"]*)"`, "i"));
   return m?.[1] ?? "";
@@ -106,9 +119,37 @@ const escapeAttr = (v: string): string =>
 const escapeText = (v: string): string =>
   v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+/**
+ * Neutralise a link whose address would EXECUTE when clicked.
+ *
+ * The editor refuses these at three points on the way IN, but that only covers
+ * text this dialog wrote. Content also arrives from cms-admin's own richtext
+ * editor, the REST API, MCP and AI agents, and `marked` renders
+ * `[k](javascript:…)` and a raw `<a href="javascript:…">` through untouched —
+ * measured with this repo's own version. So the render side needs its own gate.
+ *
+ * The link's WORDS survive; only the link is removed. Dropping the text as well
+ * would silently delete a sentence from a customer's page.
+ *
+ * Honest limit: this runs only where a site calls it. It is a chokepoint for a
+ * consumer that renders through resolveCmsLinks (or sanitizeCmsHtml directly),
+ * not a guarantee about every path into every site.
+ */
+export function sanitizeCmsHtml(html: string): string {
+  if (!html) return html;
+  return html.replace(ANY_ANCHOR_RE, (whole, attrs: string, inner: string) => {
+    const m = attrs.match(HREF_RE);
+    const href = m?.[1] ?? m?.[2] ?? m?.[3] ?? "";
+    // Whitespace and control characters are stripped first: browsers ignore
+    // them inside a scheme, so `java\tscript:` and ` javascript:` both run.
+    const bare = href.replace(/[\u0000-\u0020]/g, "");
+    return /^(?:javascript|data|vbscript):/i.test(bare) ? inner : whole;
+  });
+}
+
 export function resolveCmsLinks(html: string, lookup: CmsLinkLookup): string {
   if (!html) return html;
-  return html.replace(ANCHOR_RE, (whole, attrs: string, inner: string) => {
+  return sanitizeCmsHtml(html).replace(ANCHOR_RE, (whole, attrs: string, inner: string) => {
     const ref = attr(attrs, "data-cms-ref");
     const sep = ref.indexOf(":");
     if (sep < 1) return whole;

@@ -23,12 +23,28 @@
 export function isSchemeless(raw: string): boolean {
   const v = (raw || "").trim();
   if (!v) return false;
+  // An email address typed bare is not an address the browser will read as a
+  // path — and offering "add https://" on it produces https://cb@webhouse.dk,
+  // which parses as host webhouse.dk with userinfo cb: a dead link that now
+  // LOOKS unambiguous, so the notice disappears and nothing warns again.
+  if (isBareEmail(v)) return false;
   if (/^[a-z][a-z0-9+.-]*:/i.test(v)) return false; // https: mailto: tel: data:
   if (v.startsWith("//")) return false; // protocol-relative
   if (v.startsWith("/")) return false; // site-absolute
   if (v.startsWith("#")) return false; // anchor on this page
   if (v.startsWith("?")) return false; // query on this page
   return true;
+}
+
+/**
+ * A bare email address — `name@host.tld`, no scheme, no path.
+ *
+ * Kept deliberately narrow: anything with a slash, a space or a second @ is
+ * not one, so an ordinary URL that happens to contain an @ (userinfo, a query)
+ * is untouched.
+ */
+export function isBareEmail(raw: string): boolean {
+  return /^[^\s@/:?#]+@[^\s@/:?#]+\.[a-z]{2,}$/i.test((raw || "").trim());
 }
 
 /** The one-click repair the dialog offers. Never applied on its own. */
@@ -63,10 +79,17 @@ export function isExternalHost(raw: string, currentHost: string): boolean {
 export function extractLinkTargets(text: string): Array<{ syntax: "html" | "markdown"; value: string }> {
   const out: Array<{ syntax: "html" | "markdown"; value: string }> = [];
   if (typeof text !== "string") return out;
-  for (const m of text.matchAll(/<a\b[^>]*?\bhref\s*=\s*("([^"]*)"|'([^']*)')/gi)) {
-    out.push({ syntax: "html", value: m[2] ?? m[3] ?? "" });
+  // The unquoted form is legal HTML5 and common in pasted or imported markup —
+  // which is exactly the content this scanner exists to audit. Requiring quotes
+  // made `<a href=trailmem.com>` invisible, so a site scanned clean while the
+  // dead link was live.
+  for (const m of text.matchAll(/<a\b[^>]*?\bhref\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'>]+))/gi)) {
+    out.push({ syntax: "html", value: m[2] ?? m[3] ?? m[4] ?? "" });
   }
-  for (const m of text.matchAll(/(!)?\[[^\]]*\]\(([^)\s]+)/g)) {
+  // `[` ... `]` is allowed to contain a nested image, so a linked image
+  // (`[![alt](a.png)](https://x)`) reports the LINK's address, not the image's.
+  // A bare `![alt](src)` is still skipped: a relative image path is normal.
+  for (const m of text.matchAll(/(!)?\[(?:[^\]\[]|\[[^\]]*\])*\]\(([^)\s]+)/g)) {
     if (m[1]) continue;
     out.push({ syntax: "markdown", value: m[2] ?? "" });
   }

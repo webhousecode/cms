@@ -22,13 +22,37 @@ const TOKEN = process.env.CMS_ADMIN_TOKEN;
 // ONE source for what counts as a doubtful address: the same functions the
 // editor's link dialog uses. Two copies drift, and then this reports a clean
 // site that the editor is still producing dead links on.
-import { extractLinkTargets, isSchemeless } from "../packages/cms-inline-edit/src/link-target.ts";
+//
+// The BUILT bundle first, the TypeScript source second. Importing the .ts
+// directly needs Node's type stripping, which is only on by default from
+// 22.18 — and this package declares engines >=22, so a colleague pinned to
+// 22.14 got ERR_UNKNOWN_FILE_EXTENSION instead of a scan.
+const PKG = "../packages/cms-inline-edit";
+let extractLinkTargets, isSchemeless;
+try {
+  ({ extractLinkTargets, isSchemeless } = await import(`${PKG}/dist/index.js`));
+} catch {
+  try {
+    ({ extractLinkTargets, isSchemeless } = await import(`${PKG}/src/link-target.ts`));
+  } catch (e) {
+    console.error("✗ Kan ikke indlæse adresse-klassifikationen fra @broberg/cms-inline-edit.");
+    console.error(`  Byg pakken først:  (cd packages/cms-inline-edit && npm run build)`);
+    console.error(`  eller kør med Node ≥ 22.18 (type-stripping). Årsag: ${e.message}`);
+    process.exit(2);
+  }
+}
 
-function walkStrings(node, path, visit) {
-  if (typeof node === "string") return visit(node, path);
-  if (Array.isArray(node)) return node.forEach((v, i) => walkStrings(v, `${path}[${i}]`, visit));
+/**
+ * Visit every string, handing the visitor the PARENT and KEY as well as the
+ * value. Re-deriving the parent by splitting a dotted path broke on any key
+ * containing "." (a locale map like `da.DK`, an i18n key, `seo.title`) — and
+ * broke silently, leaving the plant unplaced.
+ */
+function walkStrings(node, path, visit, parent, key) {
+  if (typeof node === "string") return visit(node, path, parent, key);
+  if (Array.isArray(node)) return node.forEach((v, i) => walkStrings(v, `${path}[${i}]`, visit, node, i));
   if (node && typeof node === "object") {
-    for (const [k, v] of Object.entries(node)) walkStrings(v, path ? `${path}.${k}` : k, visit);
+    for (const [k, v] of Object.entries(node)) walkStrings(v, path ? `${path}.${k}` : k, visit, node, k);
   }
 }
 
@@ -98,6 +122,7 @@ async function scan() {
   let linksSeen = 0;
   let planted = 0;
   let plantsFound = 0;
+  let unread = 0;
 
   for (const site of targets) {
     let cols = [];
@@ -108,29 +133,45 @@ async function scan() {
 
     for (const col of cols) {
       let docs;
-      try { docs = await api(`/api/cms/${col}?site=${site}`); } catch { continue; }
-      if (!Array.isArray(docs)) continue;
+      try {
+        docs = await api(`/api/cms/${col}?site=${site}`);
+      } catch (e) {
+        // NOT silent. A collection we could not read is indistinguishable from
+        // an empty one, and the run would still print the all-clear — the exact
+        // failure this script's own header warns about. It is also invisible to
+        // --prove, since a collection never fetched plants nothing.
+        console.error(`  ! ${site}/${col}: kunne ikke læses (${e.message}) — IKKE scannet`);
+        unread++;
+        continue;
+      }
+      if (!Array.isArray(docs)) {
+        console.error(`  ! ${site}/${col}: uventet svar-form — IKKE scannet`);
+        unread++;
+        continue;
+      }
       for (const doc of docs) {
         docsScanned++;
         const data = doc.data ?? doc;
         if (prove) {
-          // Append to the FIRST string field this document has — whichever one
-          // that is, it is a field the editor's own content lives in.
-          let done = false;
-          walkStrings(data, "", (str, path) => {
-            if (done || typeof str !== "string") return;
-            const seg = path.split(/[.[]/);
-            let ref = data;
-            for (let i = 0; i < seg.length - 1; i++) ref = ref?.[seg[i].replace(/\]$/, "")];
-            const key = seg[seg.length - 1].replace(/\]$/, "");
-            if (ref && typeof ref[key] === "string") { ref[key] = `${str}\n\n${PLANT}`; done = true; planted++; }
+          // EVERY string field, not the first one. The first is usually a
+          // shallow scalar — a title, a slug, a date — so a walker that failed
+          // only on nested block arrays would still return every plant, and the
+          // script would print that it reaches "the field the editor writes in"
+          // while never having gone near one.
+          const targets = [];
+          walkStrings(data, "", (str, _path, parent, key) => {
+            if (parent !== undefined && key !== undefined) targets.push([parent, key, str]);
           });
+          for (const [parent, key, str] of targets) {
+            parent[key] = `${str}\n\n${PLANT}`;
+            planted++;
+          }
         }
         walkStrings(data, "", (str, path) => {
           for (const t of extractLinkTargets(str)) {
+            if (t.value === "kontrol-plantet.example") { plantsFound++; continue; }
             linksSeen++;
             if (isSchemeless(t.value)) {
-              if (t.value === "kontrol-plantet.example") { plantsFound++; continue; }
               findings.push({ site, col, slug: doc.slug ?? doc.id ?? "?", path, ...t });
             }
           }
@@ -141,8 +182,12 @@ async function scan() {
   }
 
   console.log(`\nScannet: ${docsScanned} dokumenter, ${linksSeen} links, ${targets.length} sites.`);
+  if (unread) {
+    console.error(`\n\u2717 ${unread} samling(er) kunne IKKE l\u00e6ses. Et nul herunder d\u00e6kker ikke dem.`);
+    process.exitCode = 1;
+  }
   if (prove) {
-    console.log(`Positiv kontrol: ${planted} plantet, ${plantsFound} fundet.`);
+    console.log(`Positiv kontrol: ${planted} plantet i ${docsScanned} dokumenter, ${plantsFound} fundet.`);
     if (planted === 0 || plantsFound !== planted) {
       console.error("\n\u2717 Kontrollen fejlede \u2014 scanningen n\u00e5r ikke frem til det felt redakt\u00f8ren skriver i.");
       console.error("  Et nul fra denne scanning betyder derfor ingenting.");

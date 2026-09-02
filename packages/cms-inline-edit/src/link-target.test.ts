@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractLinkTargets, isDangerousUrl, isExternalHost, isSchemeless, withHttps } from "./link-target";
+import { extractLinkTargets, isBareEmail, isDangerousUrl, isExternalHost, isSchemeless, withHttps } from "./link-target";
 
 describe("isSchemeless", () => {
   // Christian, 2026-09-02: typed www.trailmem.com into the free-address field
@@ -127,5 +127,79 @@ describe("isDangerousUrl", () => {
     ]) {
       expect(isDangerousUrl(ok), ok).toBe(false);
     }
+  });
+});
+
+describe("isBareEmail", () => {
+  // Typing an email address used to raise the schemeless notice and offer
+  // "add https://", which produces https://cb@webhouse.dk — parsed as host
+  // webhouse.dk with userinfo cb. A dead link that then LOOKS unambiguous, so
+  // the notice disappears and nothing warns again.
+  it("recognises a bare address and keeps the notice away", () => {
+    for (const mail of ["cb@webhouse.dk", "christian@broberg.ai", " a.b@x.co "]) {
+      expect(isBareEmail(mail), mail).toBe(true);
+      expect(isSchemeless(mail), mail).toBe(false);
+    }
+  });
+
+  // The negative control: an ordinary URL that happens to contain an @ must
+  // not be mistaken for one, or it would lose its notice.
+  it("is not fooled by an @ inside a URL", () => {
+    for (const notMail of [
+      "https://x.dk/@bruger",
+      "trailmem.com",
+      "user@host/path",
+      "@handle",
+      "a@b",
+    ]) {
+      expect(isBareEmail(notMail), notMail).toBe(false);
+    }
+    expect(isSchemeless("user@host/path")).toBe(true);
+  });
+});
+
+describe("extractLinkTargets — the forms a scanner must not miss", () => {
+  // An unquoted href is legal HTML5 and common in pasted or imported markup —
+  // exactly the content this scanner audits. Requiring quotes made the site
+  // scan clean while the dead link was live.
+  it("finds an unquoted href", () => {
+    expect(extractLinkTargets("<a href=trailmem.com>Trail</a>")).toEqual([
+      { syntax: "html", value: "trailmem.com" },
+    ]);
+  });
+
+  // A linked image must report the LINK's address, not the image's — the old
+  // pattern stopped at the inner ] and reported a.png as a schemeless link.
+  it("reports the link address of a linked image, not the image source", () => {
+    expect(extractLinkTargets("[![alt](a.png)](https://x.com)")).toEqual([
+      { syntax: "markdown", value: "https://x.com" },
+    ]);
+  });
+
+  it("still skips a plain image and an ordinary link is unchanged", () => {
+    expect(extractLinkTargets("![foto](uploads/x.jpg)")).toEqual([]);
+    expect(extractLinkTargets("[Trail](https://trailmem.com)")).toEqual([
+      { syntax: "markdown", value: "https://trailmem.com" },
+    ]);
+  });
+});
+
+describe("the {v} placeholder is not a substitution pattern", () => {
+  // String.replace interprets $&, $` and $' in the REPLACEMENT, so a plain
+  // string replacement splices the label's own markup back in after escaping
+  // has run — worst of all in the security warning. The dialog uses the
+  // function form; this pins why.
+  const LABEL = "<b>{v}</b> læses som en side på <b>dette</b> site.";
+  const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  it("the string form corrupts the label — this is the bug, kept visible", () => {
+    expect(LABEL.replace("{v}", esc("a$`b"))).not.toBe("<b>a$`b</b> læses som en side på <b>dette</b> site.");
+  });
+
+  it("the function form does not", () => {
+    expect(LABEL.replace("{v}", () => esc("a$`b"))).toBe(
+      "<b>a$`b</b> læses som en side på <b>dette</b> site.",
+    );
+    expect(LABEL.replace("{v}", () => esc("x$'y"))).toContain("x$'y");
   });
 });

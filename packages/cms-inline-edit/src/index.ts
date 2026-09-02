@@ -8,6 +8,18 @@
 import { applyFieldSlice } from "./field-slice";
 import { isDangerousUrl, isExternalHost, isSchemeless, withHttps } from "./link-target";
 export { applyFieldSlice } from "./field-slice";
+// Re-exported so a consumer — and the repo's content scanner — classifies an
+// address with the SAME functions the dialog uses. A second copy of that rule
+// drifts, and then a sweep reports a clean site the editor is still producing
+// dead links on.
+export {
+  extractLinkTargets,
+  isBareEmail,
+  isDangerousUrl,
+  isExternalHost,
+  isSchemeless,
+  withHttps,
+} from "./link-target";
 import { serializeTokenSafe, hasTokenChips, lockTokenChips } from "./token-safe";
 
 /**
@@ -928,7 +940,7 @@ function renderLinkDialog(): void {
     `<div data-pane="url" style="display:${onPageTab ? "none" : "block"}">` +
     `<label style="${labelCss()}">${L.linkUrl}</label>` +
     `<input data-testid="inline-link-url" data-role="url" placeholder="https://…" style="${fieldCss()}">` +
-    `<div data-role="schemeless" data-testid="inline-link-schemeless" style="${noticeCss("schemeless")}">` +
+    `<div data-role="schemeless" style="${noticeCss("schemeless")}">` +
     `<p data-role="schemeless-text" style="margin:0;font-size:11.5px;line-height:1.5"></p>` +
     `<button type="button" data-testid="inline-link-add-scheme" data-role="add-scheme" style="${btnCss(false)};margin-top:7px;height:26px;font-size:12px">${L.linkSchemelessFix}</button>` +
     "</div></div>" +
@@ -942,7 +954,7 @@ function renderLinkDialog(): void {
     '<div style="display:flex;gap:8px;align-items:center;margin-top:14px">' +
     '<div data-role="remove"></div><div style="flex:1"></div>' +
     `<button type="button" data-testid="inline-link-cancel" data-role="cancel" style="${btnCss(false)}">${L.linkCancel}</button>` +
-    `<button type="button" data-testid="inline-link-submit" data-role="submit" style="${btnCss(true)}" disabled>${editing ? L.linkSave : L.linkInsert}</button>` +
+    `<button type="button" data-testid="inline-link-submit" data-role="submit" style="${btnCss(true, true)}" disabled>${editing ? L.linkSave : L.linkInsert}</button>` +
     "</div></div>";
 
   const q = <T extends HTMLElement>(role: string) => d.querySelector(`[data-role="${role}"]`) as T;
@@ -956,7 +968,7 @@ function renderLinkDialog(): void {
     // Show what the link ACTUALLY does today, not a guess: an author who
     // deliberately turned the new tab off must not have it turned back on
     // by the default the moment they retype the address.
-    linkNewTab = linkEditing?.getAttribute("target") === "_blank";
+    linkNewTab = (linkEditing?.getAttribute("target") ?? "").trim().toLowerCase() === "_blank";
     linkNewTabTouched = true;
     q<HTMLElement>("remove").appendChild(buildRemoveLink());
   }
@@ -1153,9 +1165,8 @@ function syncLinkDialog(): void {
       ? (uiLabels.linkTextAutoHint as string)
       : (uiLabels.linkUrlHint as string);
   q<HTMLElement>("live").style.display = onPage ? "flex" : "none";
-  (q<HTMLButtonElement>("submit")).disabled = onPage
-    ? !linkPicked
-    : !q<HTMLInputElement>("url").value.trim();
+  const submit = q<HTMLButtonElement>("submit");
+  submit.disabled = onPage ? !linkPicked : !q<HTMLInputElement>("url").value.trim();
 
   const raw = q<HTMLInputElement>("url").value;
 
@@ -1175,18 +1186,33 @@ function syncLinkDialog(): void {
   if (dangerous) {
     notice.setAttribute("style", noticeCss("blocked"));
     notice.setAttribute("data-variant", "blocked");
+    // The FUNCTION form, deliberately. A plain string replacement interprets
+    // $&, $` and $' as substitution patterns, so an address containing one
+    // splices the label's own markup back in AFTER escapeHtml has run — worst
+    // of all in this branch, which is the security warning itself.
     q<HTMLElement>("schemeless-text").innerHTML = (uiLabels.linkBlocked as string).replace(
       "{v}",
-      escapeHtml(raw.trim()),
+      () => escapeHtml(raw.trim()),
     );
-    (q<HTMLButtonElement>("submit")).disabled = true;
+    submit.disabled = true;
   } else if (doubtful) {
     notice.setAttribute("style", noticeCss("schemeless"));
     notice.setAttribute("data-variant", "schemeless");
     q<HTMLElement>("schemeless-text").innerHTML = (uiLabels.linkSchemeless as string).replace(
       "{v}",
-      escapeHtml(raw.trim()),
+      () => escapeHtml(raw.trim()),
     );
+  }
+  submit.setAttribute("style", btnCss(true, submit.disabled));
+  if (!show) {
+    // Cleared, not just hidden. A stale data-variant is an assertion that
+    // passes in the green direction: a driver reading it on a valid address
+    // would still be told "blocked".
+    notice.removeAttribute("data-variant");
+    notice.removeAttribute("data-testid");
+    q<HTMLElement>("schemeless-text").innerHTML = "";
+  } else {
+    notice.setAttribute("data-testid", dangerous ? "inline-link-blocked" : "inline-link-schemeless");
   }
   notice.style.display = show ? "block" : "none";
   q<HTMLElement>("schemeless-text").style.color = dangerous ? "#f5c6c6" : "#e8d6b0";
@@ -1198,8 +1224,13 @@ function syncLinkDialog(): void {
   // Default the new-tab box ON for an address that clearly leaves this site.
   // The default is visible IN the box, so the editor can see and change it —
   // and once they touch it, their choice wins over ours.
-  if (!onPage && !linkNewTabTouched) {
-    linkNewTab = isExternalHost(raw, typeof location !== "undefined" ? location.host : "");
+  if (!linkNewTabTouched) {
+    // Re-derived on EVERY sync, both tabs. Deriving it only on the URL tab left
+    // the guess from an address the editor then deleted standing, so switching
+    // back to a page saved an internal link with target="_blank".
+    linkNewTab = onPage
+      ? false
+      : isExternalHost(raw, typeof location !== "undefined" ? location.host : "");
   }
   const box = q<HTMLElement>("newtab-box");
   if (box) box.setAttribute("style", checkboxCss(linkNewTab));
@@ -1218,12 +1249,21 @@ function syncLinkDialog(): void {
  * inline HTML, so both attributes survive a save.
  */
 export function setLinkTarget(el: HTMLElement, newTab: boolean): void {
+  // `rel` is a TOKEN LIST that belongs to the author, not a slot we own. The
+  // first version of this wrote `rel="noopener"` and cleared the attribute
+  // outright, which silently deleted `nofollow`, `sponsored`, `ugc` and
+  // `noreferrer` from any existing link the moment its label was edited — an
+  // SEO and monetisation attribute, gone with no trace. Only our own token
+  // moves; everything the author put there stays.
+  const tokens = (el.getAttribute("rel") ?? "").split(/\s+/).filter(Boolean);
+  const kept = tokens.filter((t) => t.toLowerCase() !== "noopener");
   if (newTab) {
     el.setAttribute("target", "_blank");
-    el.setAttribute("rel", "noopener");
+    el.setAttribute("rel", ["noopener", ...kept].join(" "));
   } else {
     el.removeAttribute("target");
-    el.removeAttribute("rel");
+    if (kept.length) el.setAttribute("rel", kept.join(" "));
+    else el.removeAttribute("rel");
   }
 }
 
@@ -1293,8 +1333,6 @@ const tabCss = (on: boolean) =>
   (on ? "#fff" : "#9aa3b2") +
   ";height:32px;border-radius:7px;font-size:13px;cursor:pointer;font-weight:500;font-family:inherit;";
 
-/** A checkbox drawn by us. A native one renders in the OS theme and looks
- *  nothing like the rest of this dialog. */
 /** Amber asks a question; red refuses. A blocked scheme must not look like
  *  friendly advice the editor can click past. */
 const noticeCss = (variant: "schemeless" | "blocked") =>
@@ -1304,6 +1342,8 @@ const noticeCss = (variant: "schemeless" | "blocked") =>
   (variant === "blocked" ? "rgba(255,90,90,.38)" : "rgba(255,176,32,.34)") +
   ";";
 
+/** A checkbox drawn by us. A native one renders in the OS theme and looks
+ *  nothing like the rest of this dialog. */
 const checkboxCss = (on: boolean) =>
   "width:16px;height:16px;flex:0 0 16px;border-radius:4px;box-sizing:border-box;display:inline-block;" +
   (on
@@ -1318,8 +1358,13 @@ const fieldCss = () =>
 const labelCss = () =>
   "font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9aa3b2;margin:12px 0 5px;display:block;";
 
-const btnCss = (primary: boolean) =>
-  "height:33px;border-radius:7px;font-size:13px;cursor:pointer;padding:0 14px;font-weight:600;font-family:inherit;" +
+const btnCss = (primary: boolean, disabled = false) =>
+  "height:33px;border-radius:7px;font-size:13px;padding:0 14px;font-weight:600;font-family:inherit;" +
+  // A disabled button that still looks clickable is the silent state this whole
+  // card exists to remove: the editor clicks, nothing happens, and the dialog
+  // reads as broken rather than as refusing. It matters more now that `disabled`
+  // is what stops a javascript: address being inserted.
+  (disabled ? "cursor:not-allowed;opacity:.42;" : "cursor:pointer;") +
   (primary
     ? "background:#00b2ff;color:#04121b;border:none;"
     : "background:none;border:1px solid #3a3f4a;color:#fff;font-weight:500;");
@@ -1619,7 +1664,7 @@ function escapeAttr(value: string): string {
  *    page. Nothing in the CMS puts them there, so dropping them loses nothing
  *    real — and unlike the accidental loss this function exists to fix, it is
  *    a decision rather than an oversight.
- *  - any OTHER attribute whose value is a `javascript:` URL, for the same
+ *  - any OTHER attribute whose value carries an executing scheme, for the same
  *    reason. Note this does NOT cover `href` itself: a javascript: href with no
  *    other attributes still becomes a Markdown link, exactly as before. Whether
  *    that link is then rendered is the renderer's call, and each consumer
@@ -1635,7 +1680,7 @@ function preservedLinkAttrs(el: Element): string[] {
     const name = attr.name.toLowerCase();
     if (name === "href") continue;
     if (name.startsWith("on")) continue;
-    if (/^javascript:/i.test(attr.value.trim())) continue;
+    if (isDangerousUrl(attr.value)) continue;
     out.push(`${name}="${escapeAttr(attr.value)}"`);
   }
   return out;
@@ -1843,7 +1888,7 @@ function showPill(el: HTMLElement, state: "saving" | "saved" | "error"): void {
   if (!pill) {
     pill = document.createElement("span");
     pill.setAttribute("data-cms-inline-edit-pill", "");
-  pill.setAttribute("data-testid", "inline-edit-pill");
+    pill.setAttribute("data-testid", "inline-edit-pill");
     document.body.appendChild(pill);
     pills.set(el, pill);
   }
