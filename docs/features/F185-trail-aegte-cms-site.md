@@ -22,17 +22,33 @@ broberg.ai        103                        9.930        0   ← kontrol
 
 **0 redigerbare felter** er det bærende tal. Det er ikke «lav dækning» — der findes ikke ét `data-cms-field` på hele sitet. Inline-redigering er ikke delvist til stede; den er slet ikke der.
 
-Og et andet spørgsmål end «kan teksten redigeres?»: **findes teksten overhovedet i CMS'et?** Målt fra læserens side, 62 sider, hver synlig tekstblok sammenlignet mod hver strengværdi i alle CMS-dokumenter:
+**700 huller betyder IKKE 700 tekster der mangler i CMS'et.** Det tal blev krydstjekket
+frem for forklaret — hvert af de 700 hullers tekst slået op i alt indhold på site=trail:
 
 ```
-2.420  synlige tekstblokke
-  344  findes ikke i CMS
-   29    · sammensat af CMS-værdier (dato · kategori · «min read») — skal IKKE i CMS
-  282    · etiketter i skabelonen (knapper, overskrifter, «No posts yet.»)
-   33    · ægte prosa der KUN findes i koden
+700  huller i alt (680 unikke tekster; resten er samme tekst på flere sider)
+618    · teksten STÅR allerede i CMS'et — mangler kun data-cms-field      88,3 %
+ 82    · teksten findes IKKE i CMS'et (75 unikke)                          11,7 %
 ```
 
-**Måle-forbehold, fordi tallet ellers ville blive brugt forkert:** første kørsel sagde **183** ægte prosa. Det var min egen fejl — siden skriver `&#39;` hvor CMS'et har `'`, og opslaget kunne derfor ikke finde tekst der var der. Et opslag der ikke kan se en tekst, melder den som manglende. Rettet, og efterprøvet med kontrol i begge retninger (en kendt tekst med `&#39;` SKAL findes; en opdigtet må ikke). **33 er tallet.**
+Det deler arbejdet i to, og de to halvdele er ikke lige store:
+
+- **618 er opmærkningsarbejde.** Teksten er allerede redigerbar i CMS-admin; den kan bare ikke
+  klikkes på ude på siden. Det er én ændring i `build.ts`, ikke 618 beslutninger.
+- **82 er indholdsarbejde.** Heraf de 30 billedtekster nedenfor, en del tekst der er BAGT IND I
+  SVG-figurerne selv («TRANSLUCENT SCREEN KEYBOARD LEVERS MICROFILM STORAGE», «1945 MEMEX Bush
+  … 1968 THE DEMO Engelbart»), og nogle få ægte skabelontekster («Contact», «Changes»,
+  «No posts yet.»). SVG-teksten er en kategori for sig og skal afgøres særskilt: den er synlig
+  prosa, men den er også en del af en tegning.
+
+**Kontrollen kørte før tallene, i begge retninger:** en kendt CMS-tekst SKAL findes, en opdigtet
+må ikke. Uden den kunne «82 ikke i CMS» lige så godt betyde at opslaget var i stykker.
+
+**En tidligere måling i denne tråd nævnte 344 tekstblokke / 33 ægte prosa.** Den er
+SUPERSEDERET af tallene ovenfor og bør ikke bruges: den scannede hele siden inkl. menu og
+foden, talte unikke strenge frem for elementer, og målte altså en anden population end
+`check-editable`. To tal fra to værktøjer med hver sit udsnit er den slags par der bliver lagt
+sammen af en der læser hurtigt.
 
 ### De 30 billedtekster — det konkrete fund
 
@@ -84,6 +100,32 @@ Fra 0 til det der giver `cms check-editable` nul huller. Attributterne udsendes 
 - **De 42 genererede tag-sider.** Afledt af posts' egne tags; ikke indhold der skrives.
 - **Design- eller layoutændringer.** Dette kort flytter tekst og tilføjer attributter; det redesigner ikke.
 - **F184 selv.** Beskrevet her fordi det blokerer, men bygges der.
+
+## Hvor kortene ligger — og hvorfor to af dem flyttede
+
+Efter aftale med trail-sessionen (#25014) er de to stories der er REN trail-kode flyttet til
+trail-boardet. Deres begrundelse, og den er rigtig: en trail-session i queue-drain ser aldrig
+et kort på cms-boardet, så arbejdet ville ligge og vente på at nogen tilfældigt huskede det.
+Og Christian kigger på trail-boardet når han vil vide hvad der sker i trail.
+
+**Flyttet, ikke spejlet.** Et spejl er to rækker der kan skride fra hinanden.
+
+| Nu | Før | Ejer | Hvad |
+|---|---|---|---|
+| `trail-F223` | F185.1 | trail | de 30 billedtekster ind i CMS'et |
+| `trail-F224` | F185.2 | trail | `data-cms-field` på hvert element |
+| `cms-F185.3` | — | cms | de resterende tekster klassificeres |
+| `cms-F185.4` | — | cms | porten i CI |
+
+**To ting gik ikke som aftalt ved flytningen, og de står her frem for at blive opdaget senere:**
+
+1. **Numrene ændrede sig.** `cardmem_move_card_to_project` tildeler modtager-projektets næste
+   frie F-nummer; F185.1/.2 kunne ikke følge med. Det er værktøjets dokumenterede opførsel,
+   ikke et uheld — men det betyder at en henvisning til «F185.2» andre steder nu er død.
+2. **Plan-stien fulgte ikke med** (`plans_copied: 0`). Trail bad om at den blev pegende på
+   dette dokument, så der stadig kun var ét sted at læse hvorfor. De to kort står nu uden
+   plan-doc. Accepteret ændring skal træffes af trail: enten en kort plan-doc i deres repo der
+   peger herhen, eller forældre dem under et trail-epic der har en.
 
 ## Ejerskab på tværs af repoer
 
