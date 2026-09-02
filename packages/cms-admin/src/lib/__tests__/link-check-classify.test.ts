@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { isUnfetchable, normalisePath, sitemapPathsFromXml } from "../link-check-classify";
+import { isDangerousUrl, isSchemeless } from "@broberg/cms-inline-edit";
+import { classifyByShape, isUnfetchable, normalisePath, sitemapPathsFromXml } from "../link-check-classify";
 
 describe("isUnfetchable", () => {
   // 9 of 37 warnings on sanneandersen were a correct mail address reported as
@@ -75,5 +76,67 @@ describe("normalisePath", () => {
     expect(normalisePath("/da/privatliv#top")).toBe("/da/privatliv");
     expect(normalisePath("/")).toBe("/");
     expect(normalisePath("")).toBe("/");
+  });
+});
+
+/**
+ * The shape-only verdicts, driven through the REAL function.
+ *
+ * Every case below is a false alarm that shipped and was measured afterwards,
+ * not a hypothetical. The predicates come from @broberg/cms-inline-edit so the
+ * editor's link dialog and this checker cannot disagree about what is doubtful.
+ */
+describe("classifyByShape", () => {
+  const deps = { isSchemeless, isDangerousUrl };
+  const link = (u: string) => classifyByShape("link", u, deps);
+  const image = (u: string) => classifyByShape("image", u, deps);
+
+  it("skips an address there is nothing to fetch", () => {
+    // 9 of sanneandersen's 37 warnings were a correct mail address, reported
+    // as `error: fetch failed`.
+    expect(link("mailto:cb@webhouse.dk")?.status).toBe("skipped");
+    expect(link("tel:+4512345678")?.status).toBe("skipped");
+  });
+
+  it("flags an address with no scheme, because a browser reads it as a page here", () => {
+    expect(link("www.trailmem.com")?.status).toBe("schemeless");
+  });
+
+  it("does NOT flag a relative image source — that is normal and correct", () => {
+    // Applying the href rule to images buries the real findings in noise; the
+    // shared extractor skips them for exactly this reason.
+    expect(image("uploads/foto.jpg")).toBeNull();
+  });
+
+  it("flags javascript: in a link", () => {
+    expect(link("javascript:alert(1)")?.status).toBe("dangerous");
+  });
+
+  it("does NOT call an inline data-URI image dangerous", () => {
+    // THE regression this test exists for: `data:` is dangerous in an href and
+    // completely ordinary in an <img src>. TipTap stores a pasted image that
+    // way, so the href rule applied to images paints every inline image red
+    // with "remove it, it is a script".
+    expect(image("data:image/png;base64,iVBORw0KGgo=")?.status).toBe("skipped");
+  });
+
+  it("still calls data: in a LINK dangerous", () => {
+    // The negative control for the case above: sparing an inline image must
+    // not be implemented as dropping the rule.
+    expect(link("data:text/html,<script>alert(1)</script>")?.status).toBe("dangerous");
+  });
+
+  it("does flag javascript: in an image source", () => {
+    // Deliberate, and the reason the dangerous rule is NOT narrowed to links:
+    // an <img src="javascript:…"> renders nothing in any browser. The inline
+    // data-URI image is spared by ORDER, not by a kind-guard — a guard that
+    // could be deleted with every test still green protected nothing.
+    expect(image("javascript:alert(1)")?.status).toBe("dangerous");
+  });
+
+  it("settles nothing for an ordinary address, so the caller goes and looks", () => {
+    expect(link("https://webhouse.dk")).toBeNull();
+    expect(link("/da/om-sanne")).toBeNull();
+    expect(image("/uploads/hero.webp")).toBeNull();
   });
 });

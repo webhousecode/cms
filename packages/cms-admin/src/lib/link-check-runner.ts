@@ -1,7 +1,8 @@
-import { isSchemeless } from "@broberg/cms-inline-edit";
+import { isDangerousUrl, isSchemeless } from "@broberg/cms-inline-edit";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { readSiteConfig } from "@/lib/site-config";
-import { isUnfetchable, normalisePath, sitemapPathsFromXml } from "@/lib/link-check-classify";
+import { classifyByShape, normalisePath, sitemapPathsFromXml } from "@/lib/link-check-classify";
+import { probeUrl } from "@/lib/link-check-probe";
 import { getUploadDir } from "@/lib/upload-dir";
 import fs from "fs/promises";
 import path from "path";
@@ -19,11 +20,13 @@ export type LinkResult = {
    * `skipped`     — nothing to fetch (mailto:, tel:, …). NOT a fault.
    * `schemeless`  — no scheme and no leading "/", so a browser reads it as a
    *                 page on THIS site. Valid markup, dead destination.
-   * `unverified`  — an internal link we could not check, because the site's own
-   *                 path list was unavailable. Deliberately not `ok`: a check
-   *                 that could not look must never report a clean result.
+   * `unverified`  — a link we could not check: no path list, no public URL, or
+   *                 the site did not answer. Deliberately neither `ok` nor
+   *                 `broken` — a check that could not look must report neither
+   *                 a clean result nor a death sentence.
+   * `dangerous`   — javascript:/data:/vbscript:. Not a link; a script.
    */
-  status: "ok" | "broken" | "redirect" | "error" | "skipped" | "schemeless" | "unverified";
+  status: "ok" | "broken" | "redirect" | "error" | "skipped" | "schemeless" | "unverified" | "dangerous";
   httpStatus?: number;
   redirectTo?: string;
   error?: string;
@@ -92,49 +95,6 @@ function extractHtmlImages(html: string): Array<{ text: string; url: string }> {
   return found;
 }
 
-async function checkExternal(url: string): Promise<Pick<LinkResult, "status" | "httpStatus" | "redirectTo" | "error">> {
-  try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 6000);
-    const res = await fetch(url, {
-      method: "HEAD",
-      signal: ctrl.signal,
-      redirect: "manual",
-      headers: { "User-Agent": "webhouse-cms-link-checker/1.0" },
-    }).catch(() =>
-      fetch(url, {
-        method: "GET",
-        signal: ctrl.signal,
-        redirect: "manual",
-        headers: { "User-Agent": "webhouse-cms-link-checker/1.0", Range: "bytes=0-0" },
-      })
-    ).finally(() => clearTimeout(timer));
-
-    if (res.status >= 300 && res.status < 400)
-      return { status: "redirect", httpStatus: res.status, redirectTo: res.headers.get("location") ?? url };
-
-    // A 4xx/5xx from HEAD is not proof the page is gone. Plenty of hosts (and
-    // most WAFs) refuse HEAD outright and answer GET perfectly — measured on
-    // https://kpo.naevneneshus.dk: HEAD 404, GET-with-redirect 200, and the
-    // tool called a live legal-authority page dead. Only a method that the
-    // server actually honours can settle it.
-    if (res.status >= 400) {
-      const viaGet = await fetch(url, {
-        method: "GET",
-        signal: ctrl.signal,
-        redirect: "follow",
-        headers: { "User-Agent": "webhouse-cms-link-checker/1.0", Range: "bytes=0-0" },
-      }).catch(() => null);
-      if (viaGet && viaGet.status < 400) return { status: "ok", httpStatus: viaGet.status };
-      return { status: "broken", httpStatus: viaGet?.status ?? res.status };
-    }
-    return { status: "ok", httpStatus: res.status };
-  } catch (err: unknown) {
-    const msg = (err as Error).message ?? String(err);
-    return { status: "error", error: msg.includes("abort") ? "Timeout (6s)" : msg.slice(0, 120) };
-  }
-}
-
 /** Core link-check logic. Callbacks drive streaming in the API route. */
 export async function runLinkCheck(
   onStart?: (total: number) => void,
@@ -169,12 +129,17 @@ export async function runLinkCheck(
   let publicBase = "";
   try {
     const siteConfig = await readSiteConfig();
-    const base = (siteConfig.previewSiteUrl || siteConfig.deployProductionUrl || "").trim();
+    // Production FIRST. previewSiteUrl is the preview target and is often a
+    // staging or localhost origin — checking against it either fails to
+    // connect (and condemns every internal link) or reports on a site the
+    // editor is not publishing. For a link check the live site is the
+    // authority; preview is the fallback when there is no production URL.
+    const base = (siteConfig.deployProductionUrl || siteConfig.previewSiteUrl || "").trim();
     if (/^https?:\/\//i.test(base)) publicBase = base.replace(/\/$/, "");
-    if (/^https?:\/\//i.test(base)) {
+    if (publicBase) {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 8000);
-      const res = await fetch(`${base.replace(/\/$/, "")}/sitemap.xml`, {
+      const res = await fetch(`${publicBase}/sitemap.xml`, {
         signal: ctrl.signal,
         headers: { "User-Agent": "webhouse-cms-link-checker/1.0" },
       }).finally(() => clearTimeout(t));
@@ -255,7 +220,10 @@ export async function runLinkCheck(
     // `skipped`, `schemeless` and `unverified` are NOT faults for the counter:
     // schemeless gets its own list in the UI, and a link we could not check
     // must not be counted as broken any more than as ok.
-    if (fields.status === "broken" || fields.status === "error") broken++;
+    // `dangerous` IS one — and it has to be counted in the SAME place the UI
+    // counts it, or the number the API streams and the number on screen are
+    // two different claims about one run.
+    if (fields.status === "broken" || fields.status === "error" || fields.status === "dangerous") broken++;
     const result: LinkResult = { ...raw, type, ...fields };
     results.push(result);
     onResult?.(result);
@@ -264,24 +232,13 @@ export async function runLinkCheck(
   async function processOne(raw: RawLink): Promise<void> {
     const url = raw.url.trim();
 
-    // Nothing to fetch. `mailto:` and friends are not addresses a checker can
-    // visit, and calling fetch on one throws — which the old code reported as
-    // `error: fetch failed`. Measured on sanneandersen: 9 of 37 warnings were
-    // a perfectly correct mail address.
-    if (isUnfetchable(url)) {
-      push(raw, "other", { status: "skipped" });
-      return;
-    }
-
-    // No scheme and no leading "/" — a browser resolves this against the page
-    // it sits on. The markup is valid, so nothing looks wrong until someone
-    // clicks. Same rule the inline editor's link dialog uses (F164.6), shared
-    // rather than re-stated, so the two can never disagree.
-    if (isSchemeless(url)) {
-      push(raw, "other", {
-        status: "schemeless",
-        error: `Adressen mangler https:// — en browser læser den som en side på dette site, ikke som en adresse ude på nettet.`,
-      });
+    // Everything settled by the address's SHAPE — no network, no path list.
+    // Extracted to link-check-classify.ts because this is the part that keeps
+    // regressing and the runner cannot be unit-tested (it imports the CMS), so
+    // a rule left in here is a rule nothing can go red on.
+    const byShape = classifyByShape(raw.kind, url, { isSchemeless, isDangerousUrl });
+    if (byShape) {
+      push(raw, "other", byShape);
       return;
     }
 
@@ -313,30 +270,47 @@ export async function runLinkCheck(
         // say "yes"; it is never trusted to say "no" on its own.
         if (sitemapPaths?.has(p) || internalMap.has(p) || internalMap.has(p + "/")) {
           statusFields = { status: "ok" };
-        } else if (sitemapPaths && publicBase) {
+        } else if (publicBase) {
           // The sitemap is a FAST PATH, not the authority — the site is. A
           // login-gated page is correctly absent from a sitemap and still
-          // exists: /da/min-konto and /en/min-konto answer 307 and were the
-          // last two false alarms after the sitemap fix. So an internal path
-          // in neither list gets the same courtesy an external one already
-          // got: ask, then decide.
-          const probe = await checkExternal(`${publicBase}${p}`);
-          statusFields =
-            probe.status === "ok" || probe.status === "redirect"
-              ? { status: "ok", httpStatus: probe.httpStatus }
-              : { status: "broken", error: "Findes hverken i sitemap, som dokument, eller som en side sitet svarer på" };
-        } else if (internalMap.has(p) || internalMap.has(p + "/")) {
-          statusFields = { status: "ok" };
+          // exists: /da/min-konto answers 307 and was a false alarm after the
+          // sitemap fix. So an internal path in neither list gets the same
+          // courtesy an external one already got: ask, then decide.
+          //
+          // NOT gated on having a sitemap. Requiring one meant a site that
+          // simply does not serve sitemap.xml reported every non-document link
+          // "unverified" forever — while the authority was reachable the whole
+          // time.
+          const probeUrlStr = `${publicBase}${p}`;
+          if (!externalCache.has(probeUrlStr)) externalCache.set(probeUrlStr, await probeUrl(probeUrlStr));
+          const probe = externalCache.get(probeUrlStr)!;
+          if (probe.status === "ok" || probe.status === "redirect") {
+            statusFields = { status: "ok", httpStatus: probe.httpStatus };
+          } else if (probe.status === "error") {
+            // The probe could not look. Calling that "broken" is this card's
+            // own thesis inverted — a definitive dead verdict from a check that
+            // never got an answer. A slow site, a rate-limit or no egress from
+            // the container would otherwise condemn every such link.
+            statusFields = {
+              status: "unverified",
+              error: `Ikke verificeret — sitet svarede ikke (${probe.error ?? "ukendt"}). Linket kan sagtens virke.`,
+            };
+          } else {
+            statusFields = { status: "broken", httpStatus: probe.httpStatus, error: "Findes hverken i sitemap, som dokument, eller som en side sitet svarer på" };
+          }
         } else {
+          // NOT `(${sitemapNote})` here: in this branch the note IS "sitet har
+          // ingen offentlig adresse i indstillingerne", so the editor read the
+          // same sentence twice inside one line.
           statusFields = {
             status: "unverified",
-            error: `Ikke verificeret — sitets adresseliste kunne ikke hentes (${sitemapNote}). Linket kan sagtens virke.`,
+            error: "Ikke verificeret — sitet har ingen offentlig adresse i indstillingerne, så der er ikke noget at spørge. Linket kan sagtens virke.",
           };
         }
       }
     } else {
       // External link or image: HTTP HEAD check
-      if (!externalCache.has(url)) externalCache.set(url, await checkExternal(url));
+      if (!externalCache.has(url)) externalCache.set(url, await probeUrl(url));
       statusFields = externalCache.get(url)!;
     }
 

@@ -27,6 +27,8 @@ function statusIcon(status: LinkResult["status"]) {
   // verdicts. Painting them red is how a tool teaches people to ignore red.
   if (status === "schemeless" || status === "unverified")
     return <AlertTriangle style={{ width: "0.875rem", height: "0.875rem", color: "#fbbf24", flexShrink: 0 }} />;
+  if (status === "dangerous")
+    return <XCircle style={{ width: "0.875rem", height: "0.875rem", color: "#f87171", flexShrink: 0 }} />;
   if (status === "skipped")
     return <MinusCircle style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)", flexShrink: 0 }} />;
   return <XCircle style={{ width: "0.875rem", height: "0.875rem", color: "#f87171", flexShrink: 0 }} />;
@@ -39,6 +41,7 @@ function statusLabel(r: LinkResult) {
   if (r.status === "skipped") return "Ikke en adresse der kan tjekkes";
   if (r.status === "schemeless") return r.error ?? "Mangler https://";
   if (r.status === "unverified") return r.error ?? "Ikke verificeret";
+  if (r.status === "dangerous") return r.error ?? "Kan køre kode";
   return r.error ?? "Error";
 }
 
@@ -242,15 +245,21 @@ export default function LinkCheckerPage() {
     setState("idle");
   }
 
-  const broken = results.filter((r) => (r.status === "broken" || r.status === "error") && r.kind !== "image");
+  const broken = results.filter((r) => (r.status === "broken" || r.status === "error" || r.status === "dangerous") && r.kind !== "image");
   const brokenImages = results.filter((r) => (r.status === "broken" || r.status === "error") && r.kind === "image");
-  const allBroken = results.filter((r) => r.status === "broken" || r.status === "error");
+  const allBroken = results.filter((r) => r.status === "broken" || r.status === "error" || r.status === "dangerous");
   const redirects = results.filter((r) => r.status === "redirect");
   const ok = results.filter((r) => r.status === "ok");
   // Their own bucket on purpose. Counted as broken they train the reader to
   // ignore red; left out of every list they disappear silently — and a
   // disappeared warning is the worse of the two.
   const attention = results.filter((r) => r.status === "schemeless" || r.status === "unverified");
+  // «Intet at se her» skal betyde INTET, ikke «intet i den bunke jeg tæller».
+  // Den grønne kvittering var betinget af allBroken alene, så et site med 20
+  // skemaløse links kunne slutte med et grønt flueben og fundene gemt bag en
+  // fane ingen havde grund til at klikke på. Det er præcis dette korts egen
+  // pointe, genindført ét lag højere oppe.
+  const needsAttention = results.filter((r) => r.status !== "ok" && r.status !== "skipped");
 
   const visible = filter === "all" ? results
     : filter === "broken" ? broken
@@ -263,13 +272,25 @@ export default function LinkCheckerPage() {
     const report = {
       exportedAt: new Date().toISOString(),
       checkedAt,
+      // Alle tilstande med, og summen SKAL gå op: et resultat der ikke er
+      // talt med nogen steder er et fund der forsvinder ud af rapporten.
       summary: {
         total: results.length,
         brokenLinks: broken.length,
         brokenImages: brokenImages.length,
         redirects: redirects.length,
+        attention: attention.length,
+        skipped: results.filter((r) => r.status === "skipped").length,
         ok: ok.length,
       },
+      attention: attention.map((r) => ({
+        url: r.url,
+        text: r.text,
+        status: r.status,
+        reason: r.error,
+        document: `${r.docCollection}/${r.docSlug}`,
+        field: r.field,
+      })),
       brokenLinks: broken.map((r) => ({
         url: r.url,
         text: r.text,
@@ -311,7 +332,7 @@ export default function LinkCheckerPage() {
     <div data-testid="link-checker-root" className="flex flex-col">
       <ActionBar helpArticleId="linkchecker-intro"
         actions={<>
-          {state === "done" && allBroken.length > 0 && (
+          {state === "done" && needsAttention.length > 0 && (
             <ActionButton variant="secondary" onClick={exportReport} icon={<Download style={{ width: 14, height: 14 }} />}>
               Export JSON
             </ActionButton>
@@ -501,7 +522,7 @@ export default function LinkCheckerPage() {
         )}
 
         {/* Done — no broken links */}
-        {state === "done" && allBroken.length === 0 && (
+        {state === "done" && needsAttention.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
             <CheckCircle style={{ width: "2rem", height: "2rem", color: "#4ade80" }} />
             <p className="text-sm font-medium text-foreground">All links and images are healthy</p>
