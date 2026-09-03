@@ -11,6 +11,7 @@ import { getMailer, buildFrom } from "../mailer";
 import { readSiteConfig } from "../site-config";
 import { brandForSite } from "../mail/brand";
 import { renderAutoReply, renderFormNotification } from "../mail/render";
+import { formatFieldValue } from "./field-value";
 
 /**
  * Send all configured notifications for a form submission.
@@ -172,9 +173,15 @@ async function sendEmailNotification(form: FormConfig, sub: FormSubmission): Pro
   // der stod her var kopi to af et lag der allerede fandtes som pakke.
   const html = renderFormNotification({
     formLabel: form.label,
+    // Værdien formateres efter feltets ERKLÆREDE type. String(v) skrev
+    // "Nyhedsbrev: true" til et menneske — maskinens ord, samme fejlform som
+    // dengang etiketten var feltets nøgle.
     fakta: Object.entries(sub.data)
       .filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== "")
-      .map(([k, v]) => ({ label: fieldLabel(form, k), value: String(v) })),
+      .map(([k, v]) => ({
+        label: fieldLabel(form, k),
+        value: formatFieldValue(v, form.fields?.find((f) => f.name === k)?.type, lang),
+      })),
     brand: brandForSite(siteConfig),
     lang,
     etiket: t.heading(form.label),
@@ -190,9 +197,12 @@ async function sendEmailNotification(form: FormConfig, sub: FormSubmission): Pro
     t.heading(form.label),
     `${t.received} ${humanTime(sub.createdAt, lang)}`,
     "",
+    // Samme formatering som HTML-halvdelen. En ren-tekst-klient viste ellers
+    // "Nyhedsbrev: true" mens HTML-klienten viste "Nyhedsbrev: Ja" — samme brev,
+    // to svar.
     ...Object.entries(sub.data)
       .filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== "")
-      .map(([k, v]) => `${fieldLabel(form, k)}: ${v}`),
+      .map(([k, v]) => `${fieldLabel(form, k)}: ${formatFieldValue(v, form.fields?.find((f) => f.name === k)?.type, lang)}`),
   ].join("\n");
 
   await getMailer(apiKey).send({ from, to, subject, html, text });
