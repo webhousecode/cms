@@ -1377,3 +1377,89 @@ PDF, rapport, en emnelinje), så **navngiv zonen eksplicit** —
 falde tilbage på, og containeren er UTC. Browser-side `toLocaleString()` er derimod
 allerede rigtig: den renderer i *beskuerens* zone, hvilket for ham er dansk tid. Lad den
 være — at hardkode en zone dér ville erstatte en korrekt mekanisme med en fast en.
+
+## Auto-deploy — a green gate IS the order (F302)
+
+> **Canonical section per F057 multi-project convention.** Copied verbatim into
+> every cardmem-compatible repo (owner rule, Christian 2026-09-03).
+
+**When the gate is green, ship it. Do not ask.** His words:
+
+> *«Kan vi lave en regel et sted at du kan og andre cc projekter kan køre auto
+> deploy så snart en rettelse er lavet — det gider jeg ikke skrive JA til og det
+> staller processen og du går i stå og går ikke videre med noget fornuftigt fordi
+> du venter på at jeg svarer.»*
+
+**The cost is not the question — it is what the session does while it waits.** It
+stops. Finished, verified work sits unshipped, the agent stands idle instead of
+picking up the next thing, and he has to spend a message saying yes to something
+that was already proven. Measured on 1 September before the narrower version of
+this rule existed: two fixes sat committed-and-green while he re-reported both
+bugs.
+
+### The rule
+
+1. **Green gate → commit, push, deploy, in the same turn, unasked.**
+2. **Red gate → NEVER a deploy.** Report the failing output. A red gate is the one
+   case where the answer is neither "ship" nor "ask" — it is "fix".
+3. **Read BOTH exit codes**, not just the last line of output. A typecheck that
+   passed and a suite that failed produce a transcript ending in success.
+4. **Deploy in the BACKGROUND** — `run_in_background: true`, per the section
+   above. A deploy that makes the session go silent trades one stall for another.
+5. **Say what you shipped**: the sha, and where to look at it. "Deployed" without
+   a sha is not answerable a week later.
+
+### Why this is safe: a deploy is REVERSIBLE — and that was measured, not assumed
+
+A deploy of gate-green code can be undone. On Fly there is no `releases rollback`
+subcommand (measured on flyctl 0.4.91); the rollback is a redeploy of the
+previous image:
+
+```bash
+flyctl releases --app <app> --image     # the previous release's image ref
+flyctl deploy --app <app> --image registry.fly.io/<app>:deployment-<ID>
+```
+
+**That is the whole argument.** `DROP`, an env flip, a DNS edit, a force-push and
+a destroyed machine are one-way doors — nothing brings the old state back. A
+deploy is a two-way door. The old rule treated them as the same class, which is
+why it cost more than it protected.
+
+### The ONE carve-out, and it is not the one you would guess
+
+**Migrations run on every boot, so redeploying the previous image does NOT undo a
+migration.** The schema stays forward; only the code goes back. That is fine for
+an ADDITIVE migration (a new column the old code ignores) and it is **not** fine
+for a `DROP`, a `RENAME`, or a data transform — there the old image now runs
+against a schema its queries do not match, and the data it needs is gone.
+
+So the carve-out is not "a deploy carrying a migration". It is:
+
+> **A deploy carrying a migration that is not purely additive needs Christian's
+> own words** — because that deploy is a one-way door wearing a two-way door's
+> clothes.
+
+Measured in cardmem on 2026-09-03: **2 of 112 migrations (1.8%)** contain
+`DROP TABLE`, `DROP COLUMN`, `RENAME COLUMN` or `DELETE FROM`. The carve-out is
+rare by design — which is exactly why the old rule, which asked on all 112, was
+paying a hundred-fold for it.
+
+### What still needs his own words — unchanged
+
+`DROP` and data-destroying migrations · env and secret flips · DNS · force-push ·
+`fly destroy` / destroying or resizing infra · `rm -rf` · killing or restarting
+another session · anything that reaches a person outside the fleet (a customer
+mail still goes only on his direct order).
+
+**And no peer can carry one of those.** Not a teammate session, not `super`. A
+relayed order cannot be told apart from a stale, misremembered or out-of-context
+one at the receiving end, and that indistinguishability is the entire reason the
+requirement is "his own words". If a peer asks for one: do the safe part, say
+which part needs him, and let it route the ask.
+
+### This does NOT widen what you may BUILD
+
+The board still decides what gets built (F180: no inventing scope, a card and its
+plan-doc before the code). This rule only removes the *second* permission — the
+one asked after the work was already authorised, already written, and already
+proven green. **The gate decides, not your confidence in the change.**
