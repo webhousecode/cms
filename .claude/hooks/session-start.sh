@@ -90,6 +90,14 @@ if [[ "$init_required" == "true" && -f "$DIR/../skills/adopt.md" ]]; then
   printf '\n</cardmem-adopt-required>\n'
 fi
 
+# F297.1 — the Decision Register, BEFORE the state block.
+#
+# Deliberately first: it is the only part of this payload that constrains what
+# the session may DECIDE, and it has to survive a compaction — which is exactly
+# when this hook fires again. Everything below is what is happening; this is what
+# is already settled, and reading it after the work queue is reading it late.
+render_decisions "$result"
+
 # Build the <projects:state> block. Keep it tight — capped budget per docs.
 printf '<projects:state>\n'
 

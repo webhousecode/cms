@@ -200,6 +200,61 @@ rule_disabled() {
 # block buried in a 200-line hook cannot be driven by a test.
 #
 # Echoes what it decided so a caller can report it. Never fails the boot.
+# F297.1 — render the Decision Register.
+#
+# THE DATA WAS ALREADY ARRIVING. session-start.sh calls cardmem_session_start,
+# whose payload has carried `decisions` since F271 — and the SessionStart hook
+# fires after a COMPACTION too. The register was reaching this script at every
+# boot and every compaction, and the script printed everything except it.
+# `grep -n decision session-start.sh` returned nothing; so did pre-compact.sh.
+#
+# That is the whole defect. Constraint pinning was prompt-delivered (an agent had
+# to remember to call a tool) when it could be code-guaranteed for one jq block.
+#
+# Lives HERE rather than inline for the same reason write_rules_local does: a
+# block buried in that 200-line hook cannot be driven by a test, and a test that
+# reads the script's TEXT would pass on a block that never runs.
+render_decisions() { # $1 = the full session_start result JSON
+  local result="${1:-}"
+  command -v jq >/dev/null 2>&1 || return 0
+  local block
+  block=$(printf '%s' "$result" | jq -c '.decisions // empty' 2>/dev/null || echo "")
+  # ABSENT prints nothing: an older server, or no project resolved. A hook that
+  # dies takes the whole boot context with it, so every branch here returns 0.
+  [ -z "$block" ] && return 0
+
+  local total shown
+  total=$(printf '%s' "$block" | jq -r '.total // 0' 2>/dev/null || echo 0)
+  shown=$(printf '%s' "$block" | jq -r '.shown // 0' 2>/dev/null || echo 0)
+
+  # EMPTY IS NOT SILENT. "There are none" and "nobody looked" must not render
+  # identically — the same rule the payload itself follows by sending empty:true
+  # rather than omitting the key.
+  if [ "$total" = "0" ]; then
+    printf '<cardmem-decisions total="0">\n'
+    printf 'This project has no settled decisions yet. That is a real answer, not a\n'
+    printf 'missing one — propose with cardmem_propose_decision; only the owner confirms.\n'
+    printf '</cardmem-decisions>\n'
+    return 0
+  fi
+
+  # TOTAL BESIDE SHOWN, always. The register has a delivery cap, and a truncated
+  # list read as the whole one is how someone confidently re-opens decision 16.
+  printf '<cardmem-decisions total="%s" shown="%s">\n' "$total" "$shown"
+  printf 'SETTLED CHOICES for this project — do NOT re-open them. Delivered here so a\n'
+  printf 'compaction cannot drop them.\n'
+  printf '%s' "$block" | jq -r '
+    (.decisions // [])[] |
+    "  • " + (if .pinned then "[pinned] " else "" end) + (.decision // "(no text)")
+    + (if (.why // "") != "" then "\n      why: " + .why else "" end)
+    + (if (.rejected // "") != "" then "\n      rejected: " + .rejected else "" end)
+  ' 2>/dev/null
+  if [ "$shown" != "$total" ]; then
+    printf '  … %s more not shown. cardmem_list_decisions reads the rest.\n' "$((total - shown))"
+  fi
+  printf '</cardmem-decisions>\n'
+}
+
 write_rules_local() { # $1 = the full session_start result JSON
   local result="${1:-}" dir="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
   local f="$dir/rules.local.json"
