@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     try {
       const siteConfig = await readSiteConfig();
       const siteName = siteConfig.emailFromName || "webhouse.app";
-      const { subject, html } = renderInviteEmail({
+      const { subject, html } = await renderInviteEmail({
         inviterName: session.name,
         siteName,
         role,

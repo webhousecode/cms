@@ -24,6 +24,7 @@
     "@broberg/cms-chat-client": "^0.4.14",
     "@broberg/cms-inline-edit": ">=0.6.3 <1",
     "@broberg/mail": "0.7.1",
+    "@broberg/mail-core": ">=0.7.0 <1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

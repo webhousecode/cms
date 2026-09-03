@@ -68,6 +68,15 @@ export interface SiteConfig {
   emailAccentColor2: string;
   /** Footer line under the email card, e.g. "Sent by broberg.ai" */
   emailFooterName: string;
+  /**
+   * F186 — absolute URL to the sender's mark, shown at the top of every mail.
+   *
+   * ABSOLUT, ikke en sti: en mailklient har ingen side at være relativ til, og
+   * henter billedet anonymt gennem sin egen proxy — så adressen skal også være
+   * offentlig uden login. Tom = mailen sendes UDEN mærke, hvilket er med vilje:
+   * et hul hvor logoet skulle stå er værre end intet logo.
+   */
+  emailLogoUrl: string;
   /** Secret used to generate per-user calendar feed tokens */
   calendarSecret: string;
   /** Webhook URL for scheduled task notifications (Discord, Slack, etc.) */
@@ -234,6 +243,7 @@ async function defaults(): Promise<SiteConfig> {
     emailAccentColor: "#F7BB2E",
     emailAccentColor2: "#f59e0b",
     emailFooterName: "webhouse.app",
+    emailLogoUrl: "",
     calendarSecret: crypto.randomBytes(32).toString("hex"),
     schedulerWebhookUrl: "",
     schedulerNotifications: false,
