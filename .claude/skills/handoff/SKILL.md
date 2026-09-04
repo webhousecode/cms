@@ -40,7 +40,7 @@ After successful handoff:
    response.queue_drain.next_card_id, session_id })` in the same turn.
    This is the F035.14 queue-drain contract: when the user has set
    queue-drain mode, finishing one card immediately starts the next.
-   No confirmation. See `.claude/skills/queue-drain.md` for the full rule.
+   No confirmation. See `.claude/skills/queue-drain/SKILL.md` for the full rule.
 
 Pattern for the summary:
 - Good: "Shipped X with Y unit tests + smoke-tested round-trip"

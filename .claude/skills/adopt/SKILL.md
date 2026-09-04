@@ -147,7 +147,7 @@ Work **one F-doc per turn** to keep context fresh, and **adopt parents before ch
    - Batch with `cardmem_create_cards` when cleaner.
 5. **Next F-doc.** Repeat until every `F<n>-*.md` is adopted with its stories.
 
-The server rejects a story carrying a top-level (dotless) F-number — stories nest as `F<n>.<m>` with `parent_card_id`. Use the local `feature` skill (`.claude/skills/feature.md`) to help author clean breakdowns.
+The server rejects a story carrying a top-level (dotless) F-number — stories nest as `F<n>.<m>` with `parent_card_id`. Use the local `feature` skill (`.claude/skills/feature/SKILL.md`) to help author clean breakdowns.
 
 ---
 

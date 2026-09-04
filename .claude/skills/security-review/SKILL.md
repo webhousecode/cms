@@ -1,13 +1,13 @@
 ---
 name: security-review
-description: Security-review a card's diff locally ($0, Max-plan) — secret-in-diff scan + OWASP-class review + dependency-audit — and record findings via cardmem_record_review(type:security). The "security" pillar of Full Auto Review (F095). YOU are the reviewer; no metered API, no billed harness.
+description: Security-review a card's diff locally (unmetered, Max-plan) — secret-in-diff scan + OWASP-class review + dependency-audit — and record findings via cardmem_record_review(type:security). The "security" pillar of Full Auto Review (F095). YOU are the reviewer; no metered API, no billed harness.
 argument-hint: "F<n> | <global-slug>"
 ---
 
 # /security-review F<n>
 
 Security-review the code behind a single card and record the verdict. **You**
-(this cc session, Max-plan) do the reasoning — **$0**, no metered API, no billed
+(this cc session, Max-plan) do the reasoning — **local and unmetered**, no metered API, no billed
 cloud harness, no `ultrareview`.
 
 ## Steps
@@ -56,7 +56,7 @@ cloud harness, no `ultrareview`.
 
 ## Rules
 
-- **$0, local.** No metered API, no billed harness, no `ultrareview`.
+- **Local, unmetered.** No metered API, no billed harness, no `ultrareview`.
 - A **committed secret is always `error` + `failed`** — never downgrade it.
 - Don't fix here — record findings; `/auto-review` or a human repairs.
 - Records the **security** pillar; `cardmem_card_verdict` needs `code` + `security`

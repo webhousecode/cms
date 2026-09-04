@@ -1,13 +1,13 @@
 ---
 name: code-review
-description: Review a card's code change locally ($0, Max-plan) — read the diff, judge it against the plan-doc + AC + CLAUDE.md conventions, and record structured findings via cardmem_record_review(type:code). The "code" pillar of Full Auto Review (F095). YOU are the reviewer — no metered API, no /code-review harness, no ultrareview.
+description: Review a card's code change locally (unmetered, Max-plan) — read the diff, judge it against the plan-doc + AC + CLAUDE.md conventions, and record structured findings via cardmem_record_review(type:code). The "code" pillar of Full Auto Review (F095). YOU are the reviewer — no metered API, no /code-review harness, no ultrareview.
 argument-hint: "F<n> | <global-slug>"
 ---
 
 # /code-review F<n>
 
 Review the code behind a single card and record the verdict. **You** (this cc
-session, on the Max-plan) are the reviewer — this costs **$0**. Do **not** call
+session, on the Max-plan) are the reviewer — this runs **locally, unmetered**. Do **not** call
 any metered LLM API, the billed `/code-review` cloud harness, or `ultrareview`.
 That is the whole point of F095.
 
@@ -63,7 +63,7 @@ That is the whole point of F095.
 
 ## Rules
 
-- **$0, local, you-are-the-reviewer.** No metered API, no cloud harness, no `ultrareview`.
+- **Local, unmetered, you-are-the-reviewer.** No metered API, no cloud harness, no `ultrareview`.
 - **Specific over general** — point at exact `file:line`. Max ~10 findings, highest-signal first.
 - **Don't fix here** — record findings only. `/auto-review` (or a human) decides what to repair.
 - This skill records the **code** pillar; the gate (`cardmem_card_verdict`) needs

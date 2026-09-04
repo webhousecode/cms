@@ -1,6 +1,6 @@
 ---
 name: auto-review
-description: The Full Auto Review gate (F095). Walk the Review column and, per card, run all five checks LOCALLY ($0) — Lens (visual) + AC (contract) + code-review + security-review + design-drift — aggregate via cardmem_card_verdict, and flip Review→Done ONLY when ready_for_done, attaching a review report. On any fail, fix the findings in-session and re-handoff to Review (the review→fix→re-review loop), bounded by the project's max-fix-rounds cap — then escalate to the human. Never flips without all-green + evidence.
+description: The Full Auto Review gate (F095). Walk the Review column and, per card, run all five checks LOCALLY (unmetered) — Lens (visual) + AC (contract) + code-review + security-review + design-drift — aggregate via cardmem_card_verdict, and flip Review→Done ONLY when ready_for_done, attaching a review report. On any fail, fix the findings in-session and re-handoff to Review (the review→fix→re-review loop), bounded by the project's max-fix-rounds cap — then escalate to the human. Never flips without all-green + evidence.
 argument-hint: "[F<n>]  (omit to sweep the whole Review column)"
 ---
 
@@ -8,7 +8,7 @@ argument-hint: "[F<n>]  (omit to sweep the whole Review column)"
 
 Run the Review→Done gate. With an F-number, review that one card; with no
 argument, sweep every card in the **Review** column. **Everything runs locally
-on the Max-plan — $0.** No metered API, no billed `/code-review` harness, no
+on the Max-plan — local and unmetered.** No metered API, no billed `/code-review` harness, no
 `ultrareview`.
 
 ## Auto-triggered (F095.11)
@@ -114,7 +114,7 @@ For each card (`cardmem_list_cards({column:"review"})`, or the one you were give
   blocking (see the design-pillar asymmetry below). The AC gate (F017.1) still blocks Done independently.
 - **Every tick carries evidence** — a tool-result, a value, or a Lens run id. Never
   tick an AC or pass a check you didn't prove ("aldrig påstå noget virker uden bevis").
-- **$0, local, all five pillars.** No metered API, no billed harness, no `ultrareview`.
+- **Local, unmetered, all five pillars.** No metered API, no billed harness, no `ultrareview`.
 - **The design pillar is the one place `flagged` does NOT block.** `failed` (drift rose)
   blocks; `flagged` (drift at or below baseline) is advisory. That asymmetry is what lets
   the pillar exist at all — 152 pre-existing off-token values would otherwise turn every
