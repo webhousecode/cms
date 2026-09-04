@@ -78,6 +78,41 @@ For every cross-cutting capability the feature needs (mail, auth/session, web-pu
 
 The session-start `discovery_reuse` block (F217.1) already hands you THIS repo's *gap* (shipped packages it hasn't adopted); this step is the per-feature version at plan-time. If Discovery is unreachable, note that in `## Reuse` and proceed — the check is required, but a network outage never blocks a plan.
 
+## Step 3.6: Design consult — ask the guide, at plan-time
+
+> Canonical per **F280.10**. Christian named the half this closes: *«når der laves
+> ændringer til løsningen at DS altid konfereres om hvor og hvordan.»* The design
+> rules ARE delivered at session start (F280.2) and are forgotten by the time
+> they matter — so this asks the guide at the moment the question exists, and the
+> plan records the answer while the context is alive.
+
+**Does this feature build or change any visual surface** — a route, a page, a
+panel, a modal, a control, a state (empty / loading / error)? If yes:
+
+```
+cardmem_design_consult({ project, building: "<what you are about to build, in a sentence>", card_id? })
+```
+
+It reads THIS project's `DESIGN.md` and answers in the guide's own words: the
+sections that bind the change, the components to reuse, the token namespaces to
+type instead of raw values. **Three outcomes, and they are deliberately not the
+same thing:**
+
+| outcome | means | what you do |
+|---|---|---|
+| `covered` | the guide speaks to this shape | follow it — quote the rules into `## Design` |
+| `silent` | the guide exists and says nothing about this | say so in `## Design`. **Silence is not permission** — it is the signal that the guide has a gap worth filling (F280.11) |
+| `no_guide` | this repo has no `DESIGN.md` yet | say so, and name how it gets one (F280.4 seeding, or promoting an approved mockup) |
+
+The call **records the consult against the card in the same call** — there is no
+second call to remember, because a record that depends on remembering is missing
+exactly when someone was in a hurry.
+
+**Skip it only when the feature touches no visual surface at all** (a migration,
+an MCP-only tool, a script). Then write `None — no visual surface` in `## Design`
+rather than omitting the section: "not applicable" and "nobody looked" must not
+render the same.
+
 ## Step 4: Write the plan-doc
 
 Create `docs/features/F<nn>-<slug>.md` with this **mandatory** structure. Every section must be present — write "None" / "Not applicable" if a section has no content.
@@ -98,6 +133,9 @@ Create `docs/features/F<nn>-<slug>.md` with this **mandatory** structure. Every 
 
 ## Reuse
 <Per F217 — the result of the Discovery reuse check (Step 3.5). One line per cross-cutting capability: the `@broberg/*` package to reuse (with version), OR an explicit "no match in Discovery — build (and notify components)". Write "None — no cross-cutting capabilities" only when the feature is genuinely repo-local.>
+
+## Design
+<Per F280.10 — the result of the design consult (Step 3.6), and which of the three outcomes came back. `covered`: quote the binding rules and name the tokens/components to reuse. `silent`: say the guide is silent on this shape, and that silence is not permission — it is a gap worth filling. `no_guide`: say the repo has none yet and how it gets one. Write "None — no visual surface" when the feature touches no UI at all.>
 
 ## Scope
 
@@ -150,6 +188,7 @@ The plan must be specific: real file paths drawn from the repo's `## Project lay
 4. **Stories must be shippable in isolation.** Each story should produce a green commit + a board move from Backlog → Review.
 5. **Open Questions must be honest.** If "Electron vs Tauri" is undecided, write it. "I'll decide later" is not a plan.
 6. **`## Reuse` is mandatory (F217).** Run the Discovery reuse check (Step 3.5) and record the reuse-vs-build decision per capability. A plan-doc with no `## Reuse` section trips the F217.3 advisory. Write "None — no cross-cutting capabilities" only when the feature is genuinely repo-local.
+7. **`## Design` is mandatory (F280.10).** If the feature touches any visual surface, run `cardmem_design_consult` (Step 3.6) and record what came back — including `silent`, which is a real answer and not an empty one. Write "None — no visual surface" only when nothing visible changes. The point is that the consult happens while the plan is being written, not hours later when the code is already shaped.
 
 ## Step 5: Create the board entries via MCP
 
