@@ -1,0 +1,140 @@
+<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>F187 — Form Engine 2.0</title><style>
+:root{--bg:#171717;--fg:#FAFAFA;--card:#1F1F1F;--sec:#2E2E2E;--muted:#242424;--mfg:#898989;--gold:#E9C46A;--gold2:#f1d590;--goldbg:rgba(233,196,106,.14);--green:#4ade80;--red:#f87171;--r:8px;--fb:-apple-system,'Segoe UI',sans-serif}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--fb);font-size:13px;min-height:100vh;display:flex}
+.side{width:190px;background:#000;border-right:1px solid var(--sec);padding:14px 10px;flex:none}
+.side b{display:block;color:var(--gold);font-size:.95rem;margin-bottom:14px;padding-left:6px}
+.side a{display:block;color:var(--mfg);text-decoration:none;padding:7px 10px;border-radius:7px;margin-bottom:2px}
+.side a.akt{background:var(--goldbg);color:var(--gold2)}
+main{flex:1;padding:20px 24px;min-width:0}
+h1{font-size:1.15rem;margin-bottom:4px}
+.sub{color:var(--mfg);font-size:.8rem;margin-bottom:16px}
+.tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--sec)}
+.tab{background:none;border:none;color:var(--mfg);font:inherit;padding:8px 14px;cursor:pointer;border-bottom:2px solid transparent}
+.tab.akt{color:var(--gold2);border-bottom-color:var(--gold)}
+.pane{display:none}.pane.akt{display:block}
+.grid{display:grid;gap:12px}
+.kort{background:var(--card);border:1px solid var(--sec);border-radius:12px;padding:14px}
+.kort h3{font-size:.8rem;color:var(--mfg);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+/* builder */
+.builder{display:grid;grid-template-columns:170px 1fr 200px;gap:12px}
+.palette .felt{background:var(--muted);border:1px dashed var(--sec);border-radius:7px;padding:7px 9px;margin-bottom:6px;color:var(--fg);cursor:grab;font-size:.76rem}
+.palette .felt:hover{border-color:var(--gold)}
+.canvas .step{border:1px solid var(--sec);border-radius:10px;padding:10px;margin-bottom:10px;background:var(--bg)}
+.canvas .step b{display:block;font-size:.72rem;color:var(--gold2);margin-bottom:8px}
+.f{background:var(--muted);border:1px solid var(--sec);border-radius:7px;padding:8px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.f i{font-style:normal;color:var(--mfg);font-size:.68rem}
+.logik{border-left:2px solid var(--gold);padding:4px 8px;margin:4px 0 8px 10px;color:var(--mfg);font-size:.7rem}
+.egenskaber label{display:block;color:var(--mfg);font-size:.7rem;margin:8px 0 3px}
+.egenskaber input,.egenskaber .sel{width:100%;background:var(--muted);border:1px solid var(--sec);border-radius:6px;padding:6px 8px;color:var(--fg);font:inherit}
+.pill{display:inline-block;background:var(--goldbg);color:var(--gold2);border-radius:999px;padding:2px 8px;font-size:.66rem;margin:2px 2px 0 0}
+/* tragt */
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.kol{background:var(--bg);border:1px solid var(--sec);border-radius:10px;padding:8px;min-height:180px}
+.kol h4{font-size:.7rem;color:var(--mfg);margin-bottom:8px;display:flex;justify-content:space-between}
+.lead{background:var(--card);border:1px solid var(--sec);border-radius:8px;padding:8px;margin-bottom:6px;font-size:.74rem;cursor:pointer}
+.lead:hover{border-color:var(--gold)}
+.lead b{display:block}.lead i{font-style:normal;color:var(--mfg);font-size:.66rem}
+.kilde{display:inline-block;border:1px solid var(--sec);border-radius:5px;padding:1px 5px;font-size:.6rem;color:var(--gold2);margin-top:4px}
+/* statistik */
+.statgrid{grid-template-columns:repeat(4,1fr)}
+.tal{font-size:1.5rem;font-weight:700}
+.tal.op{color:var(--green)}.tal.ned{color:var(--red)}
+.delta{font-size:.68rem;color:var(--mfg)}
+.graf{width:100%;height:110px}
+.tragtbar{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.tragtbar span{width:120px;color:var(--mfg);font-size:.72rem;flex:none}
+.tragtbar .bar{height:18px;background:var(--gold);border-radius:4px;opacity:.9}
+.tragtbar em{font-style:normal;font-size:.72rem}
+.note{margin-top:16px;color:var(--mfg);font-size:.74rem;line-height:1.55;max-width:820px}
+.note b{color:var(--gold2)}
+</style></head><body>
+<nav class="side"><b>webhouse.app</b><a href="#">Indhold</a><a href="#">Medier</a><a href="#" class="akt">Forms 2.0</a><a href="#">SEO</a><a href="#">Indstillinger</a></nav>
+<main>
+<h1>Forms 2.0 — «Kontakt & leads»</h1>
+<div class="sub">Én flade: byg formen · følg tragten · læs statistikken (inkl. Aidan-strømmene)</div>
+<div class="tabs">
+  <button class="tab akt" data-p="byg">Builder</button>
+  <button class="tab" data-p="tragt">Tragt</button>
+  <button class="tab" data-p="stat">Statistik</button>
+</div>
+
+<div class="pane akt" id="byg">
+  <div class="builder">
+    <div class="kort palette"><h3>Felter</h3>
+      <div class="felt">✏️ Tekst</div><div class="felt">✉️ Email</div><div class="felt">📞 Telefon</div><div class="felt">▾ Valg</div><div class="felt">☑ Samtykke (GDPR)</div><div class="felt">📎 Fil</div><div class="felt">⭐ Bedømmelse</div><div class="felt">🕶 Skjult / UTM</div>
+    </div>
+    <div class="kort canvas"><h3>Formen — 2 steps</h3>
+      <div class="step"><b>STEP 1 · Hvad drejer det sig om?</b>
+        <div class="f">Hvad vil I bygge? <i>valg · påkrævet</i></div>
+        <div class="logik">↳ vis kun «Budget» hvis svaret er «Platform»</div>
+        <div class="f">Budget-ramme <i>valg · betinget</i></div>
+      </div>
+      <div class="step"><b>STEP 2 · Kontakt</b>
+        <div class="f">Navn <i>tekst</i></div>
+        <div class="f">Email <i>email · påkrævet</i></div>
+        <div class="f">Telefon <i>telefon · påkrævet</i></div>
+        <div class="f">Samtykke <i>GDPR · påkrævet · versioneret</i></div>
+      </div>
+      <span class="pill">Turnstile spam-værn</span><span class="pill">UTM-fangst</span><span class="pill">Tak-side: /tak</span><span class="pill">AI: «foreslå form ud fra formål»</span>
+    </div>
+    <div class="kort egenskaber"><h3>Felt: Email</h3>
+      <label>Label</label><input value="Email">
+      <label>Påkrævet</label><div class="sel">Ja</div>
+      <label>Ved indsendelse</label><div class="sel">Opret LEAD i tragten «Salg»</div>
+      <label>Notifikation</label><div class="sel">Mail + cardmem-ping</div>
+    </div>
+  </div>
+</div>
+
+<div class="pane" id="tragt">
+  <div class="kanban">
+    <div class="kol"><h4>NY <span>4</span></h4>
+      <div class="lead"><b>mette@nordfirma.dk</b><i>Platform · budget 250-500k</i><br><span class="kilde">form: kontakt</span></div>
+      <div class="lead"><b>jonas@klinikken.nu</b><i>Vil høre om BI-dashboard</i><br><span class="kilde">Aidan-chat · transskript</span></div>
+      <div class="lead"><b>pia@rejsebutik.dk</b><i>Webshop</i><br><span class="kilde">form: kontakt</span></div>
+      <div class="lead"><b>lars@vvsnord.dk</b><i>Lydfil: BI-indsigten</i><br><span class="kilde">Aidan-chat · lydfil</span></div>
+    </div>
+    <div class="kol"><h4>KONTAKTET <span>2</span></h4>
+      <div class="lead"><b>anne@tandhuset.dk</b><i>Ringet 4/9 — vil have oplæg</i><br><span class="kilde">form: kontakt</span></div>
+      <div class="lead"><b>ceo@logistikpro.dk</b><i>Svar-mail: MCP-artiklen</i><br><span class="kilde">Aidan-chat · svar</span></div>
+    </div>
+    <div class="kol"><h4>MØDE <span>1</span></h4>
+      <div class="lead"><b>it@kommune-x.dk</b><i>tir 10:00 · BI internt</i><br><span class="kilde">Aidan-chat · tider</span></div>
+    </div>
+    <div class="kol"><h4>VUNDET <span>1</span></h4><div class="lead"><b>fys@aalborg.dk</b><i>Dashboard-aftale</i></div></div>
+    <div class="kol"><h4>TABT <span>1</span></h4><div class="lead"><b>info@billigweb.nu</b><i>Pris</i></div></div>
+  </div>
+</div>
+
+<div class="pane" id="stat">
+  <div class="grid statgrid" style="margin-bottom:12px">
+    <div class="kort"><h3>Konvertering</h3><div class="tal op">7,4%</div><div class="delta">visning → indsendt · +1,2 pp/30d</div></div>
+    <div class="kort"><h3>Leads / 30 dage</h3><div class="tal">23</div><div class="delta">14 form · 9 Aidan-chat</div></div>
+    <div class="kort"><h3>Aidan 👍-rate</h3><div class="tal op">91%</div><div class="delta">142 👍 · 14 👎</div></div>
+    <div class="kort"><h3>Største drop-off</h3><div class="tal ned">38%</div><div class="delta">Step 1 → 2 («Budget»)</div></div>
+  </div>
+  <div class="grid" style="grid-template-columns:1.3fr 1fr">
+    <div class="kort"><h3>Tragten — hvor falder de fra?</h3>
+      <div class="tragtbar"><span>Visninger</span><div class="bar" style="width:100%"></div><em>1.204</em></div>
+      <div class="tragtbar"><span>Startede</span><div class="bar" style="width:44%"></div><em>530</em></div>
+      <div class="tragtbar"><span>Step 2</span><div class="bar" style="width:27%"></div><em>329</em></div>
+      <div class="tragtbar"><span>Indsendt</span><div class="bar" style="width:7.4%"></div><em>89</em></div>
+      <div class="tragtbar"><span>→ Møde</span><div class="bar" style="width:2%;background:var(--green)"></div><em>24</em></div>
+    </div>
+    <div class="kort"><h3>Aidan-strømmene / dag</h3>
+      <svg class="graf" viewBox="0 0 300 110"><polyline points="0,80 30,70 60,74 90,55 120,60 150,40 180,45 210,30 240,36 270,20 300,24" fill="none" stroke="#E9C46A" stroke-width="2.5"/><polyline points="0,100 30,98 60,99 90,95 120,97 150,92 180,94 210,90 240,92 270,86 300,88" fill="none" stroke="#f87171" stroke-width="1.6"/></svg>
+      <span class="pill">— 👍 pr. dag</span><span class="pill" style="color:#f87171">— 👎 pr. dag</span>
+    </div>
+  </div>
+</div>
+
+<p class="note"><b>F187 Form Engine 2.0 — hvad mockup'en viser:</b> Builder med felt-palette, multi-step, betinget logik, GDPR-samtykke (versioneret), Turnstile, UTM-fangst og AI-forslag · Tragt hvor HVER indsendelse er et lead med stadie, og hvor <b>Aidan-strømmene lander i samme tragt</b> (lydfil/svar/transskript/tider — kilden står på kortet) · Statistik med konvertering pr. step, drop-off, leads over tid og 👍/👎-raten — ejerens krav 5/9: «Den skal ind i CMS som et modul så vi kan lave noget statistik». Fanerne er klikbare.</p>
+</main>
+<script>
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('akt',x===t));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('akt',p.id===t.dataset.p));
+}));
+</script>
+</body></html>
