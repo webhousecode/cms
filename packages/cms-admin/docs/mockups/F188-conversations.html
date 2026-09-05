@@ -1,0 +1,165 @@
+<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>F188 — Conversations</title><style>
+:root{--bg:#171717;--card:#1f1f1f;--fg:#fafafa;--primary:#f7bb2e;--primary-fg:#1a1a1a;--muted:#242424;--muted-fg:#898989;--border:#2e2e2e;--sidebar:#000;--gold15:rgba(247,187,46,.15);--green:#34d399;--red:#f26d5b}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 ui-sans-serif,-apple-system,'Segoe UI',sans-serif;display:flex;min-height:100vh}
+.sb{width:216px;flex:none;background:var(--sidebar);border-right:1px solid var(--border);padding:14px 0;display:flex;flex-direction:column;gap:2px}
+.sb .brand{padding:4px 16px 16px;font-weight:700;letter-spacing:-.01em}
+.sb .brand i{color:var(--primary);font-style:normal}
+.sb a{display:flex;align-items:center;gap:9px;padding:7px 16px;color:var(--muted-fg);text-decoration:none;font-size:.83rem}
+.sb a:hover{color:var(--fg)}
+.sb a.on{background:var(--gold15);color:var(--primary);font-weight:600;box-shadow:inset 2px 0 0 var(--primary)}
+.sb .ic{width:15px;height:15px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7}
+.sb .sep{height:1px;background:var(--border);margin:10px 16px}
+main{flex:1;min-width:0;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:10px;padding:11px 20px;border-bottom:1px solid var(--border);background:var(--card)}
+.bar h1{font-size:.92rem;font-weight:600}
+.bar .crumb{color:var(--muted-fg);font-size:.8rem}
+.pill{margin-left:auto;font-size:.72rem;color:var(--muted-fg);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+.tabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--border);background:var(--card)}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted-fg);font:inherit;font-size:.82rem;padding:9px 12px;cursor:pointer}
+.tabs button:hover{color:var(--fg)}
+.tabs button.on{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+.wrap{padding:18px 20px;overflow:auto}
+.split{display:grid;grid-template-columns:340px 1fr;gap:16px}
+.box{background:var(--card);border:1px solid var(--border);border-radius:8px}
+.rowhd{padding:9px 13px;border-bottom:1px solid var(--border);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-fg)}
+.row{padding:11px 13px;border-bottom:1px solid var(--border);cursor:pointer}
+.row:last-child{border-bottom:0}
+.row:hover{background:var(--muted)}
+.row.on{background:var(--gold15);box-shadow:inset 2px 0 0 var(--primary)}
+.row .q{font-size:.83rem;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{font-size:.7rem;color:var(--muted-fg);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tag{font-size:.63rem;border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--muted-fg)}
+.tag.lead{border-color:var(--primary);color:var(--primary)}
+.tag.miss{border-color:var(--red);color:var(--red)}
+.conv{padding:16px 18px;display:flex;flex-direction:column;gap:12px;max-height:520px;overflow:auto}
+.t{display:flex;gap:10px}
+.who{width:52px;flex:none;font-size:.66rem;color:var(--muted-fg);text-transform:uppercase;letter-spacing:.05em;padding-top:3px}
+.bub{background:var(--muted);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:.82rem;max-width:620px}
+.t.ai .bub{background:rgba(247,187,46,.07);border-color:rgba(247,187,46,.25)}
+.t .ts{font-size:.64rem;color:var(--muted-fg);margin-top:5px}
+.flag{margin:2px 0 0 62px;font-size:.7rem;color:var(--red);display:flex;gap:6px;align-items:center}
+.convhd{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.convhd b{font-size:.85rem;font-weight:600}
+.btn{font-size:.72rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--fg);cursor:pointer}
+.btn.gold{background:var(--primary);color:var(--primary-fg);border-color:var(--primary);font-weight:600}
+.btn:hover{border-color:var(--primary)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px}
+.kpi .n{font-size:1.7rem;font-weight:600;letter-spacing:-.02em}
+.kpi .l{font-size:.72rem;color:var(--muted-fg);margin-top:2px}
+.kpi .s{font-size:.68rem;color:var(--muted-fg);margin-top:6px}
+.kpi.warn .n{color:var(--red)}
+.kpi.ok .n{color:var(--green)}
+.bars{display:flex;align-items:flex-end;gap:7px;height:92px;margin:14px 0 6px}
+.bars i{flex:1;background:rgba(247,187,46,.35);border-top:2px solid var(--primary);border-radius:3px 3px 0 0}
+.axis{display:flex;gap:7px;font-size:.62rem;color:var(--muted-fg)}
+.axis span{flex:1;text-align:center}
+.h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-fg);margin:22px 0 9px}
+table{width:100%;border-collapse:collapse;font-size:.81rem}
+th{text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted-fg);font-weight:500;padding:8px 13px;border-bottom:1px solid var(--border)}
+td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sub{font-size:.71rem;color:var(--muted-fg);margin-top:3px}
+.note{margin:18px 20px 26px;padding:14px 16px;border:1px solid var(--border);border-left:3px solid var(--primary);border-radius:6px;background:var(--card);font-size:.79rem;line-height:1.65;color:#cfcfcf}
+.note b{color:var(--primary)}
+.note code{background:var(--muted);padding:1px 5px;border-radius:3px;font-size:.92em}
+.hide{display:none}
+@media(max-width:900px){.sb{display:none}.split{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+</style></head><body>
+<nav class="sb">
+  <div class="brand">webhouse<i>.app</i></div>
+  <a href="#"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+  <a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg>Content</a>
+  <a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M5 3h11l4 4v14H5z"/><path d="M9 12h6M9 16h4"/></svg>Forms</a>
+  <a href="#" class="on"><svg class="ic" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z"/></svg>Conversations</a>
+  <a href="#"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Interactives</a>
+  <a href="#"><svg class="ic" viewBox="0 0 24 24"><path d="M4 16l5-6 4 4 3-4 4 6z"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>Media library</a>
+  <div class="sep"></div>
+  <a href="#"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Tools</a>
+</nav>
+<main>
+  <div class="bar"><span class="crumb">broberg.ai /</span><h1>Conversations</h1><span class="pill">Seneste 30 dage</span></div>
+  <div class="tabs">
+    <button class="on" data-t="a">Samtaler</button>
+    <button data-t="b">Statistik</button>
+    <button data-t="c">Ubesvarede</button>
+  </div>
+
+  <div class="wrap" id="a">
+    <div class="split">
+      <div class="box">
+        <div class="rowhd">184 samtaler</div>
+        <div class="row on"><div class="q">Kan I bygge et dashboard på vores egne data?</div><div class="meta">I dag 14:32 · DA · 7 ture <span class="tag lead">Kundeemne</span></div></div>
+        <div class="row"><div class="q">Hvad koster sådan en løsning cirka?</div><div class="meta">I dag 11:08 · DA · 4 ture <span class="tag miss">1 ubesvaret</span></div></div>
+        <div class="row"><div class="q">Do you work with companies outside Denmark?</div><div class="meta">I dag 09:51 · EN · 3 ture</div></div>
+        <div class="row"><div class="q">Hvem står bag Trail?</div><div class="meta">I går 22:14 · DA · 9 ture <span class="tag lead">Kundeemne</span></div></div>
+        <div class="row"><div class="q">Hvor ligger vores data henne?</div><div class="meta">I går 17:40 · DA · 5 ture</div></div>
+        <div class="row"><div class="q">Kan Aidan integreres i vores eget intranet?</div><div class="meta">I går 15:03 · DA · 12 ture <span class="tag miss">2 ubesvarede</span></div></div>
+      </div>
+      <div class="box">
+        <div class="convhd"><b>Kan I bygge et dashboard på vores egne data?</b><span class="tag">DA</span><span class="tag lead">Kundeemne → Forms</span>
+          <button class="btn" style="margin-left:auto">Åbn i Forms</button><button class="btn">Slet</button></div>
+        <div class="conv">
+          <div class="t"><span class="who">Gæst</span><div><div class="bub">Kan I bygge et dashboard på vores egne data?</div><div class="ts">14:32:04</div></div></div>
+          <div class="t ai"><span class="who">Aidan</span><div><div class="bub">Ja — det er præcis dét vi laver. Vi bygger dashboardet på jeres egne realtidsdata, uden brugerlicenser, og det kan køre helt internt hos jer.</div><div class="ts">14:32:07 · 3 opslag i vidensbasen</div></div></div>
+          <div class="t"><span class="who">Gæst</span><div><div class="bub">Hvad med vores gamle AS/400 — kan I trække data ud derfra?</div><div class="ts">14:33:41</div></div></div>
+          <div class="t ai"><span class="who">Aidan</span><div><div class="bub">Det kan jeg ikke svare præcist på ud fra det jeg ved. Lad mig sætte dig i kontakt med Christian, så får du et rigtigt svar.</div><div class="ts">14:33:45</div></div></div>
+          <div class="flag">⚠ Ubesvaret — sendt til Trail som videns-hul</div>
+          <div class="t"><span class="who">Gæst</span><div><div class="bub">Ja tak, jeg hedder … og min mail er …</div><div class="ts">14:35:12</div></div></div>
+          <div class="t ai"><span class="who">Aidan</span><div><div class="bub">Tak! Christian vender tilbage. 🎉</div><div class="ts">14:35:14</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap hide" id="b">
+    <div class="kpis">
+      <div class="kpi"><div class="n">184</div><div class="l">Samtaler</div><div class="s">30 dage · 6,1/dag</div></div>
+      <div class="kpi"><div class="n">5,4</div><div class="l">Ture i snit</div><div class="s">længste: 21</div></div>
+      <div class="kpi ok"><div class="n">23</div><div class="l">Kundeemner</div><div class="s">12,5 % af samtalerne</div></div>
+      <div class="kpi warn"><div class="n">8,7 %</div><div class="l">Ubesvaret</div><div class="s">71 af 812 opslag</div></div>
+    </div>
+    <div class="box" style="padding:14px 16px">
+      <div style="font-size:.8rem;font-weight:600">Samtaler pr. dag</div>
+      <div class="bars"><i style="height:34%"></i><i style="height:52%"></i><i style="height:41%"></i><i style="height:68%"></i><i style="height:57%"></i><i style="height:88%"></i><i style="height:73%"></i><i style="height:46%"></i><i style="height:62%"></i><i style="height:100%"></i><i style="height:79%"></i><i style="height:55%"></i><i style="height:67%"></i><i style="height:48%"></i></div>
+      <div class="axis"><span>22.</span><span>23.</span><span>24.</span><span>25.</span><span>26.</span><span>27.</span><span>28.</span><span>29.</span><span>30.</span><span>31.</span><span>1.</span><span>2.</span><span>3.</span><span>4.</span></div>
+    </div>
+    <div class="h2">Sådan blev de 812 opslag talt</div>
+    <div class="box"><table>
+      <tr><th>Udfald</th><th>Betyder</th><th class="num">Antal</th><th class="num">Andel</th></tr>
+      <tr><td>Besvaret</td><td class="sub">Vidensbasen rakte</td><td class="num">729</td><td class="num">89,8 %</td></tr>
+      <tr><td style="color:var(--red)">Ubesvaret</td><td class="sub">Aidan flagede selv at opslaget ikke rakte → sendt til Trail</td><td class="num">71</td><td class="num">8,7 %</td></tr>
+      <tr><td style="color:var(--muted-fg)">Opslag fejlede</td><td class="sub">Vidensbasen svarede ikke i tide — tælles ALDRIG som hul i indholdet</td><td class="num">12</td><td class="num">1,5 %</td></tr>
+    </table></div>
+  </div>
+
+  <div class="wrap hide" id="c">
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi warn"><div class="n">71</div><div class="l">Ubesvarede spørgsmål</div><div class="s">8,7 % af alle opslag</div></div>
+      <div class="kpi"><div class="n">14</div><div class="l">Klynger</div><div class="s">samme hul, forskellige ord</div></div>
+      <div class="kpi ok"><div class="n">3</div><div class="l">Blevet til viden</div><div class="s">neuroner skrevet i Trail</div></div>
+    </div>
+    <div class="box"><table>
+      <tr><th>Videns-hul</th><th class="num">Gange</th><th class="num">Miss-rate</th><th>Status</th></tr>
+      <tr><td>Integration med gamle ERP-systemer<div class="sub">«AS/400», «vores gamle Navision», «kan I læse fra AX?»</div></td><td class="num">17</td><td class="num">2,1 %</td><td><span class="tag miss">Åbent hul</span></td></tr>
+      <tr><td>Priser og estimater<div class="sub">«hvad koster det», «jeres timepris», «kan I sige et interval?»</div></td><td class="num">14</td><td class="num">1,7 %</td><td><span class="tag miss">Åbent hul</span></td></tr>
+      <tr><td>Drift og support efter levering<div class="sub">«hvem passer det bagefter», «har I vagtordning?»</div></td><td class="num">9</td><td class="num">1,1 %</td><td><span class="tag" style="border-color:var(--green);color:var(--green)">Neuron skrevet</span><div class="sub">miss-rate faldt fra 1,1 % → 0,2 %</div></td></tr>
+      <tr><td style="color:var(--muted-fg)">Uden for vores forretning<div class="sub">«traktorer i Bolivia», «opskrift på lasagne»</div></td><td class="num">6</td><td class="num">0,7 %</td><td><span class="tag">Afvist · ikke et hul</span></td></tr>
+    </table></div>
+  </div>
+
+  <p class="note"><b>F188 — Conversations.</b> Besøgendes AI-samtaler som eget modul, ikke som indsendelser i Forms: en samtale er ture med roller og tidsstempler, ikke felter med værdier. <b>Kundeemner</b> lander stadig i Forms' indbakke (mærket med kilden) og linker begge veje, så man kan se hvad der blev sagt før man svarer et menneske. <b>Navnet</b> er Conversations og ikke Chat, fordi <code>components/chat/</code> allerede er ejerens egen AI-chat med CMS'et. <b>Tre udfald, aldrig to:</b> besvaret · ubesvaret · opslag fejlede — en langsom vidensbase må aldrig ligne et hul i indholdet. Ubesvarede sendes til Trail som råstof til nye neuroner (kontrakt aftalt med trail-sessionen, F251), og måles som ANDEL, så «virkede neuronen» kan besvares. <b>Fritekst gemmes 12 måneder</b> (ejerens beslutning: der skal være tid til minering); tallene beholdes uden tidsgrænse.</p>
+</main>
+<script>
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  ['a','b','c'].forEach(id=>document.getElementById(id).classList.toggle('hide',id!==b.dataset.t));
+});
+document.querySelectorAll('#a .row').forEach(r=>r.onclick=()=>{
+  document.querySelectorAll('#a .row').forEach(x=>x.classList.toggle('on',x===r));
+});
+</script>
+</body></html>
