@@ -2082,13 +2082,63 @@ function togglePageTools(options: ResolvedOptions, forankring: HTMLElement): voi
     "background:rgba(255,255,255,.04);border:1px solid #3a3f4a;border-radius:9px;" +
     "padding:8px 12px;color:#fff;font:600 12px system-ui,sans-serif;cursor:pointer;";
   plus.textContent = "# Tags +";
+  // Feltet er en BOKS med chips + et input, ikke et rent tekstfelt: et komma
+  // gør ordet til en chip med det samme (ejerens ønske 6/9), så man ser hvad
+  // man har skrevet frem for at stole på en kommasepareret streng.
+  const boks = document.createElement("div");
+  boks.setAttribute("data-testid", "page-tools-tags-boks");
+  boks.style.cssText =
+    "flex:1;min-width:0;display:none;flex-wrap:wrap;align-items:center;gap:5px;" +
+    "background:#12151a;border:1px solid #3a3f4a;border-radius:8px;padding:5px 7px;cursor:text;";
+  const chips: string[] = [];
   const felt = document.createElement("input");
   felt.type = "text";
   felt.placeholder = "tag1, tag2, tag3";
   felt.setAttribute("data-testid", "page-tools-tags-input");
   felt.style.cssText =
-    "flex:1;min-width:0;display:none;background:#12151a;border:1px solid #3a3f4a;" +
-    "border-radius:8px;padding:7px 9px;color:#fff;font:12px system-ui,sans-serif;outline:none;";
+    "flex:1;min-width:70px;background:transparent;border:none;padding:2px;" +
+    "color:#fff;font:12px system-ui,sans-serif;outline:none;";
+  /** Tegn chips-rækken forfra — ét sted, så visning og liste ikke kan drive. */
+  const tegnChips = () => {
+    Array.prototype.forEach.call(boks.querySelectorAll("[data-chip]"), (c: Element) => c.remove());
+    chips.forEach((t, i) => {
+      const chip = document.createElement("span");
+      chip.setAttribute("data-chip", "");
+      chip.setAttribute("data-testid", "page-tools-tag-chip");
+      chip.style.cssText =
+        "display:inline-flex;align-items:center;gap:4px;background:rgba(0,178,255,.15);" +
+        "border:1px solid rgba(0,178,255,.45);border-radius:999px;padding:2px 4px 2px 8px;" +
+        "color:#7fd8ff;font:600 11px system-ui,sans-serif;";
+      chip.textContent = t;
+      const x = document.createElement("button");
+      x.type = "button";
+      x.setAttribute("data-testid", "page-tools-tag-fjern");
+      x.setAttribute("aria-label", `Fjern ${t}`);
+      x.style.cssText =
+        "background:none;border:none;color:#7fd8ff;font:700 13px system-ui,sans-serif;" +
+        "cursor:pointer;line-height:1;padding:0 3px;";
+      x.textContent = "×";
+      x.addEventListener("click", (e) => {
+        e.stopPropagation();
+        chips.splice(i, 1);
+        tegnChips();
+        felt.focus();
+      });
+      chip.appendChild(x);
+      boks.insertBefore(chip, felt);
+    });
+  };
+  /** Gør det skrevne til chips. Bruger parseTags, så komma-reglen og
+   *  dublet-håndteringen er den SAMME som ved gem — ikke en kopi. */
+  const tagify = () => {
+    const nye = parseTags(felt.value);
+    for (const t of nye) {
+      if (!chips.some((c) => c.toLowerCase() === t.toLowerCase())) chips.push(t);
+    }
+    felt.value = "";
+    tegnChips();
+  };
+  boks.addEventListener("click", () => felt.focus());
   const gem = document.createElement("button");
   gem.type = "button";
   gem.setAttribute("data-testid", "page-tools-tags-gem");
@@ -2098,12 +2148,13 @@ function togglePageTools(options: ResolvedOptions, forankring: HTMLElement): voi
   gem.textContent = "Gem";
   plus.addEventListener("click", () => {
     plus.style.display = "none";
-    felt.style.display = "block";
+    boks.style.display = "flex";
     gem.style.display = "inline-block";
     felt.focus();
   });
   const gemTags = async () => {
-    const nye = parseTags(felt.value);
+    tagify(); // det der stod i feltet uden komma tæller også med
+    const nye = [...chips];
     if (!nye.length) return;
     gem.disabled = true;
     gem.textContent = "…";
@@ -2116,6 +2167,8 @@ function togglePageTools(options: ResolvedOptions, forankring: HTMLElement): voi
       gem.textContent = holdt ? "Gemt ✓" : "Fejl";
       if (holdt) {
         felt.value = "";
+        chips.length = 0;
+        tegnChips();
         setTimeout(() => {
           gem.textContent = "Gem";
           gem.disabled = false;
@@ -2130,12 +2183,29 @@ function togglePageTools(options: ResolvedOptions, forankring: HTMLElement): voi
   };
   gem.addEventListener("click", () => void gemTags());
   felt.addEventListener("keydown", (e) => {
+    if (e.key === "," ) {
+      e.preventDefault();
+      tagify();
+      return;
+    }
     if (e.key === "Enter") {
       e.preventDefault();
       void gemTags();
+      return;
+    }
+    // Tomt felt + backspace fjerner den sidste chip — som enhver tag-editor.
+    if (e.key === "Backspace" && felt.value === "" && chips.length) {
+      e.preventDefault();
+      chips.pop();
+      tegnChips();
     }
   });
-  tagRow.append(plus, felt, gem);
+  // Indsat tekst med kommaer bliver også til chips.
+  felt.addEventListener("input", () => {
+    if (felt.value.includes(",")) tagify();
+  });
+  boks.appendChild(felt);
+  tagRow.append(plus, boks, gem);
   popup.appendChild(tagRow);
 
   // Luk: klik udenfor eller ESC.
