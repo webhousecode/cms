@@ -500,6 +500,11 @@ function exitEditMode(): void {
   deactivateRich(); // commit any active rich region first
   editingActive = false;
   document.body.removeAttribute("data-cms-editing");
+  // F008.5-fix: badge'en bor nu i en RÆKKE sammen med Tools-knappen — fjern
+  // hele rækken (og en evt. åben popup), ellers står wrenchen forældreløs
+  // tilbage og stables ved næste Rediger.
+  document.querySelector("[data-cms-inline-edit-toolsrow]")?.remove();
+  document.querySelector("[data-cms-inline-edit-tools-popup]")?.remove();
   document.querySelector("[data-cms-inline-edit-badge]")?.remove();
   showIdlePill();
 }
