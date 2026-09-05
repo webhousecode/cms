@@ -36,7 +36,24 @@ Første — for løse — svar var «chatten som modul i Form Engine 2.0». Det 
 
 ## Persondata — den ene beslutning der er ejerens
 
-En chatlog er andres ord om deres egne forretninger: folk skriver firmanavne og hvad de kæmper med. **Anbefaling: 90 dage på selve teksten; tallene (antal, emner, misses) beholdes uden tidsgrænse.** Så bevares indsigten uden at der samles et arkiv af fremmedes samtaler. Ejerens beslutning — står åben til den er truffet, og bør afgøres før fritekst-lageret bygges (samme rækkefølge som trail selv valgte i F251).
+En chatlog er andres ord om deres egne forretninger: folk skriver firmanavne og hvad de kæmper med.
+
+**BESLUTTET af ejeren 5/9-2026: fritekst ligger 12 måneder. Tallene (antal, emner, misses) uden tidsgrænse.** Hans begrundelse: «der skal være tid til minering» — et mønster i hvad kunder spørger om viser sig over en sæson, ikke over et kvartal, og en 90-dages frist ville have slettet materialet før det kunne læses. Min oprindelige anbefaling (90 dage) er dermed forkastet.
+
+Konsekvenser der skal bygges, ikke bare noteres:
+- Fristen er ÉN værdi ét sted i konfigurationen. Gentages den i job, visning og dokumentation, driver de fra hinanden, og den forkerte bliver stående.
+- 12 måneder er lang nok til at oplysningspligten er reel: sitet skal kunne oplyse at samtalen gemmes og hvor længe.
+- Sletning enkeltvis skal virke uafhængigt af fristen — en person kan bede om det inden de 12 måneder er gået.
+
+## Hvad der KAN genbruges fra den eksisterende chat — og hvad der ikke kan
+
+Ejeren, 5/9: «vi har allerede et kunde vendt Chat modul i CMS der styrer sin helt egen historik.» Målt i koden før datamodellen skrives:
+
+`packages/cms-admin/src/lib/chat/conversation-store.ts` gemmer `StoredConversation { id, userId, title, messages[], createdAt, updatedAt, starred }` som JSON under `{dataDir}/chat-conversations/{userId}/`. `ChatMessage` bærer `{ id, role, content, timestamp, toolCalls? }`.
+
+- **GENBRUGES: formen.** `ChatMessage` dækker præcis det en Aidan-tur er (rolle, tekst, tidsstempel). Vi opfinder ikke en ny tur-type ved siden af.
+- **KAN IKKE genbruges: nøglen.** Lageret er inddelt pr. **indlogget bruger** (`userId`), og en Aidan-samtale har ingen bruger — det er en anonym besøgende. Genbrugtes stien direkte, skulle vi opfinde en pseudo-bruger, og så ville de besøgendes samtaler ligge blandt ejerens egne.
+- **Konsekvens:** eget lager nøglet på site + samtale-id, med den samme tur-form. Én type, to lagre — ikke to typer.
 
 ## Non-goals
 
