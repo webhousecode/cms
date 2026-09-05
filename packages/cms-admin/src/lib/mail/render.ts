@@ -44,7 +44,7 @@ export function renderFormNotification(input: {
       ...(input.aabnHref
         ? {
             infoboksHtml:
-              `<a href="${escapeHtml(input.aabnHref)}" style="color:${brand.accentColor};text-decoration:none;">`
+              `<a href="${escapeHtml(input.aabnHref)}" style="color:${brand.accentText};text-decoration:none;">`
               + `${escapeHtml(input.aabnTekst)} &rarr;</a>`,
           }
         : {}),
@@ -74,7 +74,7 @@ export function renderAutoReply(input: {
           .map(
             (l) =>
               `<a href="${escapeHtml(l.url)}" style="display:block;margin:0 0 10px;font-size:14px;`
-              + `color:${brand.accentColor};text-decoration:none;">${escapeHtml(l.label)} &rarr;</a>`,
+              + `color:${brand.accentText};text-decoration:none;">${escapeHtml(l.label)} &rarr;</a>`,
           )
           .join("")
     : "";

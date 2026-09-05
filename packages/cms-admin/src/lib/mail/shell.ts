@@ -61,7 +61,9 @@ export function bygMail(o: MailFelter, brand: MailBrand): string {
   if (!o.preheader) throw new Error("preheader er påkrævet — den er det indbakken viser før mailen åbnes");
 
   const dele = [
-    eyebrow(o.etiket, { accentColor: brand.accentColor }),
+    // Etiketten er TEKST — den mørknede variant, ellers står den på 1,7:1 hos
+    // et site med et lyst brand. Flader nedenfor beholder den rene accent.
+    eyebrow(o.etiket, { accentColor: brand.accentText }),
     heading(o.overskrift, {
       ...(o.fremhaevet ? { emphasis: o.fremhaevet } : {}),
       accentColor: brand.accentColor,
@@ -71,7 +73,11 @@ export function bygMail(o: MailFelter, brand: MailBrand): string {
     ...o.broedtekst.map((t) => paragraph(t)),
     o.fakta?.length ? factBox(o.fakta, { accentColor: brand.accentColor }) : "",
     o.infoboksHtml ? noteBox(o.infoboksHtml, { accentColor: brand.accentColor }) : "",
-    o.knap ? cta(o.knap.url, o.knap.tekst, { accentColor: brand.accentColor }) : "",
+    // Knappens tekst er HVID og hardkodet i @broberg/mail-core, så baggrunden
+    // er det eneste der kan bære kontrasten: hvid på rent WebHouse-guld måler
+    // 1,74:1. Derfor den mørknede variant her — meldt til components som en
+    // manglende tekstfarve i pakkens cta().
+    o.knap ? cta(o.knap.url, o.knap.tekst, { accentColor: brand.accentText }) : "",
     o.underskrift
       ? signOff([
           { text: o.underskrift.afsked },
@@ -86,7 +92,8 @@ export function bygMail(o: MailFelter, brand: MailBrand): string {
     preheader: o.preheader,
     lang: o.lang || "da",
     bodyHtml: dele.filter(Boolean).join("\n"),
-    accentColor: brand.accentColor,
+    // Skallen farver fodnotens links — også tekst.
+    accentColor: brand.accentText,
     fontSerif: brand.fontSerif,
     fontSans: brand.fontSans,
     // SHIP-DARK: intet logo i config → mailen sendes uden mærke frem for med et
