@@ -5,6 +5,7 @@
  * element carrying data-cms-collection/data-cms-slug/data-cms-field
  * (F129's attribute convention) — no per-document step.
  */
+import { parseTags, mergeTags, primaryDocRef } from "./page-tools";
 import { applyFieldSlice } from "./field-slice";
 import { isDangerousUrl, isExternalHost, isSchemeless, withHttps } from "./link-target";
 export { applyFieldSlice } from "./field-slice";
@@ -354,6 +355,9 @@ const LINK_SVG =
   '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/>' +
   '<path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>' +
   "</svg>";
+
+const WRENCH_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
 
 function makeIcon(): HTMLSpanElement {
   const icon = document.createElement("span");
@@ -1942,7 +1946,210 @@ function showActiveBadge(options: ResolvedOptions): void {
   // Clicking the badge LEAVES edit mode but KEEPS the login → back to the idle
   // "Rediger" pill (not a logout). Explicit logout lives on the idle pill.
   badge.addEventListener("click", exitEditMode);
-  document.body.appendChild(badge);
+  // F008.5: badge + Tools-knap i ÉN fixed række, så pillen forbliver den
+  // velkendte venstre-FAB (ejer-krav: højre side er Aidans).
+  badge.style.position = "static";
+  badge.style.borderRadius = "999px 0 0 999px";
+  const raekke = document.createElement("div");
+  raekke.setAttribute("data-cms-inline-edit-toolsrow", "");
+  raekke.style.cssText =
+    "position:fixed;bottom:16px;left:16px;display:inline-flex;align-items:stretch;" +
+    "z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);border-radius:999px;overflow:visible;";
+  const tools = document.createElement("button");
+  tools.type = "button";
+  tools.setAttribute("data-cms-inline-edit-tools", "");
+  tools.setAttribute("data-testid", "inline-edit-tools");
+  tools.setAttribute("aria-label", "Tools");
+  tools.title = "Tools";
+  tools.style.cssText =
+    "display:inline-flex;align-items:center;background:#1c2027;color:#8b93a3;" +
+    "padding:8px 12px;border:none;border-left:1px solid rgba(255,255,255,.12);" +
+    "border-radius:0 999px 999px 0;cursor:pointer;font:600 12px system-ui,sans-serif;";
+  tools.innerHTML = WRENCH_SVG;
+  tools.addEventListener("mouseenter", () => (tools.style.color = "#fff"));
+  tools.addEventListener("mouseleave", () => (tools.style.color = "#8b93a3"));
+  tools.addEventListener("click", () => togglePageTools(options, raekke));
+  raekke.append(badge, tools);
+  document.body.appendChild(raekke);
+}
+
+/* ── F008.5: side-værktøjs-popup — KUN «★ Featured»-toggle og Tags som «+»
+ * med komma-mikroform (ejerens noter, ordret i F008-plan-doc'en). Skriver
+ * gennem SAMME GET→merge→PATCH-dør som feltgem — ingen ny server-flade. */
+async function hentDoc(collection: string, slug: string, token: string, options: ResolvedOptions): Promise<Record<string, unknown>> {
+  const res = await fetch(`${options.cmsBaseUrl}/api/cms/${collection}/${slug}?site=${options.siteId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`GET failed: ${res.status}`);
+  const doc = (await res.json()) as { data?: Record<string, unknown> };
+  return JSON.parse(JSON.stringify(doc.data ?? {})) as Record<string, unknown>;
+}
+
+async function gemDoc(collection: string, slug: string, data: Record<string, unknown>, token: string, options: ResolvedOptions): Promise<void> {
+  const res = await fetch(`${options.cmsBaseUrl}/api/cms/${collection}/${slug}?site=${options.siteId}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ data }),
+  });
+  if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
+}
+
+function togglePageTools(options: ResolvedOptions, forankring: HTMLElement): void {
+  const åben = document.querySelector("[data-cms-inline-edit-tools-popup]");
+  if (åben) {
+    åben.remove();
+    return;
+  }
+  const token = getConnectedToken(options);
+  if (!token) return;
+  const ankre: Array<{ collection?: string; slug?: string }> = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-cms-field]"),
+  ).map((el) => {
+    const a: { collection?: string; slug?: string } = {};
+    if (el.dataset.cmsCollection) a.collection = el.dataset.cmsCollection;
+    if (el.dataset.cmsSlug) a.slug = el.dataset.cmsSlug;
+    return a;
+  });
+  const ref = primaryDocRef(ankre);
+  if (!ref) return; // ingen side-dokument (ren globals-side) → intet at feature
+
+  const popup = document.createElement("div");
+  popup.setAttribute("data-cms-inline-edit-tools-popup", "");
+  popup.setAttribute("data-testid", "page-tools-popup");
+  popup.style.cssText =
+    "position:fixed;bottom:56px;left:16px;z-index:2147483647;background:#1c2027;" +
+    "border:1px solid #3a3f4a;border-radius:12px;padding:10px;min-width:230px;" +
+    "box-shadow:0 8px 32px rgba(0,0,0,.5);font-family:system-ui,sans-serif;color:#fff;" +
+    "display:flex;flex-direction:column;gap:8px;";
+
+  // Række 1: ★ Featured — KUN den (ejer: «I pop up skal der kun stå stjerne og Featured»)
+  const featRow = document.createElement("button");
+  featRow.type = "button";
+  featRow.setAttribute("data-testid", "page-tools-featured");
+  featRow.style.cssText =
+    "display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);" +
+    "border:1px solid #3a3f4a;border-radius:9px;padding:8px 10px;font:600 12px system-ui,sans-serif;" +
+    "color:#fff;cursor:pointer;text-align:left;";
+  featRow.textContent = "★ Featured";
+  featRow.disabled = true;
+  popup.appendChild(featRow);
+
+  const visFeatured = (til: boolean) => {
+    featRow.style.borderColor = til ? "#00b2ff" : "#3a3f4a";
+    featRow.style.color = til ? "#40c8ff" : "#fff";
+    featRow.style.background = til ? "rgba(0,178,255,.13)" : "rgba(255,255,255,.04)";
+  };
+
+  let featured = false;
+  void hentDoc(ref.collection, ref.slug, token, options)
+    .then((data) => {
+      featured = data.featured === true;
+      visFeatured(featured);
+      featRow.disabled = false;
+    })
+    .catch(() => {
+      featRow.textContent = "★ Featured — kunne ikke læses";
+    });
+  featRow.addEventListener("click", async () => {
+    featRow.disabled = true;
+    try {
+      const data = await hentDoc(ref.collection, ref.slug, token, options);
+      data.featured = !(data.featured === true);
+      await gemDoc(ref.collection, ref.slug, data, token, options);
+      // Genlæs — pillen viser hvad databasen HOLDER, ikke hvad vi sendte.
+      const frisk = await hentDoc(ref.collection, ref.slug, token, options);
+      featured = frisk.featured === true;
+      visFeatured(featured);
+    } catch {
+      featRow.style.borderColor = "#f3522c";
+    } finally {
+      featRow.disabled = false;
+    }
+  });
+
+  // Række 2: Tags — IKKE de eksisterende, kun «+» og en mikro-form (ejer-note)
+  const tagRow = document.createElement("div");
+  tagRow.style.cssText = "display:flex;align-items:center;gap:6px;";
+  const plus = document.createElement("button");
+  plus.type = "button";
+  plus.setAttribute("data-testid", "page-tools-tags-plus");
+  plus.style.cssText =
+    "background:rgba(255,255,255,.04);border:1px solid #3a3f4a;border-radius:9px;" +
+    "padding:8px 12px;color:#fff;font:600 12px system-ui,sans-serif;cursor:pointer;";
+  plus.textContent = "# Tags +";
+  const felt = document.createElement("input");
+  felt.type = "text";
+  felt.placeholder = "tag1, tag2, tag3";
+  felt.setAttribute("data-testid", "page-tools-tags-input");
+  felt.style.cssText =
+    "flex:1;min-width:0;display:none;background:#12151a;border:1px solid #3a3f4a;" +
+    "border-radius:8px;padding:7px 9px;color:#fff;font:12px system-ui,sans-serif;outline:none;";
+  const gem = document.createElement("button");
+  gem.type = "button";
+  gem.setAttribute("data-testid", "page-tools-tags-gem");
+  gem.style.cssText =
+    "display:none;background:#00b2ff;border:none;border-radius:8px;padding:7px 11px;" +
+    "color:#04222f;font:700 12px system-ui,sans-serif;cursor:pointer;";
+  gem.textContent = "Gem";
+  plus.addEventListener("click", () => {
+    plus.style.display = "none";
+    felt.style.display = "block";
+    gem.style.display = "inline-block";
+    felt.focus();
+  });
+  const gemTags = async () => {
+    const nye = parseTags(felt.value);
+    if (!nye.length) return;
+    gem.disabled = true;
+    gem.textContent = "…";
+    try {
+      const data = await hentDoc(ref.collection, ref.slug, token, options);
+      data.tags = mergeTags(data.tags, nye);
+      await gemDoc(ref.collection, ref.slug, data, token, options);
+      const frisk = await hentDoc(ref.collection, ref.slug, token, options);
+      const holdt = Array.isArray(frisk.tags) && nye.every((t) => (frisk.tags as string[]).some((e) => String(e).toLowerCase() === t.toLowerCase()));
+      gem.textContent = holdt ? "Gemt ✓" : "Fejl";
+      if (holdt) {
+        felt.value = "";
+        setTimeout(() => {
+          gem.textContent = "Gem";
+          gem.disabled = false;
+        }, 1200);
+      } else {
+        gem.disabled = false;
+      }
+    } catch {
+      gem.textContent = "Fejl";
+      gem.disabled = false;
+    }
+  };
+  gem.addEventListener("click", () => void gemTags());
+  felt.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void gemTags();
+    }
+  });
+  tagRow.append(plus, felt, gem);
+  popup.appendChild(tagRow);
+
+  // Luk: klik udenfor eller ESC.
+  const lukPåKlik = (e: MouseEvent) => {
+    if (!popup.contains(e.target as Node) && !forankring.contains(e.target as Node)) luk();
+  };
+  const lukPåEsc = (e: KeyboardEvent) => {
+    if (e.key === "Escape") luk();
+  };
+  const luk = () => {
+    popup.remove();
+    document.removeEventListener("mousedown", lukPåKlik);
+    document.removeEventListener("keydown", lukPåEsc);
+  };
+  setTimeout(() => {
+    document.addEventListener("mousedown", lukPåKlik);
+    document.addEventListener("keydown", lukPåEsc);
+  }, 0);
+  document.body.appendChild(popup);
 }
 
 /** Reads JWT claims for DISPLAY ONLY — never used for authorization decisions. */
