@@ -263,8 +263,8 @@ importers:
         specifier: 0.7.1
         version: 0.7.1
       '@broberg/mail-core':
-        specifier: '>=0.7.0 <1'
-        version: 0.7.0
+        specifier: 0.8.0
+        version: 0.8.0
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1130,8 +1130,8 @@ packages:
   '@broberg/lens-engine@0.4.0':
     resolution: {integrity: sha512-/blOeHkjo6kxxQE7d9y9BFSqaoyFE3k8+Gbu6UcGLXAf9HmEJ0T0zhdbbbWQX4mejtpRKr0CzpwhiiwAoSLoaw==}
 
-  '@broberg/mail-core@0.7.0':
-    resolution: {integrity: sha512-uCatIIKwyDwh7XPJaaWMqDyPYRiuW1F9scDHW5Tm1hbBmgsFzzjmEHwh+woqbFDLb5swgUqF4R4d5yAy0+/mnw==}
+  '@broberg/mail-core@0.8.0':
+    resolution: {integrity: sha512-n0Ne8XBY7rLXEuNEesoa/dmBktJ0RDTzpQ8t9Kisk8EqW1qHOjK4sAElDywDOuwVf0gitWzxo4jMWEJoeGMhxQ==}
 
   '@broberg/mail@0.7.1':
     resolution: {integrity: sha512-UjOFan+y2vBbIbH4iSYaHu74ngkiatu7QtZ2THoTcokF0Pt3PtIsKSP7RePL9PMx6efXojHEsz/vsDkPEozu9Q==}
@@ -7158,7 +7158,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@broberg/mail-core@0.7.0': {}
+  '@broberg/mail-core@0.8.0': {}
 
   '@broberg/mail@0.7.1': {}
 

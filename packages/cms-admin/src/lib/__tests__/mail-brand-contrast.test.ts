@@ -69,3 +69,59 @@ describe("brandForSite", () => {
     expect(kontrastModFlade(WEBHOUSE.accentText)).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+/**
+ * AC#7 fra components' F023.13, målt HOS OS fordi de ikke kan se vores mail.
+ *
+ * Vores lap gjorde knappens BAGGRUND mørkere for at bære en hvid etiket vi ikke
+ * kunne ændre. Det virkede og kostede brandet: knappen var ikke længere
+ * WebHouse-guld. Shell 3 vælger etiketten efter fladen i stedet, så begge dele
+ * kan holde — og det er præcis dét denne test spærrer for at miste igen.
+ */
+describe("shell 3 — brandet på fladen, læsbarheden i blækket", () => {
+  const guld = "#F7BB2E";
+  const brand = brandForSite({
+    emailAccentColor: guld,
+    emailFooterName: "WebHouse ApS",
+    deployProductionUrl: "https://webhouse.dk",
+  } as never);
+
+  it("knappen er WebHouse-guld — ikke en mørknet erstatning", async () => {
+    const { renderFormNotification } = await import("../mail/render");
+    const html = renderFormNotification({
+      formLabel: "Kontakt", fakta: [{ label: "Navn", value: "Test" }], brand, lang: "da",
+      etiket: "Ny henvendelse", modtaget: "Modtaget nu", fodnote: "webhouse.dk",
+      svarTekst: "Svar afsenderen", svarHref: "mailto:a@b.dk",
+      aabnTekst: "Åbn i CMS", aabnHref: "https://webhouse.app/admin",
+    });
+    // den rene brandfarve SKAL stå i mailen; den mørknede må ikke have taget dens plads
+    expect(html.toLowerCase()).toContain(guld.toLowerCase());
+  });
+
+  it("knappens etiket kontrasterer mod guld — pakken vælger mørkt blæk", async () => {
+    const { readableInk, contrastRatio } = await import("@broberg/mail-core");
+    const blaek = readableInk(guld);
+    expect(contrastRatio(blaek, guld)!).toBeGreaterThanOrEqual(4.5);
+    // hvid ER det forkerte svar her, og var det vi sad fast med
+    expect(contrastRatio("#ffffff", guld)!).toBeLessThan(2);
+  });
+
+  it("og hvidt blæk er det RIGTIGE svar på en mørk accent — derfor ingen fast farve", async () => {
+    const { readableInk, contrastRatio } = await import("@broberg/mail-core");
+    const teal = "#0f7391";
+    expect(readableInk(teal)).toBe("#ffffff");
+    expect(contrastRatio(readableInk(teal), teal)!).toBeGreaterThanOrEqual(4.5);
+    // en fast MØRK etiket ville dumpe her — begge retninger er dermed spærret
+    expect(contrastRatio("#1a1a1a", teal)!).toBeLessThan(4.5);
+  });
+
+  it("en accent der allerede er læsbar som tekst røres ikke", () => {
+    expect(laesbarSomTekst(WEBHOUSE.accentColor)).toBeTruthy();
+    expect(kontrastModFlade(laesbarSomTekst(WEBHOUSE.accentColor))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("SHELL_VERSION er mindst 3 — under det er knappen tavst ulæselig igen", async () => {
+    const { SHELL_VERSION } = await import("@broberg/mail-core");
+    expect(Number.parseInt(String(SHELL_VERSION), 10)).toBeGreaterThanOrEqual(3);
+  });
+});

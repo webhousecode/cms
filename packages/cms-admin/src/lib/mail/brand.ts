@@ -14,6 +14,7 @@
  * tiden; den gamle skabelon brugte kun to af dem og havde slet ikke et
  * logo-felt.
  */
+import { readableAccent } from "@broberg/mail-core";
 import type { SiteConfig } from "@/lib/site-config";
 
 export interface MailBrand {
@@ -63,47 +64,24 @@ export const WEBHOUSE: MailBrand = {
   fontSans: FONT_SANS,
 };
 
-/** WCAG relativ luminans for en sRGB-kanal. */
-function kanal(c: number): number {
-  const v = c / 255;
-  return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-}
-
 /**
- * Kontrast mod mailens LYSESTE flade. Ikke hvid: skallens fodnote står på
- * #f4f4f5, og et mål på hvid gav 4,18:1 dér — grønt i regnestykket, rødt på
- * skærmen. Målt med Lens' kontrast-kritiker 5/9-2026.
+ * Mailens LYSESTE flade. Ikke hvid: skallens fodnote står på #f4f4f5, og et mål
+ * mod hvid gav 4,18:1 dér — grønt i regnestykket, rødt på skærmen.
  */
-const LYSESTE_FLADE = 0.2126 * kanal(0xf4) + 0.7152 * kanal(0xf4) + 0.0722 * kanal(0xf5);
-
-function kontrastModFlade(r: number, g: number, b: number): number {
-  const L = 0.2126 * kanal(r) + 0.7152 * kanal(g) + 0.0722 * kanal(b);
-  return (LYSESTE_FLADE + 0.05) / (L + 0.05);
-}
-
-function hexTilRgb(hex: string): [number, number, number] {
-  const h = hex.replace("#", "");
-  const fuld = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
-  return [parseInt(fuld.slice(0, 2), 16), parseInt(fuld.slice(2, 4), 16), parseInt(fuld.slice(4, 6), 16)];
-}
+const LYSESTE_FLADE = "#f4f4f5";
 
 /**
- * Mørkner en accentfarve indtil den er læsbar som TEKST (WCAG AA, 4,5:1) på
- * mailens lyseste flade,
- * med kuløren i behold. Klarer farven det allerede, returneres den uændret — så
- * et brand med en mørk accent ser præcis ud som før.
+ * Accentfarven gjort læsbar som TEKST. Matematikken er PAKKENS (shell 3), ikke
+ * vores egen kopi: readableAccent bevæger sig VÆK fra fladens lysstyrke, så den
+ * mørkner mod en lys flade og LYSNER mod en mørk. Vores forgænger mørknede
+ * altid — rigtigt for os, forkert for en mørk skabelon, og præcis den halvdel
+ * components fandt fejlede i deres egen.
+ *
+ * Klarer farven allerede 4,5:1, returneres den uændret.
  */
 export function laesbarSomTekst(hex: string): string {
   if (!HEX.test(hex)) return hex;
-  let [r, g, b] = hexTilRgb(hex);
-  // 40 skridt à 2,5 % er rigeligt til at nå fra den lyseste tænkelige accent
-  // ned under kravet, og stopper straks farven er god nok.
-  for (let i = 0; i < 40 && kontrastModFlade(r, g, b) < 4.5; i++) {
-    r = Math.round(r * 0.95);
-    g = Math.round(g * 0.95);
-    b = Math.round(b * 0.95);
-  }
-  return "#" + [r, g, b].map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("");
+  return readableAccent(hex, LYSESTE_FLADE);
 }
 
 /** Et gyldigt CSS-hex. En ugyldig farve fra config må ikke nå skallen. */

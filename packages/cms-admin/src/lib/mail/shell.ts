@@ -26,8 +26,13 @@ import type { MailBrand } from "./brand";
 // sammenlignet "2" med 2 gennem en tvungen konvertering og været sandt for
 // "10" den dag skallen når dertil. Major-tallet læses eksplicit.
 const SHELL_MAJOR = Number.parseInt(String(SHELL_VERSION), 10);
-if (!Number.isFinite(SHELL_MAJOR) || SHELL_MAJOR < 2) {
-  throw new Error(`@broberg/mail-core er for gammel (SHELL_VERSION ${SHELL_VERSION}, kræver major >= 2)`);
+// KRÆVER 3. Fra og med shell 3 udleder pakken selv en læsbar etiket på en
+// accent-FLADE (readableInk) og en læsbar accent-TEKST (readableAccent). Vi
+// sender derfor den rene brandfarve igen. Kørte vi mod shell 2 med den kode,
+// ville knappens hvide etiket stå på WebHouse-guld ved 1,74:1 — og intet ville
+// fejle. Kravet er beskyttelsen mod netop den stille nedgradering.
+if (!Number.isFinite(SHELL_MAJOR) || SHELL_MAJOR < 3) {
+  throw new Error(`@broberg/mail-core er for gammel (SHELL_VERSION ${SHELL_VERSION}, kræver major >= 3)`);
 }
 
 export interface MailFelter {
@@ -61,9 +66,9 @@ export function bygMail(o: MailFelter, brand: MailBrand): string {
   if (!o.preheader) throw new Error("preheader er påkrævet — den er det indbakken viser før mailen åbnes");
 
   const dele = [
-    // Etiketten er TEKST — den mørknede variant, ellers står den på 1,7:1 hos
-    // et site med et lyst brand. Flader nedenfor beholder den rene accent.
-    eyebrow(o.etiket, { accentColor: brand.accentText }),
+    // Den rene brandfarve hele vejen. Shell 3 justerer selv en TEKST-accent op
+    // når den er under 4,5:1, og lader den være når den ikke er.
+    eyebrow(o.etiket, { accentColor: brand.accentColor }),
     heading(o.overskrift, {
       ...(o.fremhaevet ? { emphasis: o.fremhaevet } : {}),
       accentColor: brand.accentColor,
@@ -73,11 +78,10 @@ export function bygMail(o: MailFelter, brand: MailBrand): string {
     ...o.broedtekst.map((t) => paragraph(t)),
     o.fakta?.length ? factBox(o.fakta, { accentColor: brand.accentColor }) : "",
     o.infoboksHtml ? noteBox(o.infoboksHtml, { accentColor: brand.accentColor }) : "",
-    // Knappens tekst er HVID og hardkodet i @broberg/mail-core, så baggrunden
-    // er det eneste der kan bære kontrasten: hvid på rent WebHouse-guld måler
-    // 1,74:1. Derfor den mørknede variant her — meldt til components som en
-    // manglende tekstfarve i pakkens cta().
-    o.knap ? cta(o.knap.url, o.knap.tekst, { accentColor: brand.accentText }) : "",
+    // Knappen er sitets EGEN farve igen. Shell 3 vælger etiketten efter fladen
+    // (readableInk), så guld får mørkt blæk og turkis får hvidt — den ene faste
+    // etiketfarve var ulovlig i én af de to retninger, altid.
+    o.knap ? cta(o.knap.url, o.knap.tekst, { accentColor: brand.accentColor }) : "",
     o.underskrift
       ? signOff([
           { text: o.underskrift.afsked },
@@ -92,8 +96,7 @@ export function bygMail(o: MailFelter, brand: MailBrand): string {
     preheader: o.preheader,
     lang: o.lang || "da",
     bodyHtml: dele.filter(Boolean).join("\n"),
-    // Skallen farver fodnotens links — også tekst.
-    accentColor: brand.accentText,
+    accentColor: brand.accentColor,
     fontSerif: brand.fontSerif,
     fontSans: brand.fontSans,
     // SHIP-DARK: intet logo i config → mailen sendes uden mærke frem for med et
