@@ -373,15 +373,49 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
           if (shouldTranslate) {
             const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
             const serviceToken = process.env.CMS_JWT_SECRET;
+            // F157.14 — an EXISTING sibling gets only the fields this edit
+            // touched; a missing one is still created by the whole-document
+            // route. The split matters because the whole-document route writes
+            // the sibling's `data` wholesale: run it on every inline edit and a
+            // hand-polished English sentence is thrown away, silently, the next
+            // time anyone fixes a comma on the Danish page — and three edited
+            // words cost a full-article model call.
+            //
+            // The partial path also protects the ADMIN editor, which posts the
+            // whole document on save: planChangedFieldTranslation compares each
+            // field against what is stored, so an unchanged one is not an edit
+            // of it and never reaches the model.
+            const { runChangedFieldTranslation } = await import("@/lib/ai/run-changed-field-translation");
             for (const targetLocale of targetLocales) {
-              fetch(`${baseUrl}/api/cms/${collection}/${newSlug}/translate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken || "" },
-                body: JSON.stringify({ targetLocale, publish: false }),
-              }).catch(() => {}); // fire-and-forget
+              runChangedFieldTranslation({
+                collection,
+                source: updated as never,
+                changed: (body.data ?? {}) as Record<string, unknown>,
+                targetLocale,
+                defaultLocale: docLocale,
+                autoRetranslateOnUpdate: true, // gated by shouldTranslate above
+              })
+                .then((r) => {
+                  if (r.ok) {
+                    console.log(`[auto-translate] ${collection}/${newSlug} → ${targetLocale}: ${r.fields?.join(", ")} into ${r.targetSlug}`);
+                    return;
+                  }
+                  // No sibling yet → fall back to the whole-document route,
+                  // which creates it. Every other reason is a deliberate
+                  // refusal and must NOT trigger a full re-translation.
+                  if (!r.reason?.startsWith("no ")) {
+                    console.log(`[auto-translate] ${collection}/${newSlug} → ${targetLocale}: skipped (${r.reason})`);
+                    return;
+                  }
+                  fetch(`${baseUrl}/api/cms/${collection}/${newSlug}/translate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken || "" },
+                    body: JSON.stringify({ targetLocale, publish: false }),
+                  }).catch(() => {});
+                  console.log(`[auto-translate] ${collection}/${newSlug} → ${targetLocale}: creating the missing sibling`);
+                })
+                .catch(() => {}); // fire-and-forget: never fail the save
             }
-            const reason = nextStatus === "published" ? "publish" : "update (autoRetranslate)";
-            console.log(`[auto-translate] Triggered ${reason} of ${collection}/${newSlug} → ${targetLocales.join(", ")}`);
           }
         }
       } catch { /* non-fatal */ }
