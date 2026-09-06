@@ -75,6 +75,7 @@ function run(overrides: Record<string, unknown> = {}) {
       targetLocale: "en",
       defaultLocale: "da",
       autoRetranslateOnUpdate: true,
+      expectSiteId: "broberg-ai",
       ...overrides,
     } as never),
   );
@@ -135,7 +136,7 @@ describe("runChangedFieldTranslation — the push to the site", () => {
   });
 
   it("skips the push for a site with no revalidateUrl, without failing the save", async () => {
-    getActiveSiteEntry.mockResolvedValue({ id: "local-site" });
+    getActiveSiteEntry.mockResolvedValue({ id: "broberg-ai" });
     const r = await run();
     expect(r.ok).toBe(true);
     expect(dispatchRevalidation).not.toHaveBeenCalled();
@@ -151,5 +152,44 @@ describe("runChangedFieldTranslation — the push to the site", () => {
     expect(r.reason).toContain("not the default");
     expect(update).not.toHaveBeenCalled();
     expect(dispatchRevalidation).not.toHaveBeenCalled();
+  });
+});
+
+describe("runChangedFieldTranslation — the tenant must be PROVEN, not assumed", () => {
+  // Raised by the cardmem session: "works on today's runtime" is a sentence
+  // that reads as a guarantee in six months. These tests are what keeps the
+  // claim true when the runtime changes underneath us — a lost tenant becomes a
+  // logged REFUSAL, not a write into somebody else's site.
+
+  it("REFUSES when the ambient tenant resolves to a different site", async () => {
+    // Exactly what a lost request context produces: site-paths' cookies() catch
+    // answers with the registry default, which is a real, plausible site id.
+    getActiveSiteEntry.mockResolvedValue({
+      id: "webhouse-site",
+      revalidateUrl: "https://wh-site.webhouse.net/icd",
+    });
+    const r = await run();
+    expect(r.ok).toBe(false);
+    expect(r.reason).toContain("tenant lost");
+    expect(r.reason).toContain("webhouse-site");
+    // Nothing read, nothing written, nothing pushed.
+    expect(chat).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+    expect(dispatchRevalidation).not.toHaveBeenCalled();
+  });
+
+  it("REFUSES when no site resolves at all", async () => {
+    getActiveSiteEntry.mockResolvedValue(null);
+    const r = await run();
+    expect(r.ok).toBe(false);
+    expect(r.reason).toContain("tenant lost");
+    expect(update).not.toHaveBeenCalled();
+    expect(dispatchRevalidation).not.toHaveBeenCalled();
+  });
+
+  it("refuses BEFORE the model call — a lost tenant costs nothing", async () => {
+    getActiveSiteEntry.mockResolvedValue({ id: "sanneandersen" });
+    await run();
+    expect(chat).not.toHaveBeenCalled();
   });
 });

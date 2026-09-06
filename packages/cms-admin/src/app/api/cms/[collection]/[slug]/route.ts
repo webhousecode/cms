@@ -419,6 +419,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
                 targetLocale,
                 defaultLocale: siteDefaultLocale,
                 autoRetranslateOnUpdate: true, // gated by shouldTranslate above
+                expectSiteId: tenant?.siteId ?? "",
               })
                 .then((r) => {
                   if (r.ok) {

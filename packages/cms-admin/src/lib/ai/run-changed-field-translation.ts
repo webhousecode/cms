@@ -46,8 +46,35 @@ export async function runChangedFieldTranslation(args: {
   targetLocale: string;
   defaultLocale: string;
   autoRetranslateOnUpdate: boolean;
+  /**
+   * WHICH TENANT this edit belongs to, captured by the caller while the request
+   * context was still alive. Required: this function runs after the response is
+   * decided, and everything it touches resolves the tenant ambiently.
+   */
+  expectSiteId: string;
 }): Promise<ChangedFieldResult> {
   try {
+    // REFUSE rather than guess. Ambient tenant resolution answers with the
+    // registry's DEFAULT site once the request context is gone (site-paths'
+    // `cookies()` catch), so without this check a lost context does not fail —
+    // it writes this customer's translation into, and pushes it to, somebody
+    // else's site. Silent and plausible.
+    //
+    // We rely on AsyncLocalStorage carrying the caller's withSiteContext through
+    // the promise chain, and that holds on today's runtime. This is what keeps
+    // the claim true when the runtime changes underneath us: a lost pin becomes
+    // a logged refusal instead of a wrong-tenant write. (Raised by the cardmem
+    // session, 6 Sep 2026 — "a sentence like 'works today' reads as a guarantee
+    // in six months".)
+    const seen = await getActiveSiteEntry();
+    if (!seen || seen.id !== args.expectSiteId) {
+      const msg =
+        `tenant lost: expected site ${args.expectSiteId}, resolved ` +
+        `${seen?.id ?? "(none)"} — refusing rather than writing to the wrong site`;
+      console.error(`[auto-translate] ${msg}`);
+      return { ok: false, reason: msg, missingSibling: false };
+    }
+
     const cms = await getAdminCms();
     const config = await getAdminConfig();
     const colConfig = config.collections.find((c) => c.name === args.collection);
@@ -126,7 +153,7 @@ export async function runChangedFieldTranslation(args: {
     // var funktionen derfor virkningsløs, selvom begge dokumenter i CMS'et var
     // rigtige. Den fulde oversættelses-rute har altid gjort det; denne glemte det.
     try {
-      const site = await getActiveSiteEntry();
+      const site = seen;
       if (site?.revalidateUrl) {
         await dispatchRevalidation(
           site,
