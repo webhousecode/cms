@@ -77,6 +77,16 @@ export type ChangedFieldPlan =
 export function planChangedFieldTranslation(args: {
   source: LocaleDoc;
   changed: Record<string, unknown>;
+  /**
+   * The document's data BEFORE this edit. Required, and separate from
+   * `source.data`, because the caller runs AFTER the save: `source` is the
+   * updated document, so its data already holds the new value. Comparing the
+   * new value against it made every edit look unchanged, and the feature
+   * refused every single one in production while 35 tests stayed green — the
+   * tests passed an old `source.data`, a state that never occurs at the call
+   * site.
+   */
+  previousData: Record<string, unknown>;
   collection: CollectionConfig | undefined;
   siblings: LocaleDoc[];
   targetLocale: string;
@@ -116,7 +126,7 @@ export function planChangedFieldTranslation(args: {
   const byName = new Map<string, FieldConfig>(
     ((collection?.fields ?? []) as FieldConfig[]).map((f) => [f.name, f]),
   );
-  const stored = source.data ?? {};
+  const stored = args.previousData;
   const fields: Record<string, string | string[]> = {};
 
   for (const [name, value] of Object.entries(changed)) {

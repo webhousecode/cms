@@ -391,6 +391,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
                 collection,
                 source: updated as never,
                 changed: (body.data ?? {}) as Record<string, unknown>,
+                previousData: (doc.data ?? {}) as Record<string, unknown>,
                 targetLocale,
                 defaultLocale: docLocale,
                 autoRetranslateOnUpdate: true, // gated by shouldTranslate above

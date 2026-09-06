@@ -39,6 +39,8 @@ export async function runChangedFieldTranslation(args: {
   source: LocaleDoc;
   /** The PATCH body's `data` — exactly the fields this edit carried. */
   changed: Record<string, unknown>;
+  /** The document's data BEFORE the save — see planChangedFieldTranslation. */
+  previousData: Record<string, unknown>;
   targetLocale: string;
   defaultLocale: string;
   autoRetranslateOnUpdate: boolean;
@@ -54,6 +56,7 @@ export async function runChangedFieldTranslation(args: {
     const plan = planChangedFieldTranslation({
       source: args.source,
       changed: args.changed,
+      previousData: args.previousData,
       collection: colConfig,
       siblings,
       targetLocale: args.targetLocale,

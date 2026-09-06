@@ -53,6 +53,7 @@ const en: LocaleDoc = {
 
 const base = {
   source: da,
+  previousData: da.data!,
   collection,
   siblings: [da, en],
   targetLocale: "en",
@@ -190,6 +191,36 @@ describe("planChangedFieldTranslation — the guards", () => {
     const plan = planChangedFieldTranslation({
       ...base,
       changed: { canonicalUrl: "https://broberg.ai/en/blog/x" },
+    });
+    expect(plan.translate).toBe(false);
+  });
+});
+
+describe("source er dokumentet EFTER gemningen — den fejl der ramte prod", () => {
+  // Kaldstedet kører efter gemningen, så source.data BÆRER ALLEREDE den nye
+  // værdi. De øvrige tests gav en gammel source.data — en tilstand der aldrig
+  // opstår — og derfor var 35 tests grønne mens funktionen afviste hver eneste
+  // rettelse i produktionen med «no translatable field changed».
+  const efterGem: LocaleDoc = { ...da, data: { ...da.data, title: "Ny titel" } };
+
+  it("ser stadig ændringen når source allerede er opdateret", () => {
+    const plan = planChangedFieldTranslation({
+      ...base,
+      source: efterGem,
+      previousData: da.data!,     // tilstanden FØR — den ruten nu sender
+      changed: { title: "Ny titel" },
+    });
+    expect(plan.translate).toBe(true);
+    if (!plan.translate) return;
+    expect(plan.fields.title).toBe("Ny titel");
+  });
+
+  it("afviser stadig når værdien reelt er uændret", () => {
+    const plan = planChangedFieldTranslation({
+      ...base,
+      source: da,
+      previousData: da.data!,
+      changed: { title: "Gammel titel" },
     });
     expect(plan.translate).toBe(false);
   });
