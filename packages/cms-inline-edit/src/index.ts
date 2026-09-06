@@ -7,6 +7,12 @@
  */
 import { parseTags, mergeTags, primaryDocRef } from "./page-tools";
 import { applyFieldSlice } from "./field-slice";
+import {
+  parseListItemPath,
+  addListItem,
+  removeListItem,
+  renumberAfterRemoval,
+} from "./list-edit";
 import { isDangerousUrl, isExternalHost, isSchemeless, withHttps } from "./link-target";
 export { applyFieldSlice } from "./field-slice";
 // Re-exported so a consumer — and the repo's content scanner — classifies an
@@ -410,12 +416,17 @@ function showConnectPrompt(options: ResolvedOptions): void {
 let editingActive = false;
 let fieldsWired = false;
 let stateOptions: ResolvedOptions | null = null;
+// Samme edit-session-token som felterne gemmer med. Listeknapperne (F157.16)
+// laver deres egen GET→PATCH-runde og skal bruge det; der er ingen ny rute og
+// ingen ny autorisation involveret.
+let stateToken: string | null = null;
 // Elements whose listeners are already attached — makes wireField idempotent so
 // setupFields (once) and rescanFields (N times) can both run without double-wiring.
 const wiredFields = new WeakSet<HTMLElement>();
 
 function setupFields(token: string, options: ResolvedOptions): void {
   stateOptions = options;
+  stateToken = token;
   if (fieldsWired) return;
   injectStyles();
   document.querySelectorAll<HTMLElement>("[data-cms-field]").forEach((el) => wireField(el, token, options));
@@ -493,6 +504,7 @@ function enterEditMode(): void {
   document.body.setAttribute("data-cms-editing", "true");
   removeIdlePill();
   showActiveBadge(stateOptions);
+  renderListControls();
 }
 
 function exitEditMode(): void {
@@ -506,6 +518,8 @@ function exitEditMode(): void {
   document.querySelector("[data-cms-inline-edit-toolsrow]")?.remove();
   document.querySelector("[data-cms-inline-edit-tools-popup]")?.remove();
   document.querySelector("[data-cms-inline-edit-badge]")?.remove();
+  // Knapperne findes ikke for en besøgende — de tegnes ved Rediger og fjernes her.
+  fjernListeKnapper();
   showIdlePill();
 }
 
@@ -2300,4 +2314,186 @@ function injectStyles(): void {
     .cms-rich-editing { outline: 2px solid #00b2ff !important; outline-offset: 6px; border-radius: 4px; }
   `;
   document.head.appendChild(style);
+}
+
+/* ─── F157.16 — list controls («+» / «×») ─────────────────────────────────────
+ * A list can only GROW from the page if something offers to grow it. Inline
+ * editing changes an element that exists; it never creates one, so a chip row
+ * could until now only gain a member by an agent editing JSON.
+ *
+ * OPT-IN, never inferred. The site marks a list item with `data-cms-list-add`.
+ * Measured on /flagskibe/trail: a table COLUMN (`…cols.0`) is a list of strings
+ * exactly like a chip, and adding one leaves every row a cell short — so no
+ * structural rule can tell the two apart. Whether a list takes a new member is a
+ * fact about the site's markup, and the site is the only place that knows it.
+ */
+
+/** Every opted-in list item on the page, grouped by the document + array it belongs to. */
+function collectLists(): Map<string, { arrayPath: string; els: HTMLElement[] }> {
+  const grupper = new Map<string, { arrayPath: string; els: HTMLElement[] }>();
+  document.querySelectorAll<HTMLElement>("[data-cms-list-add][data-cms-field]").forEach((el) => {
+    const felt = el.dataset.cmsField;
+    const col = el.dataset.cmsCollection;
+    const slug = el.dataset.cmsSlug;
+    if (!felt || !col || !slug) return;
+    const p = parseListItemPath(felt);
+    if (!p) return;
+    // collection + slug + the FULL path: a footer and an article can both carry
+    // `tags` on one page, and keying on the tail alone would let one list's
+    // buttons write into the other's document.
+    const key = `${col} ${slug} ${p.arrayPath}`;
+    const g = grupper.get(key) ?? { arrayPath: p.arrayPath, els: [] };
+    g.els.push(el);
+    grupper.set(key, g);
+  });
+  for (const g of grupper.values()) {
+    g.els.sort((a, b) => {
+      const ia = parseListItemPath(a.dataset.cmsField!)!.index;
+      const ib = parseListItemPath(b.dataset.cmsField!)!.index;
+      return ia - ib;
+    });
+  }
+  return grupper;
+}
+
+/** GET → mutate the array → PATCH. Same round `saveField` makes, other verb. */
+async function muterListe(
+  el: HTMLElement,
+  arrayPath: string,
+  mutate: (data: Record<string, unknown>) => boolean,
+): Promise<boolean> {
+  const token = stateToken;
+  const options = stateOptions;
+  const collection = el.dataset.cmsCollection;
+  const slug = el.dataset.cmsSlug;
+  if (!token || !options || !collection || !slug) return false;
+  showPill(el, "saving");
+  try {
+    const base = `${options.cmsBaseUrl}/api/cms/${collection}/${slug}?site=${options.siteId}`;
+    const getRes = await fetch(base, { headers: { Authorization: `Bearer ${token}` } });
+    if (!getRes.ok) throw new Error(`GET failed: ${getRes.status}`);
+    const doc = (await getRes.json()) as { data?: Record<string, unknown> };
+    const data = JSON.parse(JSON.stringify(doc.data ?? {})) as Record<string, unknown>;
+    // A refusal is NOT an error the editor caused — the list is a shape we do
+    // not know how to extend. Say nothing happened rather than showing a failure.
+    if (!mutate(data)) {
+      showPill(el, "saved");
+      return false;
+    }
+    const patchRes = await fetch(base, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ data }),
+    });
+    if (!patchRes.ok) throw new Error(`PATCH failed: ${patchRes.status}`);
+    showPill(el, "saved");
+    return true;
+  } catch {
+    showPill(el, "error");
+    return false;
+  }
+}
+
+function fjernListeKnapper(): void {
+  document.querySelectorAll("[data-cms-list-btn]").forEach((n) => n.remove());
+}
+
+function knap(testid: string, tekst: string, titel: string): HTMLButtonElement {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.setAttribute("data-cms-list-btn", "");
+  b.setAttribute("data-testid", testid);
+  b.title = titel;
+  b.textContent = tekst;
+  b.style.cssText =
+    "margin-left:6px;font:600 11px system-ui,sans-serif;line-height:1;padding:3px 7px;" +
+    "border-radius:999px;border:1px dashed currentColor;background:transparent;" +
+    "color:inherit;opacity:.55;cursor:pointer;vertical-align:middle;";
+  b.addEventListener("mouseenter", () => (b.style.opacity = "1"));
+  b.addEventListener("mouseleave", () => (b.style.opacity = ".55"));
+  return b;
+}
+
+/** Draw «+» after the last member and «×» on each. Idempotent. */
+export function renderListControls(): void {
+  fjernListeKnapper();
+  if (!editingActive) return;
+  for (const { arrayPath, els } of collectLists().values()) {
+    const sidste = els[els.length - 1];
+    if (!sidste) continue;
+
+    els.forEach((el) => {
+      const x = knap(`inline-list-remove-${arrayPath}-${parseListItemPath(el.dataset.cmsField!)!.index}`, "×", "Fjern");
+      x.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        bekraeftFjern(x, el, arrayPath);
+      });
+      el.after(x);
+    });
+
+    const plus = knap(`inline-list-add-${arrayPath}`, "+", "Tilføj");
+    plus.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      let nyIndex: number | null = null;
+      const ok = await muterListe(sidste, arrayPath, (data) => {
+        nyIndex = addListItem(data, arrayPath);
+        return nyIndex !== null;
+      });
+      if (!ok || nyIndex === null) return;
+      // Clone the last member so the new one inherits its markup + classes, then
+      // point it at the new index and put the caret in it: adding and writing is
+      // ONE movement, not two.
+      const ny = sidste.cloneNode(false) as HTMLElement;
+      ny.textContent = "";
+      ny.dataset.cmsField = `${arrayPath}.${nyIndex}`;
+      sidste.parentElement?.insertBefore(ny, plus);
+      wiredFields.delete(ny);
+      wireField(ny, stateToken!, stateOptions!);
+      renderListControls();
+      ny.setAttribute("contenteditable", "true");
+      ny.dataset.cmsOriginalValue = "";
+      ny.focus();
+    });
+    sidste.parentElement?.appendChild(plus);
+  }
+}
+
+/** House pattern: «Fjern? [Ja] [Nej]» — never a click that deletes on its own. */
+function bekraeftFjern(trigger: HTMLElement, el: HTMLElement, arrayPath: string): void {
+  const index = parseListItemPath(el.dataset.cmsField!)!.index;
+  const wrap = document.createElement("span");
+  wrap.setAttribute("data-cms-list-btn", "");
+  wrap.style.cssText = "margin-left:6px;white-space:nowrap;vertical-align:middle;";
+  const label = document.createElement("span");
+  label.textContent = "Fjern?";
+  label.style.cssText = "font:500 .65rem system-ui,sans-serif;color:#e5484d;padding:0 2px;";
+  const ja = knap("inline-list-remove-yes", "Ja", "Fjern");
+  ja.style.cssText += "background:#e5484d;color:#fff;border:none;";
+  const nej = knap("inline-list-remove-no", "Nej", "Behold");
+  nej.style.opacity = "1";
+  ja.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const ok = await muterListe(el, arrayPath, (data) => removeListItem(data, arrayPath, index));
+    if (!ok) return wrap.remove();
+    // Renumber the survivors BEFORE dropping the node, so no element keeps an
+    // index that now belongs to its neighbour.
+    const soeskende = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-cms-list-add][data-cms-field]"),
+    ).filter((n) => n !== el);
+    const nye = renumberAfterRemoval(soeskende.map((n) => n.dataset.cmsField!), arrayPath, index);
+    soeskende.forEach((n, i) => (n.dataset.cmsField = nye[i]!));
+    el.remove();
+    renderListControls();
+  });
+  nej.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    wrap.remove();
+    renderListControls();
+  });
+  wrap.append(label, ja, nej);
+  trigger.replaceWith(wrap);
 }
