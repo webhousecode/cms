@@ -28,7 +28,24 @@ export type LocaleDoc = {
 };
 
 export type ChangedFieldPlan =
-  | { translate: false; reason: string }
+  | {
+      translate: false;
+      reason: string;
+      /**
+       * TRUE only when the sole thing missing is the sibling document — the one
+       * case where falling back to the whole-document route is right, because
+       * that route CREATES it.
+       *
+       * A boolean rather than the caller matching on `reason` text. The first
+       * version did match the text (`reason.startsWith("no ")`) and three
+       * different reasons begin that way: "no target locale", "no en sibling"
+       * and "no translatable field changed". So a DELIBERATE refusal — a
+       * changed date, say — triggered a full re-translation of the entire
+       * document, which is exactly the damage this module exists to prevent.
+       * Caught in production by the end-to-end check, not by a test.
+       */
+      missingSibling: boolean;
+    }
   | {
       translate: true;
       /** The sibling to write into. */
@@ -68,7 +85,7 @@ export function planChangedFieldTranslation(args: {
 }): ChangedFieldPlan {
   const { source, changed, collection, siblings, targetLocale, defaultLocale } = args;
 
-  if (!args.autoRetranslateOnUpdate) return { translate: false, reason: "auto-retranslate is off" };
+  if (!args.autoRetranslateOnUpdate) return refuse("auto-retranslate is off");
 
   // The circular guard runs FIRST, and the order is load-bearing rather than
   // stylistic. Asking "may this source propagate at all?" before "is there a
@@ -79,22 +96,22 @@ export function planChangedFieldTranslation(args: {
   // test now pins the REASON, not just the refusal.
   const sourceLocale = source.locale || defaultLocale;
   if (sourceLocale !== defaultLocale) {
-    return { translate: false, reason: `source locale ${sourceLocale} is not the default` };
+    return refuse(`source locale ${sourceLocale} is not the default`);
   }
 
   if (!targetLocale || targetLocale === defaultLocale) {
-    return { translate: false, reason: "no target locale" };
+    return refuse("no target locale");
   }
 
   const group = source.translationGroup;
-  if (!group) return { translate: false, reason: "source has no translationGroup" };
+  if (!group) return refuse("source has no translationGroup");
 
   const target = siblings.find(
     (d) => d.translationGroup === group && d.locale === targetLocale && d.id !== source.id,
   );
   // No sibling is NORMAL — an article that has never been translated is not an
   // error, so this does nothing rather than creating a page nobody asked for.
-  if (!target) return { translate: false, reason: `no ${targetLocale} sibling` };
+  if (!target) return { translate: false, reason: `no ${targetLocale} sibling`, missingSibling: true };
 
   const byName = new Map<string, FieldConfig>(
     ((collection?.fields ?? []) as FieldConfig[]).map((f) => [f.name, f]),
@@ -125,9 +142,14 @@ export function planChangedFieldTranslation(args: {
   }
 
   if (Object.keys(fields).length === 0) {
-    return { translate: false, reason: "no translatable field changed" };
+    return refuse("no translatable field changed");
   }
   return { translate: true, target, fields };
+}
+
+/** A deliberate refusal: nothing is missing, so nothing should be created. */
+function refuse(reason: string): ChangedFieldPlan {
+  return { translate: false, reason, missingSibling: false };
 }
 
 function sameStringArray(a: string[], b: unknown): boolean {

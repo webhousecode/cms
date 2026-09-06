@@ -403,7 +403,13 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
                   // No sibling yet → fall back to the whole-document route,
                   // which creates it. Every other reason is a deliberate
                   // refusal and must NOT trigger a full re-translation.
-                  if (!r.reason?.startsWith("no ")) {
+                  //
+                  // A FLAG, not the reason text. The first version matched
+                  // `reason.startsWith("no ")`, and three reasons begin that
+                  // way — so "no translatable field changed", a deliberate
+                  // refusal, re-translated the whole document instead of doing
+                  // nothing. Measured in production, not caught by a test.
+                  if (!r.missingSibling) {
                     console.log(`[auto-translate] ${collection}/${newSlug} → ${targetLocale}: skipped (${r.reason})`);
                     return;
                   }

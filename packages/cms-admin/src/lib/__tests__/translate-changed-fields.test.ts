@@ -195,6 +195,48 @@ describe("planChangedFieldTranslation — the guards", () => {
   });
 });
 
+describe("missingSibling — only ONE refusal may trigger a full re-translation", () => {
+  // This suite exists because of a real production defect. The route matched
+  // `reason.startsWith("no ")` to decide whether to fall back to the
+  // whole-document route, and THREE reasons begin that way. So a changed date —
+  // refused on purpose — re-translated the entire document and overwrote the
+  // sibling: exactly the damage this module was built to prevent. The end-to-end
+  // check found it; no test did. These make the distinction structural.
+
+  it("a genuinely missing sibling flags for fallback", () => {
+    const plan = planChangedFieldTranslation({ ...base, siblings: [da], changed: { title: "Ny titel" } });
+    expect(plan.translate).toBe(false);
+    if (plan.translate) return;
+    expect(plan.missingSibling).toBe(true);
+  });
+
+  it.each([
+    ["the switch is off", { autoRetranslateOnUpdate: false }, { title: "Ny titel" }],
+    ["nothing translatable changed", {}, { publishedAt: "2026-09-06" }],
+    ["a non-translatable type", {}, { layout: "Wide columns" }],
+    ["an unchanged value", {}, { title: "Gammel titel" }],
+    ["a non-prose value", {}, { canonicalUrl: "https://broberg.ai/x" }],
+  ])("a deliberate refusal (%s) must NOT flag for fallback", (_label, extra, changed) => {
+    const plan = planChangedFieldTranslation({ ...base, ...extra, changed });
+    expect(plan.translate).toBe(false);
+    if (plan.translate) return;
+    expect(plan.missingSibling).toBe(false);
+  });
+
+  it("an edit on a translated page must NOT flag for fallback", () => {
+    // The worst one: this would create a Danish document from the English page.
+    const plan = planChangedFieldTranslation({
+      ...base,
+      source: en,
+      changed: { title: "New title" },
+      targetLocale: "da",
+    });
+    expect(plan.translate).toBe(false);
+    if (plan.translate) return;
+    expect(plan.missingSibling).toBe(false);
+  });
+});
+
 describe("mergeTranslatedFields — the sibling's other fields survive", () => {
   it("writes the translated field and leaves every other one byte-for-byte", () => {
     const merged = mergeTranslatedFields(

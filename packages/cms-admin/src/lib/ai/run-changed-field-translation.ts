@@ -21,6 +21,8 @@ export type ChangedFieldResult = {
   ok: boolean;
   /** Why nothing happened, when nothing happened. Logged, never thrown. */
   reason?: string;
+  /** Only the sibling was missing — the one case worth falling back for. */
+  missingSibling?: boolean;
   targetSlug?: string;
   fields?: string[];
 };
@@ -59,7 +61,7 @@ export async function runChangedFieldTranslation(args: {
       autoRetranslateOnUpdate: args.autoRetranslateOnUpdate,
     });
 
-    if (!plan.translate) return { ok: false, reason: plan.reason };
+    if (!plan.translate) return { ok: false, reason: plan.reason, missingSibling: plan.missingSibling };
 
     const sourceLang = LOCALE_LABELS[args.defaultLocale] ?? args.defaultLocale;
     const targetLang = LOCALE_LABELS[args.targetLocale] ?? args.targetLocale;
