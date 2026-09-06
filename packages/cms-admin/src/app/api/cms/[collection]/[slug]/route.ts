@@ -363,7 +363,13 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
         const { readSiteConfig } = await import("@/lib/site-config");
         const siteConfig = await readSiteConfig();
         const docLocale = updated?.locale || siteConfig.locales[0] || "";
-        const isDefaultLocale = docLocale === (siteConfig.defaultLocale || siteConfig.locales[0] || "");
+        // The SITE's default locale, not this document's own. Passing docLocale
+        // to the planner below made its "source is not the default locale"
+        // guard structurally dead: `sourceLocale !== defaultLocale` compares a
+        // value with itself and can never fire. The guard is what stops an
+        // English edit translating back into Danish and overwriting it.
+        const siteDefaultLocale = siteConfig.defaultLocale || siteConfig.locales[0] || "";
+        const isDefaultLocale = docLocale === siteDefaultLocale;
         const targetLocales = isDefaultLocale
           ? siteConfig.locales.filter((l: string) => l !== docLocale)
           : [];
@@ -393,7 +399,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
                 changed: (body.data ?? {}) as Record<string, unknown>,
                 previousData: (doc.data ?? {}) as Record<string, unknown>,
                 targetLocale,
-                defaultLocale: docLocale,
+                defaultLocale: siteDefaultLocale,
                 autoRetranslateOnUpdate: true, // gated by shouldTranslate above
               })
                 .then((r) => {

@@ -6,6 +6,8 @@
  * call rather than forty lines of orchestration.
  */
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { getActiveSiteEntry } from "@/lib/site-paths";
+import { dispatchRevalidation } from "@/lib/revalidation";
 import { getAI, mistralModel } from "@/lib/ai/client";
 import { getModel } from "@/lib/ai/model-resolver";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
@@ -115,7 +117,31 @@ export async function runChangedFieldTranslation(args: {
     const requested = Object.keys(plan.fields);
     const mergedData = mergeTranslatedFields(plan.target.data ?? {}, translated, requested);
 
-    await cms.content.update(args.collection, plan.target.id, { data: mergedData });
+    const skrevet = await cms.content.update(args.collection, plan.target.id, { data: mergedData });
+
+    // PUSH DEN TIL SITET. Uden dette står oversættelsen i CMS'et og siden viser
+    // den gamle tekst — målt på broberg.ai 6/9: den danske side var opdateret
+    // (Christians egen redigering udløste et push gennem PATCH-ruten), mens den
+    // engelske blev ved med at vise den forrige udgave i timevis. Fra hans stol
+    // var funktionen derfor virkningsløs, selvom begge dokumenter i CMS'et var
+    // rigtige. Den fulde oversættelses-rute har altid gjort det; denne glemte det.
+    try {
+      const site = await getActiveSiteEntry();
+      if (site?.revalidateUrl) {
+        await dispatchRevalidation(
+          site,
+          {
+            collection: args.collection,
+            slug: plan.target.slug,
+            action: "updated",
+            document: (skrevet ?? plan.target) as unknown as Record<string, unknown>,
+          },
+          (colConfig as { urlPrefix?: string } | undefined)?.urlPrefix,
+        );
+      }
+    } catch (err) {
+      console.error("[auto-translate] push to site failed (non-fatal):", err);
+    }
 
     return { ok: true, targetSlug: plan.target.slug, fields: requested };
   } catch (err) {
