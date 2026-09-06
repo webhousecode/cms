@@ -61,7 +61,23 @@ export async function runChangedFieldTranslation(args: {
       autoRetranslateOnUpdate: args.autoRetranslateOnUpdate,
     });
 
-    if (!plan.translate) return { ok: false, reason: plan.reason, missingSibling: plan.missingSibling };
+    if (!plan.translate) {
+      // Say WHY the lookup failed, not just that it did. "no sibling" was
+      // reported twice for a sibling that provably exists, and the message
+      // could not tell a missing document from a document whose fields are not
+      // where this code looks for them.
+      if (plan.missingSibling) {
+        const grp = args.source.translationGroup;
+        const medGruppe = siblings.filter((d) => d.translationGroup === grp);
+        console.log(
+          `[auto-translate] lookup: ${siblings.length} docs in ${args.collection}, ` +
+            `source.translationGroup=${grp ?? "(none)"}, ` +
+            `${medGruppe.length} share it [${medGruppe.map((d) => `${d.locale ?? "?"}:${d.slug}`).join(", ")}], ` +
+            `looking for locale=${args.targetLocale}, source.id=${args.source.id}`,
+        );
+      }
+      return { ok: false, reason: plan.reason, missingSibling: plan.missingSibling };
+    }
 
     const sourceLang = LOCALE_LABELS[args.defaultLocale] ?? args.defaultLocale;
     const targetLang = LOCALE_LABELS[args.targetLocale] ?? args.targetLocale;
