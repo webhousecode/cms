@@ -121,7 +121,28 @@ export function planChangedFieldTranslation(args: {
 
   for (const [name, value] of Object.entries(changed)) {
     const def = byName.get(name);
-    if (!def || !TRANSLATABLE_TYPES.has(def.type)) continue;
+
+    // A field the SCHEMA does not know is judged on its value instead of
+    // skipped. Measured on broberg.ai 2026-09-06: all nine collections declare
+    // ZERO fields, so a type lookup answers "unknown" for every field on the
+    // site — including `title`. Skipping the unknown meant the feature could
+    // never fire there, and the same blindness sits in the whole-document
+    // route, where it was simply never noticed because the switch was off.
+    //
+    // Deliberately a fallback, not the rule: a declared type is a FACT and a
+    // value is a GUESS, so the schema still wins wherever it has an answer.
+    if (!def) {
+      if (typeof value !== "string") continue;
+      const t = value.trim();
+      if (t.length === 0) continue;
+      if (UNDECLARED_METADATA.test(name)) continue;
+      if (isNonProse(name, t)) continue;
+      if (typeof stored[name] === "string" && (stored[name] as string).trim() === t) continue;
+      fields[name] = value;
+      continue;
+    }
+
+    if (!TRANSLATABLE_TYPES.has(def.type)) continue;
 
     if (def.type === "tags") {
       if (!Array.isArray(value)) continue;
@@ -146,6 +167,26 @@ export function planChangedFieldTranslation(args: {
   }
   return { translate: true, target, fields };
 }
+
+/**
+ * Metadata field names that must never be translated when the schema cannot
+ * tell us their type. `isNonProse` already covers the ones whose VALUE gives
+ * them away — a URL, a path, a hex colour, a lowercase-hyphenated token, and
+ * names like href/slug/id. These are the ones whose value looks like ordinary
+ * prose while the field is plainly not:
+ *
+ *   author "broberg.ai"  ·  a byline is a name, not a sentence
+ *   locale "da"          ·  translating it would repoint the document
+ *   status "published"   ·  a state machine value
+ *
+ * Kept SHORT on purpose. Every name added here is a field that can never be
+ * translated on a schema-less site, and the earlier version of the non-prose
+ * list is the cautionary tale: it swallowed "Services" and "About" — real
+ * navigation labels — by being too eager. A missed metadata field is a wrong
+ * word in one place; an over-broad rule silently refuses to translate the site.
+ */
+const UNDECLARED_METADATA =
+  /^(author|byline|locale|lang|language|status|state|collection|createdAt|updatedAt|publishedAt|date|datetime|timestamp|category|tag|version|sku|code|currency|email|phone|tel)$/i;
 
 /** A deliberate refusal: nothing is missing, so nothing should be created. */
 function refuse(reason: string): ChangedFieldPlan {

@@ -195,6 +195,53 @@ describe("planChangedFieldTranslation — the guards", () => {
   });
 });
 
+describe("a schema with NO declared fields — measured on broberg.ai", () => {
+  // All nine collections on that site declare zero fields, so a type lookup
+  // answers "unknown" for everything, `title` included. Skipping the unknown
+  // meant the feature could never fire there at all.
+  const tomt = { name: "posts", fields: [] } as unknown as CollectionConfig;
+  const uden = { ...base, collection: tomt };
+
+  it("translates a prose field the schema does not know", () => {
+    const plan = planChangedFieldTranslation({ ...uden, changed: { title: "Ny titel" } });
+    expect(plan.translate).toBe(true);
+    if (!plan.translate) return;
+    expect(plan.fields.title).toBe("Ny titel");
+  });
+
+  it("still refuses a URL, a path and a slug-like token", () => {
+    for (const v of ["https://broberg.ai/x", "/da/blog/x", "ai-metode"]) {
+      const plan = planChangedFieldTranslation({ ...uden, changed: { someField: v } });
+      expect(plan.translate).toBe(false);
+    }
+  });
+
+  it.each(["author", "locale", "status", "publishedAt", "category", "email"])(
+    "still refuses the metadata field %s even when its value reads as prose",
+    (navn) => {
+      const plan = planChangedFieldTranslation({ ...uden, changed: { [navn]: "Christian Broberg" } });
+      expect(plan.translate).toBe(false);
+    },
+  );
+
+  it("a DECLARED type still wins over the value guess", () => {
+    // `layout` is a select carrying an ordinary phrase. With the schema present
+    // it must stay refused — the fallback is for absence, not for override.
+    const plan = planChangedFieldTranslation({ ...base, changed: { layout: "Wide columns" } });
+    expect(plan.translate).toBe(false);
+  });
+
+  it("a non-string value is never guessed at", () => {
+    const plan = planChangedFieldTranslation({ ...uden, changed: { readTime: 7, featured: true } });
+    expect(plan.translate).toBe(false);
+  });
+
+  it("an unchanged value is still not an edit", () => {
+    const plan = planChangedFieldTranslation({ ...uden, changed: { title: "Gammel titel" } });
+    expect(plan.translate).toBe(false);
+  });
+});
+
 describe("missingSibling — only ONE refusal may trigger a full re-translation", () => {
   // This suite exists because of a real production defect. The route matched
   // `reason.startsWith("no ")` to decide whether to fall back to the
