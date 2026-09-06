@@ -590,7 +590,7 @@ function wireField(el: HTMLElement, token: string, options: ResolvedOptions): vo
     // TEMPLATE form (chips → their tokens) so the saved value keeps its tokens,
     // and lock the chips so each edits as one unbreakable unit.
     const tokenSafe = hasTokenChips(el);
-    el.dataset.cmsOriginalValue = tokenSafe ? serializeTokenSafe(el) : (el.textContent ?? "");
+    el.dataset.cmsOriginalValue = tokenSafe ? serializeTokenSafe(el) : plainTextWithBreaks(el);
     el.setAttribute("contenteditable", "true");
     if (tokenSafe) lockTokenChips(el);
     el.focus();
@@ -599,7 +599,7 @@ function wireField(el: HTMLElement, token: string, options: ResolvedOptions): vo
   el.addEventListener("blur", () => {
     el.removeAttribute("contenteditable");
     const original = el.dataset.cmsOriginalValue ?? "";
-    const current = hasTokenChips(el) ? serializeTokenSafe(el) : (el.textContent ?? "");
+    const current = hasTokenChips(el) ? serializeTokenSafe(el) : plainTextWithBreaks(el);
     if (current.trim() === original.trim()) return;
     void saveField(el, current.trim(), token, options);
   });
@@ -611,11 +611,59 @@ function wireField(el: HTMLElement, token: string, options: ResolvedOptions): vo
   });
 
   el.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      el.blur();
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    // Shift+Enter = a line break INSIDE the value; Enter alone still commits.
+    //
+    // Without this a plain field could not hold a line break at all: Enter was
+    // the only handling and it ended the edit, so an editor who wanted two
+    // paragraphs in one field had no keystroke that would produce one. Reported
+    // by Christian on broberg.ai, 6 Sep 2026 — a `prose` block whose text is a
+    // plain string, rendered in a `.lead` paragraph that already carries
+    // `white-space: pre-line`. The page could show the break; nothing could
+    // type it.
+    if (e.shiftKey) {
+      document.execCommand("insertLineBreak");
+      return;
     }
+    el.blur();
   });
+}
+
+/**
+ * A plain field's value, with its line breaks intact.
+ *
+ * `textContent` drops <br> entirely — a two-paragraph value read through it
+ * comes back as one run of text, and saving then DESTROYS the break that was
+ * already stored. So this is not only how a new break gets in; it is what stops
+ * an existing one being silently flattened the next time anyone edits the field.
+ *
+ * Deliberately narrow: <br> becomes "\n" and text nodes come through verbatim.
+ * A plain field is a string, not a document — anything richer belongs in a
+ * richtext field, which has its own serializer.
+ */
+export function plainTextWithBreaks(el: HTMLElement): string {
+  let out = "";
+  const walk = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      out += node.textContent ?? "";
+      return;
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    const tag = (node as HTMLElement).tagName.toLowerCase();
+    if (tag === "br") {
+      out += "\n";
+      return;
+    }
+    // A browser may wrap a new line in a <div>/<p> instead of using <br>
+    // (Chrome does this when the editing host is a block element). Treat the
+    // start of such a child as a break, so both shapes read back the same.
+    const blocky = tag === "div" || tag === "p";
+    if (blocky && out !== "" && !out.endsWith("\n")) out += "\n";
+    node.childNodes.forEach(walk);
+  };
+  el.childNodes.forEach(walk);
+  return out;
 }
 
 /* ─── Rich-text mode (article bodies) ──────────────────────────────────────
