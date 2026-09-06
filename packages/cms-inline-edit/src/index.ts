@@ -664,6 +664,11 @@ export function plainTextWithBreaks(el: HTMLElement): string {
       return;
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return;
+    // F157.16: «×» sidder INDE i pillen, altså inde i det felt der gemmes. Uden
+    // dette ville knappens tegn blive en del af værdien og «Second Brain» blive
+    // gemt som «Second Brain×» — stille, og først synligt næste gang nogen læste
+    // feltet. En knap er betjening, ikke indhold.
+    if ((node as HTMLElement).hasAttribute?.("data-cms-list-btn")) return;
     const tag = (node as HTMLElement).tagName.toLowerCase();
     if (tag === "br") {
       out += "\n";
@@ -2405,6 +2410,9 @@ function knap(testid: string, tekst: string, titel: string): HTMLButtonElement {
   b.setAttribute("data-testid", testid);
   b.title = titel;
   b.textContent = tekst;
+  // contentEditable=false: markøren må ikke kunne lande i knappen når den sidder
+  // inde i et felt der er ved at blive redigeret.
+  b.contentEditable = "false";
   b.style.cssText =
     "margin-left:6px;font:600 11px system-ui,sans-serif;line-height:1;padding:3px 7px;" +
     "border-radius:999px;border:1px dashed currentColor;background:transparent;" +
@@ -2424,12 +2432,21 @@ export function renderListControls(): void {
 
     els.forEach((el) => {
       const x = knap(`inline-list-remove-${arrayPath}-${parseListItemPath(el.dataset.cmsField!)!.index}`, "×", "Fjern");
+      // INDE i pillen, ikke ved siden af: som nabo lignede den sin egen pille og
+      // gjorde rækken ulæselig (Christians skærmbillede 6/9). Diskret indtil man
+      // peger på pillen.
+      x.style.cssText +=
+        "margin:0 -2px 0 6px;padding:0;width:14px;height:14px;border:none;" +
+        "border-radius:50%;opacity:0;transition:opacity .12s;font-size:12px;";
+      el.addEventListener("mouseenter", () => (x.style.opacity = ".5"));
+      el.addEventListener("mouseleave", () => (x.style.opacity = "0"));
+      x.addEventListener("mouseenter", () => (x.style.opacity = "1"));
       x.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         bekraeftFjern(x, el, arrayPath);
       });
-      el.after(x);
+      el.appendChild(x);
     });
 
     const plus = knap(`inline-list-add-${arrayPath}`, "+", "Tilføj");

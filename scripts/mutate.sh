@@ -17,7 +17,11 @@
 # Derfor: filen SKAL ændre sig, ellers stopper vi frem for at aflevere et tal.
 set -euo pipefail
 
-fil="${1:?fil}"; find_s="${2:?find}"; erstat="${3:?erstat}"; shift 3
+fil="${1:?fil}"; find_s="${2:?find}"
+# ${3?...} og IKKE ${3:?...}: en TOM erstatning er en gyldig mutation (slet
+# linjen), og med kolon afviste scriptet netop den. Fanget 6/9 da jeg forsøgte
+# at fjerne en vagt-linje og fik «3: erstat» i stedet for en måling.
+erstat="${3?erstat}"; shift 3
 [ "${1:-}" = "--" ] && shift
 [ $# -gt 0 ] || { echo "mangler testkommando efter --" >&2; exit 2; }
 

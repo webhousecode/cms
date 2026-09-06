@@ -64,4 +64,18 @@ describe("plainTextWithBreaks", () => {
     p.textContent = stored;
     expect(plainTextWithBreaks(p)).toBe(stored);
   });
+
+  it("tager ALDRIG en listeknap med som en del af værdien", () => {
+    // «×» sidder inde i pillen, altså inde i det felt der gemmes. Uden filtret
+    // ville «Second Brain» blive gemt som «Second Brain×» — stille, og først
+    // synligt næste gang nogen læste feltet. Det er den fejlform der gør en
+    // knap inde i et redigerbart felt farlig, og derfor har den sin egen prøve.
+    const e = el('Second Brain<button data-cms-list-btn contenteditable="false">×</button>');
+    expect(plainTextWithBreaks(e).trim()).toBe("Second Brain");
+  });
+
+  it("filtrerer knappen uanset hvor i feltet den står", () => {
+    const e = el('<button data-cms-list-btn>×</button>Foran<br>Bagved');
+    expect(plainTextWithBreaks(e)).toBe("ForanBagved".replace("Foran", "Foran\n"));
+  });
 });
