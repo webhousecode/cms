@@ -392,8 +392,26 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
             // field against what is stored, so an unchanged one is not an edit
             // of it and never reaches the model.
             const { runChangedFieldTranslation } = await import("@/lib/ai/run-changed-field-translation");
+            // WHICH TENANT — captured HERE, while the request context is still
+            // alive, and carried into the background work explicitly.
+            //
+            // The translation runs on after this response is decided. Every
+            // helper it calls (getAdminCms, getAdminConfig, getActiveSiteEntry)
+            // resolves the tenant from cookies, and `cookies()` throws once the
+            // request context is gone — whereupon those helpers fall back to the
+            // registry's DEFAULT site. That failure is silent and plausible: the
+            // translation would be written into, and pushed to, someone else's
+            // site instead of erroring. Measured working today on Fly, where the
+            // async context does survive; this makes it not depend on that.
+            const { loadRegistry } = await import("@/lib/site-registry");
+            const { resolveActiveSiteIds } = await import("@/lib/site-paths");
+            const { withSiteContext } = await import("@/lib/site-context");
+            const reg = await loadRegistry();
+            const tenant = reg ? await resolveActiveSiteIds(reg) : null;
+            const iTenant = <T,>(fn: () => Promise<T>) =>
+              tenant ? withSiteContext(tenant, fn) : fn();
             for (const targetLocale of targetLocales) {
-              runChangedFieldTranslation({
+              iTenant(() => runChangedFieldTranslation({
                 collection,
                 source: updated as never,
                 changed: (body.data ?? {}) as Record<string, unknown>,
@@ -420,14 +438,17 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
                     console.log(`[auto-translate] ${collection}/${newSlug} → ${targetLocale}: skipped (${r.reason})`);
                     return;
                   }
-                  fetch(`${baseUrl}/api/cms/${collection}/${newSlug}/translate`, {
+                  // ?site= er den ENESTE måde et token-kald kan pege på en
+                  // kunde — uden det opløser proxy'en til registrets default.
+                  const site = tenant?.siteId ? `?site=${encodeURIComponent(tenant.siteId)}` : "";
+                  fetch(`${baseUrl}/api/cms/${collection}/${newSlug}/translate${site}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken || "" },
                     body: JSON.stringify({ targetLocale, publish: false }),
                   }).catch(() => {});
                   console.log(`[auto-translate] ${collection}/${newSlug} → ${targetLocale}: creating the missing sibling`);
                 })
-                .catch(() => {}); // fire-and-forget: never fail the save
+                .catch(() => {})); // fire-and-forget: never fail the save
             }
           }
         }

@@ -9,7 +9,7 @@
  */
 import path from "node:path";
 import { cookies } from "next/headers";
-import { loadRegistry, findSite, findOrg, getDefaultSite, type SiteEntry } from "./site-registry";
+import { loadRegistry, findSite, findOrg, getDefaultSite, type SiteEntry, type Registry } from "./site-registry";
 
 /** Thrown when active org has no sites — caught by layout to show OrgSidebar */
 export class EmptyOrgError extends Error {
@@ -39,6 +39,37 @@ export interface SitePaths {
 }
 
 /**
+ * Which tenant is this call for: request-scoped override > cookies > registry default.
+ *
+ * Exported because work that OUTLIVES a request — a translation kicked off after
+ * the response is decided, a background job — must capture the ids WHILE the
+ * request context is still alive and carry them itself. `cookies()` throws once
+ * that context is gone and the catch below then answers with the registry
+ * DEFAULT site: a silent, plausible-looking wrong tenant rather than an error.
+ * Anything running outside a request should resolve the ids here first and wrap
+ * itself in `withSiteContext({ orgId, siteId }, …)`.
+ */
+export async function resolveActiveSiteIds(
+  registry: Registry,
+): Promise<{ orgId: string; siteId: string }> {
+  const { getSiteContextOverride } = await import("./site-context");
+  const override = getSiteContextOverride();
+  if (override?.orgId && override?.siteId) {
+    return { orgId: override.orgId, siteId: override.siteId };
+  }
+  try {
+    const cookieStore = await cookies();
+    return {
+      orgId: cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId,
+      siteId: cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId,
+    };
+  } catch {
+    // cookies() throws outside a request context (instrumentation, background work).
+    return { orgId: registry.defaultOrgId, siteId: registry.defaultSiteId };
+  }
+}
+
+/**
  * Get paths for the currently active site.
  * Works in both single-site and multi-site mode.
  */
@@ -63,25 +94,7 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
 
   // Multi-site mode — check request-scoped override first (token-based
   // API callers use this), then fall back to cookies (session users).
-  const { getSiteContextOverride } = await import("./site-context");
-  const override = getSiteContextOverride();
-
-  let orgId: string;
-  let siteId: string;
-  if (override?.orgId && override?.siteId) {
-    orgId = override.orgId;
-    siteId = override.siteId;
-  } else {
-    try {
-      const cookieStore = await cookies();
-      orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
-      siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
-    } catch {
-      // cookies() may throw outside request context (e.g. instrumentation)
-      orgId = registry.defaultOrgId;
-      siteId = registry.defaultSiteId;
-    }
-  }
+  const { orgId, siteId } = await resolveActiveSiteIds(registry);
 
   // Guard: if active org has no sites, don't fall through to another org's site
   const activeOrg = findOrg(registry, orgId);
@@ -139,25 +152,7 @@ export async function getActiveSiteEntry(): Promise<SiteEntry | null> {
   const registry = await loadRegistry();
   if (!registry) return null;
 
-  // Same precedence as getActiveSitePaths: request-scoped override > cookies > default.
-  const { getSiteContextOverride } = await import("./site-context");
-  const override = getSiteContextOverride();
-
-  let orgId: string;
-  let siteId: string;
-  if (override?.orgId && override?.siteId) {
-    orgId = override.orgId;
-    siteId = override.siteId;
-  } else {
-    try {
-      const cookieStore = await cookies();
-      orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
-      siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
-    } catch {
-      orgId = registry.defaultOrgId;
-      siteId = registry.defaultSiteId;
-    }
-  }
+  const { orgId, siteId } = await resolveActiveSiteIds(registry);
 
   // Guard: if active org has no sites, return null (don't leak another org's site)
   const activeOrg = findOrg(registry, orgId);
