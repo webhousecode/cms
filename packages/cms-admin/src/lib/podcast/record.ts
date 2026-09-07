@@ -106,7 +106,16 @@ export async function indspil(args: {
     const adapter = await getMediaAdapter();
     const filnavn = `podcast-${args.afsnitSlug}-${noegle}.mp3`;
     const resultat = await adapter.uploadFile(filnavn, Buffer.from(lyd), "podcast");
-    lydUrl = adapter.type === "filesystem" ? `/uploads${resultat.url}` : resultat.url;
+    // ADAPTERENS URL BRUGES UÆNDRET. Den første udgave satte «/uploads» foran
+    // for filesystem-adapteren — men den returnerer ALLEREDE «/uploads/...»,
+    // så resultatet blev «/uploads/uploads/...», som svarer 404.
+    //
+    // Målt 7/9 i F189.7's første rigtige indspilning: alt så grønt ud —
+    // HTTP 200, tilstand «indspillet», en 5,5 minutters mp3 på disken, prisen
+    // gemt — og den ene værdi en lytter skal bruge, pegede på ingenting.
+    // Præcis den slags fejl enhedsprøverne ikke kan se, fordi de ikke spørger
+    // om filen kan hentes.
+    lydUrl = resultat.url;
   } catch (err) {
     // Lyden ER lavet og betalt, men kunne ikke gemmes. Sig det præcist frem for
     // at melde en generisk fejl — pengene er brugt, og det skal den der læser

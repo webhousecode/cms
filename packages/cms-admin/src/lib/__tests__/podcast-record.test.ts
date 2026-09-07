@@ -105,6 +105,32 @@ describe("rækkefølgen — pengene må ikke bruges før spærren er passeret", 
     expect(kilde).not.toMatch(/elevenlabs\.(com|io)|api\.elevenlabs/);
   });
 
+  it("adapterens url bruges UÆNDRET — ingen /uploads foran", () => {
+    // Den fejl der faktisk skete: `/uploads${resultat.url}` gav
+    // «/uploads/uploads/...», som svarer 404. Filen fandtes, prisen var gemt,
+    // tilstanden var «indspillet» — og feltet en lytter skal bruge, pegede
+    // på ingenting. Alt så grønt ud.
+    expect(kilde).toContain("lydUrl = resultat.url;");
+    expect(kilde).not.toMatch(/`\/uploads\$\{/);
+  });
+
+  it("media-adapteren returnerer selv en /uploads-sti (kontrakten der gjorde præfikset forkert)", () => {
+    // Måler den ANDEN halvdel: at antagelsen bag rettelsen holder. Ændrer
+    // filesystem-adapteren sin url-form, skal DENNE prøve fejle — ikke en
+    // lytters afspiller.
+    const adapterKilde = fs.readFileSync(
+      path.join(PKG_ROOT, "src/lib/media/filesystem.ts"),
+      "utf-8",
+    );
+    // HVER url-tildeling skal bruge /uploads, ikke bare én af dem. Første
+    // udgave af denne prøve spurgte «findes der ét sted med /uploads?» — og
+    // filen har TRE, så en mutation af den ene blev grøn. Mutations-tjekket
+    // fangede det; den svagere prøve ville have set ud som dækning.
+    const tildelinger = [...adapterKilde.matchAll(/const urlPath = [^;]+;/g)].map((m) => m[0]);
+    expect(tildelinger.length).toBeGreaterThanOrEqual(3);
+    for (const t of tildelinger) expect(t).toContain("/uploads/");
+  });
+
   it("den FAKTISKE pris gemmes på afsnittet", () => {
     // «Hvad kostede det» skal kunne besvares bagefter, ikke kun estimeres.
     expect(kilde).toMatch(/faktiskPrisUsd: pris/);
