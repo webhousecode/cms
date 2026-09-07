@@ -113,9 +113,27 @@ Discovery søgt 7/9 på «podcast», «tts» og «audio» før planen blev skrev
 |---|---|---|
 | dialog-lyd (to stemmer) | **`@broberg/ai-sdk` · `ai.podcast()`** | findes allerede, ægte dialog-endpoint, omkostning spores pr. kald |
 | manuskript-generering | `ai.chat()` gennem samme SDK | én chokepunkt, så pris og fallback virker |
-| tale-normalisering | broberg-ai-site's `tilTale()` | GENBRUGES, kopieres ikke — ellers vender bindestregs-fejlen tilbage i podcasten |
+| udtale-ordbogen | **sitets egen — motoren VALIDERER den, ejer den ikke** | se rettelsen nedenfor |
 | auth | mobil-ruternes JWT-hjælper | en femte auth-vej er drift |
 | CORS | `forms/[name]`s origin-logik | intet nyt konfigurationsfelt |
+
+### RETTELSE 7/9: udtale-grænsen var sat forkert
+
+Planen sagde at motoren skulle **genbruge** broberg-ai-site's `tilTale()` og
+ordbog. Det opdagede jeg ikke kunne lade sig gøre da jeg skulle bygge F189.3:
+de bor i et andet repo, og cms har ingen afhængighed dertil.
+
+**Og den ville have været forkert hvis den kunne.** En CMS-evne flere sites
+køber sig ind på, må ikke eje ét sites udtale af «harness». Ordbogen er sitets,
+ikke motorens.
+
+Så: **motoren validerer den ordbog den får.** Sitet sender sin egen, og
+før-flyvnings-tjekket svarer om den holder — fx om den indeholder IPA-rækker
+ElevenLabs afviser. Det er samtidig den eneste form der virker headless: et
+site-panel kan spørge om SIN ordbog uden at vi kender den på forhånd.
+
+Bindestregs-fejlen løses dermed hvor den hører til — i sitet, før teksten
+sendes — og motoren siger fra hvis den får noget den ved vil fejle.
 
 **Byg selv:** kun selve motoren (tilstands-maskinen, estimatet,
 før-flyvnings-tjekket, lagringen af lyden) — og den hører i cms, fordi den er en
