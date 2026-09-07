@@ -100,3 +100,23 @@ export function renumberAfterRemoval(
     return `${arrayPath}.${p.index - 1}`;
   });
 }
+
+/**
+ * Do two list items belong to the same DOCUMENT?
+ *
+ * `renumberAfterRemoval` matches on the array path alone — correct for what it
+ * does, and not enough on its own. A page can carry two documents whose lists
+ * share a path (a footer and an article both have `tags`), and renumbering
+ * across that boundary shifts the OTHER document's indices, so its next edit
+ * writes to the wrong element. Silent: nothing looks wrong until a value lands
+ * one slot over.
+ *
+ * The same fact `listKey` encodes for grouping, as a predicate for removal. It
+ * was true of the grouping and false of the removal until a review of F157.16.
+ */
+export function sameDocument(
+  a: { collection?: string | undefined; slug?: string | undefined },
+  b: { collection?: string | undefined; slug?: string | undefined },
+): boolean {
+  return a.collection === b.collection && a.slug === b.slug;
+}

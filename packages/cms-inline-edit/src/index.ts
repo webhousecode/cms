@@ -9,9 +9,11 @@ import { parseTags, mergeTags, primaryDocRef } from "./page-tools";
 import { applyFieldSlice } from "./field-slice";
 import {
   parseListItemPath,
+  listKey,
   addListItem,
   removeListItem,
   renumberAfterRemoval,
+  sameDocument,
 } from "./list-edit";
 import { isDangerousUrl, isExternalHost, isSchemeless, withHttps } from "./link-target";
 export { applyFieldSlice } from "./field-slice";
@@ -2345,8 +2347,10 @@ function collectLists(): Map<string, { arrayPath: string; els: HTMLElement[] }> 
     if (!p) return;
     // collection + slug + the FULL path: a footer and an article can both carry
     // `tags` on one page, and keying on the tail alone would let one list's
-    // buttons write into the other's document.
-    const key = `${col} ${slug} ${p.arrayPath}`;
+    // buttons write into the other's document. Through listKey(), not a second
+    // copy of the format — a duplicated key shape is not wrong the day it is
+    // written, it is wrong the day one of the two is changed.
+    const key = listKey(col, slug, p.arrayPath);
     const g = grupper.get(key) ?? { arrayPath: p.arrayPath, els: [] };
     g.els.push(el);
     grupper.set(key, g);
@@ -2497,9 +2501,24 @@ function bekraeftFjern(trigger: HTMLElement, el: HTMLElement, arrayPath: string)
     if (!ok) return wrap.remove();
     // Renumber the survivors BEFORE dropping the node, so no element keeps an
     // index that now belongs to its neighbour.
+    //
+    // SAME DOCUMENT ONLY. The query returns every opted-in list item on the
+    // page, and renumberAfterRemoval matches on the array path alone — so a
+    // footer and an article that both carry `tags` would have the OTHER
+    // document's indices shifted by this removal, and its next edit would write
+    // to the wrong element. collectLists() already keys on collection + slug for
+    // exactly this reason; the sibling query did not, which made the guard true
+    // of the grouping and false of the removal. Found in review of F157.16.
     const soeskende = Array.from(
       document.querySelectorAll<HTMLElement>("[data-cms-list-add][data-cms-field]"),
-    ).filter((n) => n !== el);
+    ).filter(
+      (n) =>
+        n !== el &&
+        sameDocument(
+          { collection: n.dataset.cmsCollection, slug: n.dataset.cmsSlug },
+          { collection: el.dataset.cmsCollection, slug: el.dataset.cmsSlug },
+        ),
+    );
     const nye = renumberAfterRemoval(soeskende.map((n) => n.dataset.cmsField!), arrayPath, index);
     soeskende.forEach((n, i) => (n.dataset.cmsField = nye[i]!));
     el.remove();

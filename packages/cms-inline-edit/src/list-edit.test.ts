@@ -20,6 +20,7 @@ import {
   addListItem,
   removeListItem,
   renumberAfterRemoval,
+  sameDocument,
 } from "./list-edit";
 
 const doc = () => ({
@@ -126,5 +127,29 @@ describe("renumberAfterRemoval", () => {
 
   it("leaves non-list fields alone", () => {
     expect(renumberAfterRemoval(["titel", "t.2"], "t", 0)).toEqual(["titel", "t.1"]);
+  });
+});
+
+describe("sameDocument", () => {
+  const a = { collection: "platforms", slug: "trail" };
+
+  it("keeps a removal inside its own document", () => {
+    expect(sameDocument(a, { collection: "platforms", slug: "trail" })).toBe(true);
+  });
+
+  it("REFUSES to pair two documents that share a path tail", () => {
+    // The finding this exists for: renumberAfterRemoval matches on the array
+    // path alone, so without this predicate removing a tag from the article
+    // would shift the FOOTER's tag indices in the DOM — and the footer's next
+    // edit would write one slot over. Nothing on screen would say so.
+    expect(sameDocument(a, { collection: "globals", slug: "trail" })).toBe(false);
+    expect(sameDocument(a, { collection: "platforms", slug: "lens" })).toBe(false);
+  });
+
+  it("does not treat two undeclared documents as the same one", () => {
+    // Both undefined compares equal, which is right for a page with a single
+    // undeclared document and wrong for two of them — so the caller must supply
+    // the dataset, and this pins that undefined is not a wildcard.
+    expect(sameDocument({}, { collection: "platforms", slug: "trail" })).toBe(false);
   });
 });
