@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>F012 — Podcast i CMS'et</title>
+<style>
+  :root{
+    --bg:#171717; --card:#1F1F1F; --fg:#FAFAFA; --muted:#898989; --muted-bg:#242424;
+    --border:#2E2E2E; --primary:#F7BB2E; --primary-fg:#0D0D0D; --destructive:#e5484d;
+    --ok:#3fb950; --info:#40c8ff; --radius:.5rem;
+    --f:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0e0e0e;color:var(--fg);font-family:var(--f);font-size:14px;line-height:1.5;padding:28px 20px 60px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:20px;font-weight:650;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:13px;margin-top:6px;max-width:74ch}
+  .tabs{display:flex;gap:4px;margin:22px 0 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);
+    font:600 13px var(--f);padding:9px 14px;cursor:pointer;transition:color .15s,border-color .15s}
+  .tab:hover{color:var(--fg)}
+  .tab[aria-selected="true"]{color:var(--primary);border-bottom-color:var(--primary)}
+  .panel[hidden]{display:none}
+
+  /* --- admin-skal --- */
+  .shell{border:1px solid var(--border);border-radius:calc(var(--radius)*1.4);overflow:hidden;background:var(--bg)}
+  .topbar{display:flex;align-items:center;gap:14px;padding:11px 16px;background:var(--card);border-bottom:1px solid var(--border)}
+  .brand{font-weight:700;font-size:13px}.brand b{color:var(--primary)}
+  .crumb{color:var(--muted);font-size:12.5px}
+  .crumb b{color:var(--fg);font-weight:600}
+  .spacer{flex:1}
+  .site-pill{font-size:11.5px;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+  .body{display:grid;grid-template-columns:190px 1fr;min-height:520px}
+  .side{border-right:1px solid var(--border);padding:12px 8px;background:#1a1a1a}
+  .nav{display:block;color:var(--muted);font-size:13px;padding:7px 10px;border-radius:var(--radius);text-decoration:none}
+  .nav:hover{background:var(--muted-bg);color:var(--fg)}
+  .nav.on{background:var(--muted-bg);color:var(--fg);font-weight:600}
+  .nav .dot{color:var(--primary)}
+  .main{padding:20px 22px}
+
+  .head{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+  .head h2{font-size:17px;font-weight:650}
+  .head p{color:var(--muted);font-size:12.5px;margin-top:3px}
+
+  .btn{font:600 13px var(--f);border-radius:var(--radius);padding:8px 14px;border:1px solid var(--border);
+    background:var(--muted-bg);color:var(--fg);cursor:pointer;transition:filter .15s,transform .08s}
+  .btn:hover{filter:brightness(1.25)} .btn:active{transform:translateY(1px)}
+  .btn.pri{background:var(--primary);color:var(--primary-fg);border-color:transparent}
+  .btn.ghost{background:transparent}
+  .btn[disabled]{opacity:.42;cursor:not-allowed;filter:none;transform:none}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.03em;
+    text-transform:uppercase;padding:0 10px 8px;border-bottom:1px solid var(--border)}
+  td{padding:11px 10px;border-bottom:1px solid #262626;vertical-align:middle}
+  tr:hover td{background:#1c1c1c}
+  .ep-t{font-weight:600}
+  .ep-s{color:var(--muted);font-size:12px;margin-top:2px}
+  .num{font-family:var(--mono);color:var(--muted);font-size:12px}
+
+  .st{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;
+    border-radius:999px;padding:3px 9px;border:1px solid}
+  .st.kladde{color:var(--muted);border-color:var(--border);background:#202020}
+  .st.klar{color:var(--info);border-color:rgba(64,200,255,.35);background:rgba(64,200,255,.1)}
+  .st.godk{color:var(--primary);border-color:rgba(247,187,46,.4);background:rgba(247,187,46,.11)}
+  .st.lyd{color:var(--ok);border-color:rgba(63,185,80,.4);background:rgba(63,185,80,.1)}
+  .st.ude{color:var(--ok);border-color:rgba(63,185,80,.55);background:rgba(63,185,80,.18)}
+
+  .grid{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+  .box{border:1px solid var(--border);border-radius:var(--radius);background:var(--card)}
+  .box-h{padding:10px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
+  .box-h b{font-size:12.5px;font-weight:650}
+  .box-h .n{color:var(--muted);font-size:11.5px;margin-left:auto;font-family:var(--mono)}
+  .box-b{padding:13px}
+
+  /* manuskript */
+  .turn{display:grid;grid-template-columns:74px 1fr;gap:11px;padding:9px;border-radius:var(--radius);
+    border:1px solid transparent}
+  .turn:hover{background:#232323;border-color:var(--border)}
+  .who{font-size:11.5px;font-weight:700;letter-spacing:.02em;padding-top:2px}
+  .who.a{color:var(--primary)} .who.b{color:var(--info)}
+  .who small{display:block;color:var(--muted);font-weight:500;font-size:10.5px;letter-spacing:0;margin-top:1px}
+  .line{font-size:13.3px;line-height:1.62}
+  .turn.edit{background:#232323;border-color:var(--primary)}
+  .turn.edit .line{outline:1px solid rgba(247,187,46,.45);border-radius:4px;padding:5px 7px;background:#1b1b1b}
+  .tools{display:flex;gap:5px;margin-top:7px}
+  .mini{font:600 11px var(--f);border:1px solid var(--border);background:#1b1b1b;color:var(--muted);
+    border-radius:5px;padding:3px 7px;cursor:pointer}
+  .mini:hover{color:var(--fg)}
+  .mini.warn{color:var(--destructive);border-color:rgba(229,72,77,.4)}
+
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:12.5px;border-bottom:1px solid #262626}
+  .kv:last-child{border-bottom:none}
+  .kv span{color:var(--muted)} .kv b{font-weight:600;font-family:var(--mono);font-size:12px}
+
+  .voice{display:flex;align-items:center;gap:9px;padding:8px;border:1px solid var(--border);
+    border-radius:var(--radius);background:#1b1b1b;margin-bottom:8px}
+  .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex:0 0 auto}
+  .av.a{background:rgba(247,187,46,.16);color:var(--primary)}
+  .av.b{background:rgba(64,200,255,.16);color:var(--info)}
+  .voice .nm{font-size:12.5px;font-weight:600}
+  .voice .rl{font-size:11px;color:var(--muted)}
+  .sel{margin-left:auto;font:500 11.5px var(--mono);background:#232323;border:1px solid var(--border);
+    color:var(--fg);border-radius:5px;padding:4px 8px;cursor:pointer}
+
+  .check{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #262626;font-size:12.5px}
+  .check:last-child{border-bottom:none}
+  .ic{flex:0 0 auto;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;margin-top:1px}
+  .ic.ok{background:rgba(63,185,80,.16);color:var(--ok)}
+  .ic.no{background:rgba(229,72,77,.16);color:var(--destructive)}
+  .ic.wait{background:#2a2a2a;color:var(--muted)}
+  .check .t{font-weight:600} .check .d{color:var(--muted);font-size:11.5px;margin-top:2px;line-height:1.45}
+
+  .note{border-left:2px solid var(--primary);background:rgba(247,187,46,.07);padding:10px 12px;
+    border-radius:0 var(--radius) var(--radius) 0;font-size:12.5px;color:#e8e2d4;margin-top:14px}
+  .note b{color:var(--primary)}
+  .note.red{border-left-color:var(--destructive);background:rgba(229,72,77,.08);color:#f0dada}
+  .note.red b{color:var(--destructive)}
+
+  /* bekræft-lag */
+  .stage{position:relative}
+  .veil{position:absolute;inset:0;background:rgba(10,10,10,.72);display:grid;place-items:center;
+    border-radius:calc(var(--radius)*1.4)}
+  .modal{width:min(440px,92%);background:var(--card);border:1px solid var(--border);
+    border-radius:calc(var(--radius)*1.4);box-shadow:0 24px 70px rgba(0,0,0,.6);padding:20px}
+  .modal h3{font-size:15.5px;font-weight:650;margin-bottom:6px}
+  .modal p{color:var(--muted);font-size:12.5px;line-height:1.6}
+  .cost{display:flex;align-items:baseline;gap:8px;margin:14px 0 4px}
+  .cost b{font-size:26px;font-weight:700;font-family:var(--mono);color:var(--primary)}
+  .cost span{color:var(--muted);font-size:12px}
+  .row{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+
+  .player{display:flex;align-items:center;gap:11px;padding:11px;border:1px solid var(--border);
+    border-radius:var(--radius);background:#1b1b1b}
+  .play{width:34px;height:34px;border-radius:50%;background:var(--primary);color:var(--primary-fg);
+    display:grid;place-items:center;font-size:13px;flex:0 0 auto;cursor:pointer}
+  .bar{flex:1;height:4px;background:#333;border-radius:2px;position:relative}
+  .bar i{position:absolute;left:0;top:0;bottom:0;width:37%;background:var(--primary);border-radius:2px}
+
+  .why{margin-top:26px;border:1px solid var(--border);border-radius:var(--radius);background:#151515;padding:16px 18px}
+  .why h3{font-size:13px;font-weight:650;margin-bottom:10px;color:var(--primary)}
+  .why ul{list-style:none;display:grid;gap:11px}
+  .why li{font-size:12.6px;color:#cfcfcf;line-height:1.6;padding-left:15px;position:relative}
+  .why li::before{content:"—";position:absolute;left:0;color:var(--muted)}
+  .why b{color:var(--fg)}
+  .scroll{overflow-x:auto}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}.body{grid-template-columns:1fr}.side{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>F012 · Podcasten set fra CMS'et</h1>
+  <p class="sub">Tre skærme. Den bærende idé er den samme som i planen: <b>manuskriptet er et dokument du læser og godkender — lyden laves først bagefter.</b> Derfor kan der ikke indspilles fra et manuskript ingen har set.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-p="p1">1 · Afsnitslisten</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="p2">2 · Manuskriptet</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="p3">3 · Indspilningen koster penge</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="p4">4 · Efter indspilning</button>
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <section class="panel" id="p1">
+    <div class="shell">
+      <div class="topbar">
+        <span class="brand">webhouse<b>.app</b></span>
+        <span class="crumb">Indhold › <b>Podcast</b></span>
+        <span class="spacer"></span>
+        <span class="site-pill">broberg.ai</span>
+      </div>
+      <div class="body">
+        <nav class="side">
+          <a class="nav">Overblik</a>
+          <a class="nav">Artikler</a>
+          <a class="nav">Flagskibe</a>
+          <a class="nav on"><span class="dot">◎</span> Podcast</a>
+          <a class="nav">Medier</a>
+          <a class="nav">Formularer</a>
+          <a class="nav">Indstillinger</a>
+        </nav>
+        <div class="main">
+          <div class="head">
+            <div>
+              <h2>Podcast</h2>
+              <p>Ét afsnit pr. artikel, hver 14. dag. Nyeste øverst.</p>
+            </div>
+            <span class="spacer"></span>
+            <button class="btn pri">+ Nyt afsnit fra en artikel</button>
+          </div>
+
+          <div class="scroll"><table>
+            <thead><tr><th style="width:52px">#</th><th>Afsnit</th><th style="width:150px">Status</th><th style="width:96px">Længde</th><th style="width:120px">Udgives</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="num">07</td>
+                <td><div class="ep-t">AI'en byggede det på en eftermiddag</div><div class="ep-s">fra: Byg selv på samme motor</div></td>
+                <td><span class="st klar">◔ Manuskript klar</span></td>
+                <td class="num">~11 min</td>
+                <td class="num">12/9</td>
+              </tr>
+              <tr>
+                <td class="num">06</td>
+                <td><div class="ep-t">Seletøjet, ikke agenten</div><div class="ep-s">fra: Seletøjet, ikke agenten</div></td>
+                <td><span class="st godk">★ Godkendt — klar til studiet</span></td>
+                <td class="num">~13 min</td>
+                <td class="num">29/8</td>
+              </tr>
+              <tr>
+                <td class="num">05</td>
+                <td><div class="ep-t">Otte uger til en sundhedsplatform</div><div class="ep-s">fra: Otte uger til en hel sundhedsplatform</div></td>
+                <td><span class="st ude">● Udgivet</span></td>
+                <td class="num">12:04</td>
+                <td class="num">15/8</td>
+              </tr>
+              <tr>
+                <td class="num">04</td>
+                <td><div class="ep-t">Hvorfor vi ikke bruger Chrome til test</div><div class="ep-s">fra: Lens — visuel verifikation</div></td>
+                <td><span class="st lyd">♪ Indspillet</span></td>
+                <td class="num">09:41</td>
+                <td class="num">1/8</td>
+              </tr>
+              <tr>
+                <td class="num">03</td>
+                <td><div class="ep-t">Udkast uden titel</div><div class="ep-s">fra: (ingen artikel valgt endnu)</div></td>
+                <td><span class="st kladde">○ Kladde</span></td>
+                <td class="num">—</td>
+                <td class="num">—</td>
+              </tr>
+            </tbody>
+          </table></div>
+
+          <div class="note"><b>Fem tilstande, ikke to.</b> «Kladde → Manuskript klar → Godkendt → Indspillet → Udgivet». Grunden til at <b>Godkendt</b> står som sit eget trin: det er dét trin der låser op for at bruge penge. Uden det ville «indspil» være en knap man kan komme til at trykke på.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section class="panel" id="p2" hidden>
+    <div class="shell">
+      <div class="topbar">
+        <span class="brand">webhouse<b>.app</b></span>
+        <span class="crumb">Podcast › <b>07 · AI'en byggede det på en eftermiddag</b></span>
+        <span class="spacer"></span>
+        <span class="st klar">◔ Manuskript klar</span>
+      </div>
+      <div class="body">
+        <nav class="side">
+          <a class="nav">Overblik</a><a class="nav">Artikler</a><a class="nav">Flagskibe</a>
+          <a class="nav on"><span class="dot">◎</span> Podcast</a>
+          <a class="nav">Medier</a><a class="nav">Formularer</a><a class="nav">Indstillinger</a>
+        </nav>
+        <div class="main">
+          <div class="grid">
+            <div class="box">
+              <div class="box-h"><b>Manuskript</b><span class="n">24 replikker · 9.840 tegn</span></div>
+              <div class="box-b">
+                <div class="turn"><div class="who a">AIDAN<small>forklarer</small></div>
+                  <div class="line">Der er en sætning jeg hører tit for tiden: «AI'en byggede det på en eftermiddag.» Og den er sand. Problemet kommer tre uger senere.</div></div>
+
+                <div class="turn"><div class="who b">AIRINA<small>spørger</small></div>
+                  <div class="line">Hvad sker der tre uger senere?</div></div>
+
+                <div class="turn edit"><div class="who a">AIDAN<small>forklarer</small></div>
+                  <div>
+                    <div class="line" contenteditable="true">Så skal nogen ændre noget i det. Og ingen kan huske hvorfor det blev bygget sådan. Koden findes, den virker — men begrundelsen er væk.</div>
+                    <div class="tools">
+                      <button class="mini">Gem</button>
+                      <button class="mini">Fortryd</button>
+                      <button class="mini">↑ Flyt op</button>
+                      <button class="mini warn">Slet replik</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="turn"><div class="who b">AIRINA<small>spørger</small></div>
+                  <div class="line">Kan du give et eksempel? Det bliver lidt abstrakt.</div></div>
+
+                <div class="turn"><div class="who a">AIDAN<small>forklarer</small></div>
+                  <div class="line">Ja. Forestil dig en betalingsrute der afviser beløb over ti tusind. Der står ikke hvorfor…</div></div>
+
+                <div style="margin-top:10px;display:flex;gap:7px">
+                  <button class="mini">+ Tilføj replik</button>
+                  <button class="mini">↻ Generér manuskriptet forfra</button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="box" style="margin-bottom:14px">
+                <div class="box-h"><b>Værterne</b></div>
+                <div class="box-b">
+                  <div class="voice"><span class="av a">AI</span>
+                    <div><div class="nm">Aidan</div><div class="rl">forklarer</div></div>
+                    <button class="sel">soren ▾</button></div>
+                  <div class="voice" style="margin-bottom:0"><span class="av b">AR</span>
+                    <div><div class="nm">Airina</div><div class="rl">spørger på lytterens vegne</div></div>
+                    <button class="sel">camilla ▾</button></div>
+                </div>
+              </div>
+
+              <div class="box" style="margin-bottom:14px">
+                <div class="box-h"><b>Før studiet</b><span class="n">3 af 4</span></div>
+                <div class="box-b">
+                  <div class="check"><span class="ic ok">✓</span><div><div class="t">Stemmerne svarer</div><div class="d">soren + camilla findes hos udbyderen lige nu</div></div></div>
+                  <div class="check"><span class="ic ok">✓</span><div><div class="t">Udtale-ordbogen er ren</div><div class="d">6 IPA-rækker skrevet om til lyd-alias — udbyderen afviser IPA</div></div></div>
+                  <div class="check"><span class="ic ok">✓</span><div><div class="t">Bindestreger læst</div><div class="d">«AI-agenter» siges A-I, ikke «ai»</div></div></div>
+                  <div class="check"><span class="ic wait">•</span><div><div class="t">Din godkendelse</div><div class="d">Lyden kan ikke laves før du har trykket godkend</div></div></div>
+                </div>
+              </div>
+
+              <div class="box">
+                <div class="box-h"><b>Hvad det koster</b></div>
+                <div class="box-b">
+                  <div class="kv"><span>Tegn i manuskriptet</span><b>9.840</b></div>
+                  <div class="kv"><span>Pris pr. 1.000 tegn</span><b>$0,15</b></div>
+                  <div class="kv"><span>Denne indspilning</span><b style="color:var(--primary)">$1,48</b></div>
+                  <div class="kv"><span>Anslået længde</span><b>~11 min</b></div>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:8px;margin-top:14px">
+                <button class="btn pri" style="flex:1">★ Godkend manuskript</button>
+                <button class="btn" disabled title="Kræver godkendt manuskript">♪ Indspil</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="note"><b>«Indspil» er slukket indtil du har godkendt.</b> Det er ikke pynt: indspilning bruger rigtige penge og tager minutter. En knap der altid kan trykkes, ville før eller siden blive trykket på et manuskript ingen havde læst — og så er det afsnittet, ikke knappen, der er problemet.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section class="panel" id="p3" hidden>
+    <div class="shell stage">
+      <div class="topbar">
+        <span class="brand">webhouse<b>.app</b></span>
+        <span class="crumb">Podcast › <b>07 · AI'en byggede det på en eftermiddag</b></span>
+        <span class="spacer"></span><span class="st godk">★ Godkendt</span>
+      </div>
+      <div class="body">
+        <nav class="side">
+          <a class="nav">Overblik</a><a class="nav">Artikler</a><a class="nav">Flagskibe</a>
+          <a class="nav on"><span class="dot">◎</span> Podcast</a>
+          <a class="nav">Medier</a><a class="nav">Formularer</a><a class="nav">Indstillinger</a>
+        </nav>
+        <div class="main" style="opacity:.35">
+          <div class="grid"><div class="box"><div class="box-h"><b>Manuskript</b></div><div class="box-b" style="height:300px"></div></div><div></div></div>
+        </div>
+      </div>
+      <div class="veil">
+        <div class="modal">
+          <h3>Indspil afsnit 07?</h3>
+          <p>Manuskriptet sendes til studiet med stemmerne <b style="color:var(--primary)">soren</b> og <b style="color:var(--info)">camilla</b>. Det tager et par minutter.</p>
+          <div class="cost"><b>$1,48</b><span>9.840 tegn · ~11 min lyd</span></div>
+          <p style="font-size:11.5px">Beløbet trækkes hos udbyderen når indspilningen starter — også hvis du kasserer resultatet.</p>
+          <div class="row">
+            <button class="btn ghost">Nej</button>
+            <button class="btn pri">Ja, indspil for $1,48</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note"><b>Prisen står PÅ knappen, ikke i en note ved siden af.</b> Det er den eneste handling i hele CMS'et der koster penge hver gang den bruges, og «Ja, indspil for $1,48» kan ikke misforstås som «gem».</div>
+    <div class="note red"><b>Husets mønster, ikke en browser-dialog.</b> Ingen <span style="font-family:var(--mono)">window.confirm</span> — samme «Ja / Nej» som resten af admin'en, i vores egne farver.</div>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section class="panel" id="p4" hidden>
+    <div class="shell">
+      <div class="topbar">
+        <span class="brand">webhouse<b>.app</b></span>
+        <span class="crumb">Podcast › <b>05 · Otte uger til en sundhedsplatform</b></span>
+        <span class="spacer"></span><span class="st ude">● Udgivet</span>
+      </div>
+      <div class="body">
+        <nav class="side">
+          <a class="nav">Overblik</a><a class="nav">Artikler</a><a class="nav">Flagskibe</a>
+          <a class="nav on"><span class="dot">◎</span> Podcast</a>
+          <a class="nav">Medier</a><a class="nav">Formularer</a><a class="nav">Indstillinger</a>
+        </nav>
+        <div class="main">
+          <div class="grid">
+            <div>
+              <div class="box" style="margin-bottom:14px">
+                <div class="box-h"><b>Lyden</b><span class="n">12:04 · 11,3 MB</span></div>
+                <div class="box-b">
+                  <div class="player">
+                    <span class="play">▶</span>
+                    <div class="bar"><i></i></div>
+                    <span class="num">04:28 / 12:04</span>
+                  </div>
+                  <div style="display:flex;gap:7px;margin-top:11px">
+                    <button class="mini">Hent mp3</button>
+                    <button class="mini">Se på broberg.ai/podcast/05</button>
+                    <button class="mini">RSS-feed</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="box">
+                <div class="box-h"><b>Manuskript</b><span class="n">bruges også som undertekster</span></div>
+                <div class="box-b">
+                  <div class="turn"><div class="who a">AIDAN<small>00:00</small></div><div class="line">Otte uger. Fra intet til en platform i drift på en kommunes sundhedsområde.</div></div>
+                  <div class="turn"><div class="who b">AIRINA<small>00:09</small></div><div class="line">Otte uger lyder som et salgstal. Hvad er det otte uger til?</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="box" style="margin-bottom:14px">
+                <div class="box-h"><b>Udgivelse</b></div>
+                <div class="box-b">
+                  <div class="kv"><span>Udgivet</span><b>15/8 kl. 08.00</b></div>
+                  <div class="kv"><span>I RSS-feedet</span><b style="color:var(--ok)">ja</b></div>
+                  <div class="kv"><span>Fra artikel</span><b style="font-family:var(--f)">Otte uger…</b></div>
+                  <div class="kv"><span>Faktisk pris</span><b>$1,71</b></div>
+                </div>
+              </div>
+
+              <div class="box">
+                <div class="box-h"><b>Ret manuskriptet?</b></div>
+                <div class="box-b">
+                  <p style="font-size:12.3px;color:var(--muted);line-height:1.6">Lyden hører til <b style="color:var(--fg)">dette</b> manuskript. Retter du en replik, passer lyden ikke længere til teksten — og teksten er også undertekster.</p>
+                  <button class="btn" style="width:100%;margin-top:11px">Ret og indspil igen — $1,71</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="note red"><b>Den fælde vi undgår her.</b> Uden denne skærm kunne man rette en replik og beholde den gamle lyd — og så ville afspilleren sige ét og underteksterne noget andet, uden at noget fejlede. Derfor kan manuskriptet ikke rettes «bare lidt» efter indspilning: enten står det, eller også koster en ny indspilning det den koster.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="why">
+    <h3>De fem beslutninger fladen bygger på</h3>
+    <ul>
+      <li><b>Manuskriptet er et dokument, ikke et mellemresultat.</b> Det er planens bærende valg. Derfor fylder manuskriptet skærmen, og lyden er noget der kommer bagefter — ikke omvendt.</li>
+      <li><b>«Godkendt» er sit eget trin.</b> Det låser op for den eneste handling i CMS'et der koster penge hver gang. En indspilning fra et ulæst manuskript er et afsnit ingen har hørt før lytteren.</li>
+      <li><b>Prisen står på knappen.</b> $1,48 er ikke meget — men det er et beløb, hver gang, og en knap der bruger penge skal sige hvor mange.</li>
+      <li><b>Tjeklisten «Før studiet» findes fordi fejlene er MÅLT.</b> Udbyderen afviser IPA-udtaler (vi har seks), og bindestregs-fejlen fra oplæsningen ville sige «ai-agenter» forkert i podcasten også. Begge fanges før pengene bruges, ikke midt i en indspilning.</li>
+      <li><b>En rettelse efter indspilning er ikke gratis.</b> Lyden hører til ét bestemt manuskript. At lade dem skride fra hinanden ville give en afspiller der siger ét og undertekster der siger noget andet — tavst.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  const tabs = [...document.querySelectorAll('.tab')];
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(x => x.setAttribute('aria-selected', String(x === t)));
+    document.querySelectorAll('.panel').forEach(p => p.hidden = p.id !== t.dataset.p);
+  }));
+</script>
+</body>
+</html>

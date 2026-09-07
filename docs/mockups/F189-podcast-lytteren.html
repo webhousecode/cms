@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>broberg.ai podcast — F012 mockup</title>
+<style>
+:root{
+  --blue:#00b2ff; --blue-text:#00b2ff; --blue-glow:rgba(0,178,255,.13);
+  --dark:#23282f; --card:rgba(255,255,255,.04); --card-border:rgba(255,255,255,.08);
+  --light:#f0f4f8; --muted:rgba(240,244,248,.5);
+  --orange:#f3522c; --orange-text:#ff6a45; --orange-soft:rgba(243,82,44,.12);
+  --fd:"Cormorant Garamond",Georgia,serif;
+  --fb:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--dark);color:var(--light);font-family:var(--fb);
+  font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:920px;margin:0 auto;padding:0 22px}
+header.top{border-bottom:1px solid var(--card-border);padding:16px 0;position:sticky;top:0;
+  background:rgba(35,40,47,.86);backdrop-filter:blur(12px);z-index:5}
+.brand{font-family:var(--fd);font-size:22px;letter-spacing:.01em}
+.brand b{font-weight:600}.brand span{color:var(--blue-text)}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--fd);font-size:clamp(34px,5.4vw,54px);line-height:1.08;margin:.35em 0 .3em;font-weight:600}
+h1 em{font-style:normal;color:var(--orange-text)}
+h2{font-family:var(--fd);font-size:clamp(24px,3.2vw,32px);margin:0 0 6px;font-weight:600}
+.lead{font-size:clamp(15px,1.5vw,18px);line-height:1.75;color:var(--muted);max-width:640px}
+section{padding:48px 0}
+.hr{height:1px;background:var(--card-border);margin:0}
+
+/* afspiller */
+.player{background:var(--card);border:1px solid var(--card-border);border-radius:18px;
+  padding:22px;display:flex;gap:18px;align-items:center;margin-top:26px;
+  box-shadow:0 1px 0 rgba(255,255,255,.03) inset}
+.cover{width:104px;height:104px;border-radius:14px;flex:0 0 auto;position:relative;overflow:hidden;
+  background:linear-gradient(145deg,var(--blue) 0%,#0a4c72 55%,var(--orange) 130%)}
+.cover i{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;
+  font-family:var(--fd);font-size:34px;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.4)}
+.pmeta{flex:1;min-width:0}
+.pmeta .t{font-family:var(--fd);font-size:21px;line-height:1.25;margin-bottom:2px}
+.pmeta .s{font-size:12.5px;color:var(--muted)}
+.bar{height:5px;border-radius:99px;background:rgba(255,255,255,.09);margin:13px 0 8px;position:relative}
+.bar u{position:absolute;inset:0 62% 0 0;background:var(--blue);border-radius:99px;display:block}
+.bar b{position:absolute;left:38%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;
+  background:#fff;box-shadow:0 0 0 4px var(--blue-glow)}
+.times{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ctrls{display:flex;gap:9px;align-items:center;margin-left:auto;flex:0 0 auto}
+.rnd{width:44px;height:44px;border-radius:50%;border:1px solid var(--card-border);background:transparent;
+  color:var(--light);cursor:pointer;display:grid;place-items:center;font-size:15px;transition:.15s}
+.rnd:hover{border-color:var(--blue);color:var(--blue-text)}
+.rnd.play{width:56px;height:56px;background:var(--blue);border-color:var(--blue);color:#04212f;font-size:19px}
+.rnd.play:hover{background:var(--blue-text);color:#04212f}
+.spd{font-size:11.5px;color:var(--muted);border:1px solid var(--card-border);border-radius:99px;
+  padding:4px 9px;cursor:pointer;background:transparent}
+
+/* værter */
+.hosts{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.host{display:flex;gap:9px;align-items:center;background:var(--card);border:1px solid var(--card-border);
+  border-radius:99px;padding:6px 14px 6px 6px;font-size:13px}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#04212f}
+.av.a{background:var(--blue)} .av.b{background:var(--orange);color:#fff}
+.host s{text-decoration:none;color:var(--muted);font-size:11.5px}
+
+/* manuskript */
+.turns{margin-top:30px;border-left:2px solid var(--card-border);padding-left:20px}
+.turn{margin-bottom:19px;position:relative}
+.turn::before{content:"";position:absolute;left:-25px;top:7px;width:8px;height:8px;border-radius:50%}
+.turn.a::before{background:var(--blue)} .turn.b::before{background:var(--orange)}
+.who{font-size:11px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;margin-bottom:2px}
+.turn.a .who{color:var(--blue-text)} .turn.b .who{color:var(--orange-text)}
+.turn p{margin:0;font-size:14.5px;line-height:1.7}
+.tt{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:8px;font-weight:400;letter-spacing:0}
+
+/* afsnitsliste */
+.eps{display:grid;gap:12px;margin-top:24px}
+.ep{display:flex;gap:16px;align-items:center;background:var(--card);border:1px solid var(--card-border);
+  border-radius:14px;padding:15px 18px;cursor:pointer;transition:.15s}
+.ep:hover{border-color:var(--blue);transform:translateY(-1px)}
+.num{font-family:var(--fd);font-size:26px;color:var(--muted);width:38px;flex:0 0 auto;text-align:center}
+.ep .b{flex:1;min-width:0}
+.ep .b h3{margin:0 0 2px;font-size:15.5px;font-weight:600;line-height:1.35}
+.ep .b p{margin:0;font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dur{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.badge{display:inline-block;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;
+  padding:3px 8px;border-radius:99px;background:var(--orange-soft);color:var(--orange-text);margin-left:8px}
+
+/* abonner */
+.subs{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+.sub{display:flex;gap:8px;align-items:center;border:1px solid var(--card-border);border-radius:11px;
+  padding:10px 15px;font-size:13px;cursor:pointer;background:var(--card);transition:.15s}
+.sub:hover{border-color:var(--blue)}
+.note{margin-top:14px;font-size:12.5px;color:var(--muted)}
+.pill{display:inline-block;border:1px dashed var(--card-border);border-radius:99px;padding:3px 10px;
+  font-size:11.5px;color:var(--muted);margin:0 5px 5px 0}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:20px}
+.step{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:14px 15px}
+.step b{display:block;font-size:12.5px;margin-bottom:3px}
+.step span{font-size:11.5px;color:var(--muted);line-height:1.5;display:block}
+.step em{font-style:normal;color:var(--blue-text);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+footer{border-top:1px solid var(--card-border);padding:26px 0;font-size:12px;color:var(--muted)}
+@media(max-width:620px){.player{flex-wrap:wrap}.ctrls{margin-left:0;width:100%;justify-content:center}}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap brand"><b>broberg</b><span>.ai</span></div></header>
+
+<div class="wrap">
+
+  <section>
+    <div class="eyebrow">Podcast · hver 14. dag</div>
+    <h1>To der taler om <em>én artikel</em> ad gangen.</h1>
+    <p class="lead">Aidan forklarer. Airina spørger som lytteren ville. Ét afsnit,
+    én artikel, og ingen der lader som om de er enige når de ikke er det.</p>
+
+    <div class="hosts">
+      <div class="host"><span class="av a">A</span><div>Aidan<br><s>forklarer</s></div></div>
+      <div class="host"><span class="av b">Ai</span><div>Airina<br><s>spørger på din vegne</s></div></div>
+    </div>
+
+    <div class="player">
+      <div class="cover"><i>04</i></div>
+      <div class="pmeta">
+        <div class="t">AI'en byggede det på en eftermiddag. Tre uger senere ved ingen hvorfor.</div>
+        <div class="s">Afsnit 4 · 7. september 2026</div>
+        <div class="bar"><u></u><b></b></div>
+        <div class="times"><span>04:31</span><span>−07:12</span></div>
+      </div>
+      <div class="ctrls">
+        <button class="rnd" title="15 sek. tilbage">↺</button>
+        <button class="rnd play" title="Afspil">▶</button>
+        <button class="rnd" title="15 sek. frem">↻</button>
+        <button class="spd">1,0×</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <section>
+    <div class="eyebrow">Manuskript</div>
+    <h2>Alt bliver sagt — og skrevet</h2>
+    <p class="lead">Manuskriptet er ikke undertekster lavet bagefter. Det er skrevet
+    og godkendt <b>før</b> afsnittet blev indspillet — så det kan læses i stedet for at
+    lyttes, søges i, og rettes hvis der står noget forkert.</p>
+
+    <div class="turns">
+      <div class="turn b">
+        <div class="who">Airina <span class="tt">00:12</span></div>
+        <p>Okay, jeg starter med at være uenig. «AI kan ikke huske hvorfor» — det er
+        jo bare en LLM der ikke har hukommelse. Det er ikke et problem, det er sådan
+        de virker.</p>
+      </div>
+      <div class="turn a">
+        <div class="who">Aidan <span class="tt">00:24</span></div>
+        <p>Det er rigtigt. Og det er præcis derfor det bliver dit problem og ikke
+        modellens. Modellen glemmer — det er dig der sidder tilbage med koden.</p>
+      </div>
+      <div class="turn b">
+        <div class="who">Airina <span class="tt">00:36</span></div>
+        <p>Giv mig et tal.</p>
+      </div>
+      <div class="turn a">
+        <div class="who">Aidan <span class="tt">00:39</span></div>
+        <p>84 procent af udviklere bruger det. 29 procent stoler på resultatet.
+        Den forskel er hele historien.</p>
+      </div>
+      <div class="turn b">
+        <div class="who">Airina <span class="tt">00:49</span></div>
+        <p>Hmm. Og hvis jeg nu siger at det er fint, fordi jeg alligevel smider
+        prototypen væk om to uger?</p>
+      </div>
+      <div class="turn a">
+        <div class="who">Aidan <span class="tt">00:56</span></div>
+        <p>Så har du ret. Det er faktisk artiklens eget råd — brug det frit til noget
+        du kaster væk. Problemet opstår den dag prototypen bliver til produktet uden
+        at nogen tog beslutningen.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <section>
+    <div class="eyebrow">Alle afsnit</div>
+    <h2>Arkivet</h2>
+    <div class="eps">
+      <div class="ep"><div class="num">04</div><div class="b">
+        <h3>AI'en byggede det på en eftermiddag<span class="badge">Nyt</span></h3>
+        <p>Vibe coding, teknisk gæld, og hvorfor gælden er usynlig</p></div>
+        <div class="dur">11:43</div></div>
+      <div class="ep"><div class="num">03</div><div class="b">
+        <h3>Otte uger til en hel sundhedsplatform</h3>
+        <p>Booking, betalinger og to native apps — med ét menneske bag</p></div>
+        <div class="dur">14:02</div></div>
+      <div class="ep"><div class="num">02</div><div class="b">
+        <h3>Værktøjet der kunne se det</h3>
+        <p>Hvorfor et skærmbillede ikke kan vise en bevægelse</p></div>
+        <div class="dur">09:18</div></div>
+      <div class="ep"><div class="num">01</div><div class="b">
+        <h3>Seletøjet, ikke agenten</h3>
+        <p>Det første afsnit — og hvorfor vi overhovedet gør det her</p></div>
+        <div class="dur">12:35</div></div>
+    </div>
+  </section>
+
+  <div class="hr"></div>
+
+  <section>
+    <div class="eyebrow">Abonnér</div>
+    <h2>Hvor du plejer at lytte</h2>
+    <div class="subs">
+      <div class="sub">🎧 Apple Podcasts</div>
+      <div class="sub">🟢 Spotify</div>
+      <div class="sub">📡 RSS-feed</div>
+    </div>
+    <p class="note">Feedet er et helt almindeligt RSS med lydfiler — det virker i
+    enhver podcast-app, også dem der ikke står her.</p>
+  </section>
+
+  <div class="hr"></div>
+
+  <section>
+    <div class="eyebrow">Sådan bliver et afsnit til</div>
+    <h2>Fem trin, ét menneske</h2>
+    <div class="flow">
+      <div class="step"><em>1 · auto</em><b>Artikel vælges</b><span>Hver 14. dag foreslås
+        næste artikel fra CMS</span></div>
+      <div class="step"><em>2 · auto</em><b>Manuskript skrives</b><span>Artiklen bliver
+        til replikker mellem de to værter</span></div>
+      <div class="step"><em>3 · Christian</em><b>Du læser og retter</b><span>Manuskriptet
+        ligger i CMS. Intet indspilles før du siger ja</span></div>
+      <div class="step"><em>4 · auto</em><b>Indspilning</b><span>Én rigtig samtale-motor,
+        to stemmer, ca. 10 kr.</span></div>
+      <div class="step"><em>5 · auto</em><b>Udgivelse</b><span>Side, afspiller og feed —
+        abonnenter får den selv</span></div>
+    </div>
+    <p class="note" style="margin-top:18px">
+      <span class="pill">ai.podcast — findes allerede i vores SDK</span>
+      <span class="pill">ægte dialog, ikke sammenklippede klip</span>
+      <span class="pill">≈ 250 kr. om året</span>
+      <span class="pill">ingen ny runtime</span>
+    </p>
+  </section>
+
+  <footer>Mockup · F012 · broberg.ai podcast — layout og tekst er et oplæg, ikke færdigt indhold</footer>
+</div>
+</body>
+</html>
