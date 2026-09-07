@@ -66,6 +66,27 @@ open(p, "w", encoding="utf-8").write(s.replace(find, erstat))
 print(f"muteret {n} sted(er)")
 PY
 
+# INGEN NULL-BYTES. Bash's command substitution taber en backtick-streng som
+# null-bytes ("ignored null byte in input"), og de er USYNLIGE: filen
+# typetjekker, prøverne består, og en template-literal med et null-byte i
+# stedet for et mellemrum hasher glad videre. Målt 7/9-2026 — jeg korrumperede
+# record.ts med to af dem og opdagede det først da en søgning ikke kunne finde
+# sin egen kode. En mutation må aldrig efterlade tegn ingen kan se.
+#
+# TJEKKET ER PYTHON, IKKE GREP, med vilje: `grep -q $'\x00'` afhænger af om den
+# installerede grep læser \x00 som en hex-escape eller som fire tegn. Min første
+# udgave gjorde netop det og fyrede kun ved et tilfælde af hvilken grep der stod
+# i PATH. En spærre der virker på én maskine er ingen spærre.
+#
+# Gendan IKKE her — EXIT-trappen gør det. Kaldes den to gange, fejler den anden
+# på en midlertidig fil der allerede er væk, og fejlbeskeden bliver om
+# kopieringen i stedet for om null-bytesene.
+if ! python3 -c "import sys; sys.exit(1 if open(sys.argv[1],'rb').read().count(b'\\x00') else 0)" "$fil"; then
+  echo "✗ MUTATIONEN EFTERLOD NULL-BYTES i $fil — gendannet." >&2
+  echo "  Skyldes typisk backticks sendt gennem skallen. Brug python eller en fil." >&2
+  exit 5
+fi
+
 efter="$(shasum -a 256 "$fil" | cut -d' ' -f1)"
 [ "$foer" != "$efter" ] || { echo "FILEN ER UÆNDRET trods erstatning — mutationen tæller ikke" >&2; exit 3; }
 printf 'sha %s → %s\n' "${foer:0:8}" "${efter:0:8}"
