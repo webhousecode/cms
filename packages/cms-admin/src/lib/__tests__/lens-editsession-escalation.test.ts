@@ -1,6 +1,20 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+/**
+ * Resolve from THIS FILE, never from process.cwd().
+ *
+ * cwd is whatever directory vitest was invoked from, so the same test is
+ * green run one way and errors out run another — and a file that cannot be
+ * read fails BEFORE a single assertion, which reports as a red test rather
+ * than as a broken harness. Measured 7 Sep 2026: a mutation check on this
+ * suite reported "RED with the mutation" for two mutations that changed
+ * nothing, because the baseline was already red for this reason. A mutation
+ * check whose baseline is red measures the harness, not the code.
+ */
+const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 import { decodeJwt } from "jose";
 import { isReadOnlyLensSession, mintEditSessionToken } from "../inline-edit-token";
 
@@ -88,7 +102,7 @@ describe("every minting door refuses a read-only Lens session", () => {
 
   for (const rel of DOORS) {
     it(`${rel} calls the guard BEFORE it mints`, () => {
-      const src = fs.readFileSync(path.join(process.cwd(), rel), "utf-8");
+      const src = fs.readFileSync(path.join(PKG_ROOT, rel), "utf-8");
       const guard = src.indexOf("isReadOnlyLensSession(");
       const mint = src.indexOf("await mintEditSessionToken(");
       expect(guard, "the door does not call isReadOnlyLensSession at all").toBeGreaterThan(-1);
@@ -110,12 +124,12 @@ describe("every minting door refuses a read-only Lens session", () => {
         if (e.isDirectory()) walk(p);
         else if (e.name.endsWith(".ts") && !e.name.endsWith(".test.ts")) {
           if (fs.readFileSync(p, "utf-8").includes("mintEditSessionToken(")) {
-            found.push(path.relative(process.cwd(), p));
+            found.push(path.relative(PKG_ROOT, p));
           }
         }
       }
     };
-    walk(path.join(process.cwd(), "src"));
+    walk(path.join(PKG_ROOT, "src"));
     expect(found.sort()).toEqual([...DOORS, "src/lib/inline-edit-token.ts"].sort());
   });
 });

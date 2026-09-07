@@ -237,13 +237,42 @@ export async function proxy(request: NextRequest) {
     if (overrideSite) {
       const { loadRegistry, findSite } = await import("./lib/site-registry");
       const registry = await loadRegistry();
+      let fundet = false;
       if (registry) {
         for (const org of registry.orgs) {
           if (findSite(registry, org.id, overrideSite)) {
             siteOverrideCookies = [`cms-active-org=${org.id}`, `cms-active-site=${overrideSite}`];
+            fundet = true;
             break;
           }
         }
+      }
+      // F157.18 — REFUSE an unresolvable `?site=` instead of no-opping.
+      //
+      // The old comment said a silent no-op was safe because "handlers will then
+      // return their normal 'site not found' error". Two do not: they call
+      // getActiveSiteEntry(), which falls back to registry.defaultSiteId, and
+      // answer 200 for a DIFFERENT tenant than the caller named. Measured
+      // against production 7 Sep 2026:
+      //
+      //   POST /api/inline-edit/token?site=findes-ikke-xyz  → 200, token for webhouse-site
+      //   POST /api/admin/site-config?site=findes-ikke-xyz  → 200, webhouse-site's config
+      //
+      // Not a privilege gain — permission is checked against the RESOLVED site —
+      // but a silent wrong recipient, which is the tenant-separation class this
+      // repo has a hard rule about, failing in the green direction. A typo or a
+      // stale site id is not an edge case: `cms-docs` exists in a local registry
+      // and not in production's, and it was the first id typed.
+      //
+      // The assumption was not wrong so much as unenforced, so it held for the
+      // handlers someone remembered and not for the rest. Enforced here, at the
+      // one place tenant resolution happens, so a NEW /api/* route inherits the
+      // refusal without knowing it exists.
+      if (!fundet) {
+        return NextResponse.json(
+          { error: `site not found: ${overrideSite}` },
+          { status: 404 },
+        );
       }
     }
   }

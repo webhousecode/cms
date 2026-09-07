@@ -26,6 +26,29 @@ erstat="${3?erstat}"; shift 3
 [ $# -gt 0 ] || { echo "mangler testkommando efter --" >&2; exit 2; }
 
 [ -f "$fil" ] || { echo "findes ikke: $fil" >&2; exit 2; }
+
+# BASELINE FØRST. En mutations-prøve med RØD baseline måler harnessen, ikke
+# koden: hver mutation rapporteres som «RØD med mutationen» uanset om den ramte
+# noget. Målt 7/9-2026 på dette script — to mutationer meldte rødt for vagter de
+# slet ikke berørte, fordi prøvefilen læste sin kilde via process.cwd() og
+# fejlede før én assertion kørte under den kaldsform mutate.sh bruger. Jeg
+# afleverede tallene til et kort OG til et andet repo, før jeg opdagede det.
+#
+# Samme familie som «filen skal ændre sig»-spærren nedenfor: begge nægter at
+# aflevere et tal der ikke måler det man tror.
+echo "── baseline (uden mutation) ──"
+set +e
+"$@" >/dev/null 2>&1
+baseline=$?
+set -e
+if [ $baseline -ne 0 ]; then
+  echo "✗ BASELINE ER RØD (exit $baseline) — prøven fejler UDEN mutationen." >&2
+  echo "  Enhver mutation ville melde «RØD» herfra. Fix prøven først; kør så igen." >&2
+  echo "  Kør kommandoen selv for at se hvorfor:  $*" >&2
+  exit 4
+fi
+echo "✓ grøn uden mutationen — nu tæller en rød"
+
 sikkerhed="$(mktemp)"; cp "$fil" "$sikkerhed"
 foer="$(shasum -a 256 "$fil" | cut -d' ' -f1)"
 gendan() { cp "$sikkerhed" "$fil"; rm -f "$sikkerhed"; }
