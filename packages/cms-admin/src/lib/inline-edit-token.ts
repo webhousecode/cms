@@ -31,6 +31,28 @@ export interface EditSessionClaims {
   /** The caller's role on the site (falls back to "editor"). */
   role?: string;
   siteId: string;
+  /** Carried from the MINTING session — see mintEditSessionToken. */
+  lens?: boolean;
+  lensWrite?: boolean;
+}
+
+/**
+ * F157.17 — a read-only Lens session must not be able to mint itself a token
+ * that CAN write.
+ *
+ * proxy.ts's read-only boundary is one expression, `lens === true &&
+ * lensWrite !== true`, and it can only see a mark that is IN the token it is
+ * shown. Minting drops the mark, and minting is a GET — so the method guard
+ * (POST/PUT/PATCH/DELETE) never looks at it. Measured against production
+ * 7 Sep 2026: the same identity was refused a direct PATCH with 403 and then
+ * granted one through `/admin/inline-edit/connect`, four calls apart.
+ *
+ * Both doors call this. A closed door beside an open one is not a door.
+ */
+export function isReadOnlyLensSession(
+  claims: { lens?: unknown; lensWrite?: unknown } | null | undefined,
+): boolean {
+  return !!claims && claims.lens === true && claims.lensWrite !== true;
 }
 
 /** Mint a signed, site-scoped editSession JWT. Returns { token, expiresIn }. */
@@ -46,6 +68,13 @@ export async function mintEditSessionToken(
     role: claims.role ?? "editor",
     editSession: true,
     site: claims.siteId,
+    // Carry the Lens marks INTO the token. Second layer, on purpose: the
+    // refusal above is what works today; this is what still works when someone
+    // adds a third minting path and never reads the first. Without it the
+    // minted token is unmarked BY CONSTRUCTION, so proxy.ts's guard is blind to
+    // it no matter which door it came out of.
+    ...(claims.lens ? { lens: true } : {}),
+    ...(claims.lensWrite ? { lensWrite: true } : {}),
   })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt(now)

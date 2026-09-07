@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { mintEditSessionToken } from "@/lib/inline-edit-token";
+import { mintEditSessionToken, isReadOnlyLensSession } from "@/lib/inline-edit-token";
 import { requirePermission } from "@/lib/permissions";
 import { getActiveSiteEntry } from "@/lib/site-paths";
 import { getSessionWithSiteRole } from "@/lib/require-role";
@@ -119,12 +119,26 @@ export async function GET(request: NextRequest) {
     const iat = (rawSession as { iat?: number } | null)?.iat ?? 0;
     const freshLogin = iat > 0 && now - iat <= FRESH_LOGIN_WINDOW_SECONDS;
 
+    // F157.17 — the same refusal as the headless door. This handler is a GET,
+    // so proxy.ts's method guard (POST/PUT/PATCH/DELETE) never sees it: the
+    // gate that should stop this is the gate that opens the door. Measured
+    // against production 7 Sep 2026 — a read-only Lens cookie was refused a
+    // direct PATCH (403) and granted a writing token here, four calls apart.
+    if (isReadOnlyLensSession(rawSession)) {
+      return NextResponse.json(
+        { error: "Lens session is read-only — mint with the write key to get an edit session" },
+        { status: 403 },
+      );
+    }
+
     const { token } = await mintEditSessionToken({
       userId: session.userId,
       email: session.email,
       name: session.name,
       role: session.siteRole ?? "editor",
       siteId: site.id,
+      lens: rawSession?.lens === true,
+      lensWrite: rawSession?.lensWrite === true,
     });
 
     return new NextResponse(renderConnectWelcome({ token, returnUrl, site: site.id, freshLogin }), {

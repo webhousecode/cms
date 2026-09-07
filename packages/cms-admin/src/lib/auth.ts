@@ -53,6 +53,16 @@ export interface SessionPayload {
   email: string;
   name: string;
   role: UserRole;
+  /**
+   * F151 — the Lens principal's marks. `lens` alone means look-only (proxy.ts
+   * refuses every mutating method); `lensWrite` is the separate key that may
+   * save. Declared here rather than cast at each reader: a session claim that
+   * decides an authorisation must be visible to the type system, or the next
+   * caller reads it with a cast and the compiler cannot tell them they are
+   * reading a field nobody carries. (F157.17.)
+   */
+  lens?: boolean;
+  lensWrite?: boolean;
 }
 
 export const COOKIE_NAME = "cms-session";

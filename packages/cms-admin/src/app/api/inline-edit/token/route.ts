@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { getSiteRole, getSessionWithSiteRole } from "@/lib/require-role";
 import { hasPermission, ROLE_PERMISSIONS } from "@/lib/permissions";
 import { getActiveSiteEntry } from "@/lib/site-paths";
-import { mintEditSessionToken } from "@/lib/inline-edit-token";
+import { mintEditSessionToken, isReadOnlyLensSession } from "@/lib/inline-edit-token";
+import { cookies } from "next/headers";
+import { getSessionUser } from "@/lib/auth";
 
 /**
  * F157 — headless mint of an inline-edit `editSession` token.
@@ -46,6 +48,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // F157.17 — the read-only Lens principal holds role "admin" so it sails
+  // through the permission check below. Its boundary is the `lens` claim, and
+  // this is the one place that can honour it: minting is where a look-only
+  // identity would otherwise hand itself a token that writes.
+  const raw = await getSessionUser(await cookies());
+  if (isReadOnlyLensSession(raw)) {
+    return NextResponse.json(
+      { error: "Lens session is read-only — mint with the write key to get an edit session" },
+      { status: 403 },
+    );
+  }
+
   const role = await getSiteRole();
   if (!role || !hasPermission(ROLE_PERMISSIONS[role] ?? [], "content.edit")) {
     return NextResponse.json({ error: "Forbidden — content.edit required" }, { status: 403 });
@@ -67,6 +81,8 @@ export async function POST(request: Request) {
     name: session.name,
     role: session.siteRole ?? role,
     siteId: site.id,
+    lens: raw?.lens === true,
+    lensWrite: raw?.lensWrite === true,
   });
 
   return NextResponse.json(
