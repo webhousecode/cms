@@ -44,20 +44,34 @@ cms-admin har allerede **fire** klient-klasser ind i API'et:
 | `cms-session`-cookie | admin-UI'et | cookie |
 | `wh_` Bearer / `X-CMS-Service-Token` | maskinkaldere | proxy laver dem om til cookies |
 | editSession-JWT | inline-redigering | allowlistet i proxy, site-scopet |
-| **bruger-JWT som Bearer** | `/api/mobile/*` — **27 ruter** | JSON, ingen cookies, CORS |
+| bruger-JWT som Bearer | `/api/mobile/*` — 27 ruter | JSON, ingen cookies, CORS |
 
-**Den fjerde ER den form ejeren beder om:** et separat frontend, med sit eget
-login, der taler JSON over Bearer. Et site-panel er bare ikke «mobil».
+**RETTELSE, ejeren 7/9: «Mobil appen er ikke i spil her den virker ikke.»**
 
-Så: **nyt præfiks, samme auth.** `/api/podcast/*` bruger den SAMME
-JWT-verifikations-hjælper som mobil-ruterne og den SAMME CORS-model som
-`forms/[name]` allerede bruger (reflekterer sitets `previewSiteUrl`, intet nyt
-konfigurationsfelt). Husets egen hard rule siger det ordret: *«no parallel auth
-path»*.
+Første udgave af denne plan brugte mobil-ruterne som *beviset* for at formen
+virker — «27 ruter, altså en gennemprøvet vej». Den begrundelse trækkes tilbage.
+En flade der ikke virker beviser ingenting, og at læne en ny arkitektur op ad den
+ville være at arve en autoritet ingen har efterprøvet.
+
+**Mekanikken står, men på et andet grundlag.** Målt i koden: `createToken` og
+`verifyToken` i `lib/auth.ts` er de samme primitiver som **det almindelige
+admin-login** bruger — `/api/auth/login`, `/api/auth/me` og proxy'ens egen
+verifikation. Dét virker hver dag, for hver eneste redaktør. Mobil-ruterne er
+blot endnu en forbruger af de samme funktioner.
+
+Så: `/api/podcast/*` bygger på **de primitiver der beviseligt virker**, ikke på
+den flade der tilfældigvis også bruger dem. Forskellen er ikke akademisk — den
+afgør hvad vi selv skal efterprøve frem for at antage, og svaret er: hele
+token-vejen for site-panelet skal bevises i F189.7, ikke krydses af på en
+henvisning.
+
+CORS bruger den EKSISTERENDE origin-logik fra `forms/[name]` (reflekterer sitets
+`previewSiteUrl`, intet nyt konfigurationsfelt) — den flade er i drift og bærer
+rigtige formular-indsendelser i dag.
 
 **Ingen ny tilladelse uden at den er gated på alle lag.** Podcasten får sine
-egne permissions i `permissions-shared.ts`, og hver rute + hvert UI-element
-går gennem `requirePermission` / `can()`. Det er ikke valgfrit her — en af
+egne permissions i `permissions-shared.ts`, og hver rute + hvert UI-element går
+gennem `requirePermission` / `can()`. Det er ikke valgfrit her — en af
 handlingerne bruger rigtige penge.
 
 ## Den ene handling der koster penge
