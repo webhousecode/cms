@@ -80,6 +80,11 @@ export const SECRET_FIELDS: Record<string, string[]> = {
     "resendApiKey",
   ],
   "ai-config.json": [
+    // F190: mistralApiKey manglede her, så en beam-push efterlod nøglen til
+    // STANDARDudbyderen i klartekst i snapshottet. Samme udeladelse som
+    // geminiApiKey engang var, med samme følge.
+    "mistralApiKey",
+    "elevenlabsApiKey",
     "anthropicApiKey",
     "openaiApiKey",
     // Both names kept: actual field is geminiApiKey; googleApiKey is legacy for any

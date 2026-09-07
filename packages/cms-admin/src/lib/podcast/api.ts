@@ -22,7 +22,8 @@
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyToken, type SessionPayload } from "@/lib/auth";
-import { getSiteRole } from "@/lib/require-role";
+import { resolveMembershipRole } from "@/lib/require-role";
+import { getTeamMembers } from "@/lib/team";
 import { hasPermission, ROLE_PERMISSIONS } from "@/lib/permissions";
 import { readSiteConfig } from "@/lib/site-config";
 import { originAllowed, siteOriginsWithSiblings } from "@/lib/cors-origin";
@@ -89,7 +90,22 @@ export async function kraevTilladelse(
     };
   }
 
-  const rolle = await getSiteRole();
+  // ROLLEN OPSLÅS PÅ DEN KALDER VI ALLEREDE LÆSTE — ikke via getSiteRole(),
+  // som henter sessionen ud af COOKIES igen.
+  //
+  // Målt 7/9: et Bearer-kald uden cookies fik 403 «missing permission
+  // podcast.read» selv som admin. laesKalder() havde læst tokenet korrekt;
+  // getSiteRole() kiggede bagefter i en tom cookie-krukke og svarede null. To
+  // identitetskilder i ét tjek, hvor den anden ikke kunne se den første — og
+  // en flade der SKAL kunne bruges uden cookies var dermed låst ude af sit
+  // eget permission-tjek.
+  //
+  // resolveMembershipRole er husets delte svar (eksporteret netop fordi tre
+  // sider hånd-rullede det og hver kun kendte «dev-token»). Den håndterer både
+  // de selvbeskrivende principaler og den almindelige medlemsopslag.
+  const rolle = resolveMembershipRole(kalder, await getTeamMembers()) as
+    | keyof typeof ROLE_PERMISSIONS
+    | null;
   if (!rolle || !hasPermission(ROLE_PERMISSIONS[rolle] ?? [], tilladelse)) {
     return {
       svar: NextResponse.json(

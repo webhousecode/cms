@@ -26,6 +26,13 @@ export async function POST(request: NextRequest) {
 
     const updated: AiConfig = {
       defaultProvider: body.defaultProvider ?? existing.defaultProvider,
+      // F190 — mistralApiKey MANGLEDE her, mens typen, masken, getKeyFor() og
+      // getAI() alle kender feltet. Enhver gemning skrev derfor et objekt uden
+      // den, og nøglen til STANDARDUDBYDEREN (defaultProvider = "mistral")
+      // forsvandt tavst. 200 tilbage, felt væk — det ligner et felt der aldrig
+      // blev udfyldt. Vagten mod det næste tab står i ai-config-fields.test.ts.
+      mistralApiKey: mergeKey(body.mistralApiKey, existing.mistralApiKey),
+      elevenlabsApiKey: mergeKey(body.elevenlabsApiKey, existing.elevenlabsApiKey),
       anthropicApiKey: mergeKey(body.anthropicApiKey, existing.anthropicApiKey),
       openaiApiKey: mergeKey(body.openaiApiKey, existing.openaiApiKey),
       geminiApiKey: mergeKey(body.geminiApiKey, existing.geminiApiKey),

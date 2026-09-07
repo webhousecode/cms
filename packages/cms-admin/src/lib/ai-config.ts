@@ -6,6 +6,9 @@ import { SECRET_FIELDS, clearRedactedSecrets } from "./beam/types";
 export interface AiConfig {
   defaultProvider: "mistral" | "anthropic" | "openai" | "gemini";
   mistralApiKey?: string;
+  /** ElevenLabs — indspilning af podcast-afsnit (F189). Pr. site, fordi
+   *  indspilning bruger rigtige penge: en lejer skal betale sin egen lyd. */
+  elevenlabsApiKey?: string;
   anthropicApiKey?: string;
   openaiApiKey?: string;
   geminiApiKey?: string;
@@ -19,6 +22,9 @@ export interface AiConfig {
 export interface AiConfigMasked {
   defaultProvider: AiConfig["defaultProvider"];
   mistralApiKey?: string;
+  /** ElevenLabs — indspilning af podcast-afsnit (F189). Pr. site, fordi
+   *  indspilning bruger rigtige penge: en lejer skal betale sin egen lyd. */
+  elevenlabsApiKey?: string;
   anthropicApiKey?: string;
   openaiApiKey?: string;
   geminiApiKey?: string;
@@ -93,6 +99,7 @@ export function maskAiConfig(config: AiConfig): AiConfigMasked {
   return {
     defaultProvider: config.defaultProvider,
     mistralApiKey: mask(config.mistralApiKey),
+    elevenlabsApiKey: mask(config.elevenlabsApiKey),
     anthropicApiKey: mask(config.anthropicApiKey),
     openaiApiKey: mask(config.openaiApiKey),
     geminiApiKey: mask(config.geminiApiKey),

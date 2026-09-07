@@ -15,6 +15,7 @@ import {
   mistralAdapter,
   geminiAdapter,
   openaiAdapter,
+  elevenlabsAdapter,
   upmetricsSink,
   noopSink,
   parseJsonLoose,
@@ -50,11 +51,22 @@ export function createAIWithKeys(keys: {
   mistral?: string;
   gemini?: string;
   openai?: string;
+  elevenlabs?: string;
 }): AiClient {
   const providers: Record<string, ProviderAdapter> = {
     mistral: mistralAdapter({ apiKey: keys.mistral }),
     gemini: geminiAdapter({ apiKey: keys.gemini }),
     openai: openaiAdapter({ apiKey: keys.openai }),
+    // F189.4 — UDEN DENNE fejlede ai.podcast() med «no provider adapter
+    // registered for "elevenlabs"», også når nøglen var sat. Målt 7/9 i
+    // F189.7's e2e: indspilningen kunne aldrig have virket som udgivet.
+    //
+    // Registreres ALTID, ikke kun med nøgle: adapterens nøgle-tjek er dovent
+    // (kaldes ved brug, ikke ved opbygning), så uden nøgle fejler først selve
+    // indspilningen — med en besked der siger hvad der mangler. Registrerede
+    // vi den betinget, ville den manglende nøgle i stedet melde «ukendt
+    // udbyder», og det peger det forkerte sted hen.
+    elevenlabs: elevenlabsAdapter({ apiKey: keys.elevenlabs }),
   };
   return createAI({ costSink: buildCostSink(), providers });
 }
@@ -79,6 +91,7 @@ export async function getAI(): Promise<AiClient> {
       process.env.GOOGLE_API_KEY ??
       process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     openai: cfg?.openaiApiKey ?? process.env.OPENAI_API_KEY,
+    elevenlabs: cfg?.elevenlabsApiKey ?? process.env.ELEVENLABS_API_KEY,
   });
 }
 

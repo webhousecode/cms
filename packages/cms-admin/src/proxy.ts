@@ -85,6 +85,18 @@ export function isAllowedForEditSession(
   return requestSite === tokenSite;
 }
 
+/**
+ * F189 — er dette podcast-API'et?
+ *
+ * Egen funktion frem for en streng i PUBLIC_PREFIXES, fordi listen matcher med
+ * `startsWith`: «/api/podcast» ville også ramme «/api/podcastfoo», og
+ * «/api/podcast/» ville IKKE ramme listeruten «/api/podcast». Begge fejl er
+ * tavse — den ene åbner for meget, den anden 401'er en rute der skulle virke.
+ */
+export function isPodcastApi(pathname: string): boolean {
+  return pathname === "/api/podcast" || pathname.startsWith("/api/podcast/");
+}
+
 const PUBLIC_PREFIXES = [
   "/api/auth/",
   "/api/admin/invitations/", // Invite accept flow (user not yet logged in)
@@ -140,7 +152,19 @@ export async function proxy(request: NextRequest) {
   // referenced below — this is exactly the kind of route that precedent was
   // meant to prevent, just carved out of the fix by the early PUBLIC_PREFIXES
   // return.
-  const isPublicPrefix = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+  // F189 — podcast-API'et autentificerer SELV (lib/podcast/api.ts:
+  // kraevTilladelse på hver rute: identitet, rolle, tilladelse og
+  // read-only-Lens-grænsen). Det ligger her fordi et site med sit EGET login
+  // skal kunne drive hele forløbet med et Bearer-token og nul cookies — som
+  // ejerens note kræver. Proxy'ens cookie-gate kan ikke bære det: den kender
+  // kun tre Bearer-former (CMS_DEV_TOKEN, wh_, editSession), og et almindeligt
+  // bruger-JWT er ingen af dem, så det 401'ede før handleren blev nået.
+  //
+  // PRISEN: glemmer én podcast-rute sit kraevTilladelse, står den åben. Det er
+  // ikke et løfte men en prøve — podcast-api-guard.test.ts læser hver rutefil
+  // og fejler hvis en HTTP-handler ikke går gennem tjekket.
+  const isPublicPrefix =
+    PUBLIC_PREFIXES.some((p) => pathname.startsWith(p)) || isPodcastApi(pathname);
 
   // ── F146: URL-based site routing ──────────────────────────────────────
   // `/admin/{slug}/...` carries the active site in the URL so parallel tabs,
