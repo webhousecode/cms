@@ -72,6 +72,27 @@ Repo: `/Users/cb/Apps/broberg/broberg-ai-site` (separate repo, not part of this 
 - `src/client/enhance.ts` — new `inlineEdit()` feature function (same `safe()`-wrapped pattern as existing features), importing `initInlineEdit` from `@broberg/cms-inline-edit`.
 - Add `@broberg/cms-inline-edit` as a real npm dependency (published package, not a workspace symlink).
 
+## Reuse
+
+Discovery søgt 7/9-2026 på «inline editing», «contenteditable» og «visual
+editing» — **nul træf** på alle tre. Inventaret ejer ingen redigerings-primitiv,
+og skulle ikke gøre det: klientdelen skal kende `data-cms-*`-konventionen og
+CMS'ets GET→flet→PATCH-kontrakt, altså netop det der binder den til dette repo.
+
+**Byg, og udgiv den så andre kan bruge den.** Resultatet er `@broberg/cms-inline-edit`
+— copy-owned fra første dag, så et site med en helt anden frontend (Sanne
+Andersens var den første efter broberg.ai) kan installere den og eje sin egen
+version, i stedet for at hænge på et centralt hostet script.
+
+Det vi til gengæld IKKE bygger selv:
+
+| Behov | Hvor det kommer fra | Hvorfor ikke vores eget |
+|---|---|---|
+| Signering/verifikation af tokens | `jose` + `CMS_JWT_SECRET`, samme vej som `cms-session` | Én nøgle, én verifikationsvej. En parallel auth-sti er præcis den drift huset har regler imod |
+| Mint-endepunkts-mønstret | Kopieret fra `api/lens-session/route.ts` (F151) | Formen er allerede bevist i drift her; at opfinde en anden ville give to mønstre at holde i sync |
+| CORS mod sitets eget origin | `forms/[name]/route.ts`s eksisterende logik + `previewSiteUrl` | Intet nyt konfigurationsfelt. Sitets adresse står allerede ét sted |
+| Bearer-JWT uden cookie | Mobil-appens `/api/mobile/*`-præcedens | Mønstret er i brug og gennemgået; en tredje auth-form ville kræve sin egen gennemgang |
+
 ## Verification plan
 
 1. `npx tsc --noEmit` across touched cms-admin + new package; `cd packages/cms && npx vitest run` (existing suite stays green).
