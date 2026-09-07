@@ -16,6 +16,13 @@ export const PERMISSIONS = {
   "content.create": "Create documents",
   "content.edit": "Edit documents",
   "content.publish": "Publish / unpublish",
+  // F189 — podcasten. TRE og ikke én, fordi de tre handlinger har vidt
+  // forskellig vægt. `podcast.record` er sin egen med vilje: en redaktør der må
+  // rette en tekst, er ikke automatisk en der må bruge ~$1,48 af ejerens penge
+  // pr. tryk — og var de samme tilladelse, kunne forskellen ikke udtrykkes.
+  "podcast.read": "See podcast episodes and scripts",
+  "podcast.edit": "Write and approve podcast scripts",
+  "podcast.record": "Record an episode (SPENDS MONEY)",
   "content.delete": "Trash documents",
   "content.trash.empty": "Empty entire trash",
   /**
@@ -69,6 +76,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "content.create",
     "content.edit",
     "content.publish",
+    "podcast.read",
+    "podcast.edit",
     "content.delete",
     "content.history",
     "media.*",
