@@ -20,7 +20,7 @@ describe("estimat — bruger ingen penge", () => {
   it("regner pris ud fra tegn", () => {
     const e = estimat(manuskript(10_000));
     expect(e.tegn).toBe(10_000);
-    expect(e.prisUsd).toBe(1.5); // 10 × $0,15
+    expect(e.prisUsd).toBe(1); // 10 × $0,10 — satsen MÅLT mod regningen 8/9, se preflight.ts
   });
 
   it("runder OP til øre — et for lavt beløb på en knap er værre end et lidt for højt", () => {
@@ -132,5 +132,26 @@ describe("foerFlyvning — alt der kan fejle NÅR vi trykker, spurgt FØR", () =
     for (const t of f.tjek.filter((x) => !x.ok)) {
       expect(t.detalje.length, t.navn).toBeGreaterThan(10);
     }
+  });
+});
+
+describe("prisen er MÅLT mod regningen, ikke taget fra en prisliste", () => {
+  it("satsen er den målte $0,10 pr. 1.000 råtegn", () => {
+    // $1,10 / 11.000 tegn på kontoens egen forbrugsside, 2.-8. september 2026.
+    expect(PRIS_PR_1000_TEGN_USD).toBeCloseTo(0.1, 5);
+  });
+
+  it("prøve-afsnittets 4.764 tegn koster $0,48 — ikke $0,72", () => {
+    // Det gamle tal stod på knappen i to dage. En pris der er 50 % for høj er
+    // ikke harmløs: den afskrækker fra en handling der er billigere end den ser ud.
+    const e = estimat([{ speaker: "aidan", text: "x".repeat(4764) }]);
+    expect(e.tegn).toBe(4764);
+    expect(e.prisUsd).toBe(0.48);
+  });
+
+  it("KONTROL: satsen ganges faktisk på tegnene — en fast pris ville ikke bestå", () => {
+    const lille = estimat([{ speaker: "aidan", text: "x".repeat(1000) }]);
+    const stor = estimat([{ speaker: "aidan", text: "x".repeat(10000) }]);
+    expect(stor.prisUsd).toBeCloseTo(lille.prisUsd * 10, 2);
   });
 });

@@ -23,11 +23,32 @@ import type { Replik } from "./manuscript";
 import { manuskriptTegn } from "./manuscript";
 
 /**
- * ElevenLabs' pris pr. 1.000 tegn, målt i @broberg/ai-sdk's egne konstanter
- * (F012). Ét sted, så beløbet på knappen og beløbet i regnskabet er det samme
- * tal.
+ * ElevenLabs' pris pr. 1.000 RÅTEGN.
+ *
+ * MÅLT mod den faktiske regning 8/9-2026, ikke taget fra en prisliste. Tallet
+ * var $0,15 (SDK'ets konstant) og er 50 % for højt. Tre uafhængige tal fra
+ * kontoens forbrugsside for 2.-8. september går op:
+ *
+ *   $1,10 forbrug · 11.000 tegn · 75 kald à 40,4 kreditter = 3.030 kreditter
+ *   $1,10 / 11.000 tegn                     = $0,100 pr. 1.000 tegn
+ *   3.030 kreditter / 11.000 tegn           = 0,2755 kreditter pr. tegn
+ *
+ * Den sidste brøk er beviset for at tallene hører sammen: jeg havde uafhængigt
+ * målt 0,2743 kreditter pr. tegn i tre kontrollerede syntesekørsler (70 tegn →
+ * 19, 350 tegn → 96), og API'ets egen tæller for samme vindue sagde 3.031 mod
+ * forbrugssidens 3.030.
+ *
+ * FÆLDEN der kostede mig en forkert konklusion først: /v1/usage/character-stats
+ * rapporterer KREDITTER, ikke tegn — trods sit navn. Jeg læste dens 3.031 som
+ * tegn, sammenlignede med vores 4.764 og konkluderede at estimatet var 3,6×
+ * for højt. Det var 1,5×. To tal der måler forskellige ting ligner et afvig.
+ *
+ * FORBEHOLD: satsen er kontoens, ikke en listepris. Et andet site med sit eget
+ * abonnement kan have en anden. I dag bruger kun ét site motoren, så tallet bor
+ * her; bliver de flere, hører det til i site-konfigurationen ved siden af
+ * nøglen. Se F189.3.
  */
-export const PRIS_PR_1000_TEGN_USD = 0.15;
+export const PRIS_PR_1000_TEGN_USD = 0.1;
 
 /** Talehastighed brugt til at anslå længden. Groft, og det siges i svaret. */
 const TEGN_PR_MINUT = 900;
