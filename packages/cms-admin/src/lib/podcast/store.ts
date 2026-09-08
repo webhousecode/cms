@@ -111,10 +111,19 @@ export async function listAfsnit(): Promise<StoreSvar<Afsnit[]>> {
   const { documents } = await cms.content.findMany(PODCAST_SAMLING, {});
   return {
     ok: true,
-    vaerdi: (documents as { slug?: unknown; data?: unknown }[]).map((d) => ({
-      slug: String(d.slug ?? ""),
-      data: laesData(d.data),
-    })),
+    // PAPIRKURVEN UDELADES. findMany svarer med ALT, også det slettede — så et
+    // afsnit Christian havde bedt om at få slettet stod stadig i listen som
+    // «Udgivet», og sletningen så ud til ikke at virke (målt 8/9 på et
+    // skærmbillede af admin).
+    //
+    // Der filtreres HER frem for med options.status, fordi det felt kun kan
+    // vælge ÉN status — og så ville kladder og godkendte forsvinde med.
+    vaerdi: (documents as { slug?: unknown; status?: unknown; data?: unknown }[])
+      .filter((d) => d.status !== "trashed")
+      .map((d) => ({
+        slug: String(d.slug ?? ""),
+        data: laesData(d.data),
+      })),
   };
 }
 

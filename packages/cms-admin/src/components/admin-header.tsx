@@ -1050,7 +1050,7 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
       backgroundColor: "var(--card)",
     }}>
       <div style={{ display: "flex", flex: 1, alignItems: "center", gap: "0.5rem", padding: "0 1rem" }}>
-        {mode !== "chat" && <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />}
+        {mode !== "chat" && <SidebarTrigger data-testid="sidebar-toggle" className="-ml-1 text-muted-foreground hover:text-foreground" />}
         {mode === "chat" ? (
           <>
             <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--foreground)" }}>

@@ -141,3 +141,31 @@ describe("ingen overgang uden en sponsor", () => {
     expect(skalHaveOvergang("   ")).toBe(false);
   });
 });
+
+describe("papirkurven vises ikke som indhold", () => {
+  const KODE_STORE = readFileSync(new URL("../podcast/store.ts", import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "");
+  const KODE_SPONS = readFileSync(new URL("../podcast/sponsors.ts", import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "");
+
+  it("afsnitslisten filtrerer slettede fra", () => {
+    // Christian bad om at få et prøve-afsnit slettet. Det blev slettet — og
+    // stod stadig i admin som «Udgivet», fordi findMany svarer med alt.
+    // Sletningen så ud til ikke at virke.
+    expect(KODE_STORE).toContain('.filter((d) => d.status !== "trashed")');
+  });
+
+  it("sponsor-arkivet gør det samme", () => {
+    expect(KODE_SPONS).toContain('.filter((d) => d.status !== "trashed")');
+  });
+
+  it("der filtreres IKKE med options.status — det ville skjule kladderne", () => {
+    // options.status kan kun vælge ÉN status. Bruges den, forsvinder kladder
+    // og godkendte sammen med papirkurven, og listen bliver tom for alt andet
+    // end udgivne — en «rettelse» der er værre end fejlen.
+    expect(KODE_STORE).toContain("findMany(PODCAST_SAMLING, {})");
+    expect(KODE_STORE).not.toContain('findMany(PODCAST_SAMLING, { status:');
+  });
+});

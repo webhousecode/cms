@@ -93,10 +93,15 @@ export async function listSponsorer(): Promise<StoreSvar<Sponsor[]>> {
   const { documents } = await cms.content.findMany(SPONSOR_SAMLING, {});
   return {
     ok: true,
-    vaerdi: (documents as { slug?: unknown; data?: unknown }[]).map((d) => ({
-      slug: String(d.slug ?? ""),
-      data: laes(d.data),
-    })),
+    // Papirkurven udelades — samme grund som ved afsnittene: findMany svarer
+    // med alt, og et slettet indslag i arkivet ville se ud som om sletningen
+    // ikke virkede.
+    vaerdi: (documents as { slug?: unknown; status?: unknown; data?: unknown }[])
+      .filter((d) => d.status !== "trashed")
+      .map((d) => ({
+        slug: String(d.slug ?? ""),
+        data: laes(d.data),
+      })),
   };
 }
 
