@@ -181,3 +181,49 @@ describe("hver svatch har sit EGET anker", () => {
     expect(testidNavn("#00b2ff")).toBe("00b2ff");
   });
 });
+
+describe("pipetten og det gamle udseende", () => {
+  it("pipetten skriver i HEX-FELTET — den farver ikke teksten", () => {
+    // Christians ord: den skal «måle en farve og indsætte #hex værdien i hex
+    // feltet». En pipette der farvede med det samme, ville gøre en fejlmåling
+    // til en ændring man skal fortryde.
+    const f = KODE.slice(KODE.indexOf("async function maalFarve"));
+    const krop = f.slice(0, f.indexOf("\n}"));
+    expect(krop).toContain("felt.value = sRGBHex");
+    expect(krop).not.toContain("applyColor");
+    expect(krop).not.toContain("execCommand");
+  });
+
+  it("pipetten tegnes KUN når browseren har EyeDropper", () => {
+    // Safari og Firefox har den ikke. En knap der intet gør er værre end ingen.
+    expect(KODE).toContain("if (harPipette()) {");
+    const h = KODE.slice(KODE.indexOf("function harPipette"));
+    expect(h.slice(0, h.indexOf("\n}"))).toContain('typeof (window as unknown as { EyeDropper?: unknown }).EyeDropper === "function"');
+  });
+
+  it("et afbrudt måleforsøg er ikke en fejl og må ikke støje", () => {
+    const f = KODE.slice(KODE.indexOf("async function maalFarve"));
+    expect(f.slice(0, f.indexOf("\n}"))).toContain("catch {");
+  });
+
+  it("toolbar-knappen viser den VALGTE farve, ikke en generisk glyf", () => {
+    // Det gamle udseende: ordet «Farve» ved siden af en farvet firkant, hvor
+    // firkanten viste hvad der var valgt. En pensel-glyf mistede begge dele.
+    expect(KODE).toContain('data-role="prik"');
+    expect(KODE).toContain("background:${sidsteFarve}");
+    expect(KODE).toContain("uiLabels.color}</span>");
+  });
+
+  it("prikken opdateres NÅR en farve sættes — ellers er den pynt", () => {
+    const f = KODE.slice(KODE.indexOf("function applyColor"));
+    const krop = f.slice(0, f.indexOf("\n}"));
+    const farv = krop.indexOf('execCommand("foreColor"');
+    const prik = krop.indexOf("opdaterFarvePrik(farve)");
+    expect(prik).toBeGreaterThan(-1);
+    expect(prik).toBeGreaterThan(farv);
+  });
+
+  it("pipetten har sit eget anker", () => {
+    expect(KODE).toContain('"inline-color-pipette"');
+  });
+});

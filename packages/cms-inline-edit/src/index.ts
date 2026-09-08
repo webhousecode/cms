@@ -46,6 +46,8 @@ export interface InlineEditLabels {
   orderedList?: string;
   unorderedList?: string;
   color?: string;
+  /** Pipetten i paletten — måler en farve på skærmen ind i hex-feltet. */
+  colorPick?: string;
   emoji?: string;
   done?: string;
   saving?: string;
@@ -115,6 +117,7 @@ const DEFAULT_LABELS: Required<InlineEditLabels> = {
   orderedList: "Nummereret liste",
   unorderedList: "Punktliste",
   color: "Farve",
+  colorPick: "Mål en farve på skærmen",
   emoji: "Indsæt emoji",
   done: "Færdig",
   saving: "Gemmer…",
@@ -821,8 +824,24 @@ function buildRichToolbar(): HTMLElement {
   //
   // Vores egen palet løser begge: markeringen gemmes før den åbner (samme
   // savedRange-mønster som link- og emoji-vælgeren), og udseendet er vores.
-  const colorBtn = toolbarButton(COLOR_SVG, uiLabels.color, () => toggleColorPicker(colorBtn));
+  // UDSEENDET er det gamle, med vilje. Christian, 8/9: «det ikon der var før på
+  // toolbar var bedre.» Før stod der ordet «Farve» ved siden af en lille farvet
+  // firkant — firkanten VAR den native <input type="color">, og den viste den
+  // valgte farve. En generisk pensel-glyf mistede begge dele: hvad knappen gør,
+  // og hvilken farve der er valgt.
+  //
+  // Så: samme udseende, men det er en knap der åbner VORES palet — ikke en
+  // systemkontrol. Firkanten opdateres når en farve vælges (opdaterFarvePrik).
+  const colorBtn = toolbarButton(
+    `<span data-role="prik" style="display:inline-block;width:14px;height:14px;border-radius:3px;` +
+      `border:1px solid #3a3f4a;background:${sidsteFarve};vertical-align:-2px"></span>` +
+      `<span style="margin-left:6px;font-size:12px;color:#9aa4b2">${uiLabels.color}</span>`,
+    uiLabels.color,
+    () => toggleColorPicker(colorBtn),
+  );
+  colorBtn.style.padding = "0 9px";
   colorBtn.setAttribute("data-testid", "inline-toolbar-color");
+  farvePrik = colorBtn.querySelector('[data-role="prik"]');
   t.appendChild(colorBtn);
 
   t.appendChild(sep());
@@ -1520,6 +1539,15 @@ function insertEmoji(emoji: string): void {
    det redigerbare felt har fjernet markeringen. Samme mønster som link- og
    emoji-vælgeren, som allerede gør det rigtige. */
 
+/** Den senest valgte farve, vist på toolbar-knappen. Starter hvid, som paletten. */
+let sidsteFarve = "#ffffff";
+let farvePrik: HTMLElement | null = null;
+
+function opdaterFarvePrik(farve: string): void {
+  sidsteFarve = farve;
+  if (farvePrik) farvePrik.style.background = farve;
+}
+
 function toggleColorPicker(anchor: HTMLElement): void {
   if (!colorPicker) colorPicker = buildColorPicker();
   if (colorPicker.style.display === "block") {
@@ -1570,6 +1598,46 @@ function svatch(f: { vaerdi: string; navn: string }, testid: string): HTMLButton
  *  garanterer er unik i paletten. */
 function anker(praefiks: string, f: { vaerdi: string; navn: string }): string {
   return `${praefiks}-${testidNavn(f.navn) || testidNavn(f.vaerdi)}`;
+}
+
+/** Lucide "pipette" (https://lucide.dev/icons/pipette), MIT. Inline af samme
+ *  grund som resten: pakken må ikke trække en ikon-runtime med sig. */
+const PIPETTE_SVG =
+  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+  'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/>' +
+  '<path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3z"/>' +
+  "</svg>";
+
+type EyeDropperCtor = new () => { open(): Promise<{ sRGBHex: string }> };
+
+/** Har browseren EyeDropper? Chrome/Edge ja, Safari/Firefox nej (målt 8/9-2026). */
+function harPipette(): boolean {
+  return typeof window !== "undefined" && typeof (window as unknown as { EyeDropper?: unknown }).EyeDropper === "function";
+}
+
+/**
+ * Mål en farve på skærmen og skriv den i hex-feltet.
+ *
+ * Den SKRIVER kun — den farver ikke teksten. Det er Christians ord: pipetten
+ * «kan måle en farve og indsætte #hex værdien i hex feltet». Så man kan se hvad
+ * man har målt, rette i det, og selv trykke Brug. En pipette der farvede med det
+ * samme ville gøre en fejlmåling til en ændring man skal fortryde.
+ *
+ * Markeringen overlever: open() tager fokus, så savedRange gemmes igen bagefter
+ * er ikke nok — den er allerede gemt af toggleColorPicker, og applyColor
+ * genskaber den. Vi rører den ikke her.
+ */
+async function maalFarve(felt: HTMLInputElement): Promise<void> {
+  const Ctor = (window as unknown as { EyeDropper?: EyeDropperCtor }).EyeDropper;
+  if (!Ctor) return;
+  try {
+    const { sRGBHex } = await new Ctor().open();
+    felt.value = sRGBHex;
+    felt.focus();
+  } catch {
+    // Brugeren trykkede Escape. Det er ikke en fejl, og den må ikke støje.
+  }
 }
 
 function buildColorPicker(): HTMLElement {
@@ -1636,6 +1704,33 @@ function buildColorPicker(): HTMLElement {
       brugHex();
     }
   });
+  // PIPETTEN. Christian, 8/9: «jeg vil gerne have "sucker" igen den der kan måle
+  // en farve og indsætte #hex værdien i hex feltet».
+  //
+  // Den fandtes før som en del af macOS' farvepanel — altså i den native
+  // dialog, som er væk af de grunde der står ved farveknappen. Browserens egen
+  // EyeDropper-API gør det samme uden dialogen: den lader brugeren måle en
+  // vilkårlig pixel PÅ SKÆRMEN, og vi skriver hex-værdien i feltet.
+  //
+  // KUN når browseren har den. Chrome og Edge har; Safari og Firefox har ikke.
+  // En knap der intet gør er værre end ingen knap — så den tegnes ikke der.
+  if (harPipette()) {
+    const pip = document.createElement("button");
+    pip.type = "button";
+    pip.title = uiLabels.colorPick;
+    pip.setAttribute("data-testid", "inline-color-pipette");
+    pip.innerHTML = PIPETTE_SVG;
+    pip.style.cssText =
+      "background:none;border:1px solid #3a3f4a;border-radius:5px;color:#fff;" +
+      "padding:4px 7px;cursor:pointer;display:flex;align-items:center;";
+    pip.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      void maalFarve(hex);
+    });
+    fri.appendChild(pip);
+  }
+
   fri.appendChild(hex);
   fri.appendChild(brug);
   p.appendChild(fri);
@@ -1653,6 +1748,7 @@ function applyColor(farve: string): void {
     sel.addRange(savedRange);
   }
   document.execCommand("foreColor", false, farve);
+  opdaterFarvePrik(farve);
   savedRange = null;
   hideColorPicker();
 }

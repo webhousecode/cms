@@ -17,6 +17,7 @@ base: http://127.0.0.1:4321
 - assert: const f=document.querySelector('#felt'); return { pass: f.querySelector('font,span') === null, detail: 'FOER: ' + f.innerHTML };
 - click [inline-toolbar-color]
 - expectVisible [inline-color-picker]
+- expectVisible [inline-color-pipette]
 - click [inline-color-site-swatch-brand-primary]
 - assert: const f=document.querySelector('#felt'); const n=f.querySelector('font,span'); if(!n) return {pass:false, detail:'ingen farvet node — innerHTML: '+f.innerHTML}; const c=getComputedStyle(n).color; return { pass: c === 'rgb(0, 178, 255)', detail: 'maalt=' + c + ' forventet=rgb(0, 178, 255)' };
 - screenshot farven-sat
