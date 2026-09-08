@@ -53,9 +53,47 @@ export const PRIS_PR_1000_TEGN_USD = 0.1;
 /** Talehastighed brugt til at anslå længden. Groft, og det siges i svaret. */
 const TEGN_PR_MINUT = 900;
 
+/**
+ * USD → DKK.
+ *
+ * Christian 8/9: «Omregn til DKK». Han regner ikke i dollars, og et beløb han
+ * skal omregne i hovedet er et beløb han ikke bruger.
+ *
+ * MÅLT 8. september 2026 kl. 02.02 (dansk tid): 6,4313, fra open.er-api.com.
+ * Afrundet til 6,43 — en kurs med seks decimaler foregiver en præcision der
+ * ikke er der på beløb under en tyver.
+ *
+ * DET ER ET ØJEBLIKSBILLEDE. En valutakurs bevæger sig; et par procent ændrer
+ * ingen beslutning her, men står tallet uændret om et år er det forkert med
+ * måske ti procent. Derfor rejser datoen med ud i svaret, så en klient kan vise
+ * den frem for at lade som om kursen er evig.
+ *
+ * REGNINGEN KOMMER I DOLLARS — ElevenLabs fakturerer i USD. Kronebeløbet er en
+ * oversættelse til læseren, ikke det tal der trækkes.
+ */
+export const USD_TIL_DKK = 6.43;
+export const KURS_MAALT = "8. september 2026";
+
+/** Kroner, dansk skrevet: komma som decimaltegn, ALTID to decimaler.
+ *
+ *  «1.54 kr» er engelsk og læses som halvandet tusinde af en der skimmer — og
+ *  beløbet står på en knap der bruger penge. To decimaler altid, fordi penge
+ *  skrives med ører, og fordi to beløb ved siden af hinanden ellers ville have
+ *  hver sin form. */
+export function dkk(usd: number): string {
+  return `${(usd * USD_TIL_DKK).toFixed(2).replace(".", ",")} kr`;
+}
+
 export type Estimat = {
   tegn: number;
   prisUsd: number;
+  /** Færdigformateret, så hver klient ikke skal kende kursen. */
+  prisDkk: string;
+  /** Datoen kursen blev målt — vises ved siden af beløbet. */
+  kursMaalt: string;
+  /** Selve kursen, så en klient kan omregne et HISTORISK beløb uden at have
+   *  sin egen kopi af tallet. */
+  kurs: number;
   minutter: number;
 };
 
@@ -65,13 +103,24 @@ export type Estimat = {
  * Bruger INGEN penge og kalder ingen udbyder. Det er hele meningen: en klient
  * skal kunne vise beløbet før nogen trykker.
  */
+/** Prisen for et stykke ren TEKST — fx et sponsormanuskript, der ikke har en
+ *  taler. Det er tegnene der koster, ikke hvem der siger dem. Samme vej som
+ *  estimat(), så de to aldrig kan svare forskelligt. */
+export function estimatForTekst(tekst: string): Estimat {
+  return estimat([{ speaker: "aidan", text: tekst }]);
+}
+
 export function estimat(replikker: Replik[]): Estimat {
   const tegn = manuskriptTegn(replikker);
+  const prisUsd = Math.ceil((tegn / 1000) * PRIS_PR_1000_TEGN_USD * 100) / 100;
   return {
     tegn,
+    prisDkk: dkk(prisUsd),
+    kursMaalt: KURS_MAALT,
+    kurs: USD_TIL_DKK,
     // Afrundet til øre. Et beløb med fjorten decimaler på en knap ser ud som en
     // fejl, og et beløb der er FOR lavt er værre end et der er lidt for højt.
-    prisUsd: Math.ceil((tegn / 1000) * PRIS_PR_1000_TEGN_USD * 100) / 100,
+    prisUsd,
     minutter: Math.round((tegn / TEGN_PR_MINUT) * 10) / 10,
   };
 }

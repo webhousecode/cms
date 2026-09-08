@@ -10,6 +10,7 @@ import type { NextRequest } from "next/server";
 import { kraevTilladelse, preflight, svar, PODCAST_PERMISSIONS } from "@/lib/podcast/api";
 import { listSponsorer, skrivSponsor, hentSponsor, brugtI } from "@/lib/podcast/sponsors";
 import { listAfsnit } from "@/lib/podcast/store";
+import { estimatForTekst } from "@/lib/podcast/preflight";
 
 export const OPTIONS = preflight;
 
@@ -32,10 +33,19 @@ export async function GET(req: NextRequest) {
     : null;
 
   return svar(req, {
-    sponsorer: liste.vaerdi.map((s) => ({
-      ...s,
-      brugtI: brug ? brugtI(s.slug, brug) : null,
-    })),
+    sponsorer: liste.vaerdi.map((s) => {
+      // Prisen regnes i MOTOREN og sendes med. Skærmen skal ikke kende hverken
+      // satsen eller valutakursen — gjorde den det, ville der være to
+      // sandheder om hvad et tryk koster.
+      const e = estimatForTekst(s.data.manuskript ?? "");
+      return {
+        ...s,
+        brugtI: brug ? brugtI(s.slug, brug) : null,
+        prisUsd: e.prisUsd,
+        prisDkk: e.prisDkk,
+        kursMaalt: e.kursMaalt,
+      };
+    }),
     ...(brug ? {} : { advarsel: `brugen kunne ikke slås op: ${afsnit.ok ? "" : afsnit.grund}` }),
   });
 }

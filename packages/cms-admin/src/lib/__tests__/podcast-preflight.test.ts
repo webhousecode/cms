@@ -30,7 +30,12 @@ describe("estimat — bruger ingen penge", () => {
   });
 
   it("et tomt manuskript koster nul, ikke NaN", () => {
-    expect(estimat([])).toEqual({ tegn: 0, prisUsd: 0, minutter: 0 });
+    // toMatchObject og ikke toEqual: prøven skal fejle hvis et TAL bliver NaN,
+    // ikke hver gang estimatet får et nyt felt. Den blev rød da kroner og kurs
+    // kom med (Christian 8/9), og der var intet i vejen.
+    expect(estimat([])).toMatchObject({ tegn: 0, prisUsd: 0, minutter: 0 });
+    // Kronebeløbet må heller ikke blive NaN på et tomt manuskript.
+    expect(estimat([]).prisDkk).toBe("0,00 kr");
   });
 
   it("anslår en længde man kan skrive på en skærm", () => {

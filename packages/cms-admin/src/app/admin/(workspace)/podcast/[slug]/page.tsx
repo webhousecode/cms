@@ -31,7 +31,7 @@ type Afsnit = {
 };
 
 type Tjek = { navn: string; ok: boolean; detalje: string };
-type Estimat = { tegn: number; prisUsd: number; minutter: number };
+type Estimat = { tegn: number; prisUsd: number; prisDkk: string; kursMaalt: string; kurs: number; minutter: number };
 
 const STATUS: Record<Tilstand, string> = {
   kladde: "○ Kladde",
@@ -74,6 +74,12 @@ export default function PodcastAfsnitPage() {
   const [henter, setHenter] = useState(true);
   const [fejl, setFejl] = useState<string | null>(null);
   const [arbejder, setArbejder] = useState<string | null>(null);
+  /** Kursen AFLEDES af estimatets egne to tal (kroner ÷ dollars) i stedet for
+   *  at stå som en konstant her. Så kan skærmen vise «kostede X kr» for en
+   *  gammel indspilning uden at have sin egen kurs at drive med. */
+  const kurs = estimat && estimat.prisUsd > 0
+    ? Number(estimat.prisDkk.replace(" kr", "").replace(",", ".")) / estimat.prisUsd
+    : null;
   const [bekraeft, setBekraeft] = useState(false);
   const [beskedOk, setBeskedOk] = useState<string | null>(null);
 
@@ -243,7 +249,7 @@ export default function PodcastAfsnitPage() {
               <dl data-testid="podcast-pris" style={{ margin: 0, fontSize: ".78rem", display: "grid", gap: ".3rem" }}>
                 {[
                   ["Tegn i manuskriptet", estimat.tegn.toLocaleString("da-DK")],
-                  ["Denne indspilning", `$${estimat.prisUsd.toFixed(2)}`],
+                  ["Denne indspilning", estimat.prisDkk],
                   ["Anslået længde", `~${estimat.minutter} min`],
                 ].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between" }}>
@@ -252,6 +258,17 @@ export default function PodcastAfsnitPage() {
                   </div>
                 ))}
               </dl>
+              {/* Regningen kommer i DOLLARS. Kronebeløbet er en oversættelse
+                  til læseren, ikke det tal der trækkes — og en kurs bevæger
+                  sig, så den står med sin dato frem for at lade som om den er
+                  evig. */}
+              <p
+                data-testid="podcast-pris-kurs"
+                style={{ margin: ".5rem 0 0", fontSize: ".68rem", color: "var(--muted-foreground)" }}
+              >
+                Faktureres i dollars (${estimat.prisUsd.toFixed(2)}) — omregnet til kroner efter
+                kursen den {estimat.kursMaalt}.
+              </p>
             </section>
           )}
 
@@ -275,7 +292,7 @@ export default function PodcastAfsnitPage() {
                   onClick={() => setBekraeft(true)}
                   style={knap(true, !godkendt || arbejder !== null)}
                 >
-                  ♪ Indspil{estimat ? ` for $${estimat.prisUsd.toFixed(2)}` : ""}
+                  ♪ Indspil{estimat ? ` for ${estimat.prisDkk}` : ""}
                 </button>
                 {!godkendt && (
                   <p data-testid="podcast-indspil-hjaelp" style={{ margin: 0, fontSize: ".72rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
@@ -311,7 +328,7 @@ export default function PodcastAfsnitPage() {
                       background: "var(--primary)", color: "var(--primary-foreground)", cursor: "pointer",
                     }}
                   >
-                    {arbejder === "indspil" ? "Indspiller…" : `Ja, indspil${estimat ? ` for $${estimat.prisUsd.toFixed(2)}` : ""}`}
+                    {arbejder === "indspil" ? "Indspiller…" : `Ja, indspil${estimat ? ` for ${estimat.prisDkk}` : ""}`}
                   </button>
                   <button
                     data-testid="podcast-bekraeft-nej"
@@ -334,7 +351,7 @@ export default function PodcastAfsnitPage() {
                 <audio controls src={afsnit!.data.lydUrl} data-testid="podcast-afspiller" style={{ width: "100%" }} />
                 {typeof afsnit!.data.faktiskPrisUsd === "number" && (
                   <p style={{ margin: 0, fontSize: ".72rem", color: "var(--muted-foreground)" }}>
-                    Kostede ${afsnit!.data.faktiskPrisUsd.toFixed(2)}.
+                    Kostede {kurs ? `${(afsnit!.data.faktiskPrisUsd * kurs).toFixed(2).replace(".", ",")} kr` : `$${afsnit!.data.faktiskPrisUsd.toFixed(2)}`}.
                   </p>
                 )}
                 {maaSkrive && tilstand !== "udgivet" && (

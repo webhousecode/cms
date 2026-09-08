@@ -72,16 +72,22 @@ describe("F189.6 — pengeknappen", () => {
     expect(detalje.kilde).toMatch(/const godkendt = tilstand === "godkendt"/);
   });
 
+  // BELØBET, ikke et bestemt feltnavn. Vagten pinnede «prisUsd» og blev rød da
+  // priserne blev lagt om til kroner (Christian 8/9: «Omregn til DKK») — den
+  // målte implementeringen i stedet for kravet, som er at man kan se hvad et
+  // tryk koster UDEN at flytte blikket. Nu accepteres begge valutaer.
+  const BELOEB = /pris(Usd|Dkk)/;
+
   it("prisen står PÅ knappen, ikke kun i en note ved siden af", () => {
     const iKnap = detalje.kilde.match(/data-testid="podcast-indspil"[\s\S]{0,400}?<\/button>/);
     expect(iKnap, "indspil-knappen blev ikke fundet").toBeTruthy();
-    expect(iKnap![0]).toContain("prisUsd");
+    expect(iKnap![0]).toMatch(BELOEB);
   });
 
   it("bekræftelsens JA-knap bærer også beløbet", () => {
     const ja = detalje.kilde.match(/data-testid="podcast-bekraeft-ja"[\s\S]{0,900}?<\/button>/);
     expect(ja, "ja-knappen blev ikke fundet").toBeTruthy();
-    expect(ja![0]).toContain("prisUsd");
+    expect(ja![0]).toMatch(BELOEB);
   });
 });
 

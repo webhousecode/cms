@@ -31,6 +31,8 @@ type Sponsor = {
     aktiv?: boolean;
   };
   brugtI: string[] | null;
+  /** Regnet i MOTOREN og sendt med — skærmen kender hverken sats eller kurs. */
+  prisDkk?: string;
 };
 
 /** Stemmerne SDK'et kender på dansk. Aidan bruger «jesper», så en reklame må
@@ -73,6 +75,26 @@ export default function SponsorArkivPage() {
   const [gemmer, setGemmer] = useState(false);
   const [indtaler, setIndtaler] = useState<string | null>(null);
   const [bekraeft, setBekraeft] = useState<string | null>(null);
+  /** Prisen for det manuskript der skrives lige nu. Hentes fra API'et frem for
+   *  at blive regnet her — ellers ville skærmen have sin egen sats og sin egen
+   *  valutakurs ved siden af motorens. Kaldet koster ingenting. */
+  const [nyPris, setNyPris] = useState<string>("");
+  useEffect(() => {
+    const t = nyManus.trim();
+    if (!t) { setNyPris(""); return; }
+    const id = setTimeout(async () => {
+      try {
+        const r = await fetch("/api/podcast/estimate", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ tekst: t }),
+        });
+        const j = (await r.json()) as { estimat?: { prisDkk?: string } };
+        if (r.ok && j.estimat?.prisDkk) setNyPris(j.estimat.prisDkk);
+      } catch { /* uden pris skrives der bare videre */ }
+    }, 400);
+    return () => clearTimeout(id);
+  }, [nyManus]);
 
   async function hent() {
     setHenter(true);
@@ -143,7 +165,6 @@ export default function SponsorArkivPage() {
     }
   }
 
-  const pris = (n: number) => `$${((n / 1000) * 0.1).toFixed(2)}`;
 
   return (
     <>
@@ -221,7 +242,7 @@ export default function SponsorArkivPage() {
               </span>
               {nyManus.trim().length > 0 && (
                 <span style={{ fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-                  {nyManus.trim().length} tegn · ca. {pris(nyManus.trim().length)} at indtale
+                  {nyManus.trim().length} tegn · {nyPris ? ` · ca. ${nyPris} at indtale` : ""}
                 </span>
               )}
             </div>
@@ -317,7 +338,7 @@ export default function SponsorArkivPage() {
                     {bekraeft === s.slug ? (
                       <>
                         <span style={{ fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-                          Indtal for {pris((s.data.manuskript ?? "").length)}?
+                          Indtal{s.prisDkk ? ` for ${s.prisDkk}` : ""}?
                         </span>
                         <button
                           type="button" data-testid="sponsor-indtal-ja"
