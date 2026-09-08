@@ -50,6 +50,17 @@ export type AfsnitData = {
   /** Hvad indspilningen FAKTISK kostede — så «hvad kostede det» kan besvares
    *  bagefter og ikke kun estimeres. */
   faktiskPrisUsd?: number;
+  /** F191 — sponsorindslaget der skal ind i dette afsnit. Peger på et dokument
+   *  i «sponsorer»-samlingen; indslaget selv bor IKKE her, fordi det skal kunne
+   *  genbruges på tværs af afsnit. */
+  sponsorSlug?: string;
+  /** Hvor i afsnittet reklamen ligger: EFTER denne replik (0-indekseret).
+   *
+   *  En PLADS I MANUSKRIPTET og ikke et klokkeslæt. Redaktøren læser replikker,
+   *  ikke sekunder — og en tidsangivelse ville skulle regnes om hver gang
+   *  manuskriptet rettes, hvilket er præcis den slags stille forældelse der
+   *  ender med en reklame midt i en sætning. */
+  sponsorEfterReplik?: number;
   udgivetAt?: string;
 };
 
@@ -215,6 +226,10 @@ function laesData(raa: unknown): AfsnitData {
     ...(typeof d.faktiskPrisUsd === "number" ? { faktiskPrisUsd: d.faktiskPrisUsd } : {}),
     ...(typeof d.nummer === "number" && Number.isFinite(d.nummer) ? { nummer: d.nummer } : {}),
     ...(typeof d.saeson === "number" && Number.isFinite(d.saeson) ? { saeson: d.saeson } : {}),
+    ...(typeof d.sponsorSlug === "string" && d.sponsorSlug ? { sponsorSlug: d.sponsorSlug } : {}),
+    ...(typeof d.sponsorEfterReplik === "number" && Number.isFinite(d.sponsorEfterReplik)
+      ? { sponsorEfterReplik: d.sponsorEfterReplik }
+      : {}),
     ...(typeof d.udgivetAt === "string" ? { udgivetAt: d.udgivetAt } : {}),
   };
 }

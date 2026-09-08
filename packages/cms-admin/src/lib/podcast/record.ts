@@ -18,6 +18,9 @@ import { getMediaAdapter } from "@/lib/media";
 import { maaIndspilles } from "./state";
 import { estimat } from "./preflight";
 import { hentAfsnit, skrivAfsnit, type Afsnit, type StoreSvar } from "./store";
+import { hentSponsor, maaBruges } from "./sponsors";
+import { overgangNoegle, skalHaveOvergang, OVERGANG_RESERVE } from "./bumper";
+import { sySammen } from "./stitch";
 import type { Replik } from "./manuscript";
 
 /**
@@ -27,10 +30,20 @@ import type { Replik } from "./manuscript";
  * anden lydfil, og en nøgle der ikke kunne skelne dem ville genbruge den
  * forkerte optagelse — tavst, fordi filen findes og afspilleren virker.
  */
-export function lydNoegle(replikker: Replik[], stemmer: { aidan: string; airina: string }): string {
+export function lydNoegle(
+  replikker: Replik[],
+  stemmer: { aidan: string; airina: string },
+  sponsor?: { slug?: string; efterReplik?: number },
+): string {
   const h = createHash("sha256");
   for (const r of replikker) h.update(`${r.speaker} ${r.text} `);
   h.update(`voices:${stemmer.aidan}/${stemmer.airina}`);
+  // F191 — SPONSOREN ER EN DEL AF LYDENS IDENTITET. Uden den ville et afsnit
+  // der lige har fået en reklame på genbruge den gamle fil UDEN reklamen: samme
+  // manuskript, samme stemmer, samme nøgle. Filen findes, afspilleren virker,
+  // og sponsoren er der bare ikke — den tavse slags fejl, og her koster den en
+  // kunde penge han har betalt for at få leveret.
+  if (sponsor?.slug) h.update(`sponsor:${sponsor.slug}@${sponsor.efterReplik ?? 0}`);
   return h.digest("hex").slice(0, 16);
 }
 
@@ -44,6 +57,9 @@ export type IndspilSvar = StoreSvar<{
 export async function indspil(args: {
   afsnitSlug: string;
   stemmer: { aidan: string; airina: string };
+  /** Sitets egen formulering af overgangen til reklamen. Kommer fra CMS'et;
+   *  udelades den, bruges nødbremsen i bumper.ts. */
+  overgangTekst?: string;
 }): Promise<IndspilSvar> {
   const hentet = await hentAfsnit(args.afsnitSlug);
   if (!hentet.ok) return hentet;
@@ -60,7 +76,10 @@ export async function indspil(args: {
     return { ok: false, grund: "manuskriptet er tomt" };
   }
 
-  const noegle = lydNoegle(afsnit.data.replikker, args.stemmer);
+  const noegle = lydNoegle(afsnit.data.replikker, args.stemmer, {
+    slug: afsnit.data.sponsorSlug,
+    efterReplik: afsnit.data.sponsorEfterReplik,
+  });
 
   // Samme manuskript + samme stemmer = samme fil. Ingen grund til at betale
   // igen for noget vi allerede har.
@@ -81,13 +100,29 @@ export async function indspil(args: {
   let mimeType: string;
   try {
     const ai = await getAI();
-    const resultat = await ai.podcast({
-      script: afsnit.data.replikker.map((r) => ({ speaker: r.speaker, text: r.text })),
-      voices: { aidan: args.stemmer.aidan, airina: args.stemmer.airina },
-      purpose: "podcast.episode",
-    });
-    lyd = resultat.audio;
-    mimeType = resultat.mimeType;
+    const alle = afsnit.data.replikker.map((r) => ({ speaker: r.speaker, text: r.text }));
+
+    // F191 — UDEN SPONSOR: én optagelse, som før. Den korte vej er den samme
+    // som den altid har været, så et afsnit uden reklame ikke betaler for
+    // kompleksitet det ikke bruger.
+    if (!skalHaveOvergang(afsnit.data.sponsorSlug)) {
+      const resultat = await ai.podcast({
+        script: alle,
+        voices: { aidan: args.stemmer.aidan, airina: args.stemmer.airina },
+        purpose: "podcast.episode",
+      });
+      lyd = resultat.audio;
+      mimeType = resultat.mimeType;
+    } else {
+      const syet = await indspilMedSponsor({
+        afsnit,
+        stemmer: args.stemmer,
+        overgangTekst: args.overgangTekst ?? OVERGANG_RESERVE,
+      });
+      if (!syet.ok) return syet;
+      lyd = syet.vaerdi.mp3;
+      mimeType = "audio/mpeg";
+    }
   } catch (err) {
     // AFSNITTET RØRES IKKE. Det står stadig som «godkendt», hvilket er sandt:
     // manuskriptet er godkendt, der er bare ingen lyd. Havde vi sat
@@ -139,4 +174,99 @@ export async function indspil(args: {
   if (!skrevet.ok) return skrevet;
 
   return { ok: true, vaerdi: { afsnit: skrevet.vaerdi, lydUrl, noegle, prisUsd: pris } };
+}
+
+/**
+ * F191 — indspilning MED et sponsorindslag.
+ *
+ * Afsnittet optages i TO dele, fordi reklamen skal ligge et bestemt sted:
+ *
+ *   [replik 0 … n]  ·  Aidans overgang  ·  reklamen  ·  [replik n+1 …]
+ *
+ * To ai.podcast()-kald frem for ét. Det koster IKKE mere — det er de samme
+ * tegn — men det er den eneste måde at få et snit på et sted vi selv vælger.
+ * Alternativet ville være at klippe i den færdige lyd, og dér findes grænsen
+ * mellem to replikker ikke som noget man kan finde.
+ *
+ * OVERGANGEN GENBRUGES. Den nøgles på (tekst + stemme) og gemmes som fil, så
+ * den lyder ens i hvert afsnit. Se bumper.ts for hvorfor det ikke er en
+ * optimering men en kvalitet.
+ */
+async function indspilMedSponsor(args: {
+  afsnit: Afsnit;
+  stemmer: { aidan: string; airina: string };
+  overgangTekst: string;
+}): Promise<StoreSvar<{ mp3: Uint8Array }>> {
+  const { afsnit, stemmer, overgangTekst } = args;
+  const slug = afsnit.data.sponsorSlug!;
+
+  const hentet = await hentSponsor(slug);
+  if (!hentet.ok) return hentet;
+  if (!hentet.vaerdi) return { ok: false, grund: `sponsorindslaget «${slug}» findes ikke` };
+  const maa = maaBruges(hentet.vaerdi.data);
+  if (!maa.ok) return maa;
+
+  const adapter = await getMediaAdapter();
+
+  // Reklamens bytes. Den ligger i mediebiblioteket, så den læses DERFRA og
+  // ikke over HTTP — et internt kald til vores egen offentlige adresse ville
+  // kræve at serveren kan nå sig selv, hvilket den ikke altid kan.
+  const url = hentet.vaerdi.data.lydUrl!;
+  const dele = url.replace(/^\/+/, "").split("/").filter(Boolean);
+  const uden = dele[0] === "uploads" ? dele.slice(1) : dele;
+  const reklame = await adapter.readFile(uden);
+  if (!reklame) {
+    return {
+      ok: false,
+      grund: `sponsorindslagets lydfil kunne ikke læses (${url}). Indslaget peger på en fil der ikke er der.`,
+    };
+  }
+
+  const ai = await getAI();
+  const alle = afsnit.data.replikker.map((r) => ({ speaker: r.speaker, text: r.text }));
+
+  // Snittet. Ligger det uden for manuskriptet, lægges reklamen til sidst frem
+  // for at fejle: et afsnit der ikke kan indspilles er værre end en reklame der
+  // ligger et andet sted end redaktøren troede — og listen kan være blevet
+  // kortere siden placeringen blev valgt.
+  const raa = afsnit.data.sponsorEfterReplik ?? Math.floor(alle.length / 2);
+  const snit = Math.max(1, Math.min(raa + 1, alle.length));
+  const foer = alle.slice(0, snit);
+  const efter = alle.slice(snit);
+
+  const del1 = await ai.podcast({
+    script: foer,
+    voices: { aidan: stemmer.aidan, airina: stemmer.airina },
+    purpose: "podcast.episode",
+  });
+
+  // Overgangen. voiceFallback sættes IKKE med vilje: SDK'ets egen dokumentation
+  // advarer mod det netop hvor stemmen er en identitet et menneske genkender.
+  // Aidan ER den identitet her. Hellere en fejl med en besked end at afsnittet
+  // pludselig får en fremmed stemme uden at nogen får det at vide.
+  const overgang = await ai.tts({
+    text: overgangTekst,
+    voice: stemmer.aidan,
+    purpose: "podcast.sponsor-overgang",
+  });
+
+  const stykker: Uint8Array[] = [del1.audio, overgang.audio, new Uint8Array(reklame)];
+  if (efter.length) {
+    const del2 = await ai.podcast({
+      script: efter,
+      voices: { aidan: stemmer.aidan, airina: stemmer.airina },
+      purpose: "podcast.episode",
+    });
+    stykker.push(del2.audio);
+  }
+
+  const syet = await sySammen(stykker);
+  if (!syet.ok) return { ok: false, grund: syet.grund };
+
+  // Overgangens nøgle gemmes ikke som fil her — den er en del af den samlede
+  // afsnitsfil. Nøglen findes for at kunne SVARE på om overgangen har ændret
+  // sig, og den ligger derfor i afsnittets lydnøgle via sponsorSlug.
+  void overgangNoegle(overgangTekst, stemmer.aidan);
+
+  return { ok: true, vaerdi: { mp3: syet.mp3 } };
 }
