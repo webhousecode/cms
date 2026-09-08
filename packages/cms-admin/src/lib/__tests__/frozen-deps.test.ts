@@ -29,7 +29,17 @@ import path from "node:path";
  */
 const LEDGER: Record<string, string> = {
   "@upmetrics/sdk":
-    "Bumped to 0.4.1 on 2026-08-25. Fleet-owned; upmetrics tells us when to move.",
+    "Bumped 0.4.1 → 0.5.0 on 2026-09-08, the day upmetrics shipped it. The " +
+    "caret is the whole point of this ledger entry: ^0.4.1 on a 0.x version " +
+    "resolves >=0.4.1 <0.5.0, so we would NEVER have reached 0.5.0 without " +
+    "editing package.json — and nothing would have said so. 0.5.0 fixes the " +
+    "failure mode this SDK exists to prevent: one fetch, no retry, res.ok " +
+    "never read, so a 500 from the ingest looked like a delivered error " +
+    "report. It bites hardest exactly when upmetrics is down, which is when " +
+    "our errors matter most. Now: up to 3 attempts, a queue cap, 4xx never " +
+    "resent, and lostEvents() counts what was given up on. We do not call " +
+    "lostEvents() yet — worth wiring into the boot check later so a silently " +
+    "draining queue is visible.",
   "@broberg/mail":
     "Bumped 0.1.0 → 0.7.1 on 2026-08-27 (F172.3). The only semantic change in " +
     "the whole span is 0.3.0 flipping `live`'s default to false, which we were " +
@@ -43,7 +53,15 @@ const LEDGER: Record<string, string> = {
 
   // ── Knowingly behind. Each has a card; none is a shrug. ──
   "@broberg/ai-sdk":
-    "Bumped 0.28.0 → 0.34.0 (0.31.0 on 27 Aug, 0.34.0 on 28 Aug). 0.34.0 moves " +
+    "Bumped 0.34.0 → 0.41.1 on 2026-09-08 for F191.6: `pronunciations` on " +
+    "ai.tts landed in 0.39.0 and did not exist in 0.34.0. Measured before " +
+    "bumping — I had told the owner the SDK could not do it, which was a " +
+    "statement about our lockfile, not about the package. Typecheck and 1770 " +
+    "tests green on 0.41.1, unchanged. STILL MISSING upstream: ai.podcast() " +
+    "takes no pronunciations, so the episodes' own lines cannot get the " +
+    "dictionary; filed with ai-sdk. History below kept because it is the " +
+    "reasoning that still applies. --- Bumped 0.28.0 → 0.34.0 (0.31.0 on 27 " +
+    "Aug, 0.34.0 on 28 Aug). 0.34.0 moves " +
     "the `vision` tier from mistral-small to mistral-medium — measured before/" +
     "after and it does NOT touch us: image-analysis.ts pins pixtral-large-latest " +
     "through an explicit override and never reads the tier. 0.31.0 turns prompt caching ON BY " +
