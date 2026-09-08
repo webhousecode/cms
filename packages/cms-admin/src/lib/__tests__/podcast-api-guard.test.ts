@@ -20,6 +20,7 @@ import { isPodcastApi } from "@/proxy";
 // det fejlede før nogen assertion overhovedet kørte.)
 const PKG_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const PODCAST_DIR = join(PKG_ROOT, "src/app/api/podcast");
+const PROXY = readFileSync(join(PKG_ROOT, "src/proxy.ts"), "utf8");
 
 function ruteFiler(dir: string): string[] {
   const ud: string[] = [];
@@ -89,5 +90,51 @@ describe("isPodcastApi — matcheren proxy'en åbner på", () => {
   it("rammer ikke andre API'er", () => {
     expect(isPodcastApi("/api/cms/posts/x")).toBe(false);
     expect(isPodcastApi("/api/admin/site-config")).toBe(false);
+  });
+});
+
+describe("auth for podcast ligger i PROXY'en — ikke i handleren", () => {
+  /**
+   * REGRESSIONEN DENNE VAGT FINDES FOR, målt i produktion 8/9-2026.
+   *
+   * Første udgave gjorde /api/podcast til en PUBLIC PREFIX, så ruterne kunne
+   * autentificere sig selv. Det virkede for et bruger-JWT — og brød `wh_`-
+   * adgangstokens, fordi det tidlige public-prefix-retur ligger FØR proxy'ens
+   * wh_-gren. Samme token gav 200 på /api/cms/posts og 401 på /api/podcast, så
+   * et maskinkald fra et anvender-sites server var låst ude af netop det API
+   * det skulle bruge.
+   *
+   * To døre til samme flade driver fra hinanden. Vagten holder dem til én.
+   */
+  it("podcast står IKKE i PUBLIC_PREFIXES", () => {
+    const liste = PROXY.slice(PROXY.indexOf("const PUBLIC_PREFIXES = ["));
+    const krop = liste.slice(0, liste.indexOf("];"));
+    expect(krop).not.toContain("/api/podcast");
+  });
+
+  it("public-prefix-gaten kalder ikke isPodcastApi", () => {
+    expect(PROXY).not.toMatch(/isPublicPrefix[\s\S]{0,120}isPodcastApi/);
+  });
+
+  it("podcast-grenen ligger EFTER wh_-grenen, så maskinkald stadig konverteres", () => {
+    const wh = PROXY.indexOf('bearerToken.startsWith("wh_")');
+    const pod = PROXY.indexOf("isPodcastApi(pathname) && payload.sub");
+    expect(wh, "wh_-grenen findes ikke").toBeGreaterThan(-1);
+    expect(pod, "podcast-grenen findes ikke").toBeGreaterThan(-1);
+    expect(pod).toBeGreaterThan(wh);
+  });
+
+  it("proxy'en videresender kun IDENTITETEN — den afgør ikke hvad man må", () => {
+    // Grenen sætter en cookie og forwarder. Tilladelsen afgøres af
+    // kraevTilladelse i hver rute; ellers ville proxy'en åbne for noget.
+    // Et fast vindue, ikke `indexOf("}")`: første `}` efter branchens start
+    // ligger inde i `${existingCookies}`, så et naivt udsnit klipper FØR den
+    // linje der skal måles — og prøven ville melde en mangel der ikke findes.
+    const krop = PROXY.slice(
+      PROXY.indexOf("isPodcastApi(pathname) && payload.sub"),
+      PROXY.indexOf("isPodcastApi(pathname) && payload.sub") + 400,
+    );
+    expect(krop).toContain("COOKIE_NAME");
+    expect(krop).not.toMatch(/podcast\.(read|edit|record)/);
   });
 });

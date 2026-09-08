@@ -152,19 +152,7 @@ export async function proxy(request: NextRequest) {
   // referenced below — this is exactly the kind of route that precedent was
   // meant to prevent, just carved out of the fix by the early PUBLIC_PREFIXES
   // return.
-  // F189 — podcast-API'et autentificerer SELV (lib/podcast/api.ts:
-  // kraevTilladelse på hver rute: identitet, rolle, tilladelse og
-  // read-only-Lens-grænsen). Det ligger her fordi et site med sit EGET login
-  // skal kunne drive hele forløbet med et Bearer-token og nul cookies — som
-  // ejerens note kræver. Proxy'ens cookie-gate kan ikke bære det: den kender
-  // kun tre Bearer-former (CMS_DEV_TOKEN, wh_, editSession), og et almindeligt
-  // bruger-JWT er ingen af dem, så det 401'ede før handleren blev nået.
-  //
-  // PRISEN: glemmer én podcast-rute sit kraevTilladelse, står den åben. Det er
-  // ikke et løfte men en prøve — podcast-api-guard.test.ts læser hver rutefil
-  // og fejler hvis en HTTP-handler ikke går gennem tjekket.
-  const isPublicPrefix =
-    PUBLIC_PREFIXES.some((p) => pathname.startsWith(p)) || isPodcastApi(pathname);
+  const isPublicPrefix = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 
   // ── F146: URL-based site routing ──────────────────────────────────────
   // `/admin/{slug}/...` carries the active site in the URL so parallel tabs,
@@ -427,8 +415,29 @@ export async function proxy(request: NextRequest) {
         requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${bearerToken}`);
         return forwardOk();
       }
+      // F189 — et ALMINDELIGT bruger-JWT gælder for /api/podcast/*.
+      //
+      // Ejerens note: et site skal kunne bygge sit eget adminpanel bag sit
+      // EGET login. Den form er et separat frontend der taler JSON over
+      // Bearer — og ingen af de tre former ovenfor er den.
+      //
+      // HER, og ikke i handleren. Første udgave gjorde podcast til en public
+      // prefix så ruterne kunne autentificere sig selv. Det virkede for
+      // bruger-JWT'et og BRØD `wh_`-adgangstokens: den gren ligger LÆNGERE NEDE
+      // end det tidlige public-prefix-retur, så et maskinkald fra et sites
+      // server fik 401. Målt 8/9 i produktion — samme token gav 200 på
+      // /api/cms/posts og 401 på /api/podcast. Auth ét sted, ellers driver
+      // dørene fra hinanden.
+      //
+      // Kun tokenets IDENTITET kommer herfra. Hvad den må, afgøres stadig af
+      // kraevTilladelse i hver rute — proxy'en åbner ikke for noget.
+      if (isPodcastApi(pathname) && payload.sub) {
+        const existingCookies = requestHeaders.get("cookie") ?? "";
+        requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${bearerToken}`);
+        return forwardOk();
+      }
     } catch {
-      // Not an editSession token — fall through to cookie auth
+      // Not a verifiable session JWT — fall through to cookie auth
     }
   }
 
