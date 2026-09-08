@@ -52,6 +52,17 @@ proev "xcodebuild"              RAAD '{"tool_name":"Bash","tool_input":{"command
 echo "deploy-guard: skal vaere TAVS"
 proev "allerede i baggrund"     TAVS   '{"tool_name":"Bash","tool_input":{"command":"flyctl deploy -a x","run_in_background":true}}'
 proev "commit-besked"           TAVS   '{"tool_name":"Bash","tool_input":{"command":"git commit -m \"fix: flyctl deploy virkede ikke\""}}'
+# FLERLINJET commit-besked. Vagten fyrede paa min EGEN commit 8/9: den aabnende
+# anfoersel stod paa linje 1 og den lukkende mange linjer nede, saa den
+# linjebaserede citat-strip lod linje 3 staa bar -- og baggravene om «docker
+# build» er kommando-position. Samme fejlform som heredoc-fejlen, eet sted
+# laengere inde.
+proev "flerlinjet commit"       TAVS   '{"tool_name":"Bash","tool_input":{"command":"git add R.md && git commit -q -m \"docs: ryd op\n\nDenne README bad om `docker build` + `docker push` i haanden.\nDen vej findes ikke laengere.\" && git push"}}'
+# KONTROL: strippen maa ikke aabne et hul. En AEGTE udrulning EFTER en
+# flerlinjet besked skal stadig blokere -- ellers var rettelsen en bagdoer.
+proev "commit ; SAA deploy"     RAAD   '{"tool_name":"Bash","tool_input":{"command":"git commit -q -m \"en besked\nover to linjer\" && flyctl deploy -a x"}}'
+# KONTROL: en citeret KOERSEL undersoeges stadig -- den loeftes ud i $skal.
+proev "bash -c med deploy"      RAAD   '{"tool_name":"Bash","tool_input":{"command":"bash -c \"flyctl deploy --remote-only\""}}'
 # HEREDOC: vagten blokerede sin egen plan-doc paa denne form. sed er
 # linjebaseret og fjernede kun markoer-linjen; kroppen overlevede.
 proev "heredoc-krop"            TAVS   '{"tool_name":"Bash","tool_input":{"command":"cat >> d.md <<XEOF\nflyctl deploy 985 kald\nXEOF"}}'

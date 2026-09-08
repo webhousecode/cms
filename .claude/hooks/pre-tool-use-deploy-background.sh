@@ -119,7 +119,45 @@ skal=$(printf '%s' "$head" \
             -e "s/.*(^|[^[:alnum:]_])eval[[:space:]]+'([^']*)'.*/\2/p" \
             -e "s/.*(^|[^[:alnum:]_])ssh([[:space:]]+[^[:space:]]+)*[[:space:]]+'([^']*)'.*/\3/p" \
             -e 's/.*(^|[^[:alnum:]_])ssh([[:space:]]+[^[:space:]]+)*[[:space:]]+"([^"]*)".*/\3/p')
-ren=$(printf '%s' "$head" | sed -E "s/'[^']*'/''/g; s/\"[^\"]*\"/\"\"/g")
+# CITAT-STRIPPEN SKAL SPÆNDE OVER LINJER (F08.10.1). Samme fejlform som
+# heredoc-fejlen ovenfor, ét sted længere inde: `sed` er LINJEBASERET, så en
+# quoted streng der fortsætter på næste linje fik kun sin FØRSTE linje strippet,
+# og resten stod bart tilbage som «kommando».
+#
+# MÅLT på mig selv 8/9 — vagten blokerede denne, som er en almindelig commit:
+#
+#   git add X && git commit -q -m "docs(builder): …
+#   Denne README bad om `docker build` + `docker push` i hånden.
+#   …" && git push
+#
+# Beskeden er DATA. Men den åbnende anførsel stod på linje 1 og den lukkende
+# mange linjer nede, så linje 3 blev læst uden citater — og baggravene omkring
+# `docker build` er kommando-position i FORAN. Blokeret på sin egen commit.
+#
+# En tilstandsmaskine over tegn i stedet for et regex pr. linje. Den kender
+# hvilken anførsel der åbnede (så en apostrof inde i en dobbeltciteret streng
+# ikke lukker noget), og respekterer backslash-escape INDE i dobbelte citater —
+# hvor shellen også gør det. Enkelte citater har ingen escape i bash, og det
+# gælder også her.
+#
+# `bash -c "…"`-nyttelasten er allerede LØFTET UD i $skal ovenfor, så det er
+# stadig sandt at en citeret KØRSEL bliver undersøgt.
+ren=$(printf '%s\n' "$head" | awk '
+  BEGIN { q = "" }
+  {
+    ud = ""; n = length($0)
+    for (i = 1; i <= n; i++) {
+      c = substr($0, i, 1)
+      if (q != "") {
+        if (q == "\"" && c == "\\\\") { i++; continue }
+        if (c == q) { q = ""; ud = ud c }
+        continue
+      }
+      if (c == "\"" || c == "'"'"'") { q = c; ud = ud c; continue }
+      ud = ud c
+    }
+    print ud
+  }')
 [ -n "$skal" ] && ren=$(printf '%s\n%s' "$ren" "$skal")
 
 # INDESLUTNING, IKKE PRAEFIKS (F08.10). components' maaling afgjorde designet:

@@ -31,9 +31,19 @@ podman, k8s).
 
 ## Build + push
 
+**Never build this locally.** Docker Desktop is off on the M1 for good (owner's
+order, 8 Sep 2026 — it held 6 of 16 GB while the machine sat at 94% swap), so a
+local `docker build` has nowhere to run.
+
+It is already automated. `.github/workflows/cms-builder.yml` builds and pushes
+to GHCR on every push to `main` that touches `packages/cms-admin/builder/**`.
+So the normal path is: change a file here, commit, push.
+
+To rebuild without changing anything (a base-image bump, a cold cache):
+
 ```bash
-docker build -t ghcr.io/webhousecode/cms-builder:latest .
-docker push ghcr.io/webhousecode/cms-builder:latest
+gh workflow run cms-builder.yml --repo webhousecode/cms
+gh workflow run cms-builder.yml --repo webhousecode/cms -f no_cache=true
 ```
 
 The image only needs to be rebuilt when:
