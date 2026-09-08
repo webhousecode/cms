@@ -28,8 +28,15 @@ test.describe("Smoke: no critical console errors", () => {
     await gotoAdmin(page, "/curation");
     await page.waitForTimeout(2000);
 
-    expect(errors).toHaveLength(0);
-    expect(failed).toHaveLength(0);
+    // F193.2 — de 404'ere FØRST, og med adresserne.
+    //
+    // Rækkefølgen var omvendt, og det gjorde vagten ubrugelig præcis når den
+    // fangede noget: konsol-listen indeholder otte gange den samme sætning
+    // «Failed to load resource: the server responded with a status of 404»,
+    // uden en eneste URL. Prøven fejlede, og rapporten navngav intet.
+    // `failed` HAR adresserne — den blev bare aldrig nået.
+    expect(failed, `404 på agents/curation:\n${failed.join("\n")}`).toHaveLength(0);
+    expect(errors, `konsolfejl:\n${errors.join("\n")}`).toHaveLength(0);
   });
 });
 

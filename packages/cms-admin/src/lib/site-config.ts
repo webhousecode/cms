@@ -232,6 +232,38 @@ async function getConfigPath(): Promise<string> {
 /** Defaults fall back to env vars so existing setups keep working */
 async function defaults(): Promise<SiteConfig> {
   const { previewUrl } = await getActiveSitePaths();
+
+  /**
+   * F193.2 — SPROGENE KOMMER FRA SITETS EGEN cms.config, ikke fra et gæt.
+   *
+   * Standarden her var hårdkodet `defaultLocale: "en"`, og fordi den ALTID er
+   * en sandhedsværdi, kunne mønsteret `siteConfig.defaultLocale ||
+   * config.defaultLocale` — som står på 20 kaldesteder — aldrig nå sitets eget
+   * valg. Et site der erklærer `defaultLocale: "da"` i sin cms.config fik
+   * "en" overalt i admin, indtil et menneske tilfældigvis åbnede Indstillinger
+   * og gemte.
+   *
+   * Konsekvensen var ikke kun kosmetisk: AI-oversættelse, SEO-optimering,
+   * brand-voice og agent-prompts bygger deres sprog-instruktion på præcis den
+   * værdi. Et dansk site fik besked om at skrive engelsk.
+   *
+   * Fundet af to E2E-prøver der havde stået røde i over 100 kørsler
+   * (12-i18n «Source filter hides translations» + «language section shows
+   * configured locales»). De pegede på produktet hele tiden.
+   *
+   * Fejler opslaget — et site uden konfiguration — falder vi tilbage til det
+   * gamle "en"/[]. Ingen ny måde at gå i stykker på.
+   */
+  let locales: string[] = [];
+  let defaultLocale = "en";
+  try {
+    const { getAdminConfig } = await import("./cms");
+    const cfg = await getAdminConfig();
+    if (Array.isArray(cfg?.locales)) locales = cfg.locales as string[];
+    if (typeof cfg?.defaultLocale === "string" && cfg.defaultLocale) defaultLocale = cfg.defaultLocale;
+    else if (locales[0]) defaultLocale = locales[0];
+  } catch { /* intet site / ingen config — som før */ }
+
   return {
     previewSiteUrl: previewUrl,
     siteDomains: [],
@@ -303,8 +335,8 @@ async function defaults(): Promise<SiteConfig> {
     contentWebhooks: [],
     deployWebhooks: [],
     mediaWebhooks: [],
-    defaultLocale: "en",
-    locales: [],
+    defaultLocale,
+    locales,
     localeStrategy: "prefix-other",
     autoRetranslateOnUpdate: false,
     geoRobotsStrategy: "maximum",
