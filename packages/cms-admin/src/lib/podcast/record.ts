@@ -20,6 +20,7 @@ import { estimat } from "./preflight";
 import { hentAfsnit, skrivAfsnit, type Afsnit, type StoreSvar } from "./store";
 import { hentSponsor, maaBruges } from "./sponsors";
 import { overgangNoegle, skalHaveOvergang, OVERGANG_RESERVE } from "./bumper";
+import { sitetsUdtaler } from "./udtale";
 import { sySammen } from "./stitch";
 import type { Replik } from "./manuscript";
 
@@ -244,10 +245,15 @@ async function indspilMedSponsor(args: {
   // advarer mod det netop hvor stemmen er en identitet et menneske genkender.
   // Aidan ER den identitet her. Hellere en fejl med en besked end at afsnittet
   // pludselig får en fremmed stemme uden at nogen får det at vide.
+  // F191.6 — SAMME ordbog som reklamen. Aidan siger sponsorens navn i sin egen
+  // indledning, så en ordbog der kun nåede reklamen ville give to udtaler af
+  // samme navn med fem sekunders mellemrum.
+  const udtaler = await sitetsUdtaler();
   const overgang = await ai.tts({
     text: overgangTekst,
     voice: stemmer.aidan,
     purpose: "podcast.sponsor-overgang",
+    ...(udtaler ? { pronunciations: udtaler } : {}),
   });
 
   const stykker: Uint8Array[] = [del1.audio, overgang.audio, new Uint8Array(reklame)];

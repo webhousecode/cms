@@ -11,7 +11,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
-import { Mic, Plus, Megaphone } from "lucide-react";
+import { Mic, Plus, Megaphone, Volume2 } from "lucide-react";
 import { useHeaderData } from "@/lib/header-data-context";
 
 type Tilstand = "kladde" | "manuskript-klar" | "godkendt" | "indspillet" | "udgivet";
@@ -139,6 +139,16 @@ export default function PodcastListPage() {
           }}
         >
           <Megaphone size={13} /> Sponsorindslag
+        </Link>
+        <Link
+          href="/admin/podcast/udtale"
+          data-testid="podcast-til-udtale"
+          style={{
+            marginLeft: ".9rem", fontSize: ".8rem", color: "var(--muted-foreground)",
+            textDecoration: "none", display: "inline-flex", alignItems: "center", gap: ".3rem",
+          }}
+        >
+          <Volume2 size={13} /> Udtale
         </Link>
       </ActionBar>
 

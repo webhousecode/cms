@@ -209,6 +209,19 @@ export interface SiteConfig {
    *  "connect" prompt to authenticated editors and makes data-cms-field
    *  elements click-to-edit across every page — no per-document step. */
   inlineEditEnabled: boolean;
+  /**
+   * F191.6 — SITETS EGEN udtale-ordbog for podcast-stemmer.
+   *
+   * Ligger her og ikke i motoren fordi ordbogen er sitets ejendom (afgjort i
+   * F189.3): en CMS-evne flere kunder køber sig ind på, må ikke eje ÉT sites
+   * udtale af «harness». Motoren validerer rækkerne og sender dem videre; den
+   * leverer ingen selv.
+   *
+   * `alias` er en LYDSKRIFT — hvordan ordet skal siges, ikke hvad der står i
+   * teksten. `ipa` må skrives, men ElevenLabs kan ikke bruge den (adapteren
+   * kaster på den), så den filtreres fra på vej ud. Se lib/podcast/udtale.ts.
+   */
+  podcastUdtaler: { word: string; alias?: string; ipa?: string }[];
 }
 
 async function getConfigPath(): Promise<string> {
@@ -305,6 +318,7 @@ async function defaults(): Promise<SiteConfig> {
     geoOrganizationLogo: "",
     psiApiKey: process.env.GOOGLE_PSI_API_KEY ?? "",
     inlineEditEnabled: false,
+    podcastUdtaler: [],
   };
 }
 

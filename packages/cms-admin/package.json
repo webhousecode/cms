@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
-    "@broberg/ai-sdk": "0.34.0",
+    "@broberg/ai-sdk": "0.41.1",
     "@broberg/chat": ">=0.5.0 <1",
     "@broberg/cms-chat-client": "^0.4.14",
     "@broberg/cms-inline-edit": ">=0.6.3 <1",

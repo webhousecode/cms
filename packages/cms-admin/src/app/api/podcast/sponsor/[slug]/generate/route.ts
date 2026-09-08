@@ -15,6 +15,7 @@ import { hentSponsor, skrivSponsor } from "@/lib/podcast/sponsors";
 import { laengdeSek } from "@/lib/podcast/stitch";
 import { getAI } from "@/lib/ai/client";
 import { getMediaAdapter } from "@/lib/media";
+import { sitetsUdtaler } from "@/lib/podcast/udtale";
 
 export const OPTIONS = preflight;
 
@@ -52,7 +53,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
     // stemmen tilbage til en fremmed, har kunden betalt for én reklame og fået
     // en anden — uden at nogen får det at vide. SDK'ets egen dokumentation
     // advarer mod fallback præcis her.
-    const r = await ai.tts({ text: manuskript, voice: stemme, purpose: "podcast.sponsor" });
+    // F191.6 — sitets egen udtale-ordbog. Uden den siger speakeren sponsorens
+    // navn som det staves. Sendes kun når sitet HAR en; teksten forbliver ren.
+    const pronunciations = await sitetsUdtaler();
+    const r = await ai.tts({
+      text: manuskript,
+      voice: stemme,
+      purpose: "podcast.sponsor",
+      ...(pronunciations ? { pronunciations } : {}),
+    });
     lyd = r.audio;
   } catch (err) {
     return svar(
