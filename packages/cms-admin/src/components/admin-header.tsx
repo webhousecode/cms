@@ -806,25 +806,27 @@ function PreviewButton() {
   const [liveDown, setLiveDown] = useState(false);
   const { openTab } = useTabs();
 
-  // Derive URLs from shared siteConfig + start sirv
+  // Derive URLs from shared siteConfig. The sirv preview server starts LAZILY,
+  // on click — see openPreview below.
+  //
+  // F193.2: this effect used to POST /api/preview-serve on every mount, i.e. on
+  // every admin page. A site with no build yet has nothing to serve, so that
+  // request fails — and the failure was logged on pages that have nothing to do
+  // with preview. Measured in CI: eight failed requests across /agents and
+  // /curation in one run, which is what kept the smoke test red.
+  //
+  // Nothing is lost. openPreview already resolves the URL on demand, and the
+  // button is never disabled, so the only difference is that the first click
+  // pays the ~1s of starting sirv instead of every page view paying it.
   useEffect(() => {
     setPreviewUrl("");
     setLiveUrl("");
     setPreviewDown(false);
     setLiveDown(false);
 
-    // Always try sirv preview server — works for all filesystem sites
-    let customPreview = "";
-    fetch("/api/preview-serve", { method: "POST" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d: { url?: string } | null) => {
-        if (d?.url && !customPreview) setPreviewUrl(d.url);
-      })
-      .catch(() => {});
-
     if (siteConfig) {
       if (siteConfig.previewSiteUrl) {
-        customPreview = siteConfig.previewSiteUrl as string;
+        const customPreview = siteConfig.previewSiteUrl as string;
         setPreviewUrl(customPreview);
         fetch(customPreview, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(8000) })
           .catch(() => setPreviewDown(true));
@@ -859,13 +861,25 @@ function PreviewButton() {
     if (previewUrl) {
       open(previewUrl);
     } else {
+      // This is now the ORDINARY path, not a rare fallback: since F193.2 the
+      // server is started here on click rather than on every page load. So it
+      // has to say something when it can't — a click that silently does
+      // nothing is the worst of the three outcomes.
       try {
         const res = await fetch("/api/preview-serve", { method: "POST" });
         if (res.ok) {
           const { url } = await res.json() as { url: string };
           open(url);
+          return;
         }
-      } catch { /* ignore */ }
+        const { error } = await res.json().catch(() => ({ error: "" })) as { error?: string };
+        toast.error("Ingen forhåndsvisning endnu", {
+          description: error || "Sitet er ikke bygget. Kør et build først.",
+          duration: 6000,
+        });
+      } catch {
+        toast.error("Forhåndsvisningen kunne ikke startes", { duration: 6000 });
+      }
     }
   }, [previewUrl, siteName, openTab]);
 

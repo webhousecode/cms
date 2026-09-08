@@ -56,9 +56,14 @@ export async function POST(req: NextRequest) {
   const distDir = path.join(sitePaths.projectDir, "dist");
 
   if (!existsSync(distDir)) {
+    // 409, not 404. The endpoint exists and answered; what is missing is the
+    // site's build. A 404 here is indistinguishable from a broken route in a
+    // browser console, an error monitor or a smoke test — and that is exactly
+    // how it read: F193.2 spent a CI cycle chasing "404 on /agents" that was
+    // this route honestly reporting an unbuilt site.
     return NextResponse.json(
       { error: `No dist/ directory found at ${distDir}. Run the site's build first.` },
-      { status: 404 },
+      { status: 409 },
     );
   }
 
