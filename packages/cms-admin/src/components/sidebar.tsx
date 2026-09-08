@@ -404,9 +404,16 @@ export function AppSidebar({ collections }: Props) {
                     {formUnreadTotal}
                   </span>
                 )}
-
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            )}
             {/* F189.6 — podcast. Gated på podcast.read, samme mønster som de
-                øvrige: menupunktet er UX, server-gaten i layout.tsx er grænsen. */}
+                øvrige: menupunktet er UX, server-gaten i layout.tsx er grænsen.
+                
+                SØSKENDE til Forms, ikke barn af den. Første udgave lagde hele
+                dette punkt INDE i Forms-knappen, før dens lukkende tag — så de
+                to delte række, og Podcast var et <a> inde i et <a>. Christian
+                så det med det samme; browseren gjorde ikke indsigelse. */}
             {ctxUser?.permissions?.includes("podcast.read") && (
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -416,9 +423,6 @@ export function AppSidebar({ collections }: Props) {
               >
                 <Mic className="!w-5 !h-5" />
                 <span className="flex-1">Podcast</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            )}
               </SidebarMenuButton>
             </SidebarMenuItem>
             )}
