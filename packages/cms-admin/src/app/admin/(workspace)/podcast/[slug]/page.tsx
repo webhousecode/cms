@@ -480,7 +480,7 @@ export default function PodcastAfsnitPage() {
               <p data-testid="podcast-ok" style={{ margin: 0, color: "#0d7a5f", fontSize: ".78rem" }}>{beskedOk}</p>
             )}
 
-            <Link href="/admin/podcast" data-testid="podcast-tilbage" style={{ fontSize: ".75rem", color: "var(--muted-foreground)" }}>
+            <Link href="/admin/podcast?fane=afsnit" data-testid="podcast-tilbage" style={{ fontSize: ".75rem", color: "var(--muted-foreground)" }}>
               ← Alle afsnit
             </Link>
           </section>

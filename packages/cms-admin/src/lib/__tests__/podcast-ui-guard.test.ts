@@ -12,7 +12,15 @@ import { join, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const PKG_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
-const UI_DIR = join(PKG_ROOT, "src/app/admin/(workspace)/podcast");
+/** F191.8: skærmene blev til FANER, så de tre klient-flader flyttede ud i
+ *  components/podcast/. Vagten følger med — den handler om podcast-UI'et, ikke
+ *  om en bestemt mappe. Havde den kun kigget i rute-mappen, ville den efter
+ *  flytningen have målt to redirect-filer og en skal, og bestået på ingenting. */
+const UI_DIRS = [
+  join(PKG_ROOT, "src/app/admin/(workspace)/podcast"),
+  join(PKG_ROOT, "src/components/podcast"),
+];
+const UI_LOSE = [join(PKG_ROOT, "src/components/podcast-tabs.tsx")];
 
 function tsxFiler(dir: string): string[] {
   const ud: string[] = [];
@@ -29,7 +37,7 @@ function tsxFiler(dir: string): string[] {
 const udenKommentarer = (s: string) =>
   s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/[^\n]*/g, "");
 
-const FILER = tsxFiler(UI_DIR).map((f) => ({
+const FILER = [...UI_DIRS.flatMap(tsxFiler), ...UI_LOSE].map((f) => ({
   kort: relative(PKG_ROOT, f),
   kilde: udenKommentarer(readFileSync(f, "utf8")),
   raa: readFileSync(f, "utf8"),
@@ -37,7 +45,7 @@ const FILER = tsxFiler(UI_DIR).map((f) => ({
 
 describe("F189.6 — skærmene er KLIENTER af API'et", () => {
   it("finder skærmene (ellers måler resten ingenting)", () => {
-    expect(FILER.length).toBeGreaterThanOrEqual(3);
+    expect(FILER.length).toBeGreaterThanOrEqual(5);
   });
 
   for (const f of FILER) {
@@ -52,11 +60,16 @@ describe("F189.6 — skærmene er KLIENTER af API'et", () => {
   it("alle netværkskald går til /api/podcast/", () => {
     const klient = FILER.filter((f) => f.raa.startsWith('"use client"'));
     expect(klient.length).toBeGreaterThanOrEqual(2);
+    let i_alt = 0;
     for (const f of klient) {
       const kald = [...f.kilde.matchAll(/fetch\(\s*[`"']([^`"'$]*)/g)].map((m) => m[1]!);
-      expect(kald.length, `${f.kort} har ingen fetch`).toBeGreaterThan(0);
+      i_alt += kald.length;
       for (const u of kald) expect(u, `${f.kort} kalder ${u}`).toMatch(/^\/api\/podcast/);
     }
+    // Kravet er at INTET kald går andre steder hen — ikke at hver enkelt fil
+    // kalder noget. Fane-skallen har med rette ingen fetch. Optællingen står
+    // samlet, så løkken ikke kan bestå på en tom liste.
+    expect(i_alt, "ingen af skærmene kalder API'et — vagten måler på ingenting").toBeGreaterThan(5);
   });
 });
 

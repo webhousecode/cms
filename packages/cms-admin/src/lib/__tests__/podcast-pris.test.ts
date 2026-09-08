@@ -63,17 +63,17 @@ describe("estimatet bærer BÅDE beløbet, kursen og dens dato", () => {
 });
 
 describe("SATSEN OG KURSEN FINDES ÉT STED", () => {
-  it("sponsor-skærmen har ikke sit eget sats-tal", () => {
+  it("reklame-fanen har ikke sit eget sats-tal", () => {
     // Den havde `(n / 1000) * 0.1` skrevet ind i sig. Et bart 0.1 i en UI-fil
     // er en anden sandhed om prisen end motorens.
-    const k = UDEN_KOMMENTAR("../../app/admin/(workspace)/podcast/sponsorer/page.tsx");
+    const k = UDEN_KOMMENTAR("../../components/podcast/reklamer-fane.tsx");
     expect(k).not.toContain("/ 1000");
     expect(k).not.toContain("0.1");
   });
 
   it("ingen skærm har sin egen valutakurs", () => {
     for (const f of [
-      "../../app/admin/(workspace)/podcast/sponsorer/page.tsx",
+      "../../components/podcast/reklamer-fane.tsx",
       "../../app/admin/(workspace)/podcast/[slug]/page.tsx",
     ]) {
       expect(UDEN_KOMMENTAR(f), f).not.toContain("6.43");
@@ -81,7 +81,7 @@ describe("SATSEN OG KURSEN FINDES ÉT STED", () => {
   });
 
   it("skærmene henter prisen fra API'et", () => {
-    expect(KODE("../../app/admin/(workspace)/podcast/sponsorer/page.tsx"))
+    expect(KODE("../../components/podcast/reklamer-fane.tsx"))
       .toContain("/api/podcast/estimate");
     expect(KODE("../../app/admin/(workspace)/podcast/[slug]/page.tsx"))
       .toContain("estimat.prisDkk");
