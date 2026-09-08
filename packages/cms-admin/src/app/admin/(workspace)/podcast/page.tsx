@@ -11,7 +11,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
-import { Mic, Plus } from "lucide-react";
+import { Mic, Plus, Megaphone } from "lucide-react";
 import { useHeaderData } from "@/lib/header-data-context";
 
 type Tilstand = "kladde" | "manuskript-klar" | "godkendt" | "indspillet" | "udgivet";
@@ -130,6 +130,16 @@ export default function PodcastListPage() {
         }
       >
         <ActionBarBreadcrumb items={["Podcast"]} />
+        <Link
+          href="/admin/podcast/sponsorer"
+          data-testid="podcast-til-sponsorer"
+          style={{
+            marginLeft: ".9rem", fontSize: ".8rem", color: "var(--muted-foreground)",
+            textDecoration: "none", display: "inline-flex", alignItems: "center", gap: ".3rem",
+          }}
+        >
+          <Megaphone size={13} /> Sponsorindslag
+        </Link>
       </ActionBar>
 
       <div style={{ padding: "1.5rem" }}>
