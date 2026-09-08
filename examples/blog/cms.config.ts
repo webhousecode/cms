@@ -1,6 +1,16 @@
 import { defineConfig, defineCollection } from '@webhouse/cms';
 
 export default defineConfig({
+  // F193.2 — fixturen HAR tosproget indhold (content/posts/scenario-1-da.json
+  // + scenario-1-en.json, siden april). Kun deklarationen manglede, og uden den
+  // renderer sprogfilteret aldrig — så otte E2E-prøver har stået røde i over
+  // 100 kørsler på en flade der er rigtig.
+  //
+  // Diagnosen er skrevet TO gange før (F178.5, F178.7) og rettelsen landede
+  // aldrig. Derfor er den her nu, og derfor spærrer F193.3 udrulningen på E2E:
+  // en rød prøve ingen kan mærke bliver rettet en tredje gang for sent.
+  locales: ["da", "en"],
+  defaultLocale: "da",
   collections: [
     defineCollection({
       name: "posts",
