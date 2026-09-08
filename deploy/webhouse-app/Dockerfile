@@ -67,7 +67,15 @@ RUN --mount=type=cache,id=cms-tsup-cms,target=/app/packages/cms/.tsup-cache \
 # ── Stage 3: runner ───────────────────────────────────────────
 FROM node:22-alpine AS runner
 
-RUN apk add --no-cache libc6-compat
+# ffmpeg (F191.3) — podcast-lyd sys sammen af flere stykker: afsnit, Aidans
+# overgang og sponsorens reklame. Uden den kan de ikke samles, og den NAIVE
+# genvej (bytes efter hinanden) giver en fil der ser hel ud og går i stå ved
+# samlingen — målt: varighed 366,76 s mod forventet 366,64, og «Header
+# missing» ved afkodning. Den fejl ville nå en lytter.
+#
+# Den skal også bruges til at normalisere lyd KUNDEN uploader: en reklame fra
+# et bureau er typisk stereo/48 kHz/m4a, ikke vores mono/44,1 kHz/mp3.
+RUN apk add --no-cache libc6-compat ffmpeg
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate

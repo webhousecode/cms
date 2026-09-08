@@ -63,6 +63,12 @@ jobs:
       # The 21 webauthn/totp/push-store failures this step used to excuse are
       # gone — the suite is 1017/1017 locally. A gate that cannot go red is not
       # a gate, so it blocks again.
+      # F191.3 — lyd-sammenføjningen sys med ffmpeg, og prøverne kører den
+      # RIGTIGE binær frem for en attrap. Uden den er de prøver ikke grønne,
+      # de er fraværende — og det er den tilstand hele kortet handler om.
+      - name: ffmpeg (podcast-lyd)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && ffmpeg -version | head -1
+
       - name: CMS admin tests
         run: cd packages/cms-admin && npx vitest run
 
