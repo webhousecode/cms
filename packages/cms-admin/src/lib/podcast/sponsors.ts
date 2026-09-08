@@ -119,11 +119,26 @@ export async function skrivSponsor(
   if (!findes) {
     const nyt: SponsorData = { titel: "", sponsor: "", brugtIAfsnit: [], aktiv: true, ...aendringer };
     await cms.content.create(SPONSOR_SAMLING, { slug, status: "published", data: nyt });
-    return { ok: true, vaerdi: { slug, data: nyt } };
+  } else {
+    // findes.id, IKKE slug. Adapterens update() slår op på DOKUMENT-ID; med et
+    // slug kaster den «Document … not found» — og her betyder det at lyden var
+    // lavet og BETALT før skrivningen fejlede. Målt 8/9 på det første forsøg
+    // på at genindtale reklamen: to kald til udbyderen, to gange penge, ingen
+    // fil gemt. Afsnittenes egen skrivSafsnit gjorde det rigtigt hele tiden;
+    // denne kopi gjorde det ikke.
+    const flettet = { ...laes(findes.data), ...aendringer };
+    await cms.content.update(SPONSOR_SAMLING, findes.id, { data: flettet });
   }
-  const flettet = { ...laes(findes.data), ...aendringer };
-  await cms.content.update(SPONSOR_SAMLING, slug, { data: flettet });
-  return { ok: true, vaerdi: { slug, data: flettet } };
+
+  // LÆS TILBAGE FRA ET FRISKT OPSLAG, ikke fra det vi lige sendte. En skrivning
+  // der ikke landede ser identisk ud herfra — og det var netop dette svar der
+  // ville have meldt «gemt» hvis fejlen ovenfor havde været tavs i stedet for
+  // at kaste.
+  const efter = await cms.content.findBySlug(SPONSOR_SAMLING, slug);
+  if (!efter) {
+    return { ok: false, grund: `indslaget «${slug}» findes ikke efter skrivningen` };
+  }
+  return { ok: true, vaerdi: { slug, data: laes(efter.data) } };
 }
 
 /**

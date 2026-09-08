@@ -169,3 +169,33 @@ describe("papirkurven vises ikke som indhold", () => {
     expect(KODE_STORE).not.toContain('findMany(PODCAST_SAMLING, { status:');
   });
 });
+
+describe("skrivningen bruger DOKUMENT-ID og ikke slug", () => {
+  const K = KODE("sponsors.ts");
+  const A = readFileSync(new URL("../podcast/store.ts", import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "");
+
+  it("update kaldes med findes.id", () => {
+    // Målt 8/9: reklamen blev indtalt to gange — to kald til udbyderen, to
+    // gange penge — og begge gange fejlede skrivningen med «Document
+    // broberg-ai-bureau not found in collection sponsorer», fordi adapterens
+    // update() slår op på id og fik et slug. Lyden var lavet FØR den fejl.
+    expect(K).toContain("update(SPONSOR_SAMLING, findes.id,");
+  });
+
+  it("update kaldes IKKE med slug", () => {
+    expect(K).not.toContain("update(SPONSOR_SAMLING, slug,");
+  });
+
+  it("KONTROL: afsnittenes egen skrivning gjorde det rigtigt hele tiden", () => {
+    // Uden denne linje ville prøven ovenfor kunne læses som «det er sådan man
+    // gør her» frem for «kopien afveg fra originalen».
+    expect(A).toContain("update(PODCAST_SAMLING, findes.id,");
+  });
+
+  it("der læses tilbage fra et FRISKT opslag efter skrivningen", () => {
+    const efter = K.slice(K.indexOf("export async function skrivSponsor"));
+    expect(efter).toContain("const efter = await cms.content.findBySlug(SPONSOR_SAMLING, slug);");
+  });
+});
