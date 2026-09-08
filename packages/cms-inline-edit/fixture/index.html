@@ -54,6 +54,19 @@
     ".fixture";
   localStorage.setItem("wh-inline-edit-token", token);
 
+  // Browserens EGEN pipette kan ikke drives af et script — den åbner en
+  // vælger på operativsystem-niveau. Så DEN stubbes, og kun den: alt vores
+  // eget (knappen, tegningen, skrivningen i hex-feltet) er den rigtige kode.
+  // ?pipette=<hex> i URL'en bestemmer hvad «målingen» giver.
+  const stubFarve = new URLSearchParams(location.search).get("pipette");
+  if (stubFarve) {
+    window.EyeDropper = class {
+      async open() {
+        return { sRGBHex: stubFarve };
+      }
+    };
+  }
+
   const { initInlineEdit } = await import("../dist/index.js");
   await initInlineEdit({ siteId: "fixture", cmsBaseUrl: location.origin });
   document.documentElement.setAttribute("data-fixture-klar", "1");
