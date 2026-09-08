@@ -87,13 +87,22 @@ jobs:
       # gap with a bug that no longer exists keeps the gap open for free — the
       # reason reads as considered right up until someone checks it.
       #
-      # The real reason today: cms-admin's suite fails roughly 3 times in 30
-      # runs with ONE failing test whose name never reaches the output (vitest
-      # prints the count and nothing else). Arming this before that is named
-      # would block about one release in ten at random. Naming it is F178.2;
-      # arming this step is F178.3.
-      - name: Tests (cms-admin — non-blocking, F178.3 arms it)
-        continue-on-error: true
+      # F193.4 — ARMET, på Christians ord 8/9 2026, og med den kendte pris
+      # sagt højt frem for glattet ud:
+      #
+      # F178.2 blev aldrig lavet. Den flakkende fejl — cms-admins suite fejlede
+      # ca. 3 ud af 30 kørsler med ÉN prøve hvis navn aldrig nåede outputtet —
+      # er derfor ikke navngivet, kun ikke set siden. Målt 8/9: 1868/1868
+      # lokalt og grøn i CI, men to grønne kørsler kan ikke afvise en fejl der
+      # rammer hver tiende.
+      #
+      # Så hvis en udgivelse en dag stopper her med et tal og intet navn, er
+      # DET den fejl, og den skal navngives — ikke slukkes igen. En port der
+      # står med `continue-on-error` fordi den engang råbte ulv, er ikke en
+      # port; den er en grøn linje der lyver. Vi havde sådan én fra 28. august
+      # til 8. september, og i den periode stod E2E-suiten rød i over 100
+      # kørsler uden at stoppe noget som helst.
+      - name: Tests (cms-admin — blocks the release if any fail)
         run: pnpm --filter @webhouse/cms-admin exec vitest run
 
   tarball:

@@ -37,61 +37,28 @@ permissions:
   contents: read
 
 jobs:
-  check:
-    name: Lint & Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build packages
-        run: pnpm build --filter='!@webhouse/cms-admin'
-
-      - name: Typecheck
-        run: pnpm lint
-
-      # F178.1 — the step that gates a deploy must run the suites that actually
-      # work, and a failure must LOOK like one.
-      #
-      # It read `pnpm test:run || echo "⚠️ Tests with native modules skipped on CI"`,
-      # written into the very first deployment commit rather than in response to
-      # an observed failure. Two things were wrong with it, and the second is
-      # the one that mattered:
-      #
-      #   1. `||` swallowed EVERY failure, so a real regression was reported in
-      #      the same reassuring words as a limitation someone chose to live with.
-      #   2. `pnpm test:run` from the repo ROOT has never worked. Measured
-      #      28 Aug 2026: 45 test FILES fail to load (exit 1) while 1505 tests
-      #      pass — the root workspace collects Playwright e2e specs and stale
-      #      `.next/standalone` build artefacts as if they were unit tests, and
-      #      cms-admin's own suite does not load at all because the `@/` alias
-      #      is not applied. So this step has never once run the tests it names.
-      #
-      # These are the per-package commands test.yml already runs green. Still
-      # NON-BLOCKING (see `continue-on-error`) — arming the gate is F178.3, and
-      # it waits until the ~1-in-10 unexplained cms-admin failure is named
-      # (F178.2). A gate that cries wolf gets switched off, which is worse than
-      # no gate.
-      - name: CMS core tests
-        continue-on-error: true
-        run: cd packages/cms && npx vitest run
-
-      - name: CMS admin tests
-        continue-on-error: true
-        run: cd packages/cms-admin && npx vitest run
+  # F193.3 — PORTEN. Den KALDER Tests-arbejdsgangen frem for at gentage den,
+  # så der findes ÉN definition af «prøverne er grønne».
+  #
+  # Det den erstatter var en port der næsten ikke kunne gå rød: jobbet hed
+  # «Lint & Typecheck» og kørte begge enheds-suiter med `continue-on-error:
+  # true`, så kun typecheck blokerede. E2E kørte slet ikke her — den bor i
+  # test.yml, som udrulningen ikke kendte. Resultat: E2E-suiten stod rød i over
+  # 100 kørsler i træk uden at stoppe én eneste udrulning, og fejlen blev
+  # diagnosticeret tre gange (F178.5, F178.7, F193.1) uden at nogen mærkede den.
+  #
+  # Prisen, sagt højt frem for opdaget bagefter: en udrulning venter nu på hele
+  # suiten inkl. browser-prøverne (~12 min mod ~4 før). Det er hvad en port
+  # koster. Er den for dyr, er svaret at gøre suiten hurtigere — ikke at slukke
+  # den igen.
+  gate:
+    name: Port — typecheck, enhedsprøver, E2E
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
 
   deploy:
     name: Deploy to Fly.io
-    needs: check
+    needs: gate
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-webhouse-app

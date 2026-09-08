@@ -71,17 +71,18 @@ jobs:
       #      cms-admin's own suite does not load at all because the `@/` alias
       #      is not applied. So this step has never once run the tests it names.
       #
-      # These are the per-package commands test.yml already runs green. Still
-      # NON-BLOCKING (see `continue-on-error`) — arming the gate is F178.3, and
-      # it waits until the ~1-in-10 unexplained cms-admin failure is named
-      # (F178.2). A gate that cries wolf gets switched off, which is worse than
-      # no gate.
+      # These are the per-package commands test.yml already runs green.
+      #
+      # F193.4 — ARMET. De to trin bar `continue-on-error: true`, så en
+      # npm-udgivelse gik igennem uanset hvor mange prøver der var røde. Flaget
+      # blev sat MED F178.3 som betingelse for at fjerne det igen; det skete
+      # aldrig, og porten stod inert fra 28. august til 8. september. En
+      # undtagelse med en navngiven slutning er stadig permanent hvis ingen
+      # kommer tilbage til den — så den er væk nu, hvor suiten er grøn.
       - name: CMS core tests
-        continue-on-error: true
         run: cd packages/cms && npx vitest run
 
       - name: CMS admin tests
-        continue-on-error: true
         run: cd packages/cms-admin && npx vitest run
 
       - name: Bump versions

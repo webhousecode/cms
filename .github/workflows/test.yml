@@ -5,6 +5,14 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # F193.3 — udrulningen KALDER denne arbejdsgang som sin port, så der findes
+  # ÉN definition af «prøverne er grønne» i stedet for to der kan drive fra
+  # hinanden. Uden workflow_call kunne deploy.yml kun kopiere jobbene, og en
+  # kopi ville netop ikke være den suite der stod rød i over 100 kørsler.
+  workflow_call:
+    secrets:
+      CMS_JWT_SECRET:
+        required: false
 
 jobs:
   typecheck:
