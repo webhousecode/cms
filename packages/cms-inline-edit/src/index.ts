@@ -30,6 +30,7 @@ export {
   withHttps,
 } from "./link-target";
 import { serializeTokenSafe, hasTokenChips, lockTokenChips } from "./token-safe";
+import { STANDARD_FARVER, siteFarver } from "./site-colors.js";
 
 /**
  * Labels for the in-editor UI — the rich-text toolbar (bold/italic/underline
@@ -355,6 +356,10 @@ const OL_SVG =
   '<line x1="10" x2="21" y1="18" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/>' +
   '<path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>' +
   "</svg>";
+
+const COLOR_SVG =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M12 3l4.5 10.5a5 5 0 1 1-9 0z"/><path d="M4 20h16" stroke-width="3"/></svg>';
 
 const LINK_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" ' +
@@ -749,6 +754,7 @@ function showRichToolbar(): void {
 function hideRichToolbar(): void {
   if (richToolbar) richToolbar.style.display = "none";
   hideEmojiPicker();
+  hideColorPicker();
 }
 
 function toolbarButton(label: string, title: string, onDown: () => void): HTMLButtonElement {
@@ -805,17 +811,19 @@ function buildRichToolbar(): HTMLElement {
 
   t.appendChild(sep());
 
-  // Text color — execCommand foreColor applies to the current selection.
-  const clrLabel = document.createElement("label");
-  clrLabel.style.cssText = "display:flex;align-items:center;gap:5px;color:#9aa4b2;font-size:12px;cursor:pointer;";
-  clrLabel.textContent = uiLabels.color;
-  const clr = document.createElement("input");
-  clr.type = "color";
-  clr.style.cssText = "width:28px;height:24px;border:1px solid #3a3f4a;border-radius:5px;cursor:pointer;padding:1px;background:none;";
-  clr.addEventListener("mousedown", (e) => e.stopPropagation());
-  clr.addEventListener("input", () => document.execCommand("foreColor", false, clr.value));
-  clrLabel.prepend(clr);
-  t.appendChild(clrLabel);
+  // F157.19 — tekstfarve. EGEN palet, ikke <input type="color">.
+  //
+  // Den native gjorde to ting galt på én gang. Den åbner styresystemets dialog,
+  // som tager fokus fra det redigerbare felt — og med fokus går MARKERINGEN, så
+  // execCommand("foreColor") bagefter ikke havde noget at farve. Kaldet lykkedes;
+  // teksten skiftede aldrig farve. Og den er en systemstilet kontrol midt i en
+  // brandet værktøjslinje, hvilket huset forbyder ved navn.
+  //
+  // Vores egen palet løser begge: markeringen gemmes før den åbner (samme
+  // savedRange-mønster som link- og emoji-vælgeren), og udseendet er vores.
+  const colorBtn = toolbarButton(COLOR_SVG, uiLabels.color, () => toggleColorPicker(colorBtn));
+  colorBtn.setAttribute("data-testid", "inline-toolbar-color");
+  t.appendChild(colorBtn);
 
   t.appendChild(sep());
 
@@ -848,6 +856,7 @@ const EMOJIS =
     " ",
   );
 let emojiPicker: HTMLElement | null = null;
+let colorPicker: HTMLElement | null = null;
 let savedRange: Range | null = null;
 
 /* ------------------------------------------------------------------ F164 --
@@ -1503,6 +1512,141 @@ function insertEmoji(emoji: string): void {
   document.execCommand("insertText", false, emoji);
   savedRange = null;
   hideEmojiPicker();
+}
+
+/* ── F157.19 · farvepaletten ──────────────────────────────────────────────
+   Markeringen gemmes NÅR paletten åbner og genskabes NÅR farven vælges. Det er
+   hele rettelsen: uden det farver execCommand ingenting, fordi et klik uden for
+   det redigerbare felt har fjernet markeringen. Samme mønster som link- og
+   emoji-vælgeren, som allerede gør det rigtige. */
+
+function toggleColorPicker(anchor: HTMLElement): void {
+  if (!colorPicker) colorPicker = buildColorPicker();
+  if (colorPicker.style.display === "block") {
+    hideColorPicker();
+    return;
+  }
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
+  const rect = anchor.getBoundingClientRect();
+  positionPopover(colorPicker, rect, 6, 232);
+}
+
+function hideColorPicker(): void {
+  if (colorPicker) colorPicker.style.display = "none";
+}
+
+/** Sitets egne farver, hentet ved åbningstid. Læses hver gang paletten bygges,
+ *  så et temaskift ikke efterlader en forældet palet. */
+function laesSiteFarver(): { vaerdi: string; navn: string }[] {
+  try {
+    const cs = getComputedStyle(document.documentElement);
+    return siteFarver(Array.from(document.styleSheets), (n) => cs.getPropertyValue(n));
+  } catch {
+    return []; // paletten står med standardfarverne — aldrig tom
+  }
+}
+
+function svatch(f: { vaerdi: string; navn: string }, testid: string): HTMLButtonElement {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.title = `${f.navn} — ${f.vaerdi}`;
+  b.setAttribute("data-testid", testid);
+  b.setAttribute("data-farve", f.vaerdi);
+  b.style.cssText =
+    "width:26px;height:26px;border-radius:6px;cursor:pointer;padding:0;" +
+    `background:${f.vaerdi};border:1px solid rgba(255,255,255,.28);`;
+  b.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    applyColor(f.vaerdi);
+  });
+  return b;
+}
+
+function buildColorPicker(): HTMLElement {
+  const p = document.createElement("div");
+  p.setAttribute("data-cms-inline-edit-toolbar", "");
+  p.setAttribute("data-testid", "inline-color-picker");
+  p.style.cssText =
+    "position:fixed;z-index:2147483646;background:#1c2027;border:1px solid #3a3f4a;" +
+    "border-radius:10px;padding:10px;width:232px;display:none;" +
+    "box-shadow:0 8px 32px rgba(0,0,0,.5);color:#9aa4b2;font-size:11px;";
+
+  const raekke = (titel: string, testid: string) => {
+    const h = document.createElement("div");
+    h.textContent = titel;
+    h.style.cssText = "margin:0 0 5px;letter-spacing:.04em;text-transform:uppercase;font-size:10px;";
+    const g = document.createElement("div");
+    g.setAttribute("data-testid", testid);
+    g.style.cssText = "display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px;";
+    p.appendChild(h);
+    p.appendChild(g);
+    return g;
+  };
+
+  const std = raekke("Standard", "inline-color-standard");
+  STANDARD_FARVER.forEach((f) => std.appendChild(svatch(f, "inline-color-swatch")));
+
+  const egne = laesSiteFarver();
+  if (egne.length) {
+    const g = raekke("Sitets farver", "inline-color-site");
+    egne.forEach((f) => g.appendChild(svatch(f, "inline-color-swatch")));
+  }
+
+  // Fri hex, så arbitrære farver stadig kan vælges — uden en OS-dialog.
+  const fri = document.createElement("div");
+  fri.style.cssText = "display:flex;gap:5px;align-items:center;";
+  const hex = document.createElement("input");
+  hex.type = "text";
+  hex.placeholder = "#a1b2c3";
+  hex.maxLength = 9;
+  hex.setAttribute("data-testid", "inline-color-hex");
+  hex.style.cssText =
+    "flex:1;min-width:0;background:#12151a;border:1px solid #3a3f4a;border-radius:5px;" +
+    "color:#fff;font-size:12px;padding:4px 6px;";
+  hex.addEventListener("mousedown", (e) => e.stopPropagation());
+  const brug = document.createElement("button");
+  brug.type = "button";
+  brug.textContent = "Brug";
+  brug.setAttribute("data-testid", "inline-color-hex-brug");
+  brug.style.cssText =
+    "background:none;border:1px solid #3a3f4a;border-radius:5px;color:#fff;" +
+    "font-size:12px;padding:4px 9px;cursor:pointer;";
+  const brugHex = () => {
+    const v = hex.value.trim();
+    if (/^#[0-9a-f]{3,8}$/i.test(v)) applyColor(v);
+  };
+  brug.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    brugHex();
+  });
+  hex.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      brugHex();
+    }
+  });
+  fri.appendChild(hex);
+  fri.appendChild(brug);
+  p.appendChild(fri);
+
+  document.body.appendChild(p);
+  return p;
+}
+
+function applyColor(farve: string): void {
+  if (!richCtx) return;
+  richCtx.el.focus();
+  const sel = window.getSelection();
+  if (savedRange && sel) {
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  document.execCommand("foreColor", false, farve);
+  savedRange = null;
+  hideColorPicker();
 }
 
 // Click outside the active region (and outside the toolbar) commits the edit.
