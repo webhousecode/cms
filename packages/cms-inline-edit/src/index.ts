@@ -30,7 +30,7 @@ export {
   withHttps,
 } from "./link-target";
 import { serializeTokenSafe, hasTokenChips, lockTokenChips } from "./token-safe";
-import { STANDARD_FARVER, siteFarver } from "./site-colors.js";
+import { STANDARD_FARVER, siteFarver, testidNavn } from "./site-colors.js";
 
 /**
  * Labels for the in-editor UI — the rich-text toolbar (bold/italic/underline
@@ -1586,12 +1586,12 @@ function buildColorPicker(): HTMLElement {
   };
 
   const std = raekke("Standard", "inline-color-standard");
-  STANDARD_FARVER.forEach((f) => std.appendChild(svatch(f, "inline-color-swatch")));
+  STANDARD_FARVER.forEach((f) => std.appendChild(svatch(f, `inline-color-swatch-${testidNavn(f.navn)}`)));
 
   const egne = laesSiteFarver();
   if (egne.length) {
     const g = raekke("Sitets farver", "inline-color-site");
-    egne.forEach((f) => g.appendChild(svatch(f, "inline-color-swatch")));
+    egne.forEach((f) => g.appendChild(svatch(f, `inline-color-site-swatch-${testidNavn(f.navn)}`)));
   }
 
   // Fri hex, så arbitrære farver stadig kan vælges — uden en OS-dialog.

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<title>inline-edit — farvevælger (Lens-fixture)</title>
+<style>
+  /* Sitets egne farver: paletten LÆSER dem herfra, den hardkoder dem ikke. */
+  :root {
+    --brand-primary: #00b2ff;
+    --brand-accent: #ff6a3d;
+    --brand-ink: #101820;
+    --brand-spacing: 12px;      /* IKKE en farve — må ikke ende i paletten */
+  }
+  body { font: 16px/1.7 system-ui, sans-serif; margin: 0; padding: 48px; max-width: 720px; color: #101820; }
+  h1 { font-size: 20px; margin: 0 0 24px; }
+  #felt { font-size: 24px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<h1 data-testid="fixture-root">Farvevælger — fixture</h1>
+
+<div id="felt"
+     data-testid="fixture-felt"
+     data-cms-field="body"
+     data-cms-doc="sider:fixture:da"
+     data-cms-html="true">Denne saetning skal skifte farve.</div>
+
+<script type="module">
+  // Kun to ting stubbes: status-endpointet og tokenet. ALT andet — markering,
+  // toolbar, execCommand — er den rigtige pakke i en rigtig browser.
+  const rigtig = window.fetch.bind(window);
+  window.fetch = async (input, init) => {
+    const url = typeof input === "string" ? input : input.url;
+    if (url.includes("/api/inline-edit/status")) {
+      return new Response(JSON.stringify({ enabled: true }), {
+        headers: { "content-type": "application/json" },
+      });
+    }
+    if (url.includes("/api/cms/")) {
+      // Gem-stien er ikke det der prøves her; svar 200 så en blur ikke støjer.
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+      });
+    }
+    return rigtig(input, init);
+  };
+
+  const b64 = (o) =>
+    btoa(JSON.stringify(o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const token =
+    b64({ alg: "none", typ: "JWT" }) +
+    "." +
+    b64({ site: "fixture", exp: Math.floor(Date.now() / 1000) + 3600 }) +
+    ".fixture";
+  localStorage.setItem("wh-inline-edit-token", token);
+
+  const { initInlineEdit } = await import("../dist/index.js");
+  await initInlineEdit({ siteId: "fixture", cmsBaseUrl: location.origin });
+  document.documentElement.setAttribute("data-fixture-klar", "1");
+</script>
+</body>
+</html>

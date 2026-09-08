@@ -4,7 +4,14 @@
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { STANDARD_FARVER, erFarve, variabelNavne, siteFarver, pentNavn } from "./site-colors.js";
+import {
+  STANDARD_FARVER,
+  erFarve,
+  variabelNavne,
+  siteFarver,
+  pentNavn,
+  testidNavn,
+} from "./site-colors.js";
 
 const INDEX = readFileSync(new URL("./index.ts", import.meta.url), "utf8");
 /** Kommentarer væk: filen FORKLARER hvorfor den ikke bruger en native dialog,
@@ -133,5 +140,28 @@ describe("markeringen overlever at paletten åbner", () => {
     // Rækkefølgen ER rettelsen: farves der før markeringen er tilbage,
     // rammer kaldet ingenting — præcis som før.
     expect(genskab).toBeLessThan(farv);
+  });
+});
+
+describe("hver svatch har sit EGET anker", () => {
+  it("testidNavn giver et kebab-anker uden danske tegn", () => {
+    expect(testidNavn("Mørkegrå")).toBe("moerkegraa");
+    expect(testidNavn("Hvid")).toBe("hvid");
+    expect(testidNavn("brand primary")).toBe("brand-primary");
+  });
+
+  it("de fem standardfarver får FEM forskellige ankre", () => {
+    const ankre = STANDARD_FARVER.map((f) => testidNavn(f.navn));
+    expect(new Set(ankre).size, `kolliderende ankre: ${ankre.join(", ")}`).toBe(
+      STANDARD_FARVER.length,
+    );
+    expect(ankre.every((a) => /^[a-z0-9-]+$/.test(a))).toBe(true);
+  });
+
+  it("koden bygger ankeret PR. FARVE — ikke ét delt id", () => {
+    // Fem knapper med samme testid er fire knapper Lens aldrig kan trykke på.
+    expect(KODE).toContain("`inline-color-swatch-${testidNavn(f.navn)}`");
+    expect(KODE).toContain("`inline-color-site-swatch-${testidNavn(f.navn)}`");
+    expect(KODE).not.toContain('svatch(f, "inline-color-swatch")');
   });
 });

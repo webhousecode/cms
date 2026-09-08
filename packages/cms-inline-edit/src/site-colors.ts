@@ -92,3 +92,21 @@ export function siteFarver(
   }
   return ud;
 }
+
+/**
+ * Testid-venligt navn til ÉN svatch: «Mørkegrå» → «morkegra».
+ *
+ * Fem svatcher der deler ét testid er fem knapper Lens kun kan trykke på den
+ * første af — og en knap uden sit eget anker er ikke verificerbar (F086).
+ */
+export function testidNavn(navn: string): string {
+  return navn
+    .toLowerCase()
+    .replace(/æ/g, "ae")
+    .replace(/ø/g, "oe")
+    .replace(/å/g, "aa")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
