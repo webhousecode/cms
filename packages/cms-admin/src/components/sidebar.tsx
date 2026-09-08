@@ -33,8 +33,7 @@ import {
   Heart,
   Gauge,
   ClipboardList,
-  ScrollText,
-} from "lucide-react";
+  ScrollText, Mic} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -405,6 +404,21 @@ export function AppSidebar({ collections }: Props) {
                     {formUnreadTotal}
                   </span>
                 )}
+
+            {/* F189.6 — podcast. Gated på podcast.read, samme mønster som de
+                øvrige: menupunktet er UX, server-gaten i layout.tsx er grænsen. */}
+            {ctxUser?.permissions?.includes("podcast.read") && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname.startsWith("/admin/podcast")}
+                tooltip="Podcast"
+                render={<Link href={L("/admin/podcast")} data-testid="nav-link-podcast" />}
+              >
+                <Mic className="!w-5 !h-5" />
+                <span className="flex-1">Podcast</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            )}
               </SidebarMenuButton>
             </SidebarMenuItem>
             )}

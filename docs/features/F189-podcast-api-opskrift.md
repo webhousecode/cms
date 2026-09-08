@@ -20,7 +20,9 @@ Felterne:
 
 | felt | type | |
 |---|---|---|
-| `titel` | text | fra artiklen |
+| `saeson` | number | hvilken sæson. 24 afsnit om året er udgangspunktet |
+| `nummer` | number | pladsen i sæsonen, 1-24 |
+| `titel` | text | fra artiklen, eller din egen |
 | `artikelSlug` | text | sporet tilbage til kilden |
 | `tilstand` | select | `kladde` · `manuskript-klar` · `godkendt` · `indspillet` · `udgivet` |
 | `replikker` | array | `{ speaker: aidan\|airina, text }` |
@@ -81,6 +83,34 @@ A=(-H "Authorization: Bearer $TOK" -H "Content-Type: application/json")
 curl -s "${A[@]}" "$BASE/api/podcast?$SITE"                  # 200 {"afsnit":[…]}
 curl -s "${A[@]}" "$BASE/api/podcast/mit-afsnit?$SITE"       # 200 · 404 hvis det ikke findes
 ```
+
+### Opret et afsnit — to veje ind
+
+**Manuelt**, når afsnittet ikke stammer fra en artikel (en fast intro, et
+interview, en opsamling):
+
+```bash
+curl -s -X POST "${A[@]}" \
+  -d '{"slug":"afsnit-01","titel":"Første afsnit","saeson":1,"nummer":1}' \
+  "$BASE/api/podcast?$SITE"
+```
+
+→ **201** med afsnittet i `kladde` og et tomt manuskript. Derefter skriver du
+replikkerne med `PATCH` (nedenfor).
+
+| status | hvornår |
+|---|---|
+| 400 | slug'en er ikke små bogstaver, tal og bindestreger |
+| 400 | `nummer`/`saeson` er ikke et helt tal ≥ 0 |
+| 409 | afsnittet findes allerede — et «opret» overskriver ikke |
+
+`saeson` og `nummer` er begge valgfrie. Udelader du dem, er afsnittet
+unummereret og ligger sidst i listen — en kladde, ikke det nyeste. **`0` er et
+gyldigt nummer**, så send tom streng (eller udelad feltet) hvis du mener «intet
+tal»; den oplagte `Number(x) || undefined` i din egen klient ville kaste 0 væk.
+
+**Listen kommer sorteret fra serveren** — sæson faldende, så nummer faldende.
+Rækkefølgen er en del af svaret, så du ikke skal finde på din egen.
 
 ### Skab afsnittet ved at generere manuskriptet
 
@@ -239,7 +269,37 @@ Gem-ruten **fletter**, så du kan sende ét felt uden at røre de øvrige.
 
 ---
 
-## 5. Det ene der endnu ikke er bevist
+## 5. Byg din egen udgave
+
+Alt cms-admins egen podcast-side kan, gør den gennem præcis de endpoints der
+står her — der er ingen genvej ind i motoren. Det er ikke en høflighed: kunne
+cms-admin gå udenom, ville der være to veje ind hvoraf kun den ene var prøvet,
+og dit panel ville få den utestede. En prøve i vores suite fejler hvis en
+skærm importerer motoren direkte.
+
+Så din side-admin kan gøre det samme med dit eget udseende:
+
+| handling | endpoint |
+|---|---|
+| liste (sorteret) | `GET /api/podcast` |
+| opret manuelt | `POST /api/podcast` |
+| ét afsnit | `GET /api/podcast/{slug}` |
+| ret manuskript | `PATCH /api/podcast/{slug}` |
+| generér fra artikel | `POST /api/podcast/{slug}/generate` |
+| skift tilstand | `POST /api/podcast/{slug}/state` |
+| pris + tjekliste | `GET /api/podcast/{slug}/estimate` |
+| indspil | `POST /api/podcast/{slug}/record` |
+
+De tre ting der er værd at kopiere frem for at genopfinde:
+
+1. **Vis prisen PÅ knappen.** `estimate` koster ingenting, så beløbet kan stå
+   der før nogen trykker.
+2. **Slå «indspil» fra indtil tilstanden er `godkendt`.** Serveren afviser den
+   alligevel, men en knap der altid kan trykkes lærer folk at trykke.
+3. **Læs `r.ok`.** Alle fejl kommer som `{ "error": "…" }` med en besked der er
+   skrevet til at blive vist — ikke en kode du skal slå op.
+
+## 6. Det ene der endnu ikke er bevist
 
 **Selve lydkaldet.** Der findes i skrivende stund ingen `ELEVENLABS_API_KEY` —
 hverken lokalt, i Secrets Vault eller som Fly-secret på webhouse-app. Hele kæden
