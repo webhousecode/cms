@@ -12,6 +12,8 @@ import type { NextRequest } from "next/server";
 import { kraevTilladelse, preflight, svar, PODCAST_PERMISSIONS } from "@/lib/podcast/api";
 import { hentAfsnit } from "@/lib/podcast/store";
 import { estimat, foerFlyvning, type Udtale } from "@/lib/podcast/preflight";
+import { hentLevendeStemmer } from "@/lib/podcast/voices";
+import { readAiConfig } from "@/lib/ai-config";
 
 export const OPTIONS = preflight;
 
@@ -46,12 +48,22 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   }
 
   const stemmer = a.stemmer ? [a.stemmer.aidan, a.stemmer.airina] : [];
+
+  // F189.3 — spørg udbyderen om stemmerne findes LIGE NU. Opslaget må aldrig
+  // vælte estimatet: fejler det, får foerFlyvning ingen liste og melder «ikke
+  // slået op» med grunden. Det er dyrere for brugeren at se et grønt tjek
+  // ingen har foretaget end at se et rødt der siger hvad der mangler.
+  const cfg = await readAiConfig().catch(() => null);
+  const opslag = await hentLevendeStemmer(cfg?.elevenlabsApiKey ?? process.env.ELEVENLABS_API_KEY);
+
   return svar(req, {
     estimat: estimat(a.replikker),
+    stemmeopslag: opslag.ok ? { antal: opslag.antal } : { fejl: opslag.grund },
     foerFlyvning: foerFlyvning({
       replikker: a.replikker,
       ...(udtaler ? { udtaler } : {}),
       stemmer,
+      ...(opslag.ok ? { levendeStemmer: opslag.navne } : {}),
       godkendt: a.tilstand === "godkendt",
     }),
   });
