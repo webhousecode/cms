@@ -24,6 +24,11 @@ export const STANDARD_FARVER: { vaerdi: string; navn: string }[] = [
 export function erFarve(v: string): boolean {
   const s = v.trim();
   if (!s) return false;
+  // Værdien ender i en style-streng (`background:${vaerdi}`). Et semikolon dér
+  // ville lukke deklarationen og åbne den næste. En custom property kan i
+  // praksis ikke bære et semikolon — men gætter man forkert på præcis dét,
+  // fejler man i den retning hvor ingenting ser galt ud.
+  if (s.length > 64 || s.includes(";") || s.includes("}")) return false;
   return (
     /^#[0-9a-f]{3,8}$/i.test(s) ||
     /^rgba?\(\s*[\d.]+[\s,]/i.test(s) ||

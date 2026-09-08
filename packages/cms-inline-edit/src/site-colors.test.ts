@@ -31,6 +31,14 @@ describe("erFarve — kun det der ER en farve", () => {
       expect(erFarve(v), v).toBe(true);
   });
 
+  it("afviser en værdi der kunne lukke style-deklarationen", () => {
+    // vaerdi går direkte ind i `background:${...}` — et semikolon dér ville
+    // åbne den næste deklaration.
+    expect(erFarve("rgb(1,2,3); background:url(x)")).toBe(false);
+    expect(erFarve("#fff}")).toBe(false);
+    expect(erFarve("#" + "a".repeat(80))).toBe(false);
+  });
+
   it("afviser alt andet — en variabel er ikke en farve fordi den hedder --primary", () => {
     // --primary-spacing: 1.5rem må ALDRIG ende i en farvepalet.
     for (const v of ["1.5rem", "", "  ", "sans-serif", "var(--x)", "0", "12px"])
