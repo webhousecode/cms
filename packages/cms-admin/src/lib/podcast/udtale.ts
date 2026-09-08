@@ -69,3 +69,28 @@ export async function sitetsUdtaler(): Promise<{ word: string; alias: string }[]
   const brugbare = tilElevenLabs(raekker);
   return brugbare.length ? brugbare : undefined;
 }
+
+/**
+ * Modellen sponsorindslaget og overgangen indtales med.
+ *
+ * MÅLT 8/9 efter ejerens spørgsmål — «podcast test med Aidan og Airina ER da
+ * ElevenLabs eller er det måske stadig Azure?». Svaret er ElevenLabs begge
+ * steder, men SDK'ets to standarder er ikke den samme model:
+ *
+ *   ai.podcast()  →  eleven_v3                (afsnittene · to stemmer)
+ *   ai.tts()      →  eleven_multilingual_v2   (reklamen · overgangen)
+ *
+ * Han hørte forskellen før jeg havde målt den: «Aidan og Airina gjorde det
+ * bedre». Samme udbyder, samme stemme-id, anden model — og v3 udtaler
+ * «broberg.ai» rigtigt af sig selv, hvor v2 skulle have en lydskrift for at
+ * komme i nærheden.
+ *
+ * At de to skulle være forskellige er heller ikke til at forsvare i sig selv:
+ * reklamen ligger MIDT i afsnittet. Skifter lydkvaliteten når værten holder
+ * pause, hører man det.
+ *
+ * VERIFICERET at /v1/text-to-speech tager imod v3 — ikke antaget: to
+ * kontrollerede kald med samme tekst og samme stemme, begge HTTP 200
+ * (v3 56.050 bytes, v2 33.898).
+ */
+export const SPONSOR_MODEL = { provider: "elevenlabs", model: "eleven_v3" } as const;

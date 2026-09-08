@@ -20,7 +20,7 @@ import { estimat } from "./preflight";
 import { hentAfsnit, skrivAfsnit, type Afsnit, type StoreSvar } from "./store";
 import { hentSponsor, maaBruges } from "./sponsors";
 import { overgangNoegle, skalHaveOvergang, OVERGANG_RESERVE } from "./bumper";
-import { sitetsUdtaler } from "./udtale";
+import { sitetsUdtaler, SPONSOR_MODEL } from "./udtale";
 import { sySammen } from "./stitch";
 import type { Replik } from "./manuscript";
 
@@ -253,6 +253,9 @@ async function indspilMedSponsor(args: {
     text: overgangTekst,
     voice: stemmer.aidan,
     purpose: "podcast.sponsor-overgang",
+    // SAMME model som replikkerne omkring den — ellers skifter Aidans stemme
+    // karakter i den ene sætning hvor han holder pause.
+    override: { ...SPONSOR_MODEL },
     ...(udtaler ? { pronunciations: udtaler } : {}),
   });
 

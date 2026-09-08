@@ -15,7 +15,7 @@ import { hentSponsor, skrivSponsor } from "@/lib/podcast/sponsors";
 import { laengdeSek } from "@/lib/podcast/stitch";
 import { getAI } from "@/lib/ai/client";
 import { getMediaAdapter } from "@/lib/media";
-import { sitetsUdtaler } from "@/lib/podcast/udtale";
+import { sitetsUdtaler, SPONSOR_MODEL } from "@/lib/podcast/udtale";
 
 export const OPTIONS = preflight;
 
@@ -60,6 +60,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
       text: manuskript,
       voice: stemme,
       purpose: "podcast.sponsor",
+      // SAMME model som afsnittene. Reklamen ligger midt i dem.
+      override: { ...SPONSOR_MODEL },
       ...(pronunciations ? { pronunciations } : {}),
     });
     lyd = r.audio;
