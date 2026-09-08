@@ -40,6 +40,62 @@ skema-redigering, og **sprogfilteret på kolonnelisten forsvandt** fordi
 lige så sandsynligt en gentagelse som en forfalden prøve. Det skal måles før der
 røres ved en prøve.
 
+## SVARET på F193.1 (målt 8. september 2026, dansk tid)
+
+**Produktet er i orden. Test-fixturen har aldrig haft to sprog.**
+
+Sprogfilteret renderer kun når `siteLocales.length > 1`
+(`components/collection-list.tsx:491`). Alle tre e2e-sites peger på den samme
+konfiguration:
+
+```
+default/default      → examples/blog/cms.config.ts
+default/cms-docs     → examples/blog/cms.config.ts
+examples/simple-blog → examples/blog/cms.config.ts
+```
+
+… og den fil har **aldrig** indeholdt `locales`:
+
+```
+git log -S"locales" -- examples/blog/cms.config.ts   →  tomt
+```
+
+E2E-opsætningen sætter dem heller ikke andre steder — hverken i site-config
+eller i `_data`. Otte prøver forlanger altså en flade fixturen ikke kan
+producere. Det er ikke maj-hændelsen.
+
+**Positiv kontrol, og den er hele beviset.** Med `locales: ["da","en"]` +
+`defaultLocale: "da"` midlertidigt på fixturen:
+
+```
+8 passed (41.7s)
+```
+
+Alle otte. Ikke én rettet prøve — hele blokken, uden at røre produktet.
+Ændringen er rullet tilbage igen; den hører til F193.2.
+
+**Hændelses-signaturen er tjekket i DRIFT, ikke udledt.** Læst direkte på
+maskinen (`flyctl ssh console`, ren læsning):
+
+```
+broberg-ai           locales: ['da', 'en']
+sanneandersen        locales: ['da', 'en']
+trail                (ingen — étsproget, som forventet)
+webhouse-site        (ingen — étsproget, som forventet)
+```
+
+`sanneandersen` er sitet fra 19. maj. Feltet står der. **Hændelsen er ikke
+vendt tilbage.**
+
+> En fælde undervejs, noteret fordi den ville have givet det modsatte svar:
+> mit første forsøg spurgte `/api/admin/site-config` med den LOKALE
+> `CMS_JWT_SECRET` og fik `locales: None` for alle tre sites — hvilket ligner
+> præcis den hændelse jeg ledte efter. Kaldet svarede **401**. Tre «beviser»
+> på en produktionsfejl, som i virkeligheden var en afvist forespørgsel.
+
+**Den 9. prøve** (`01-auth`, «ingen kritiske konsolfejl» på agents + curation)
+er en ANDEN fejl og er ikke diagnosticeret her. Den hører til F193.2.
+
 ## Porten — præcist hvad der ER og IKKE er tilsluttet
 
 Det første jeg troede var at udrulningen slet ikke havde en port. Det er forkert,
