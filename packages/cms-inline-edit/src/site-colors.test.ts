@@ -168,8 +168,16 @@ describe("hver svatch har sit EGET anker", () => {
 
   it("koden bygger ankeret PR. FARVE — ikke ét delt id", () => {
     // Fem knapper med samme testid er fire knapper Lens aldrig kan trykke på.
-    expect(KODE).toContain("`inline-color-swatch-${testidNavn(f.navn)}`");
-    expect(KODE).toContain("`inline-color-site-swatch-${testidNavn(f.navn)}`");
+    expect(KODE).toContain('anker("inline-color-swatch", f)');
+    expect(KODE).toContain('anker("inline-color-site-swatch", f)');
     expect(KODE).not.toContain('svatch(f, "inline-color-swatch")');
+  });
+
+  it("et navn uden bogstaver falder tilbage på farven — aldrig et TOMT anker", () => {
+    // pentNavn("--__") giver "", og to tomme ankre er igen ét delt id.
+    expect(testidNavn("--__")).toBe("");
+    const f = KODE.slice(KODE.indexOf("function anker"));
+    expect(f.slice(0, f.indexOf("\n}"))).toContain("testidNavn(f.navn) || testidNavn(f.vaerdi)");
+    expect(testidNavn("#00b2ff")).toBe("00b2ff");
   });
 });

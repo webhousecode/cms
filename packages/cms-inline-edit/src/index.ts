@@ -1564,6 +1564,14 @@ function svatch(f: { vaerdi: string; navn: string }, testid: string): HTMLButton
   return b;
 }
 
+/** Ankeret for én svatch. Et variabelnavn helt uden bogstaver (--__) ville give
+ *  et TOMT anker — og to tomme ankre er igen ét delt id, altså præcis det denne
+ *  navngivning findes for at undgå. Falder tilbage på farven, som siteFarver
+ *  garanterer er unik i paletten. */
+function anker(praefiks: string, f: { vaerdi: string; navn: string }): string {
+  return `${praefiks}-${testidNavn(f.navn) || testidNavn(f.vaerdi)}`;
+}
+
 function buildColorPicker(): HTMLElement {
   const p = document.createElement("div");
   p.setAttribute("data-cms-inline-edit-toolbar", "");
@@ -1586,12 +1594,12 @@ function buildColorPicker(): HTMLElement {
   };
 
   const std = raekke("Standard", "inline-color-standard");
-  STANDARD_FARVER.forEach((f) => std.appendChild(svatch(f, `inline-color-swatch-${testidNavn(f.navn)}`)));
+  STANDARD_FARVER.forEach((f) => std.appendChild(svatch(f, anker("inline-color-swatch", f))));
 
   const egne = laesSiteFarver();
   if (egne.length) {
     const g = raekke("Sitets farver", "inline-color-site");
-    egne.forEach((f) => g.appendChild(svatch(f, `inline-color-site-swatch-${testidNavn(f.navn)}`)));
+    egne.forEach((f) => g.appendChild(svatch(f, anker("inline-color-site-swatch", f))));
   }
 
   // Fri hex, så arbitrære farver stadig kan vælges — uden en OS-dialog.
