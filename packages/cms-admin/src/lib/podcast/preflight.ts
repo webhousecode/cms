@@ -21,6 +21,7 @@
  */
 import type { Replik } from "./manuscript";
 import { manuskriptTegn } from "./manuscript";
+import { RESERVE_KURS, RESERVE_MAALT, type Kurs } from "./valutakurs";
 
 /**
  * ElevenLabs' pris pr. 1.000 RÅTEGN.
@@ -71,8 +72,8 @@ const TEGN_PR_MINUT = 900;
  * REGNINGEN KOMMER I DOLLARS — ElevenLabs fakturerer i USD. Kronebeløbet er en
  * oversættelse til læseren, ikke det tal der trækkes.
  */
-export const USD_TIL_DKK = 6.43;
-export const KURS_MAALT = "8. september 2026";
+export const USD_TIL_DKK = RESERVE_KURS;
+export const KURS_MAALT = RESERVE_MAALT;
 
 /** Kroner, dansk skrevet: komma som decimaltegn, ALTID to decimaler.
  *
@@ -80,8 +81,8 @@ export const KURS_MAALT = "8. september 2026";
  *  beløbet står på en knap der bruger penge. To decimaler altid, fordi penge
  *  skrives med ører, og fordi to beløb ved siden af hinanden ellers ville have
  *  hver sin form. */
-export function dkk(usd: number): string {
-  return `${(usd * USD_TIL_DKK).toFixed(2).replace(".", ",")} kr`;
+export function dkk(usd: number, kurs: number = RESERVE_KURS): string {
+  return `${(usd * kurs).toFixed(2).replace(".", ",")} kr`;
 }
 
 export type Estimat = {
@@ -91,6 +92,9 @@ export type Estimat = {
   prisDkk: string;
   /** Datoen kursen blev målt — vises ved siden af beløbet. */
   kursMaalt: string;
+  /** Kom kursen fra et opslag, eller er det den sidst kendte? En kurs uden
+   *  herkomst kan ikke kontrolleres. */
+  kursKilde: "opslag" | "reserve";
   /** Selve kursen, så en klient kan omregne et HISTORISK beløb uden at have
    *  sin egen kopi af tallet. */
   kurs: number;
@@ -106,18 +110,22 @@ export type Estimat = {
 /** Prisen for et stykke ren TEKST — fx et sponsormanuskript, der ikke har en
  *  taler. Det er tegnene der koster, ikke hvem der siger dem. Samme vej som
  *  estimat(), så de to aldrig kan svare forskelligt. */
-export function estimatForTekst(tekst: string): Estimat {
-  return estimat([{ speaker: "aidan", text: tekst }]);
+export function estimatForTekst(tekst: string, kurs?: Kurs): Estimat {
+  return estimat([{ speaker: "aidan", text: tekst }], kurs);
 }
 
-export function estimat(replikker: Replik[]): Estimat {
+export function estimat(replikker: Replik[], kurs?: Kurs): Estimat {
   const tegn = manuskriptTegn(replikker);
   const prisUsd = Math.ceil((tegn / 1000) * PRIS_PR_1000_TEGN_USD * 100) / 100;
+  // Uden en kurs bruges reserven. En pris der ikke kan vises fordi et
+  // valutaopslag ikke blev lavet, er værre end en pris der er to procent gammel.
+  const k = kurs ?? { kurs: RESERVE_KURS, kilde: "reserve" as const, maalt: RESERVE_MAALT };
   return {
     tegn,
-    prisDkk: dkk(prisUsd),
-    kursMaalt: KURS_MAALT,
-    kurs: USD_TIL_DKK,
+    prisDkk: dkk(prisUsd, k.kurs),
+    kursMaalt: k.maalt,
+    kursKilde: k.kilde,
+    kurs: k.kurs,
     // Afrundet til øre. Et beløb med fjorten decimaler på en knap ser ud som en
     // fejl, og et beløb der er FOR lavt er værre end et der er lidt for højt.
     prisUsd,

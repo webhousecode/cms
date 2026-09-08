@@ -11,6 +11,7 @@ import { kraevTilladelse, preflight, svar, PODCAST_PERMISSIONS } from "@/lib/pod
 import { listSponsorer, skrivSponsor, hentSponsor, brugtI } from "@/lib/podcast/sponsors";
 import { listAfsnit } from "@/lib/podcast/store";
 import { estimatForTekst } from "@/lib/podcast/preflight";
+import { hentKurs } from "@/lib/podcast/valutakurs";
 
 export const OPTIONS = preflight;
 
@@ -32,12 +33,14 @@ export async function GET(req: NextRequest) {
     ? afsnit.vaerdi.map((a) => ({ slug: a.slug, sponsorSlug: a.data.sponsorSlug }))
     : null;
 
+  // ÉN gang for hele listen, ikke pr. indslag.
+  const kurs = await hentKurs();
   return svar(req, {
     sponsorer: liste.vaerdi.map((s) => {
       // Prisen regnes i MOTOREN og sendes med. Skærmen skal ikke kende hverken
       // satsen eller valutakursen — gjorde den det, ville der være to
       // sandheder om hvad et tryk koster.
-      const e = estimatForTekst(s.data.manuskript ?? "");
+      const e = estimatForTekst(s.data.manuskript ?? "", kurs);
       return {
         ...s,
         brugtI: brug ? brugtI(s.slug, brug) : null,

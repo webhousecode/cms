@@ -16,6 +16,7 @@
 import type { NextRequest } from "next/server";
 import { kraevTilladelse, preflight, svar, PODCAST_PERMISSIONS } from "@/lib/podcast/api";
 import { estimatForTekst } from "@/lib/podcast/preflight";
+import { hentKurs } from "@/lib/podcast/valutakurs";
 
 export const OPTIONS = preflight;
 
@@ -27,5 +28,5 @@ export async function POST(req: NextRequest) {
   const tekst = typeof krop?.tekst === "string" ? krop.tekst : "";
   // Tom tekst er ikke en fejl — det er hvad et tomt felt indeholder, og en
   // skærm der spørger mens brugeren skriver, spørger også før hun har skrevet.
-  return svar(req, { estimat: estimatForTekst(tekst) });
+  return svar(req, { estimat: estimatForTekst(tekst, await hentKurs()) });
 }

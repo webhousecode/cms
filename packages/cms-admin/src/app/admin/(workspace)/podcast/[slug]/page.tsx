@@ -31,7 +31,7 @@ type Afsnit = {
 };
 
 type Tjek = { navn: string; ok: boolean; detalje: string };
-type Estimat = { tegn: number; prisUsd: number; prisDkk: string; kursMaalt: string; kurs: number; minutter: number };
+type Estimat = { tegn: number; prisUsd: number; prisDkk: string; kursMaalt: string; kursKilde: "opslag" | "reserve"; kurs: number; minutter: number };
 
 const STATUS: Record<Tilstand, string> = {
   kladde: "○ Kladde",
@@ -81,6 +81,40 @@ export default function PodcastAfsnitPage() {
     ? Number(estimat.prisDkk.replace(" kr", "").replace(",", ".")) / estimat.prisUsd
     : null;
   const [bekraeft, setBekraeft] = useState(false);
+
+  // F191.7 — upload af et rettet manuskript.
+  const [uploader, setUploader] = useState(false);
+  const [manusFejl, setManusFejl] = useState<string | null>(null);
+  const [manusOk, setManusOk] = useState<string | null>(null);
+
+  async function lagOpManus(fil: File) {
+    setUploader(true);
+    setManusFejl(null);
+    setManusOk(null);
+    try {
+      const tekst = await fil.text();
+      const r = await fetch(`/api/podcast/${slug}/manuskript`, {
+        method: "PUT",
+        headers: { "content-type": "text/plain; charset=utf-8" },
+        body: tekst,
+      });
+      const j = (await r.json()) as { error?: string; linje?: number; antal?: number };
+      if (!r.ok) {
+        // Beskeden fra serveren VISES ordret. Den navngiver linjen; en
+        // omskrivning her ville tage det eneste brugbare ud af den.
+        setManusFejl(j.error ?? `Filen blev afvist (HTTP ${r.status}).`);
+        return;
+      }
+      setManusOk(`${j.antal} replikker lagt op. Godkendelsen er trukket tilbage — læs igennem og godkend igen.`);
+      // LÆS TILBAGE fra serveren frem for at tro på svaret: det er dokumentet
+      // på skærmen der skal vise det nye, ikke vores egen hukommelse om det.
+      await hent();
+    } catch (e) {
+      setManusFejl(e instanceof Error ? e.message : "filen kunne ikke læses");
+    } finally {
+      setUploader(false);
+    }
+  }
   const [beskedOk, setBeskedOk] = useState<string | null>(null);
 
   const hent = useCallback(async () => {
@@ -267,8 +301,78 @@ export default function PodcastAfsnitPage() {
                 style={{ margin: ".5rem 0 0", fontSize: ".68rem", color: "var(--muted-foreground)" }}
               >
                 Faktureres i dollars (${estimat.prisUsd.toFixed(2)}) — omregnet til kroner efter
-                kursen den {estimat.kursMaalt}.
+                kursen den {estimat.kursMaalt}
+                {estimat.kursKilde === "reserve" ? " (sidst kendte — kursen kunne ikke slås op)" : ""}.
               </p>
+            </section>
+          )}
+
+          {/* F191.7 — manuskriptet ud og ind igen. Christian 8/9: han vil kunne
+              rette teksten i sin egen editor. Download er en almindelig
+              tekstfil; upload validerer FØR noget skrives, og fejlen navngiver
+              linjen — «ugyldigt format» ville tvinge ham til selv at lede. */}
+          {replikker.length > 0 && (
+            <section style={{ display: "grid", gap: ".45rem" }}>
+              <h3 style={{ fontSize: ".8rem", margin: 0 }}>Manuskriptet som fil</h3>
+              <a
+                href={`/api/podcast/${slug}/manuskript`}
+                download
+                data-testid="podcast-manus-download"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: ".35rem",
+                  padding: ".35rem .7rem", borderRadius: 6, border: "1px solid var(--border)",
+                  background: "var(--background)", color: "var(--foreground)",
+                  fontSize: ".78rem", textDecoration: "none", justifyContent: "center",
+                }}
+              >
+                ↓ Hent manuskript
+              </a>
+              {maaSkrive && (
+                <>
+                  <label
+                    data-testid="podcast-manus-upload-label"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: ".35rem",
+                      padding: ".35rem .7rem", borderRadius: 6, border: "1px solid var(--border)",
+                      background: "var(--background)", color: "var(--foreground)",
+                      fontSize: ".78rem", cursor: uploader ? "wait" : "pointer", justifyContent: "center",
+                      opacity: uploader ? 0.6 : 1,
+                    }}
+                  >
+                    {uploader ? "Læser filen…" : "↑ Læg rettet manuskript op"}
+                    <input
+                      type="file"
+                      accept=".txt,text/plain"
+                      data-testid="podcast-manus-upload"
+                      disabled={uploader}
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        const f = e.currentTarget.files?.[0];
+                        // Feltet nulstilles, så den SAMME fil kan lægges op igen
+                        // efter en rettelse — ellers sker der ingenting anden gang.
+                        e.currentTarget.value = "";
+                        if (f) void lagOpManus(f);
+                      }}
+                    />
+                  </label>
+                  {manusFejl && (
+                    <p
+                      data-testid="podcast-manus-fejl"
+                      style={{
+                        margin: 0, fontSize: ".72rem", color: "var(--destructive)",
+                        lineHeight: 1.5, whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {manusFejl}
+                    </p>
+                  )}
+                  {manusOk && (
+                    <p data-testid="podcast-manus-ok" style={{ margin: 0, fontSize: ".72rem", color: "var(--muted-foreground)" }}>
+                      {manusOk}
+                    </p>
+                  )}
+                </>
+              )}
             </section>
           )}
 
