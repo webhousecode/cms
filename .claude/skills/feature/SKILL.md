@@ -184,7 +184,40 @@ The plan must be specific: real file paths drawn from the repo's `## Project lay
 0. **`## Summary` is mandatory and comes first** (right after the H1 + status line). 1-3 self-contained sentences — the chat plan-ref drawer (F158) renders exactly this block and `cardmem_write_plan` stores it as `plans.summary`. A plan without a usable `## Summary` shows "no summary yet" in chat. Never skip it.
 1. **Every section must exist.** Write "None" if empty. Never omit.
 2. **Non-goals are mandatory.** Even if obvious, write them — prevents scope creep during implementation.
-3. **Acceptance criteria must be measurable.** Not "it works" — "MCP tool returns in <200ms", "Playwright suite passes".
+3. **Acceptance criteria must be measurable AND must name WHERE they are measured (F095.33).**
+   Not "it works" — and not "the Playwright suite passes" either, which was this
+   rule's own example until xrt81 shipped a change with five green unit tests that
+   sent the wrong thing to every subscriber. The tests called the function directly
+   with a value the real caller never sends: correct claims about a function, read
+   as a claim about the system.
+
+   | weaker | stronger |
+   |---|---|
+   | "the title is X" | "the title is X, **measured in the live feed**" |
+   | "the send is refused" | "the send is refused, **read back from a fresh query**" |
+   | "the button is green" | "the button is green, **on the shipped build**" |
+
+   The left column can be ticked from a green test. The right column cannot, and
+   the difference costs nothing to write. Plenty of criteria are properly proven by
+   a unit test — a pure function, a parser, a refusal path; the rule is that the AC
+   must SAY which, not that production always wins.
+
+   **NAMING A VANTAGE POINT IS NECESSARY, NOT SUFFICIENT — you can name the wrong
+   one.** "The title is X, proven in a unit test" satisfies the rule word for word
+   and is exactly the defect above: xrt81 HAD five unit tests, and they were
+   correct about the function. So the question that picks the vantage point is not
+   "where is it easiest to measure" but:
+
+   > **If this were broken, could THIS vantage point see it?**
+
+   For that calendar title: the unit test called the function with a value the real
+   caller never sends, so no. For a pure parser: yes, the unit test sees everything
+   that can go wrong. Same question, two different answers — which is what makes
+   the choice reasoned rather than conventional.
+
+   It is fd-sundhed's "can my assertion discriminate?" asked one step earlier: that
+   one asks whether the ASSERTION can see the fault, this asks whether the SURFACE
+   can.
 4. **Stories must be shippable in isolation.** Each story should produce a green commit + a board move from Backlog → Review.
 5. **Open Questions must be honest.** If "Electron vs Tauri" is undecided, write it. "I'll decide later" is not a plan.
 6. **`## Reuse` is mandatory (F217).** Run the Discovery reuse check (Step 3.5) and record the reuse-vs-build decision per capability. A plan-doc with no `## Reuse` section trips the F217.3 advisory. Write "None — no cross-cutting capabilities" only when the feature is genuinely repo-local.

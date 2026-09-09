@@ -30,6 +30,11 @@ For each card (`cardmem_list_cards({column:"review"})`, or the one you were give
      selector: <verify_selector>, ...})`. If pass: `cardmem_ac_check({passed:true,
      evidence:"lens run <id>"})`. (Lens is the ONLY visual engine — no `pnpm review:visual`.)
    - `manual` → leave unticked; note it needs a human.
+   **An AC that does not name WHERE it is measured is weak (F095.33)** — tick it if
+   it is met, and SAY SO in the pillar summary ("2 of 5 AC name no vantage point").
+   Deliberately not a block: most existing criteria predate the rule, and a check
+   that reddens the whole backlog on its first day is a check switched off on its
+   first day. The point is that the next person to write one sees it named.
    Then record the AC pillar: `cardmem_record_review({type:"ac", status: <all data/visual
    AC met ? "passed" : "flagged">, summary, evidence})`.
 
