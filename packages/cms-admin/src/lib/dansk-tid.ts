@@ -18,10 +18,35 @@
  */
 export const DK_ZONE = "Europe/Copenhagen";
 
+/** Et ØJEBLIK, aldrig et gæt.
+ *
+ *  F194 — en dato-tid-streng UDEN zone («2026-07-01T12:00:00») tolkes af
+ *  `new Date` i MASKINENS zone. Samme streng er derfor to forskellige
+ *  øjeblikke på min Mac og i CI, og det opdagede CI før jeg gjorde: min egen
+ *  prøve bestod lokalt fordi Macen tilfældigvis kører dansk tid.
+ *
+ *  Det er præcis den fejlklasse denne fil findes for at lukke, så den gætter
+ *  ikke — den siger fra. En kalder der har et vægur skal selv sige hvilken
+ *  zone det er i. */
+function tilOejeblik(naar: Date | string): Date {
+  if (naar instanceof Date) {
+    if (Number.isNaN(naar.getTime())) throw new Error("dansk-tid: ugyldig Date");
+    return naar;
+  }
+  if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(naar) && !/(Z|[+-]\d{2}:?\d{2})$/.test(naar)) {
+    throw new Error(
+      `dansk-tid: «${naar}» har ingen tidszone. En dato-tid uden zone er et gæt — ` +
+        "send et rigtigt øjeblik (…Z eller ±HH:MM), eller en Date.",
+    );
+  }
+  const d = new Date(naar);
+  if (Number.isNaN(d.getTime())) throw new Error(`dansk-tid: ugyldigt tidspunkt ${String(naar)}`);
+  return d;
+}
+
 /** Felterne i dansk tid for et øjeblik. `sv-SE` fordi det ISO-formaterer. */
 function dkDele(naar: Date | string): { dag: string; time: string; minut: string; sekund: string } {
-  const d = naar instanceof Date ? naar : new Date(naar);
-  if (Number.isNaN(d.getTime())) throw new Error(`dansk-tid: ugyldigt tidspunkt ${String(naar)}`);
+  const d = tilOejeblik(naar);
   const dag = new Intl.DateTimeFormat("sv-SE", { timeZone: DK_ZONE }).format(d); // YYYY-MM-DD
   const [time, minut, sekund] = new Intl.DateTimeFormat("sv-SE", {
     timeZone: DK_ZONE,
@@ -54,8 +79,18 @@ export function dkVaegur(naar: Date | string): string {
  *  kl. 00.30 hos en modtager i enhver anden zone. Med Z konverterer app'en
  *  selv, hvilket også er det rigtige for en modtager uden for Danmark. */
 export function icsUtc(naar: Date | string, plusMinutter = 0): string {
-  const d = naar instanceof Date ? new Date(naar.getTime()) : new Date(naar);
-  if (Number.isNaN(d.getTime())) throw new Error(`dansk-tid: ugyldigt tidspunkt ${String(naar)}`);
+  const d = new Date(tilOejeblik(naar).getTime());
   if (plusMinutter) d.setUTCMinutes(d.getUTCMinutes() + plusMinutter);
   return `${d.toISOString().slice(0, 19).replace(/[-:]/g, "")}Z`;
+}
+
+/** Dansk klokkeslæt til visning, `HH:MM`. */
+export function dkKlokke(naar: Date | string): string {
+  const { time, minut } = dkDele(naar);
+  return `${time}:${minut}`;
+}
+
+/** Dansk time som tal, 0-23 — til at placere en begivenhed i en ugekolonne. */
+export function dkTimeTal(naar: Date | string): number {
+  return Number(dkDele(naar).time);
 }

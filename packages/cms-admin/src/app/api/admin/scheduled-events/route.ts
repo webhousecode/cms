@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { dkVaegur } from "@/lib/dansk-tid";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { readSiteConfig, generateCalendarToken } from "@/lib/site-config";
 import { getSessionWithSiteRole } from "@/lib/require-role";
@@ -29,13 +28,17 @@ function getExcerpt(data: Record<string, unknown>): string | undefined {
   return undefined;
 }
 
-/** F194 — dansk vægur, ikke serverens.
+/** F194 — `date` er et ØJEBLIK, ikke et vægur.
  *
- *  Stod her: d.getFullYear()/getHours() uden zone. Containeren kører UTC
- *  (målt 10/9), så strengen var serverens vægur pakket ind så den LIGNEDE
- *  lokal tid — værre end en åbenlyst forkert værdi. */
+ *  Her stod localISO(), der byggede en zoneløs streng af d.getFullYear()/
+ *  getHours(). Feltet fik dermed to betydninger: publishAt og backup-stemplet
+ *  er UTC-øjeblikke, mens denne var et vægur — og klienten læste dem alle som
+ *  vægur mens .ics-ruten læste dem alle som øjeblikke. Ingen af de to kunne
+ *  have ret om begge.
+ *
+ *  Nu er der én form. Klienten oversætter til dansk tid ved visning. */
 function localISO(d: Date): string {
-  return dkVaegur(d).slice(0, 16) + ":00";
+  return d.toISOString();
 }
 
 export async function GET() {

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check, HardDrive, Link2 } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { PageHeader } from "@/components/page-header";
-import { dkDag } from "@/lib/dansk-tid";
+import { dkDag, dkKlokke, dkTimeTal } from "@/lib/dansk-tid";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -322,7 +322,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
                     <div
                       key={evt.id}
                       className="truncate rounded px-1 py-px"
-                      title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${evt.subtitle} · ${evt.date.slice(11, 16)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
+                      title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${evt.subtitle} · ${dkKlokke(evt.date)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
                       style={{
                         fontSize: "0.6rem",
                         lineHeight: "1.1rem",
@@ -331,7 +331,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
                         borderLeft: `2px solid ${EVENT_COLORS[evt.type]}`,
                       }}
                     >
-                      {evt.date.slice(11, 16)} {evt.title}
+                      {dkKlokke(evt.date)} {evt.title}
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
@@ -558,7 +558,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
 
               {/* Events */}
               {(eventsMap.get(day.key) ?? []).map((evt) => {
-                const hour = parseInt(evt.date.slice(11, 13)) || 0;
+                const hour = dkTimeTal(evt.date);
                 const minute = parseInt(evt.date.slice(14, 16)) || 0;
                 const topPx = (hour + minute / 60) * HOUR_HEIGHT;
                 const color = EVENT_COLORS[evt.type];
@@ -586,9 +586,9 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
                       textDecoration: "none",
                       zIndex: 10,
                     }}
-                    title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${evt.date.slice(11, 16)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
+                    title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${dkKlokke(evt.date)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
                   >
-                    {evt.date.slice(11, 16)} {evt.title}
+                    {dkKlokke(evt.date)} {evt.title}
                   </Link>
                 );
               })}
@@ -660,7 +660,7 @@ function DayView({ selectedDate, eventsMap }: {
                 <p className="text-sm font-medium text-foreground truncate">{evt.title}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-[10px] px-1.5 py-0 rounded bg-secondary text-secondary-foreground">{evt.subtitle}</span>
-                  <span className="text-[11px] text-muted-foreground font-mono">{evt.date.slice(11, 16)}</span>
+                  <span className="text-[11px] text-muted-foreground font-mono">{dkKlokke(evt.date)}</span>
                 </div>
               </div>
               <span

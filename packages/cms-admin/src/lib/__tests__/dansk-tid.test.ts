@@ -70,9 +70,26 @@ describe("ICS udsender utvetydig tid", () => {
     expect(icsUtc("2026-09-09T23:50:00Z", 15)).toBe("20260910T000500Z");
   });
 
-  it("en flydende tid uden zone tolkes som dansk vægur", () => {
-    // localISO udsender netop denne form. Den skal ikke pludselig blive UTC.
-    expect(icsUtc("2026-07-01T12:00:00")).toBe("20260701T100000Z");
+  it("en dato-tid UDEN zone afvises — den er et gæt", () => {
+    // DET VAR MIN EGEN FEJL, og CI fandt den før jeg gjorde: prøven stod før
+    // på .toBe("20260701T100000Z") og bestod LOKALT fordi Macen kører dansk
+    // tid. I CI (UTC) gav samme streng 120000Z. Samme streng, to øjeblikke.
+    // Præcis den fejlklasse denne fil findes for at lukke — så den gætter
+    // ikke længere, den siger fra.
+    expect(() => icsUtc("2026-07-01T12:00:00")).toThrow(/tidszone/);
+    expect(() => dkDag("2026-07-01T12:00:00")).toThrow(/tidszone/);
+  });
+
+  it("men et rigtigt øjeblik går igennem — uanset hvordan zonen skrives", () => {
+    expect(icsUtc("2026-07-01T12:00:00Z")).toBe("20260701T120000Z");
+    expect(icsUtc("2026-07-01T12:00:00+02:00")).toBe("20260701T100000Z");
+    expect(icsUtc(new Date("2026-07-01T12:00:00Z"))).toBe("20260701T120000Z");
+  });
+
+  it("en ren DATO er ikke tvetydig og slipper igennem", () => {
+    // «2026-07-01» er en kalenderdag, ikke et vægur — spærren må ikke tage
+    // den med, for dagnøglerne i kalenderen har netop den form.
+    expect(() => dkDag("2026-07-01")).not.toThrow();
   });
 });
 
