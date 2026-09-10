@@ -90,7 +90,17 @@ export function dkKlokke(naar: Date | string): string {
   return `${time}:${minut}`;
 }
 
-/** Dansk time som tal, 0-23 — til at placere en begivenhed i en ugekolonne. */
-export function dkTimeTal(naar: Date | string): number {
-  return Number(dkDele(naar).time);
+/** Dansk time og minut som tal, til at placere en begivenhed i en ugekolonne.
+ *
+ *  ÉN kilde til begge tal. Ugevisningen læste før timen herfra og minuttet råt
+ *  fra tidsstemplets tegn 14-16 — to mekanismer for det samme tidspunkt, i to
+ *  nabolinjer.
+ *
+ *  De gav det SAMME svar, og det er pointen: de var enige udelukkende fordi
+ *  Danmark er et helt antal timer fra UTC. Det var altså ikke en fejl, men en
+ *  rigtighed der hvilede på en uskreven egenskab ved vores zone — og som en
+ *  zone med halvtime-forskydning bryder stille. */
+export function dkUrMinut(naar: Date | string): [number, number] {
+  const { time, minut } = dkDele(naar);
+  return [Number(time), Number(minut)];
 }

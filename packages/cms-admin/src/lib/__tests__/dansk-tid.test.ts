@@ -1,6 +1,8 @@
 /* F194 — dansk tid ét sted. */
 import { describe, it, expect } from "vitest";
-import { dkDag, dkVaegur, icsUtc, DK_ZONE } from "../dansk-tid";
+import { dkDag, dkVaegur, dkKlokke, dkUrMinut, icsUtc, DK_ZONE } from "../dansk-tid";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 describe("den målte fejl", () => {
   it("2026-09-09T22:30:00Z er den 10. i Danmark, ikke den 9.", () => {
@@ -97,5 +99,63 @@ describe("den siger fra frem for at gætte", () => {
   it("et ugyldigt tidspunkt kaster", () => {
     expect(() => dkDag("ikke en dato")).toThrow();
     expect(() => icsUtc("ikke en dato")).toThrow();
+  });
+});
+
+describe("ugevisningens ur — én kilde til time og minut", () => {
+  it("22:30Z placeres 00:30 dansk sommertid, ikke 22:30", () => {
+    expect(dkUrMinut("2026-09-09T22:30:00Z")).toEqual([0, 30]);
+  });
+
+  it("vinter: samme vægur kommer af et ANDET øjeblik", () => {
+    // Sommer +2, vinter +1. Var zonen et fast offset, ville den ene være forkert.
+    expect(dkUrMinut("2026-01-09T23:30:00Z")).toEqual([0, 30]);
+  });
+
+  it("minuttet kommer fra ZONEN, ikke fra tegn 14-16 af strengen", () => {
+    // ÆRLIGT om hvad der var galt: den gamle aflæsning gav det SAMME svar,
+    // fordi Danmark er et helt antal timer fra UTC. Den var ikke forkert — den
+    // var en anden mekanisme for samme tidspunkt, og den holdt kun på grund af
+    // en egenskab ved vores zone som ingen havde skrevet ned.
+    expect(dkUrMinut("2026-09-09T22:30:00Z")).toEqual([0, 30]);
+    expect("2026-09-09T22:30:00Z".slice(14, 16)).toBe("30"); // enige — i DK
+    // Zoner med halvtime-forskydning er dem der ville have skilt dem ad:
+    const halvtime = new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false,
+    }).format(new Date("2026-09-09T22:30:00Z"));
+    expect(halvtime).toBe("04:00");
+    expect(halvtime.slice(3, 5)).not.toBe("2026-09-09T22:30:00Z".slice(14, 16));
+  });
+
+  it("time og minut er enige med det viste klokkeslæt", () => {
+    const naar = "2026-06-15T07:05:00Z";
+    const [t, m] = dkUrMinut(naar);
+    expect(`${String(t).padStart(2, "0")}:${String(m).padStart(2, "0")}`).toBe(dkKlokke(naar));
+  });
+});
+
+describe("PORTEN: kalenderen må ikke læse et tidsstempel råt igen", () => {
+  // F194's egen regression. Fejlen var ikke at hjælperen manglede — den var at
+  // ET kaldested sprang den over, og et rå udsnit af en UTC-streng ser i koden
+  // nøjagtig ud som en dansk dag. Målt 10/9 EFTER den første rettelse: to
+  // sådanne kaldesteder stod stadig tilbage i filen.
+  const kilde = readFileSync(
+    fileURLToPath(new URL("../../app/admin/(workspace)/scheduled/calendar-client.tsx", import.meta.url)),
+    "utf8",
+  );
+
+  it("filen findes og er kalenderen — ellers måler porten ingenting", () => {
+    expect(kilde.length).toBeGreaterThan(10_000);
+    expect(kilde).toContain("dansk-tid");
+  });
+
+  it("ingen rå udsnit af et .date-tidsstempel", () => {
+    const traef = kilde.match(/\.date\s*\.slice\s*\(/g) ?? [];
+    expect(traef).toEqual([]);
+  });
+
+  it("ingen rå getHours/getDate på en begivenhed", () => {
+    const traef = kilde.match(/\bevt?\.[a-z]*\.get(Hours|Date|Month|FullYear)\s*\(/gi) ?? [];
+    expect(traef).toEqual([]);
   });
 });

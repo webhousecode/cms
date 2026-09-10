@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check, HardDrive, Link2 } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { PageHeader } from "@/components/page-header";
-import { dkDag, dkKlokke, dkTimeTal } from "@/lib/dansk-tid";
+import { dkDag, dkKlokke, dkUrMinut } from "@/lib/dansk-tid";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -558,8 +558,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
 
               {/* Events */}
               {(eventsMap.get(day.key) ?? []).map((evt) => {
-                const hour = dkTimeTal(evt.date);
-                const minute = parseInt(evt.date.slice(14, 16)) || 0;
+                const [hour, minute] = dkUrMinut(evt.date);
                 const topPx = (hour + minute / 60) * HOUR_HEIGHT;
                 const color = EVENT_COLORS[evt.type];
                 return (
@@ -777,7 +776,7 @@ function CalendarSidebar({ events, todayKey, colColorMap }: { events: ScheduledE
   // Unique doc counts (strip pub-/unpub- prefix to deduplicate same document)
   const docKey = (e: ScheduledEvent) => e.id.replace(/^(pub|unpub)-/, "");
   const futureDocIds = new Set(futureEvents.map(docKey));
-  const todayDocIds = new Set(events.filter((e) => e.date.slice(0, 10) === todayKey).map(docKey));
+  const todayDocIds = new Set(events.filter((e) => dkDag(e.date) === todayKey).map(docKey));
 
   const colEntries = Array.from(collectionCounts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 
