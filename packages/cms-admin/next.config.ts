@@ -27,14 +27,49 @@ const nextConfig: NextConfig = {
     // the standalone bundle. Patterns are glob, evaluated relative to
     // outputFileTracingRoot (defaults to the project root, which is the
     // monorepo root here).
+    //
+    // F194.1 — HVER GLOB PEGER PÅ PAKKENS EGEN MAPPE, ikke på hele dens
+    // .pnpm-bibliotek. Grunden er målt: `<pkg>@*/**` rammer også de SYMLINKS
+    // pnpm lægger i søskende-mappen node_modules/, og fra next 16.3.3 forsøger
+    // Turbopack at hashe sådan et link som en FIL:
+    //
+    //   Error [TurbopackInternalError]: reading file
+    //     ".pnpm/gray-matter@4.0.3/node_modules/js-yaml"
+    //   Caused by: Is a directory (os error 21)
+    //
+    // 16.1.6 tolererede det, 16.3.3 og 16.3.4 gør ikke. Fire af de syv globs
+    // rammer symlinks (målt: tsx 3, marked-highlight 1, gray-matter 4,
+    // sharp 2), så det var ikke en enkeltstående sti.
+    //
+    // Afhængighederne står derfor ved navn nedenfor. Det er mere at
+    // vedligeholde, og det er prisen for at listen er EKSPLICIT: en manglende
+    // pakke i standalone-bygget viser sig som et nedbrud ved kørsel, ikke som
+    // en tavs mangel.
     "*": [
-      "../../node_modules/.pnpm/tsx@*/**",
-      "../../node_modules/.pnpm/es-module-lexer@*/**",
-      "../../node_modules/.pnpm/marked@*/**",
-      "../../node_modules/.pnpm/marked-highlight@*/**",
-      "../../node_modules/.pnpm/gray-matter@*/**",
-      "../../node_modules/.pnpm/slugify@*/**",
-      "../../node_modules/.pnpm/sharp@*/**",
+      // tsx spawnes ved kørsel (F143) — den ses ikke af statisk sporing.
+      "../../node_modules/.pnpm/tsx@*/node_modules/tsx/**",
+      "../../node_modules/.pnpm/esbuild@*/node_modules/esbuild/**",
+      "../../node_modules/.pnpm/get-tsconfig@*/node_modules/get-tsconfig/**",
+      "../../node_modules/.pnpm/resolve-pkg-maps@*/node_modules/resolve-pkg-maps/**",
+      "../../node_modules/.pnpm/es-module-lexer@*/node_modules/es-module-lexer/**",
+      // markdown-kæden
+      "../../node_modules/.pnpm/marked@*/node_modules/marked/**",
+      "../../node_modules/.pnpm/marked-highlight@*/node_modules/marked-highlight/**",
+      // gray-matter + dens fire afhængigheder
+      "../../node_modules/.pnpm/gray-matter@*/node_modules/gray-matter/**",
+      "../../node_modules/.pnpm/js-yaml@*/node_modules/js-yaml/**",
+      "../../node_modules/.pnpm/argparse@*/node_modules/argparse/**",
+      "../../node_modules/.pnpm/esprima@*/node_modules/esprima/**",
+      "../../node_modules/.pnpm/kind-of@*/node_modules/kind-of/**",
+      "../../node_modules/.pnpm/strip-bom-string@*/node_modules/strip-bom-string/**",
+      "../../node_modules/.pnpm/section-matter@*/node_modules/section-matter/**",
+      "../../node_modules/.pnpm/extend-shallow@*/node_modules/extend-shallow/**",
+      "../../node_modules/.pnpm/is-extendable@*/node_modules/is-extendable/**",
+      "../../node_modules/.pnpm/slugify@*/node_modules/slugify/**",
+      // sharp + dens to
+      "../../node_modules/.pnpm/sharp@*/node_modules/sharp/**",
+      "../../node_modules/.pnpm/detect-libc@*/node_modules/detect-libc/**",
+      "../../node_modules/.pnpm/semver@*/node_modules/semver/**",
     ],
   },
 

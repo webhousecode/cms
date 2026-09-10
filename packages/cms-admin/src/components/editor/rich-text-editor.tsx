@@ -1258,7 +1258,9 @@ function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: Node
 
     (async () => {
       const L = (await import("leaflet")).default;
-      // @ts-expect-error — CSS import for side effects
+      // CSS-import for sideeffekt. Bar et @ts-expect-error indtil next 16.3.3,
+      // som selv fik typer for .css-moduler — direktivet blev dermed UBRUGT, og
+      // tsc afviser et ubrugt @ts-expect-error. Importen er uændret.
       await import("leaflet/dist/leaflet.css");
       if (cancelled || !mapContainerRef.current) return;
 
