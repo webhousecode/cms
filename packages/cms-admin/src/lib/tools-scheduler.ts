@@ -9,6 +9,7 @@ import { loadRegistry } from "./site-registry";
 import { readSiteConfigForSite, type SiteConfig } from "./site-config";
 import { dispatchWebhooks } from "./webhook-dispatch";
 import { resolveJwtSecret } from "./dev-jwt-secret";
+import { dkDag, dkKlokke, dkUgedag } from "./dansk-tid";
 
 interface SchedulerState {
   lastBackupRun?: string;
@@ -32,18 +33,33 @@ async function writeState(dataDir: string, state: SchedulerState): Promise<void>
   await fs.writeFile(filePath, JSON.stringify(state, null, 2));
 }
 
-function isDue(schedule: string, scheduledTime: string, lastRun?: string): boolean {
+/** F195.1 — planlægningen sker i DANSK tid, ikke i maskinens.
+ *
+ *  Her stod tre aflæsninger af serverens ur, og hver af dem var en selvstændig
+ *  fejl: setHours() for tidspunktet, getDay() for «mandag», toDateString() for
+ *  «har den kørt i dag». Containeren er UTC, så et felt en dansk bruger havde
+ *  sat til 03.00 kørte 05.00 dansk om sommeren.
+ *
+ *  MÅLT I PRODUKTION 10/9 før rettelsen — alle fire sites, daglig backup:
+ *    sanneandersen 01.00 → kørte 03.00 · webhouse-site 02.00 → 04.00
+ *    broberg-ai    03.00 → kørte 05.00 · trail         04.00 → 06.00
+ *
+ *  At rette KUN klokkeslættet ville have lukket den halvdel der blev
+ *  rapporteret og ladet «mandag» og «i dag» blive ved med at være UTC's.
+ *
+ *  Klokkeslæt sammenlignes som «HH:MM»-strenge, fordi de sorterer kronologisk
+ *  af sig selv. Det undgår at bygge et Date-objekt for et vægur — netop den
+ *  konstruktion der bar fejlen. */
+export function isDue(schedule: string, scheduledTime: string, lastRun?: string, nu: Date = new Date()): boolean {
   if (schedule === "off") return false;
-  const now = new Date();
+
   const [hh, mm] = scheduledTime.split(":").map(Number);
-  const scheduledToday = new Date(now);
-  scheduledToday.setHours(hh, mm, 0, 0);
-  if (now < scheduledToday) return false;
-  if (schedule === "weekly" && now.getDay() !== 1) return false;
-  if (lastRun) {
-    const lastRunDate = new Date(lastRun);
-    if (lastRunDate.toDateString() === now.toDateString()) return false;
-  }
+  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return false; // et ugyldigt tidspunkt kører aldrig
+  const planlagt = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+
+  if (dkKlokke(nu) < planlagt) return false;
+  if (schedule === "weekly" && dkUgedag(nu) !== 1) return false;
+  if (lastRun && dkDag(lastRun) === dkDag(nu)) return false;
   return true;
 }
 

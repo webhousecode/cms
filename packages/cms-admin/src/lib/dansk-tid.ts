@@ -90,6 +90,16 @@ export function dkKlokke(naar: Date | string): string {
   return `${time}:${minut}`;
 }
 
+/** Ugedagen i DANSK tid. 0 = søndag, 1 = mandag … 6 = lørdag.
+ *
+ *  Udledt af den danske KALENDERDAG, ikke af et råt `getDay()`. Forskellen er
+ *  ikke teoretisk: et ugentligt job sat til mandag ville med serverens ur køre
+ *  på UTC-mandag, og i vinduet 23-24 dansk tid er de to forskellige dage. */
+export function dkUgedag(naar: Date | string): number {
+  const [y, m, d] = dkDag(naar).split("-").map(Number);
+  return new Date(Date.UTC(y!, m! - 1, d!)).getUTCDay();
+}
+
 /** Dansk time og minut som tal, til at placere en begivenhed i en ugekolonne.
  *
  *  ÉN kilde til begge tal. Ugevisningen læste før timen herfra og minuttet råt
