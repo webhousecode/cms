@@ -31,29 +31,16 @@ export async function GET(request: Request) {
     const baseUrl = new URL(request.url).origin;
     const snapshotPath = path.join(sitePaths.dataDir, "scheduled-events.json");
     const events: string[] = [];
+    let udeladt: { id: string; grund: string }[] = [];
 
     if (fs.existsSync(snapshotPath)) {
       const items = JSON.parse(fs.readFileSync(snapshotPath, "utf-8")) as {
         id: string; type: string; date: string; title: string; subtitle: string; href: string;
       }[];
 
-      for (const item of items) {
-        const docUrl = `${baseUrl}${item.href}`;
-        const summaryMap: Record<string, string> = {
-          publish: `📗 Publish: ${item.title}`,
-          unpublish: `📕 Unpublish: ${item.title}`,
-          backup: `💾 ${item.title}`,
-          "link-check": `🔗 ${item.title}`,
-        };
-        events.push(formatEvent({
-          uid: `${item.id}@webhouse-cms`,
-          summary: summaryMap[item.type] ?? item.title,
-          description: `${item.subtitle} — ${item.href.split("/").pop()}`,
-          dtstart: toIcsDate(item.date),
-          dtend: toIcsDate(item.date, 15),
-          url: docUrl,
-        }));
-      }
+      const bygget = byggBegivenheder(items, baseUrl);
+      events.push(...bygget.linjer);
+      udeladt = bygget.udeladt;
     }
 
     const ics = [
@@ -64,6 +51,12 @@ export async function GET(request: Request) {
       "METHOD:PUBLISH",
       "X-WR-CALNAME:CMS Content Schedule",
       "X-WR-TIMEZONE:Europe/Copenhagen",
+      // Kun når der faktisk mangler noget. En linje der ALTID står der ville
+      // læseren holde op med at se; en der kun står når tallet er over nul,
+      // er den eneste der bliver bemærket.
+      ...(udeladt.length
+        ? [`X-WR-CALDESC:${udeladt.length} ${udeladt.length === 1 ? "punkt kunne" : "punkter kunne"} ikke vises`]
+        : []),
       ...events,
       "END:VCALENDAR",
     ].join("\r\n");
@@ -94,6 +87,49 @@ export async function GET(request: Request) {
  *  i én fil. */
 function toIcsDate(iso: string, addMinutes = 0): string {
   return icsUtc(iso, addMinutes);
+}
+
+/** F195.2 — ét dårligt punkt må ikke tage hele abonnementet.
+ *
+ *  MÅLT 10/9: en zoneløs dato fra en glemt kopi af localISO() fik icsUtc til
+ *  at kaste, kaldet lå i den ENE try/catch der omslutter hele svaret, og
+ *  feedet svarede HTTP 500 på alle fire produktionssites i et døgn. Årsagen
+ *  er rettet; formen er den her.
+ *
+ *  Udeladelsen er IKKE tavs. En kalender der ser hel ud og mangler noget, er
+ *  den samme fejlklasse som den vi lukker — så den udeladte post logges med
+ *  sin id, og feedet bærer et antal. */
+export function byggBegivenheder(
+  items: { id: string; type: string; date: string; title: string; subtitle: string; href: string }[],
+  baseUrl: string,
+): { linjer: string[]; udeladt: { id: string; grund: string }[] } {
+  const linjer: string[] = [];
+  const udeladt: { id: string; grund: string }[] = [];
+
+  for (const item of items) {
+    try {
+      const summaryMap: Record<string, string> = {
+        publish: `📗 Publish: ${item.title}`,
+        unpublish: `📕 Unpublish: ${item.title}`,
+        backup: `💾 ${item.title}`,
+        "link-check": `🔗 ${item.title}`,
+      };
+      linjer.push(formatEvent({
+        uid: `${item.id}@webhouse-cms`,
+        summary: summaryMap[item.type] ?? item.title,
+        description: `${item.subtitle} — ${item.href.split("/").pop()}`,
+        dtstart: toIcsDate(item.date),
+        dtend: toIcsDate(item.date, 15),
+        url: `${baseUrl}${item.href}`,
+      }));
+    } catch (err) {
+      const grund = err instanceof Error ? err.message : String(err);
+      udeladt.push({ id: item.id, grund });
+      console.error(`[calendar.ics] punkt udeladt: ${item.id} — ${grund}`);
+    }
+  }
+
+  return { linjer, udeladt };
 }
 
 function formatEvent({ uid, summary, description, dtstart, dtend, url }: {
