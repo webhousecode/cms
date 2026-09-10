@@ -159,3 +159,36 @@ describe("PORTEN: kalenderen må ikke læse et tidsstempel råt igen", () => {
     expect(traef).toEqual([]);
   });
 });
+
+describe("PORTEN: hver `date` der når .ics skal kunne gå igennem icsUtc", () => {
+  // DEN MÅLTE REGRESSION (10/9). Spærren mod zoneløse datotider er rigtig, men
+  // den gjorde en glemt kopi til en nedbrudt rute: scheduled-snapshot.ts byggede
+  // stadig «2026-09-11T03:00:00» af getFullYear()/getHours(), .ics-ruten kører
+  // hver post gennem icsUtc, og kaldet ligger i ÉN try/catch om hele svaret —
+  // så ét planlagt backup-punkt sendte hele kalenderabonnementet i fejl.
+  //
+  // Porten måler derfor ikke «findes hjælperen», men «kan det de PRODUCERER
+  // overhovedet nå frem». To producenter, én forbruger.
+  const producenter = [
+    "../scheduled-snapshot",
+    "../../app/api/admin/scheduled-events/route",
+  ] as const;
+
+  it.each(producenter)("%s bygger ikke en zoneløs dato-tid", async (rel) => {
+    const { readFileSync } = await import("node:fs");
+    const { fileURLToPath } = await import("node:url");
+    const sti = fileURLToPath(new URL(rel + ".ts", import.meta.url));
+    const kilde = readFileSync(sti, "utf8");
+    expect(kilde.length).toBeGreaterThan(500); // ellers måler porten ingenting
+    // Det zoneløse mønster: en skabelon der selv samler YYYY-MM-DDTHH:MM.
+    expect(kilde).not.toMatch(/\$\{pad\(d\.getMonth\(\)/);
+    expect(kilde).not.toMatch(/getHours\(\)\)\}:\$\{pad\(d\.getMinutes/);
+  });
+
+  it("og formen de UDSENDER overlever turen til .ics", () => {
+    // Positiv kontrol: den nye form går igennem.
+    expect(icsUtc(new Date("2026-09-11T03:00:00Z").toISOString())).toBe("20260911T030000Z");
+    // Negativ kontrol: den gamle form gør ikke — så prøven ovenfor måler noget.
+    expect(() => icsUtc("2026-09-11T03:00:00")).toThrow(/ingen tidszone/);
+  });
+});

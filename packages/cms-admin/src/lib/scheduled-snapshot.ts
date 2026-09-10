@@ -19,9 +19,21 @@ interface ScheduledEvent {
   href: string;
 }
 
+/** F194 — `date` er et ØJEBLIK, ikke et vægur.
+ *
+ *  DEN KOPI DER BLEV GLEMT. scheduled-events/route.ts havde den samme
+ *  funktion, og den blev rettet; denne stod tilbage og byggede stadig en
+ *  zoneløs streng af getFullYear()/getHours().
+ *
+ *  Det var ikke bare uensartet — det var brudt. Snapshotten her fodrer
+ *  .ics-feedet, og icsUtc() AFVISER en dato-tid uden zone (med vilje: den er
+ *  et gæt). Kaldet ligger inde i én try/catch der omslutter hele svaret, så
+ *  ét backup-punkt sendte hele kalenderabonnementet i fejl — ikke bare den
+ *  ene post. Målt: icsUtc("2026-09-11T03:00:00") kaster «ingen tidszone».
+ *
+ *  Én form nu, samme som den anden rute. */
 function localISO(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+  return d.toISOString();
 }
 
 export async function updateScheduledSnapshot(): Promise<void> {
