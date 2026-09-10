@@ -47,6 +47,19 @@ const LEDGER: Record<string, string> = {
     "and green on 0.7.1, which is what proves the behaviour is the same.",
   "@broberg/cms-chat-client":
     "0.4.14 vs 0.4.20 — same minor, so the caret DOES reach it. Not frozen.",
+  "@broberg/ui-controls-core":
+    "Taget i brug 2026-09-10 (F016.8) — cms er pakkens FØRSTE forbruger " +
+    "nogensinde, og begge de defekter vi fandt havde overlevet siden 0.1.0 " +
+    "netop fordi ingen brugte den. På 0.2.2: 0.2.0 og 0.2.1 findes som mærker " +
+    "men blev begge afvist af components' egen udgivelses-port og bliver " +
+    "aldrig til pakker; målt på npm frem for taget på deres ord. " +
+    "Caret'en er her et bevidst valg og ikke en forglemmelse: vi kalder ÉN " +
+    "funktion (buildMonthGrid) med eksplicitte optioner, og en ny minor kan " +
+    "ændre gitterets form — hvilket ville flytte vores kalender uden en linje " +
+    "kode hos os. Vi har et pixel-bevis for at 0.2.2 lader UI'et stå uændret " +
+    "(0 forskellige pixels af 1.024.000, med negativ kontrol på metoden); " +
+    "det bevis gælder 0.2.2 og ingen anden version. Bump'es den, køres " +
+    "Lens-diffen igen FØR den udrulles.",
   "class-variance-authority": "On the newest version (0.7.1).",
   "next-themes": "On the newest version (0.4.6).",
   "tiptap-markdown": "On the newest version (0.9.0).",

@@ -6,6 +6,7 @@ import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check, HardDrive,
 import { TabTitle } from "@/lib/tabs-context";
 import { PageHeader } from "@/components/page-header";
 import { dkDag, dkKlokke, dkUrMinut } from "@/lib/dansk-tid";
+import { buildMonthGrid } from "@broberg/ui-controls-core";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -35,6 +36,25 @@ const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /* ─── Helpers ────────────────────────────────────────────────── */
+
+/** Måneds-gitteret, ét sted. `month` er 0-indekseret som `Date` (og som resten
+ *  af denne fil); pakken er 1-indekseret og KASTER uden for 1-12, så
+ *  oversættelsen sker her og kun her.
+ *
+ *  `trailing: "fill-week"` er ikke pakkens standard, og det er et bevidst valg:
+ *  standarden `six-rows` giver altid 42 celler, mens denne kalender altid har
+ *  stoppet ved den sidste hele uge. Målt før skiftet over 192 måneder
+ *  (2020-01 … 2035-12): 149 måneder giver 35 celler, 41 giver 42, 2 giver 28 —
+ *  og med "fill-week" er alle 192 celle for celle identiske med den håndskrevne
+ *  løkke der stod her. Med standarden ville september 2026 have fået en tom
+ *  sjette række.
+ *
+ *  Den erstatter TO kopier af den samme løkke (måneds- og årsvisningen), som
+ *  var tegn for tegn ens. */
+function maanedsGitter(year: number, month: number): { key: string; day: number; inMonth: boolean }[] {
+  return buildMonthGrid(year, month + 1, { weekStartsOn: 1, trailing: "fill-week" })
+    .map((c) => ({ key: c.date, day: c.day, inMonth: c.inMonth }));
+}
 
 function dateKey(y: number, m: number, d: number): string {
   return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
@@ -261,27 +281,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
   year: number; month: number; todayKey: string; selectedDate: string;
   eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
 }) {
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const startOffset = (firstDay.getDay() + 6) % 7; // Monday-based
-
-  const cells: { key: string; day: number; inMonth: boolean }[] = [];
-
-  // Previous month padding
-  for (let i = startOffset - 1; i >= 0; i--) {
-    const d = new Date(year, month, -i);
-    cells.push({ key: dateKey(d.getFullYear(), d.getMonth(), d.getDate()), day: d.getDate(), inMonth: false });
-  }
-  // Current month
-  for (let d = 1; d <= lastDay.getDate(); d++) {
-    cells.push({ key: dateKey(year, month, d), day: d, inMonth: true });
-  }
-  // Next month padding
-  while (cells.length % 7 !== 0) {
-    const d = cells.length - startOffset - lastDay.getDate() + 1;
-    const next = new Date(year, month + 1, d);
-    cells.push({ key: dateKey(next.getFullYear(), next.getMonth(), next.getDate()), day: next.getDate(), inMonth: false });
-  }
+  const cells = maanedsGitter(year, month);
 
   return (
     <div>
@@ -686,9 +686,7 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
   return (
     <div className="grid grid-cols-3 gap-4">
       {MONTHS.map((monthName, m) => {
-        const firstDay = new Date(year, m, 1);
         const lastDay = new Date(year, m + 1, 0);
-        const startOffset = (firstDay.getDay() + 6) % 7;
 
         // Count events in this month
         let monthEventCount = 0;
@@ -697,19 +695,7 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
           monthEventCount += (eventsMap.get(key) ?? []).length;
         }
 
-        const cells: { day: number; key: string; inMonth: boolean }[] = [];
-        for (let i = startOffset - 1; i >= 0; i--) {
-          const d = new Date(year, m, -i);
-          cells.push({ day: d.getDate(), key: dateKey(d.getFullYear(), d.getMonth(), d.getDate()), inMonth: false });
-        }
-        for (let d = 1; d <= lastDay.getDate(); d++) {
-          cells.push({ day: d, key: dateKey(year, m, d), inMonth: true });
-        }
-        while (cells.length % 7 !== 0) {
-          const d = cells.length - startOffset - lastDay.getDate() + 1;
-          const next = new Date(year, m + 1, d);
-          cells.push({ day: next.getDate(), key: dateKey(next.getFullYear(), next.getMonth(), next.getDate()), inMonth: false });
-        }
+        const cells = maanedsGitter(year, m);
 
         return (
           <button

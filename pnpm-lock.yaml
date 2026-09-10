@@ -265,6 +265,9 @@ importers:
       '@broberg/mail-core':
         specifier: '>=0.8.0 <1'
         version: 0.8.0
+      '@broberg/ui-controls-core':
+        specifier: 0.2.2
+        version: 0.2.2
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1135,6 +1138,9 @@ packages:
 
   '@broberg/mail@0.7.1':
     resolution: {integrity: sha512-UjOFan+y2vBbIbH4iSYaHu74ngkiatu7QtZ2THoTcokF0Pt3PtIsKSP7RePL9PMx6efXojHEsz/vsDkPEozu9Q==}
+
+  '@broberg/ui-controls-core@0.2.2':
+    resolution: {integrity: sha512-zyi1I4fukYgN8LlwFFYIfKUNJNoAl8H+W3xePg32SqW4nbmEHpeAfBoIxjeput76S37nnMWFau4rWi0CSnFYRw==}
 
   '@capacitor/android@8.3.0':
     resolution: {integrity: sha512-EQy6ByUuKayQBJmMm/e0byJiHavqsQHrvW23BuT2GNVQvenAvipqwaePiJHzrv2PZr7A0T0+se4kgDCeROj0mQ==}
@@ -7341,6 +7347,8 @@ snapshots:
   '@broberg/mail-core@0.8.0': {}
 
   '@broberg/mail@0.7.1': {}
+
+  '@broberg/ui-controls-core@0.2.2': {}
 
   '@capacitor/android@8.3.0(@capacitor/core@8.3.0)':
     dependencies:
