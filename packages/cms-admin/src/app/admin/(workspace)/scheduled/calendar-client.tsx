@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check, HardDrive, Link2 } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { PageHeader } from "@/components/page-header";
+import { dkDag } from "@/lib/dansk-tid";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -42,7 +43,10 @@ function dateKey(y: number, m: number, d: number): string {
 function eventsByDateKey(events: ScheduledEvent[]): Map<string, ScheduledEvent[]> {
   const map = new Map<string, ScheduledEvent[]>();
   for (const e of events) {
-    const key = e.date.slice(0, 10);
+    // F194 — de ti første tegn er UTC-dagen for en ...Z-streng, ikke den
+    // danske. 2026-09-09T22:30:00Z er den 10. kl. 00.30 i Danmark og landede
+    // på den 9. Vinduet er 22-24 dansk sommertid, hvor ingen kigger.
+    const key = dkDag(e.date);
     const list = map.get(key) ?? [];
     list.push(e);
     map.set(key, list);
@@ -58,7 +62,7 @@ function getMonday(d: Date): Date {
 }
 
 function isSameDay(a: string, b: string): boolean {
-  return a.slice(0, 10) === b.slice(0, 10);
+  return dkDag(a) === dkDag(b);
 }
 
 /* ─── Component ──────────────────────────────────────────────── */

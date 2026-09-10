@@ -1,4 +1,5 @@
 import { validateCalendarTokenForSite } from "@/lib/site-config";
+import { icsUtc } from "@/lib/dansk-tid";
 import { getSitePathsFor } from "@/lib/site-paths";
 import { NextResponse } from "next/server";
 import fs from "fs";
@@ -80,14 +81,19 @@ export async function GET(request: Request) {
   }
 }
 
-/** Convert "2026-03-26T21:59:00" to iCal format "20260326T215900" */
+/** F194 — ICS-tid i UTC, `YYYYMMDDTHHMMSSZ`.
+ *
+ *  Her stod to forskellige veje til det samme svar. Uden minutter blev
+ *  strengen bare klippet (`replace(/[-:]/g,"").slice(0,15)`), så en ...Z-tid
+ *  blev til et FLYDENDE tidspunkt uden zone — som modtagerens kalender-app
+ *  læser som SIN egen lokale tid. Med minutter gik den gennem `new Date` og
+ *  lokale gettere, altså serverens UTC. To grene, to resultater, og i en
+ *  UTC-container faldt de sammen så forskellen var usynlig.
+ *
+ *  Filen erklærede samtidig X-WR-TIMEZONE:Europe/Copenhagen. Modsigelsen stod
+ *  i én fil. */
 function toIcsDate(iso: string, addMinutes = 0): string {
-  const clean = iso.replace(/[-:]/g, "").slice(0, 15);
-  if (addMinutes === 0) return clean;
-  const d = new Date(iso);
-  d.setMinutes(d.getMinutes() + addMinutes);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  return icsUtc(iso, addMinutes);
 }
 
 function formatEvent({ uid, summary, description, dtstart, dtend, url }: {
@@ -96,7 +102,9 @@ function formatEvent({ uid, summary, description, dtstart, dtend, url }: {
   return [
     "BEGIN:VEVENT",
     `UID:${uid}`,
-    `DTSTAMP:${toIcsDate(new Date().toISOString())}Z`,
+    // Z'et sad før UDEN FOR kaldet, altså sat på bagefter uanset hvad der
+    // stod i strengen. icsUtc bærer det selv, fordi den regner i UTC.
+    `DTSTAMP:${icsUtc(new Date())}`,
     `DTSTART:${dtstart}`,
     `DTEND:${dtend}`,
     `SUMMARY:${escapeIcs(summary)}`,

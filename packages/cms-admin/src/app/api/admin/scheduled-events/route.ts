@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { dkVaegur } from "@/lib/dansk-tid";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { readSiteConfig, generateCalendarToken } from "@/lib/site-config";
 import { getSessionWithSiteRole } from "@/lib/require-role";
@@ -28,9 +29,13 @@ function getExcerpt(data: Record<string, unknown>): string | undefined {
   return undefined;
 }
 
+/** F194 — dansk vægur, ikke serverens.
+ *
+ *  Stod her: d.getFullYear()/getHours() uden zone. Containeren kører UTC
+ *  (målt 10/9), så strengen var serverens vægur pakket ind så den LIGNEDE
+ *  lokal tid — værre end en åbenlyst forkert værdi. */
 function localISO(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+  return dkVaegur(d).slice(0, 16) + ":00";
 }
 
 export async function GET() {
