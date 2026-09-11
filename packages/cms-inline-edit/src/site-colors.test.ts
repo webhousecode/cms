@@ -9,6 +9,8 @@ import {
   erFarve,
   variabelNavne,
   siteFarver,
+  siteKlasser,
+  erKlassenavn,
   pentNavn,
   testidNavn,
 } from "./site-colors.js";
@@ -225,5 +227,129 @@ describe("pipetten og det gamle udseende", () => {
 
   it("pipetten har sit eget anker", () => {
     expect(KODE).toContain('"inline-color-pipette"');
+  });
+});
+
+// ── F197 — sitets ERKLÆREDE tekstfarver, som klasser ────────────────────────
+//
+// Christian 11/9: brandfarven kunne ikke vælges. Årsagen var loftet på ti i
+// siteFarver() — men loftet var ikke den egentlige fejl. En fast hex overlever
+// ikke et temaskift, så VÆRDIEN er det forkerte at gemme. Derfor gemmes en
+// klasse, og værdien bruges kun til at male svatchen.
+
+describe("erKlassenavn — værdien ender i class=\"…\"", () => {
+  it("tager et velformet klassenavn", () => {
+    for (const s of ["o", "brand", "tekst-accent", "a_b", "H1"]) {
+      expect(erKlassenavn(s)).toBe(true);
+    }
+  });
+
+  it("AFVISER alt der kunne bryde ud af attributten", () => {
+    // Hver af disse fejler i den retning hvor siden stadig ser rigtig ud:
+    // et mellemrum laver ÉN klasse om til to, et citationstegn lukker
+    // attributten og alt efter den bliver til markup.
+    for (const s of ["to klasser", 'o" onclick="x', "o'", "<b>", "", "1tal", "-start", "a b"]) {
+      expect(erKlassenavn(s)).toBe(false);
+    }
+  });
+});
+
+describe("siteKlasser", () => {
+  const laes = (v: Record<string, string>) => (n: string) => v[n] ?? "";
+
+  it("læser klassen fra VARIABELNAVNET og farven fra værdien", () => {
+    const a = [ark(":root", ["--cms-farve-o"])];
+    expect(siteKlasser(a, laes({ "--cms-farve-o": "#ff6a45" }))).toEqual([
+      { klasse: "o", vaerdi: "#ff6a45", navn: "o" },
+    ]);
+  });
+
+  it("bruger -navn som etiket, og etiketten bliver ALDRIG selv en svatch", () => {
+    // Præfikset matcher også «--cms-farve-o-navn». Uden undtagelsen ville
+    // etiketten optræde som en farve — og fejle på erFarve, altså forsvinde
+    // tavst i stedet for at blive brugt.
+    const a = [ark(":root", ["--cms-farve-o", "--cms-farve-o-navn"])];
+    const ud = siteKlasser(
+      a,
+      laes({ "--cms-farve-o": "#ff6a45", "--cms-farve-o-navn": '"Brandfarve"' }),
+    );
+    expect(ud).toEqual([{ klasse: "o", vaerdi: "#ff6a45", navn: "Brandfarve" }]);
+  });
+
+  it("-navn bliver ALDRIG en svatch — heller ikke når den ligner en farve", () => {
+    // Denne prøve findes fordi mutations-tjekket afslørede at den forrige ikke
+    // kunne skelne: med en CITERET etiket falder «--cms-farve-o-navn» alligevel
+    // fra på erFarve, så udelukkelsen så ud til at være unødvendig.
+    //
+    // Skriver nogen derimod en FARVE som etiket, bærer udelukkelsen: uden den
+    // dukker der en svatch op der hedder «o-navn» og påfører klassen .o-navn,
+    // som intet stylesheet definerer. Altså en knap der ser ud til at virke og
+    // farver ingenting.
+    const a = [ark(":root", ["--cms-farve-o", "--cms-farve-o-navn"])];
+    const ud = siteKlasser(
+      a,
+      laes({ "--cms-farve-o": "#ff6a45", "--cms-farve-o-navn": "#123456" }),
+    );
+    expect(ud.map((k) => k.klasse)).toEqual(["o"]);
+  });
+
+  it("INTET LOFT — en erklæret liste er en beslutning, ikke et gæt", () => {
+    // Det var præcis loftet på ti der gjorde brandfarven uopnåelig.
+    const navne = Array.from({ length: 14 }, (_, i) => `--cms-farve-k${i}`);
+    const v: Record<string, string> = {};
+    navne.forEach((n, i) => (v[n] = `#ff00${String(i).padStart(2, "0")}`));
+    expect(siteKlasser([ark(":root", navne)], laes(v))).toHaveLength(14);
+  });
+
+  it("KONTROL: variabler uden præfikset kommer ikke med", () => {
+    const a = [ark(":root", ["--orange-text", "--brand"])];
+    expect(siteKlasser(a, laes({ "--orange-text": "#ff6a45", "--brand": "#000" }))).toEqual([]);
+  });
+
+  it("KONTROL: en værdi der ikke er en farve giver ingen svatch", () => {
+    const a = [ark(":root", ["--cms-farve-o"])];
+    expect(siteKlasser(a, laes({ "--cms-farve-o": "12px" }))).toEqual([]);
+  });
+
+  it("KONTROL: et ugyldigt klassenavn afvises frem for at nå markup", () => {
+    const a = [ark(":root", ["--cms-farve-to klasser", "--cms-farve-1tal"])];
+    const ud = siteKlasser(
+      a,
+      laes({ "--cms-farve-to klasser": "#fff", "--cms-farve-1tal": "#fff" }),
+    );
+    expect(ud).toEqual([]);
+  });
+});
+
+describe("værktøjslinjen: klasse ind, værdi ud", () => {
+  it("svatchen påfører en KLASSE, ikke en hex", () => {
+    expect(KODE).toContain("applyKlasse");
+    expect(KODE).toMatch(/el\.className = klasse/);
+  });
+
+  it("VÆRDIEN må kun male knappen — den må ikke nå indholdet", () => {
+    // klasseSvatch bruger k.vaerdi i background og k.klasse i markup. Blandes
+    // de to, er hele pointen væk.
+    const i = KODE.indexOf("function klasseSvatch");
+    const krop = KODE.slice(i, KODE.indexOf("\n}", i));
+    expect(krop).toMatch(/background:\$\{k\.vaerdi\}/);
+    expect(krop).toContain('b.setAttribute("data-klasse", k.klasse)');
+    expect(krop).toContain("applyKlasse(k.klasse)");
+  });
+
+  it("SERIALISERINGEN BEVARER KLASSEN — ellers ser det ud som om farven aldrig blev sat", () => {
+    const i = KODE.indexOf('case "span":');
+    const krop = KODE.slice(i, KODE.indexOf("break;", i));
+    expect(krop).toContain("erKlassenavn");
+    expect(krop).toMatch(/class="\$\{escapeAttr\(klasse\)\}"/);
+  });
+
+  it("KONTROL: et site uden konventionen får ingen ekstra række", () => {
+    // En tom sektion med en overskrift og nul svatcher ville ligne en fejl.
+    expect(KODE).toMatch(/const klasser = laesSiteKlasser\(\);\s*if \(klasser\.length\)/);
+  });
+
+  it("hver svatch har sit eget anker, så Lens kan trykke på den rigtige", () => {
+    expect(KODE).toContain("inline-color-klasse-swatch-${testidNavn(k.klasse)}");
   });
 });

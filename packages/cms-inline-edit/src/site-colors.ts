@@ -115,3 +115,77 @@ export function testidNavn(navn: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+
+/**
+ * F197 — sitets ERKLÆREDE tekstfarver, som KLASSER.
+ *
+ * Christian 11/9-2026: brandfarven manglede i paletten. Årsagen var at
+ * siteFarver() tager de ti første :root-variabler i deklarations-rækkefølge,
+ * og på broberg.ai er --orange-text nummer 13 — bag fire skær og flader ingen
+ * ville farve tekst med.
+ *
+ * MEN LOFTET VAR IKKE DEN EGENTLIGE FEJL. En fast hex kan ikke overleve et
+ * temaskift: --orange-text er #ff6a45 i mørkt og #c93a16 i lyst tema, med
+ * vilje, fordi den lyse skal kunne læses på hvid. Vælger en redaktør hex'en,
+ * fryses den ene, og teksten bliver forkert i det andet tema. At rangordne
+ * værdier bedre løser ikke at VÆRDIEN SELV er det forkerte at gemme.
+ *
+ * Derfor gemmes en KLASSE. components formulerede hvorfor det slår et
+ * var(--token) i gemt indhold: et token-navn kan omdøbes, og så brækker hvert
+ * dokument der brugte det — tavst, uden migrering og uden noget der siger
+ * hvornår. En klasse er et navn SITET ejer; at holde den sand er sitets eget
+ * arbejde.
+ *
+ *     :root {
+ *       --cms-farve-o: var(--orange-text);   klassen .o
+ *       --cms-farve-o-navn: "Brandfarve";    valgfri etiket
+ *     }
+ *
+ * Værdien males KUN på svatchen — læst med getComputedStyle, så knappen viser
+ * den rigtige farve i det tema redaktøren står i, mens indholdet aldrig
+ * indeholder en værdi. Intet loft: en erklæret liste er en beslutning, ti
+ * tilfældige er et gæt.
+ */
+export const KLASSE_PRAEFIKS = "--cms-farve-";
+
+/** Må denne streng bruges som klassenavn i markup?
+ *
+ *  Snæver med vilje. Værdien kommer fra CSS og ender i class="…" — et mellemrum
+ *  ville lave ÉN klasse om til to, og et citationstegn ville lukke attributten.
+ *  Begge dele fejler i den retning hvor siden stadig ser rigtig ud. */
+export function erKlassenavn(s: string): boolean {
+  return /^[A-Za-z][A-Za-z0-9_-]*$/.test(s);
+}
+
+export interface SiteKlasse {
+  klasse: string;
+  vaerdi: string;
+  navn: string;
+}
+
+/**
+ * Sitets erklærede tekstfarver. Rækkefølgen er sitets egen.
+ *
+ * `-navn`-varianten er en ETIKET, ikke en farve, og må ikke selv blive en
+ * svatch — præfikset matcher den også.
+ */
+export function siteKlasser(
+  ark: readonly CSSStyleSheet[],
+  laes: (navn: string) => string,
+): SiteKlasse[] {
+  const ud: SiteKlasse[] = [];
+  const set = new Set<string>();
+  for (const n of variabelNavne(ark)) {
+    if (!n.startsWith(KLASSE_PRAEFIKS)) continue;
+    if (n.endsWith("-navn")) continue; // etiketten, ikke en farve
+    const klasse = n.slice(KLASSE_PRAEFIKS.length);
+    if (!erKlassenavn(klasse) || set.has(klasse)) continue;
+    const vaerdi = laes(n).trim();
+    if (!erFarve(vaerdi)) continue;
+    set.add(klasse);
+    // Etiketten kommer fra CSS og er derfor citeret: "Brandfarve" → Brandfarve.
+    const raa = laes(`${n}-navn`).trim().replace(/^["']|["']$/g, "");
+    ud.push({ klasse, vaerdi, navn: raa || pentNavn(`--${klasse}`) });
+  }
+  return ud;
+}

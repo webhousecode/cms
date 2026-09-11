@@ -30,7 +30,7 @@ export {
   withHttps,
 } from "./link-target";
 import { serializeTokenSafe, hasTokenChips, lockTokenChips } from "./token-safe";
-import { STANDARD_FARVER, siteFarver, testidNavn } from "./site-colors.js";
+import { STANDARD_FARVER, erKlassenavn, siteFarver, siteKlasser, testidNavn, type SiteKlasse } from "./site-colors.js";
 
 /**
  * Labels for the in-editor UI — the rich-text toolbar (bold/italic/underline
@@ -1575,6 +1575,62 @@ function laesSiteFarver(): { vaerdi: string; navn: string }[] {
   }
 }
 
+/** F197 — sitets ERKLÆREDE tekstfarver. Tom liste på et site der ikke bruger
+ *  konventionen, og så vises rækken slet ikke. */
+function laesSiteKlasser(): SiteKlasse[] {
+  if (typeof document === "undefined") return [];
+  const cs = getComputedStyle(document.documentElement);
+  return siteKlasser(Array.from(document.styleSheets), (n) => cs.getPropertyValue(n));
+}
+
+/** F197 — en svatch der påfører en KLASSE. Farven males på knappen; den
+ *  følger ikke med ind i indholdet. */
+function klasseSvatch(k: SiteKlasse, testid: string): HTMLButtonElement {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.title = `${k.navn} — .${k.klasse}`;
+  b.setAttribute("data-testid", testid);
+  b.setAttribute("data-klasse", k.klasse);
+  b.style.cssText =
+    "width:26px;height:26px;border-radius:6px;cursor:pointer;padding:0;" +
+    `background:${k.vaerdi};border:1px solid rgba(255,255,255,.28);`;
+  b.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    applyKlasse(k.klasse);
+  });
+  return b;
+}
+
+/**
+ * Pakker markeringen i <span class="…">.
+ *
+ * surroundContents() ville være kortere og kaster på en markering der kun
+ * DELVIST dækker et element — altså netop den almindelige markering hen over
+ * en fed strækning. extract/insert håndterer begge dele.
+ */
+export function pakIKlasse(range: Range, klasse: string, doc: Document): HTMLElement {
+  const el = doc.createElement("span");
+  el.className = klasse;
+  el.appendChild(range.extractContents());
+  range.insertNode(el);
+  return el;
+}
+
+function applyKlasse(klasse: string): void {
+  if (!richCtx) return;
+  richCtx.el.focus();
+  const sel = window.getSelection();
+  if (savedRange && sel) {
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  const r = sel?.rangeCount ? sel.getRangeAt(0) : savedRange;
+  if (r && !r.collapsed) pakIKlasse(r, klasse, document);
+  savedRange = null;
+  hideColorPicker();
+}
+
 function svatch(f: { vaerdi: string; navn: string }, testid: string): HTMLButtonElement {
   const b = document.createElement("button");
   b.type = "button";
@@ -1663,6 +1719,17 @@ function buildColorPicker(): HTMLElement {
 
   const std = raekke("Standard", "inline-color-standard");
   STANDARD_FARVER.forEach((f) => std.appendChild(svatch(f, anker("inline-color-swatch", f))));
+
+  // F197 — sitets erklærede tekstfarver står ØVERST af de to site-rækker: det
+  // er den vej der overlever et temaskift, så det er den der skal rækkes efter
+  // først. Rækken findes slet ikke på et site uden konventionen.
+  const klasser = laesSiteKlasser();
+  if (klasser.length) {
+    const g = raekke("Sitets tekstfarver", "inline-color-klasse");
+    klasser.forEach((k) =>
+      g.appendChild(klasseSvatch(k, `inline-color-klasse-swatch-${testidNavn(k.klasse)}`)),
+    );
+  }
 
   const egne = laesSiteFarver();
   if (egne.length) {
@@ -2150,7 +2217,28 @@ function serializeInlineNode(child: Node): string {
       case "span":
       case "font": {
         const color = el.style.color || el.getAttribute("color") || "";
-        out += color ? `<span style="color:${color}">${inner}</span>` : inner;
+        // F197: en KLASSE sitet selv har erklæret (--cms-farve-<klasse>) er dét
+        // der lader en farve overleve et temaskift. Blev den smidt væk her,
+        // ville det se nøjagtig ud som om farven aldrig blev sat — redaktøren
+        // klikker, teksten bliver orange, og efter gem er den grå igen.
+        //
+        // Kun et VELFORMET enkelt klassenavn slipper igennem. Værdien kommer
+        // fra indhold, ikke fra os, og den ender i class="…": et mellemrum
+        // ville lave én klasse om til to, et citationstegn ville lukke
+        // attributten. Begge fejler i den retning hvor siden ser rigtig ud.
+        const raaKlasse = (el.getAttribute("class") || "").trim();
+        const klasse = erKlassenavn(raaKlasse) ? raaKlasse : "";
+        if (klasse || color) {
+          const attrs = [
+            klasse ? `class="${escapeAttr(klasse)}"` : "",
+            color ? `style="color:${color}"` : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+          out += `<span ${attrs}>${inner}</span>`;
+        } else {
+          out += inner;
+        }
         break;
       }
       default:
