@@ -34,6 +34,15 @@ branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
 # drawer can show which model a live agent is running.
 model=$(printf '%s' "$input" | jq -r '.model // empty')
 
+# F353.1 (cardmem) — WHAT started this session: startup | resume | clear |
+# compact | fork. cc has handed us this field all along and the hook threw it
+# away, so "does this hook fire on /clear?" could not be answered from history
+# at all. `// empty` on purpose, never `// "startup"`: an empty value travels as
+# JSON null, because "cc named no source" and "cc said startup" are two different
+# facts and only one is a measurement. Guarded so a missing or unhappy jq costs
+# this session nothing.
+source=$(printf '%s' "$input" | jq -r '.source // empty' 2>/dev/null || printf '')
+
 # F075.5 — pass our applied template version (from the marker the daemon writes
 # on Update templates) so the server can flag whether we're behind canonical.
 tmpl_version=""
@@ -50,13 +59,15 @@ args=$(session_start_args "$session_id" "$(
     --arg spawnedBranch "${CARDMEM_SPAWNED_BRANCH:-${PROJECTS_SPAWNED_BRANCH:-}}" \
     --arg parent "${CARDMEM_PARENT_SESSION_ID:-${PROJECTS_PARENT_SESSION_ID:-}}" \
     --arg tmplVersion "$tmpl_version" \
+    --arg source "$source" \
     '(if $branch!= "" then { branch:$branch} else {} end)
        + (if $buddy != "" then { buddy_session_name: $buddy } else {} end)
        + (if $model != "" then { model: $model } else {} end)
        + (if $spawnedCard  != "" then { spawned_card_id: $spawnedCard } else {} end)
        + (if $spawnedBranch!= "" then { spawned_branch: $spawnedBranch } else {} end)
        + (if $parent       != "" then { parent_session_id: $parent } else {} end)
-       + (if $tmplVersion  != "" then { template_version: $tmplVersion } else {} end)'
+       + (if $tmplVersion  != "" then { template_version: $tmplVersion } else {} end)
+       + { session_start_event: { source: (if $source != "" then $source else null end) } }'
 )")
 
 result=$(call_mcp cardmem_session_start "$args")
@@ -97,6 +108,58 @@ fi
 # when this hook fires again. Everything below is what is happening; this is what
 # is already settled, and reading it after the work queue is reading it late.
 render_decisions "$result"
+
+# F353.2 — THE HANDOVER ITSELF, not a path to it.
+#
+# MEASURED 18 September 2026: after a real /clear, cms did NOT find its own
+# handover file. It woke, took the board's orientation, and answered an intercom
+# from MONDAY. A handover that has to be FOUND is not a handover — so the
+# content is printed here, in the block the session already reads.
+#
+# FIRST, because it is a WORK ORDER. Everything below it is what is happening;
+# this is what the previous session was in the middle of, and reading it after
+# the board's list is reading it late.
+#
+# `never_set` is printed VERBATIM. A field nobody answered and a field answered
+# with nothing are different facts, and the one thing this must never do is make
+# them look the same.
+ho=$(printf '%s' "$result" | jq -r '.last_handoff // empty' 2>/dev/null || printf '')
+if [[ -n "$ho" ]]; then
+  printf '<cardmem-handoff>\n'
+  printf 'The session that ran here before you left this. It is a WORK ORDER, not a story.\n\n'
+  printf '%s' "$result" | jq -r '
+    .last_handoff as $h
+    | ("  handed over: " + ($h.at // "?"))
+    , (if ($h.skipped_empty_rows // 0) > 0 then
+         "  ^ NOT the newest entry. " + (($h.skipped_empty_rows|tostring))
+         + " newer handover(s) carried no next step and no state of play — written by a script at compaction, not by a session. The newest was at "
+         + ($h.newest_at // "?") + ". This is the last one that actually SAID something, so read its age before acting on it."
+       else empty end)
+    , (if $h.next_step then "  NEXT: " + $h.next_step else "  NEXT: (not answered — the previous session did not say)" end)
+    , (if $h.state_of_play then "  WHERE IT STANDS: " + $h.state_of_play else "  WHERE IT STANDS: (not answered)" end)
+    , (if $h.origin == "migrated" then
+         "  ^ THIS IS NOT A HANDOVER. It is the single summary that survived the old one-slot field, carried in when handovers became a log. Do not act on it as a work order."
+       else empty end)
+    , (if ($h.in_progress_f_numbers | type) == "array" then
+         (if ($h.in_progress_f_numbers | length) == 0 then "  cards: none (answered: it was working on no card)"
+          else "  cards: " + ($h.in_progress_f_numbers | join(", ")) end)
+       else "  cards: (not answered)" end)
+    , (if ($h.uncarded_work | type) == "array" then
+         ($h.uncarded_work[] | "  - [" + .basis + " @ " + .as_of + "] " + .what + (if .where then "  (" + .where + ")" else "" end)
+            + (if .owner_last_said == "nothing" then "\n      ^ the previous session states the OWNER HAS NEVER SPOKEN on this — worth checking"
+               elif .owner_last_said then "\n      ^ owner last said (" + .owner_last_said.at + "): \"" + .owner_last_said.quote + "\""
+               else "" end))
+       else "  work without a card: (not answered)" end)
+    , (if ($h.owner_decisions | type) == "array" then
+         ($h.owner_decisions[] | "  owner decided (" + .at + "): " + .decision)
+       else empty end)
+    , (if (($h.never_set // []) | length) > 0 then
+         "\n  NEVER ANSWERED: " + ($h.never_set | join(", ")) + " — treat these as unknown, not as empty."
+       else empty end)
+  ' 2>/dev/null
+  printf '\nA claim marked [assumed] was a GUESS when it was written. Check it before you act on it — on 18 September one such line said the owner had not answered when he had, ten minutes earlier.\n'
+  printf '</cardmem-handoff>\n'
+fi
 
 # Build the <projects:state> block. Keep it tight — capped budget per docs.
 printf '<projects:state>\n'
@@ -155,6 +218,16 @@ if [[ "$audit_count" -gt 0 ]]; then
   printf '%s' "$result" | jq -r \
     '.recent_audit[] | "    - " + (.timestamp | sub("\\..+"; "Z")) + "  " + .action + "  " + (.result_summary // "")' \
     | head -5
+fi
+
+# F353.1 (cardmem) — WHAT started this session, read back from the row just
+# written. ALWAYS one line, same shape whatever the source: this MEASURES, it
+# does not branch. 'not recorded' would mean an older cardmem; (none) means the
+# hook ran and cc named no source.
+start_src=$(printf '%s' "$result" | jq -r '(.recent_starts // []) | if length == 0 then "" else (.[0].source // "(none)") end' 2>/dev/null || printf '')
+if [[ -n "$start_src" ]]; then
+  start_n=$(printf '%s' "$result" | jq -r '(.recent_starts // []) | length' 2>/dev/null || printf '?')
+  printf '  Started by: %s (this session has %s recorded start(s))\n' "$start_src" "$start_n"
 fi
 
 snapshot=$(printf '%s' "$result" | jq -r '.last_snapshot // empty')
