@@ -42,6 +42,25 @@ After successful handoff:
    queue-drain mode, finishing one card immediately starts the next.
    No confirmation. See `.claude/skills/queue-drain/SKILL.md` for the full rule.
 
+## Is the deploy actually live? One request (F343.29)
+
+Before writing "deployed" in a summary, read the marker rather than the exit code:
+
+```bash
+curl -s https://www.cardmem.com/api/health | python3 -c 'import sys,json;print(json.load(sys.stdin)["build"])'
+git rev-parse HEAD
+```
+
+**EQUALITY is the answer, not "a sha came back".** A stale marker is what a
+finished-looking deploy of the previous image reports, and it is the exact
+failure this check exists to catch.
+
+`build: null` means the image was built without `BUILD_SHA`, so the two builds
+CANNOT be told apart — say that out loud rather than treating it as a pass. And
+`flyctl`/`gh run` exit 0 means the pipeline finished, never that the code is
+serving: nine deploys once went out behind a null marker and each was confirmed
+by inventing a one-off probe.
+
 Pattern for the summary:
 - Good: "Shipped X with Y unit tests + smoke-tested round-trip"
 - Bad: "Done" / "Finished" / "ok"
