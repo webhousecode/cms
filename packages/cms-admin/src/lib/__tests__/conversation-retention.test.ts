@@ -126,6 +126,26 @@ describe("the 90-day sweep", () => {
     expect((await new ConversationStore(tmpDir).get(id))!.textRedactedAt).toBe(stamp);
   });
 
+  it("KEEPS the text when the age cannot be read — the unknown case must not delete", async () => {
+    // `new Date(undefined).getTime()` is NaN and every comparison with NaN is
+    // false, so the natural `if (age > cutoff) continue` falls THROUGH and
+    // redacts. On a one-way path that is the worst possible default.
+    const store = new ConversationStore(tmpDir);
+    const conv = await store.create({ source: "aidan", turns: TURNS });
+    const file = path.join(tmpDir, "conversations", `${conv.id}.json`);
+    for (const broken of [undefined, "", "not-a-date"]) {
+      const raw = JSON.parse(await fs.readFile(file, "utf-8"));
+      if (broken === undefined) delete raw.createdAt; else raw.createdAt = broken;
+      raw.turns = raw.turns.map((t: { text: string }, i: number) => ({ ...t, text: TURNS[i]!.text }));
+      delete raw.textRedactedAt;
+      await fs.writeFile(file, JSON.stringify(raw, null, 2));
+
+      const result = await pruneConversationText(tmpDir);
+      expect(result.redacted, `createdAt=${JSON.stringify(broken)} was swept`).toBe(0);
+      expect((await store.get(conv.id))!.turns[0]!.text).toBe(TURNS[0]!.text);
+    }
+  });
+
   it("measures age from the CMS's own receipt, not from caller-supplied turn times", async () => {
     // A site sending a turn dated in the future must not buy itself an
     // indefinite stay. createdAt is ours; `at` is theirs.

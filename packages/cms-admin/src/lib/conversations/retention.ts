@@ -71,7 +71,19 @@ export async function pruneConversationText(
   let redacted = 0;
   for (const s of summaries) {
     if (s.textRedactedAt) continue;
-    if (new Date(s.createdAt).getTime() > cutoff) continue;
+
+    // Fail SAFE on an unreadable age. `new Date(undefined).getTime()` is NaN,
+    // and every comparison with NaN is false — so the obvious
+    // `if (age > cutoff) continue` would fall through and destroy the text of a
+    // conversation whose date we could not read. On a one-way path the unknown
+    // case must keep the data, not delete it.
+    const created = new Date(s.createdAt).getTime();
+    if (!Number.isFinite(created)) {
+      console.warn(`[conversation-retention] skipping ${s.id}: unreadable createdAt ${JSON.stringify(s.createdAt)}`);
+      continue;
+    }
+    if (created > cutoff) continue;
+
     if (await store.redactText(s.id, now.toISOString())) redacted++;
   }
   return { scanned: summaries.length, redacted };
