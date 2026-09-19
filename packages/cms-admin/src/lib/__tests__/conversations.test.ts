@@ -170,7 +170,7 @@ describe("every door onto conversations is permission-gated", () => {
       const start = src.indexOf(`export async function ${verb}(`);
       const next = src.indexOf("export async function ", start + 10);
       const body = src.slice(start, next === -1 ? undefined : next);
-      expect(body, `${rel}: ${verb} is ungated`).toMatch(/requirePermission\("conversations\.(read|write)"\)/);
+      expect(body, `${rel}: ${verb} is ungated`).toMatch(/requirePermission\("conversations\.(read|write|delete)"\)/);
     }
   });
 

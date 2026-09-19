@@ -99,6 +99,43 @@ export class ConversationStore {
     }
   }
 
+  /**
+   * F188.5 — strip the free text, keep everything countable.
+   *
+   * The turns stay: role, timestamp and markers are the numbers the owner keeps
+   * "for ever". Only `text` goes, and `textRedactedAt` records that it went —
+   * see the field's own comment for why an unmarked empty text is worse than
+   * none at all. No-op (returns false) on a conversation already redacted, so
+   * the sweep is idempotent and cannot re-stamp an old one with today's date.
+   */
+  async redactText(id: string, at: string = new Date().toISOString()): Promise<boolean> {
+    const conv = await this.get(id);
+    if (!conv || conv.textRedactedAt) return false;
+
+    const redacted: Conversation = {
+      ...conv,
+      turns: conv.turns.map((t) => ({ ...t, text: "" })),
+      textRedactedAt: at,
+    };
+    await fs.writeFile(this.file(conv.id), JSON.stringify(redacted, null, 2));
+    return true;
+  }
+
+  /**
+   * Remove a conversation entirely — for an erasure request that cannot wait
+   * for the retention sweep. Returns false when there was nothing to remove,
+   * so a caller can answer 404 rather than a cheerful 200 over a no-op.
+   */
+  async delete(id: string): Promise<boolean> {
+    if (!this.isOwnId(id)) return false;
+    try {
+      await fs.unlink(this.file(id));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   /** All conversations, newest last-turn first, without their turns. */
   async list(): Promise<ConversationSummary[]> {
     let files: string[];

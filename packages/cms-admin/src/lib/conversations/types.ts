@@ -37,6 +37,15 @@ export interface Conversation {
   turns: ConversationTurn[];
   /** When the conversation was received by the CMS. */
   createdAt: string;
+  /**
+   * F188.5 — when the free text was removed by the retention sweep.
+   *
+   * Set means: the turns are still here with their roles, timestamps and
+   * markers, but `text` is empty BECAUSE IT EXPIRED. Without this stamp an
+   * emptied conversation is indistinguishable from one that was always empty,
+   * and a reader would conclude the visitor said nothing.
+   */
+  textRedactedAt?: string;
 }
 
 /** A conversation without its turns — what the list view needs. */

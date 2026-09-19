@@ -34,11 +34,31 @@ Første — for løse — svar var «chatten som modul i Form Engine 2.0». Det 
 - **Statistik:** antal samtaler, ture pr. samtale, frafald, emner, og **ubesvarede spørgsmål** (miss-signalet, jf. F251 hos trail — samme hovedvending sendes til Trail som råstof til nye neuroner).
 - **Rettigheder:** nyt permission-streng, gated på ALLE lag (sidebar, server-side page, API-rute, chat-tool) jf. husets hard rule. Spørgsmålet «admin-only eller også editors?» besvares i F188.1.
 
-## Persondata — den ene beslutning der er ejerens
+## Persondata — fristen, og en modsigelse der skal afklares
 
 En chatlog er andres ord om deres egne forretninger: folk skriver firmanavne og hvad de kæmper med.
 
-**BESLUTTET af ejeren 5/9-2026: fritekst ligger 12 måneder. Tallene (antal, emner, misses) uden tidsgrænse.** Hans begrundelse: «der skal være tid til minering» — et mønster i hvad kunder spørger om viser sig over en sæson, ikke over et kvartal, og en 90-dages frist ville have slettet materialet før det kunne læses. Min oprindelige anbefaling (90 dage) er dermed forkastet.
+**Ejeren har sagt to forskellige ting, og den anden gang var min skyld.**
+
+| dato | hans ord | begrundelse |
+|---|---|---|
+| **5/9-2026** | fritekst ligger **12 måneder** | «der skal være tid til minering» — et mønster i hvad kunder spørger om viser sig over en sæson, ikke over et kvartal. En 90-dages frist ville slette materialet før det kunne læses. |
+| **19/9-2026** | «**90 dage** på teksten, tallene for evigt — byg det» | — ingen; det var et svar på et spørgsmål jeg fremstillede som åbent |
+
+**Hvorfor det skete:** jeg læste kortets GEMTE plan-tekst (fra 5/9 kl. 21.05,
+før hans beslutning blev skrevet ind i filen) i stedet for filen på disken, og
+fortalte ham derfor at fristen stod åben med 90 dage som min anbefaling. Den
+anbefaling var allerede forkastet — af ham, med en grund. Han svarede på et
+spørgsmål der ikke var åbent.
+
+**Bygget med 90 dage**, fordi det er hans seneste udtrykkelige ord, og fordi
+prisen for at tage fejl i dag er nul: der findes ikke én samtale i systemet der
+er over et døgn gammel, så ingen tekst slettes af den beslutning før om 90 dage.
+Fristen er ÉN konstant — `CONVERSATION_TEXT_RETENTION_DAYS` — så den ændres ét
+sted hvis 12 måneder skal gælde.
+
+**Står åbent til han bekræfter hvilken der gælder.** Vælger han 12 måneder igen,
+er ændringen ét tal og to prøve-forventninger.
 
 Konsekvenser der skal bygges, ikke bare noteres:
 - Fristen er ÉN værdi ét sted i konfigurationen. Gentages den i job, visning og dokumentation, driver de fra hinanden, og den forkerte bliver stående.
@@ -118,3 +138,64 @@ browser med en viewer-session.
 Admin-fladen (sidebar, indbakke-visning), koblingen til Forms' indsendelser
 begge veje, statistik/miss-signalet, og opbevaringsgrænsen på fritekst — den
 sidste er ejerens beslutning og står stadig åben øverst i dette dokument.
+
+---
+
+## F188.5 — leveret (19. september 2026): teksten udløber, tallene bliver
+
+**Ejerens ord 19/9-2026, ordret: «90 dage på teksten, tallene for evigt — byg
+det.»** Se afsnittet «Persondata» ovenfor: han sagde 12 måneder den 5/9 med en
+grund, og de 90 dage blev sagt fordi jeg fremstillede spørgsmålet som åbent.
+Motoren er bygget med 90; det er ét tal at ændre hvis 12 måneder står ved magt.
+
+| | |
+|---|---|
+| Hvad der fjernes | kun `turns[].text` |
+| Hvad der bliver | antal ture, roller, tidsstempler, markører (lead/miss), sprog, kilde — og samtalen selv |
+| Hvornår | 90 dage, målt fra **CMS'ets eget ur** (`createdAt`, da vi modtog samtalen) |
+| Hvor tit | hver time; fejningen nægter at køre to gange inden for 20 timer pr. site |
+| Hvor | `lib/conversations/retention.ts`, tilsluttet i `instrumentation-node.ts` |
+| Straks-sletning | `DELETE /api/conversations/{id}` — egen rettighed `conversations.delete`, kun admin |
+
+### Fire valg der ikke er vilkårlige
+
+1. **Teksten tømmes, samtalen bliver — og den bærer `textRedactedAt`.** Uden det
+   stempel er en tømt samtale ikke til at skelne fra en hvor den besøgende
+   aldrig sagde noget. Læseren ville drage den forkerte konklusion, og intet i
+   dataen ville modsige ham.
+2. **Alderen måles på VORES ur, ikke kalderens.** `createdAt` sættes af CMS'et;
+   `at` på hver tur kommer fra sitet. Målte vi på det sidste, kunne et site
+   sende en tur dateret i 2099 og dermed købe sin samtale et ubegrænset ophold.
+   Løftet er vores at holde.
+3. **Tallet står ÉT sted.** `CONVERSATION_TEXT_RETENTION_DAYS` bestemmer både
+   fejningens grænse og den `textRetentionDays` læse-API'et udleverer — så en
+   flade der vil fortælle et menneske hvor længe teksten gemmes, spørger
+   serveren i stedet for at skrive 90 selv. En prøve fejler hvis tallet dukker
+   op i en anden fil i modulet.
+4. **Fejningen har sin EGEN runde, ikke et trin i tools-scheduler.** Den loop
+   springer et site over hvis både backup og link-tjek er slået fra — og et site
+   der har fravalgt backup har ikke fravalgt et databeskyttelsesløfte. Hullet
+   ville have været usynligt: fejningen ville melde succes uden nogensinde at
+   have kigget på de sites.
+
+### Målt, ikke antaget
+
+Mod den kørende admin (`:3010`, sitet `landing`) og mod sitets rigtige datamappe:
+
+- Samtale bagdateret 91 dage → fejet → **læst tilbage over HTTP**: begge ture har
+  tom tekst, `textRedactedAt` sat, mens `turnCount: 2`, `locale: da`,
+  `source: aidan`, begge tidsstempler og markøren `["lead"]` står uændrede.
+- De oprindelige ord findes ikke længere i filens bytes.
+- `GET /api/conversations` svarer `textRetentionDays: 90`.
+- `DELETE` → 200 og derefter 404 ved genlæsning; ukendt id → 404.
+- 16 prøver. Mutations-bevist: skrivningen fjernet → 5 røde · grænsen hardkodet
+  til 9999 dage → 5 røde · markører tabt ved tømning → 1 rød · fejningens
+  kaldested fjernet → 1 rød.
+
+### Udskilt til F188.6 — ikke droppet
+
+To halvdele af det oprindelige kort kræver en skærm der ikke findes endnu:
+**sletteknappen på Conversations-fladen** (kræver F188.2) og **løftet til den
+besøgende på selve sitet** (andet repo, kræver samtale-widget'en). Serverdelen af
+begge ligger klar: ruten svarer, og fristen kan læses fra API'et. F188.6 er
+oprettet med egne acceptkriterier og er blokeret af F188.2.

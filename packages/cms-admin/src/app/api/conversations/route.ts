@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requirePermission } from "@/lib/permissions";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { ConversationStore, EmptyConversationError } from "@/lib/conversations/store";
+import { CONVERSATION_TEXT_RETENTION_DAYS } from "@/lib/conversations/retention";
 import type { NewConversationTurn } from "@/lib/conversations/types";
 
 const ROLES = new Set(["visitor", "assistant"]);
@@ -77,5 +78,8 @@ export async function GET() {
 
   const { dataDir } = await getActiveSitePaths();
   const conversations = await new ConversationStore(dataDir).list();
-  return NextResponse.json({ conversations });
+  // The policy travels with the data. A surface that wants to tell a human how
+  // long text is kept reads it from here instead of repeating the number —
+  // which is what keeps "one value, one place" true once a second reader exists.
+  return NextResponse.json({ conversations, textRetentionDays: CONVERSATION_TEXT_RETENTION_DAYS });
 }

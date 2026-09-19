@@ -127,6 +127,25 @@ async function snapshotTick() {
   }
 }
 
+// ── 5. Conversation retention (F188.5, hourly; sweeps at most once a day) ──
+// Its own tick rather than a step inside the tools scheduler: that loop skips a
+// site with backup AND link-check off, and opting out of backups is not opting
+// out of a data-protection promise.
+async function conversationRetentionTick() {
+  try {
+    const { runConversationRetention } = await import("./lib/conversations/retention");
+    const result = await runConversationRetention();
+    if (result.redacted > 0) {
+      console.log(`[conversation-retention] text removed from ${result.redacted} conversation(s) across ${result.sitesSwept} site(s)`);
+    }
+    if (result.errors.length > 0) {
+      console.error(`[conversation-retention] errors: ${result.errors.join("; ")}`);
+    }
+  } catch (err) {
+    console.error("[conversation-retention] fatal:", err);
+  }
+}
+
 // ── 0. Deploy self-report (F019 upmetrics deploy-observe) ─────
 // One fire-and-forget POST on healthy boot. deploy_id = git sha → upmetrics
 // upserts on (project, deploy_id), so re-boots of the same image self-dedupe
@@ -189,6 +208,12 @@ export function startSchedulers() {
   // 4. Calendar snapshot — first run 15s after startup, then every 5 min
   setTimeout(snapshotTick, 15_000);
   setInterval(snapshotTick, 5 * 60_000);
+
+  // 5b. Conversation retention — first run 4 min after startup, then hourly.
+  // The sweep itself refuses to run twice within 20 hours per site, so an
+  // hourly tick costs a state-file read and nothing else.
+  setTimeout(conversationRetentionTick, 4 * 60_000);
+  setInterval(conversationRetentionTick, 60 * 60_000);
 
   // 5. Link checker (daily or weekly, opt-in via env)
   const linkCheckSchedule = process.env.LINK_CHECK_SCHEDULE; // "daily" | "weekly"

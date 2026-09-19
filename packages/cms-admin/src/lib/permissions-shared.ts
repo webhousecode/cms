@@ -62,6 +62,14 @@ export const PERMISSIONS = {
    */
   "conversations.read": "View visitors' conversations",
   "conversations.write": "Record a conversation (site → CMS)",
+  /**
+   * Erasing one conversation before the 90-day sweep reaches it — what an
+   * erasure request needs. Its own permission, and admin-only, for the same
+   * reason `content.delete` is separate from `content.edit`: removing a record
+   * of what a visitor said is a different act from reading it, and it cannot
+   * be undone.
+   */
+  "conversations.delete": "Delete a single conversation (erasure request)",
   "chat.use": "Use chat interface",
   "agents.run": "Run agents manually",
   "agents.manage": "Create / edit agents + workflows",
