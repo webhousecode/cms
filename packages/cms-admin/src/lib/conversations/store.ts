@@ -38,6 +38,20 @@ export class ConversationStore {
     return path.join(this.dir(), `${id}.json`);
   }
 
+  /**
+   * Ids are ours — crypto.randomUUID() on every write — so anything that is not
+   * a UUID cannot name a conversation we stored.
+   *
+   * Enforced because the id arrives from a URL segment. Next decodes `%2F`
+   * before handing over the param, so `/api/conversations/..%2F..%2Fsomething`
+   * would otherwise reach path.join() as `../../something` and read a JSON file
+   * outside the site's data directory. Checked HERE rather than in the route so
+   * a second reader cannot be added without it.
+   */
+  private isOwnId(id: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  }
+
   /** Store a conversation. Rejects one with no usable turns. */
   async create(input: NewConversation): Promise<Conversation> {
     const source = input.source?.trim();
@@ -76,6 +90,7 @@ export class ConversationStore {
 
   /** Read one conversation back, turns included. null when it does not exist. */
   async get(id: string): Promise<Conversation | null> {
+    if (!this.isOwnId(id)) return null;
     try {
       const raw = await fs.readFile(this.file(id), "utf-8");
       return JSON.parse(raw) as Conversation;

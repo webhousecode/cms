@@ -101,6 +101,24 @@ describe("ConversationStore", () => {
     expect(missing).toBeNull();
   });
 
+  it("an id that is not one of ours cannot read a file outside the site's data dir", async () => {
+    // The id arrives from a URL segment, and Next decodes %2F before handing
+    // it over — so `..%2F..%2Fforms` would reach path.join() as `../../forms`.
+    // Plant a real JSON file one level up and prove the traversal answers null.
+    const conversations = path.join(tmpDir, "conversations");
+    await fs.mkdir(conversations, { recursive: true });
+    await fs.writeFile(path.join(tmpDir, "secret.json"), JSON.stringify({ turns: ["leaked"] }));
+
+    const store = new ConversationStore(tmpDir);
+    for (const evil of ["../secret", "..%2Fsecret", "../../etc/passwd", "secret", ""]) {
+      expect(await store.get(evil), `traversal via ${JSON.stringify(evil)}`).toBeNull();
+    }
+
+    // Positive control: a real id still reads back, so the guard is not "null for everything".
+    const conv = await store.create({ source: "aidan", turns: THREE_TURNS });
+    expect(await new ConversationStore(tmpDir).get(conv.id)).not.toBeNull();
+  });
+
   it("lists without turns, newest last-turn first", async () => {
     const store = new ConversationStore(tmpDir);
     await store.create({ source: "aidan", turns: [{ role: "visitor", text: "gammel", at: "2026-01-01T00:00:00.000Z" }] });
