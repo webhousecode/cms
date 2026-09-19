@@ -64,3 +64,57 @@ Ejeren, 5/9: «vi har allerede et kunde vendt Chat modul i CMS der styrer sin he
 ## Reuse
 
 Discovery-tjek: intet `@broberg/*`-pakke ejer «gem en AI-samtale». Modulet genbruger CMS'ets egne primitiver (site-pool, permissions-shared, proxy-site-kontekst, Forms' indbakke-komponenter). Miss-signalet genbruger trails F251-kontrakt frem for at bygge en parallel tæller.
+
+---
+
+## F188.1 — leveret (19. september 2026)
+
+**Hvad der findes nu:** et site kan aflevere en færdig samtale til CMS'et, og
+den kan læses tilbage — pr. site, som alt andet.
+
+| | |
+|---|---|
+| Lager | `<dataDir>/conversations/<id>.json`, én fil pr. samtale med turene i sig — samme form som formular-indsendelser (F30) og admin-chatten. Ikke to SQL-tabeller: cms-admin har ingen database pr. site, og en opfundet en ville være det eneste sted i huset. |
+| Optagelse | `POST /api/conversations` → 201 |
+| Læsning | `GET /api/conversations` (liste, uden ture) · `GET /api/conversations/{id}` (hel samtale) |
+| Tenant | `?site=<id>` opløses i `proxy.ts` som alle andre ruter. Ruten læser den ALDRIG selv. |
+
+### Rettigheds-spørgsmålet, besvaret
+
+To rettigheder, ikke én:
+
+- **`conversations.read`** — indbakken. En redaktør har den, af samme grund som
+  `forms.read`.
+- **`conversations.write`** — optagelses-ruten, som sitets eget token bruger.
+  Ingen menneskelig rolle har den ud over admin: en redaktør må læse hvad
+  besøgende sagde, men har ikke noget at gøre med at skrive samtaler ind i
+  protokollen — en samtale skal jo være et referat.
+
+**En læser (viewer) får INGEN af dem.** Samme afgjorte regel som for
+formular-indsendelser: en læser må se det der er UDGIVET, aldrig protokollen
+bag — og en chatlog er andres ord om deres egne forretninger.
+
+Begge findes også i token-kataloget (`conversations:read` / `conversations:write`),
+så et site-token kan få præcis den ene rettighed det skal bruge.
+
+### Målt, ikke antaget
+
+Kørt mod den kørende admin (`:3010`), med `?site=` mod to forskellige sites:
+
+- POST med 3 ture → 201; en FRISK GET gav nøjagtig de 3 ture i rigtig
+  rækkefølge, ordret (danske tegn intakte).
+- Samme id på et ANDET site → 404, og filen lå kun i det ene sites `_data`.
+- Samtale uden ture → 400, og der blev ikke skrevet en tom skal.
+- Ukendt id → 404. Ingen auth → 401.
+- `conversations.test.ts` skriver og LÆSER TILBAGE fra lageret.
+  Mutations-bevist: fjernes skrivningen går 4 prøver røde, fjernes
+  tom-spærren 2, fjernes POST-porten 2.
+
+At en viewer får 403 er bevist mod rolle-tabellen i prøverne, ikke kørt i en
+browser med en viewer-session.
+
+### Endnu ikke bygget (F188.2+)
+
+Admin-fladen (sidebar, indbakke-visning), koblingen til Forms' indsendelser
+begge veje, statistik/miss-signalet, og opbevaringsgrænsen på fritekst — den
+sidste er ejerens beslutning og står stadig åben øverst i dette dokument.

@@ -29,6 +29,9 @@ export type Permission =
   | "deploy:trigger" | "deploy:read"
   // forms
   | "forms:read" | "forms:write"
+  // conversations (F188) — a site's own token needs conversations:write to
+  // hand in a finished conversation; read is for admin/reporting callers.
+  | "conversations:read" | "conversations:write"
   // admin surfaces (org-level, no per-site narrowing)
   | "team:manage" | "tokens:manage" | "sites:read" | "sites:write"
   | "org:settings:read" | "org:settings:write"
@@ -40,6 +43,7 @@ export const ALL_PERMISSIONS: Permission[] = [
   "media:read", "media:write", "media:delete",
   "deploy:trigger", "deploy:read",
   "forms:read", "forms:write",
+  "conversations:read", "conversations:write",
   "team:manage", "tokens:manage", "sites:read", "sites:write",
   "org:settings:read", "org:settings:write",
 ];

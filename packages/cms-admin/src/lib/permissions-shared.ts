@@ -46,6 +46,22 @@ export const PERMISSIONS = {
   "curation.review": "Approve / reject in queue",
   "forms.read": "View form inbox",
   "forms.manage": "Create / edit form definitions",
+  /**
+   * F188 — visitors' AI conversations.
+   *
+   * TWO permissions, and the split is the point. `conversations.read` is the
+   * inbox: an editor needs it for the same reason they need `forms.read`.
+   * `conversations.write` is the RECORDING route, which the site's own token
+   * uses — no human role carries it except admin. An editor may read what
+   * visitors said; an editor has no business writing conversations into the
+   * record, because a conversation is supposed to be a transcript.
+   *
+   * A viewer gets NEITHER. Same settled rule as form submissions: a reader may
+   * read what is PUBLISHED, never the protocol behind it — and a chat log is
+   * other people's words about their own business.
+   */
+  "conversations.read": "View visitors' conversations",
+  "conversations.write": "Record a conversation (site → CMS)",
   "chat.use": "Use chat interface",
   "agents.run": "Run agents manually",
   "agents.manage": "Create / edit agents + workflows",
@@ -84,6 +100,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "deploy.trigger",
     "curation.*",
     "forms.read",
+    "conversations.read",
     "chat.use",
     "agents.run",
   ],
