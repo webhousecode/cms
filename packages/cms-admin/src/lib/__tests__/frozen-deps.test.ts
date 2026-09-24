@@ -45,6 +45,11 @@ const LEDGER: Record<string, string> = {
     "the whole span is 0.3.0 flipping `live`'s default to false, which we were " +
     "already immune to — we pass it explicitly. The gate tests ran UNCHANGED " +
     "and green on 0.7.1, which is what proves the behaviour is the same.",
+  "@broberg/deploy-core":
+    "Exact-pinned 0.4.1 on 2026-09-24 (F200) — FlyClient replaces our two " +
+    "hand-rolled Fly clients. Exact on purpose: 0.4.0 shipped without a " +
+    "per-request timeout and was fixed the same day, so a newer release is " +
+    "taken deliberately, with fly-machines.test.ts run against it.",
   "@broberg/cms-chat-client":
     "0.4.14 vs 0.4.20 — same minor, so the caret DOES reach it. Not frozen.",
   "@broberg/ui-controls-core":

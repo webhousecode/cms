@@ -150,7 +150,7 @@ describe("spawnBuilder", () => {
         dockerfile: "",
         flyToken: "f",
       }),
-    ).rejects.toThrow(/spawn failed.*403/);
+    ).rejects.toThrow(/403/);
   });
 
   it("falls back to FLY_API_TOKEN env var when no override", async () => {
@@ -252,7 +252,10 @@ describe("awaitBuilderCompletion", () => {
     mockFetch(async () => {
       calls++;
       if (calls < 3) return new Response("502 bad gateway", { status: 502 });
-      return new Response(JSON.stringify({ state: "stopped", events: [] }));
+      return new Response(JSON.stringify({
+        state: "stopped",
+        events: [{ type: "exit", request: { exit_event: { exit_code: 0 } } }],
+      }));
     });
     const result = await awaitBuilderCompletion({
       appName: "wb",
@@ -263,6 +266,42 @@ describe("awaitBuilderCompletion", () => {
     });
     expect(result.success).toBe(true);
     expect(calls).toBeGreaterThanOrEqual(3);
+  });
+
+  // F200: a machine that stops without a recorded exit code carried no verdict,
+  // and used to be reported as a successful build.
+  it("returns success=false when the machine stops without an exit code", async () => {
+    mockFetch(async () => new Response(JSON.stringify({ state: "stopped", events: [] })));
+    const result = await awaitBuilderCompletion({
+      appName: "wb",
+      machineId: "m1",
+      flyToken: "f",
+      pollIntervalMs: 5,
+      maxWaitMs: 1000,
+    });
+    expect(result.success).toBe(false);
+    expect(result.exitCode).toBeNull();
+    expect(result.finalState).toBe("stopped");
+  });
+
+  // F200: a wrong token (401) used to be retried for up to 30 minutes and
+  // looked like a slow build. It must fail at once.
+  it("fails at once on a 401 instead of polling until the deadline", async () => {
+    let calls = 0;
+    mockFetch(async () => {
+      calls++;
+      return new Response("unauthorized", { status: 401 });
+    });
+    await expect(
+      awaitBuilderCompletion({
+        appName: "wb",
+        machineId: "m1",
+        flyToken: "bad",
+        pollIntervalMs: 5,
+        maxWaitMs: 60_000,
+      }),
+    ).rejects.toThrow(/401/);
+    expect(calls).toBe(1);
   });
 });
 

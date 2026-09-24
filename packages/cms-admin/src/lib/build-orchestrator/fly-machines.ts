@@ -22,6 +22,8 @@
  * fly-deployment plumbing already requires this, so no new secret.
  */
 
+import { FlyClient, FlyTimeoutError } from "@broberg/deploy-core";
+
 const FLY_API_BASE = "https://api.machines.dev";
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -106,7 +108,7 @@ export async function spawnBuilder(opts: SpawnBuilderOptions): Promise<SpawnedBu
       image: opts.builderImage,
       guest: { cpu_kind: "shared", cpus, memory_mb: memoryMb },
       auto_destroy: true,
-      restart: { policy: "no" },
+      restart: { policy: "no" as const },
       env: {
         SITE_ID: opts.siteId,
         SHA: opts.sha,
@@ -128,24 +130,14 @@ export async function spawnBuilder(opts: SpawnBuilderOptions): Promise<SpawnedBu
     },
   };
 
-  const url = `${FLY_API_BASE}/v1/apps/${encodeURIComponent(opts.appName)}/machines`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: flyHeaders(token),
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+  const machine = await new FlyClient({ token }).createMachine(opts.appName, payload.config, {
+    name: payload.name,
+    region: payload.region,
   });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Fly Machines spawn failed (${res.status}): ${body.slice(0, 500)}`);
+  if (!machine?.id) {
+    throw new Error(`Fly Machines spawn returned no machine id: ${JSON.stringify(machine)}`);
   }
-
-  const data = (await res.json()) as { id?: string; region?: string; state?: string };
-  if (!data.id) {
-    throw new Error(`Fly Machines spawn returned no machine id: ${JSON.stringify(data)}`);
-  }
-  return { machineId: data.id, region: data.region ?? region, state: data.state ?? "unknown" };
+  return { machineId: machine.id, region: machine.region ?? region, state: machine.state ?? "unknown" };
 }
 
 /**
@@ -166,45 +158,22 @@ export async function awaitBuilderCompletion(args: {
   const maxMs = args.maxWaitMs ?? 30 * 60 * 1000;
   const start = Date.now();
 
-  while (true) {
-    const elapsed = Date.now() - start;
-    if (elapsed > maxMs) {
-      return { success: false, exitCode: null, durationMs: elapsed, finalState: "timeout" };
-    }
-
-    const url = `${FLY_API_BASE}/v1/apps/${encodeURIComponent(args.appName)}/machines/${encodeURIComponent(args.machineId)}`;
-    const res = await fetch(url, {
-      headers: flyHeaders(token),
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
+  // Transient failures (network, 408/429/5xx) are retried inside FlyClient;
+  // a permanent one (401, 403, 404) throws at once instead of looking like a
+  // slow build for 30 minutes.
+  try {
+    const exit = await new FlyClient({ token }).waitForExit(args.appName, args.machineId, {
+      maxMs,
+      pollMs,
     });
-    if (!res.ok) {
-      // Transient error — wait + retry instead of failing the whole build
-      await new Promise((r) => setTimeout(r, pollMs));
-      continue;
+    // No exit code means Fly recorded no verdict — that is not a success.
+    const success = exit.state !== "failed" && exit.exitCode === 0;
+    return { success, exitCode: exit.exitCode, durationMs: Date.now() - start, finalState: exit.state };
+  } catch (err) {
+    if (err instanceof FlyTimeoutError) {
+      return { success: false, exitCode: null, durationMs: Date.now() - start, finalState: "timeout" };
     }
-    const data = (await res.json()) as {
-      state?: string;
-      events?: Array<{ type?: string; status?: string; request?: { exit_event?: { exit_code?: number } } }>;
-    };
-    const state = data.state ?? "unknown";
-
-    // Terminal states from Fly Machines docs:
-    //   created, starting, started, stopping, stopped, destroying, destroyed,
-    //   replacing, suspended, failed
-    if (state === "destroyed" || state === "failed" || state === "stopped") {
-      // Try to extract exit code from events
-      let exitCode: number | null = null;
-      for (const ev of data.events ?? []) {
-        if (ev.type === "exit" && typeof ev.request?.exit_event?.exit_code === "number") {
-          exitCode = ev.request.exit_event.exit_code;
-          break;
-        }
-      }
-      const success = state !== "failed" && (exitCode === null || exitCode === 0);
-      return { success, exitCode, durationMs: Date.now() - start, finalState: state };
-    }
-
-    await new Promise((r) => setTimeout(r, pollMs));
+    throw err;
   }
 }
 

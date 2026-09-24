@@ -259,6 +259,9 @@ importers:
       '@broberg/cms-inline-edit':
         specifier: '>=0.6.3 <1'
         version: 0.6.3
+      '@broberg/deploy-core':
+        specifier: 0.4.1
+        version: 0.4.1
       '@broberg/mail':
         specifier: 0.7.1
         version: 0.7.1
@@ -1129,6 +1132,9 @@ packages:
   '@broberg/cms-inline-edit@0.6.3':
     resolution: {integrity: sha512-YAGWSsTMGbg/x7hZWeHdzjVjXrgNL4YuJ8dUhz6Ya2TW7NJQHqUsHerDnxVmGeC7M8/41ZkkYpr1TrBJS3t7+A==}
     engines: {node: '>=22'}
+
+  '@broberg/deploy-core@0.4.1':
+    resolution: {integrity: sha512-ud3tz4Omux83uk0duRjYN2uSqdXtGOSCBGd11GdV5yKXL5xc2jTR/yfOvXx/SILQ9rxCgETfgMKnOTq7OFd+9w==}
 
   '@broberg/lens-engine@0.4.0':
     resolution: {integrity: sha512-/blOeHkjo6kxxQE7d9y9BFSqaoyFE3k8+Gbu6UcGLXAf9HmEJ0T0zhdbbbWQX4mejtpRKr0CzpwhiiwAoSLoaw==}
@@ -7329,6 +7335,8 @@ snapshots:
   '@broberg/cms-chat-client@0.4.14': {}
 
   '@broberg/cms-inline-edit@0.6.3': {}
+
+  '@broberg/deploy-core@0.4.1': {}
 
   '@broberg/lens-engine@0.4.0':
     dependencies:

@@ -8,7 +8,8 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
-import { FlyMachinesClient, FLY_VM_SIZES } from "@/lib/deploy/fly-machines";
+import { FlyClient } from "@broberg/deploy-core";
+import { FLY_VM_SIZES } from "@/lib/deploy/fly-machines";
 import { denyViewers } from "@/lib/require-role";
 
 export const dynamic = "force-dynamic";
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const fly = new FlyMachinesClient(flyToken);
+      const fly = new FlyClient({ token: flyToken });
       const adminPassword = randomBytes(16).toString("hex");
 
       try {
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
 
         const vmPreset = FLY_VM_SIZES.find((s) => s.value === vmSize) ?? FLY_VM_SIZES[0];
 
-        const machine = await fly.createMachine(appName, region, {
+        const machine = await fly.createMachine(appName, {
           image: "ghcr.io/webhousecode/cms-admin:latest",
           env: {
             PORT: "3010",
@@ -119,21 +120,21 @@ export async function POST(request: NextRequest) {
             cpus: vmPreset.cpus,
             memory_mb: vmPreset.memoryMb,
           },
-        });
+        }, { region });
 
         // ── Step 5: Wait for healthy ──
         send({ step: "wait-healthy", message: "Waiting for container to start...", progress: 70, status: "running" });
-        await fly.waitForMachine(appName, machine.id, 60);
+        await fly.waitForState(appName, machine.id, "started", 60);
 
         // ── Step 6: Allocate IPs ──
         send({ step: "allocate-ip", message: "Allocating IP addresses...", progress: 85, status: "running" });
         try {
-          await fly.allocateSharedIpv4(appName);
+          await fly.allocateIp(appName, "shared_v4");
         } catch {
           // May already have an IP
         }
         try {
-          await fly.allocateIpv6(appName);
+          await fly.allocateIp(appName, "v6");
         } catch {
           // May already have an IP
         }
