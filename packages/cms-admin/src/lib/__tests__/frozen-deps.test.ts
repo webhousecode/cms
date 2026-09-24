@@ -49,7 +49,8 @@ const LEDGER: Record<string, string> = {
     "Exact-pinned 0.4.1 on 2026-09-24 (F200) — FlyClient replaces our two " +
     "hand-rolled Fly clients. Exact on purpose: 0.4.0 shipped without a " +
     "per-request timeout and was fixed the same day, so a newer release is " +
-    "taken deliberately, with fly-machines.test.ts run against it.",
+    "taken deliberately, with fly-machines.test.ts run against it. " +
+    "0.5.0 (F200.2, same day): a machine that 404s on the first poll now throws.",
   "@broberg/cms-chat-client":
     "0.4.14 vs 0.4.20 — same minor, so the caret DOES reach it. Not frozen.",
   "@broberg/ui-controls-core":

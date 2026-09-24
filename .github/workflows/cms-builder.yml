@@ -25,6 +25,9 @@ jobs:
   build-and-push:
     name: Build & push cms-builder to GHCR
     runs-on: ubuntu-latest
+    # Measured 20-60 s. cancel-in-progress is false, so a hung run would
+    # block every later build for up to six hours without going red (F200.2).
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 

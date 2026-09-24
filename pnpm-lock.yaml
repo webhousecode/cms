@@ -260,8 +260,8 @@ importers:
         specifier: '>=0.6.3 <1'
         version: 0.6.3
       '@broberg/deploy-core':
-        specifier: 0.4.1
-        version: 0.4.1
+        specifier: 0.5.0
+        version: 0.5.0
       '@broberg/mail':
         specifier: 0.7.1
         version: 0.7.1
@@ -1133,8 +1133,8 @@ packages:
     resolution: {integrity: sha512-YAGWSsTMGbg/x7hZWeHdzjVjXrgNL4YuJ8dUhz6Ya2TW7NJQHqUsHerDnxVmGeC7M8/41ZkkYpr1TrBJS3t7+A==}
     engines: {node: '>=22'}
 
-  '@broberg/deploy-core@0.4.1':
-    resolution: {integrity: sha512-ud3tz4Omux83uk0duRjYN2uSqdXtGOSCBGd11GdV5yKXL5xc2jTR/yfOvXx/SILQ9rxCgETfgMKnOTq7OFd+9w==}
+  '@broberg/deploy-core@0.5.0':
+    resolution: {integrity: sha512-JMUyRsuiKn237W96lHCh2SMz8KMW4dZbBJ9jK+FEQikoWDiD14pMLsQziplSyXbzN7IUzk2kC7h8w2Iv0a1+xw==}
 
   '@broberg/lens-engine@0.4.0':
     resolution: {integrity: sha512-/blOeHkjo6kxxQE7d9y9BFSqaoyFE3k8+Gbu6UcGLXAf9HmEJ0T0zhdbbbWQX4mejtpRKr0CzpwhiiwAoSLoaw==}
@@ -7336,7 +7336,7 @@ snapshots:
 
   '@broberg/cms-inline-edit@0.6.3': {}
 
-  '@broberg/deploy-core@0.4.1': {}
+  '@broberg/deploy-core@0.5.0': {}
 
   '@broberg/lens-engine@0.4.0':
     dependencies:

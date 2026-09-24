@@ -60,6 +60,9 @@ jobs:
     name: Deploy to Fly.io
     needs: gate
     runs-on: ubuntu-latest
+    # Measured max 375 s over 15 runs; the default 360 min would let a hung
+    # deploy sit invisible for six hours (F200.2).
+    timeout-minutes: 20
     concurrency:
       group: deploy-webhouse-app
       cancel-in-progress: true

@@ -284,6 +284,16 @@ describe("awaitBuilderCompletion", () => {
     expect(result.finalState).toBe("stopped");
   });
 
+  // F200.2 (deploy-core 0.5.0): Fly answers 404 both for an unknown machine id
+  // AND for a wrong token on that route. A machine never seen must throw, not
+  // read as "destroyed".
+  it("throws when the machine is 404 on the first poll", async () => {
+    mockFetch(async () => new Response('{"error":"machine not found"}', { status: 404 }));
+    await expect(
+      awaitBuilderCompletion({ appName: "wb", machineId: "nope", flyToken: "f", pollIntervalMs: 5, maxWaitMs: 1000 }),
+    ).rejects.toThrow(/404/);
+  });
+
   // F200: a wrong token (401) used to be retried for up to 30 minutes and
   // looked like a slow build. It must fail at once.
   it("fails at once on a 401 instead of polling until the deadline", async () => {
