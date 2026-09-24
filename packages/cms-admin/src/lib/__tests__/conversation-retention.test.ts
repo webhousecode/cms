@@ -117,10 +117,12 @@ describe("the 90-day sweep", () => {
 
   it("is idempotent — a second sweep changes nothing and does not re-stamp the date", async () => {
     const id = await conversationAgedDays(CONVERSATION_TEXT_RETENTION_DAYS + 5);
-    const first = await pruneConversationText(tmpDir, new Date("2026-09-19T08:00:00.000Z"));
+    // Relative to the real clock: the helper ages the conversation from
+    // Date.now(), so fixed dates here stop crossing the limit as time passes.
+    const first = await pruneConversationText(tmpDir, new Date());
     const stamp = (await new ConversationStore(tmpDir).get(id))!.textRedactedAt;
 
-    const second = await pruneConversationText(tmpDir, new Date("2026-09-20T08:00:00.000Z"));
+    const second = await pruneConversationText(tmpDir, new Date(Date.now() + DAY_MS));
     expect(first.redacted).toBe(1);
     expect(second.redacted).toBe(0);
     expect((await new ConversationStore(tmpDir).get(id))!.textRedactedAt).toBe(stamp);
