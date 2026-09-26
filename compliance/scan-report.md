@@ -1,6 +1,6 @@
 # F201.1 — scanningsrapport
 
-Kørt 2026-09-26T08:36:56.750Z · 39 af 40 projekter scannet.
+Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
 
 ## Projekter
 
@@ -14,7 +14,7 @@ Kørt 2026-09-26T08:36:56.750Z · 39 af 40 projekter scannet.
 | broberg-id | broberg-ai/broberg-id | scannet | 8a682cf | 111 | broberg-id=arn |
 | buddy | webhousecode/buddy | scannet | 6c8cf0f | 690 | buddy-brain=arn, buddy-edge-fly=arn, webhouse-old=arn, buddy-voice=arn, buddy-cloud=arn |
 | cardmem | broberg-ai/cardmem | scannet | 6b34b87 | 1028 | cardmem-lens=arn, cardmem=arn |
-| cms | webhousecode/cms | scannet | 9a77e61 | 1016 | webhouse-cms=arn, webhouse-app=arn |
+| cms | webhousecode/cms | scannet | 2e0222a | 1016 | webhouse-cms=arn, webhouse-app=arn |
 | components | broberg-ai/components | scannet | 7d36015 | 415 | broberg-discovery=arn |
 | contentpush | broberg-ai/contentpush | scannet | 8e66535 | 77 | contentpush=arn |
 | contract-manager | broberg-ai/contract-manager | scannet | 4d72c97 | 177 | webhouse-contract-manager=arn |
@@ -121,6 +121,81 @@ Kørt 2026-09-26T08:36:56.750Z · 39 af 40 projekter scannet.
 | Discord | buddy, cardmem, cms, contentpush, cronjobs, fd-sundhed, fysiodk-aalborg-sport, sanneandersen, upmetrics, whop |
 | Gravatar | broberg-id, cms, components, coverletter-generator, fd-sundhed, fysiodk-aalborg-sport, pitch, trail |
 | Vimeo | cardmem, cms, sanneandersen |
+
+## Vurdering pr. leverandør (F201.2)
+
+| leverandør | anbefaling | aftale | overførsel | helbredsdata uden for EU | link |
+|---|---|---|---|---|---|
+| Fly.io | **acceptér/underskriv** | skal_accepteres | DPF | JA (fd-sundhed, fysiodk-aalborg-sport, sanneandersen) | https://fly.io/documents/ |
+| Tigris | **link** | auto | SCC |  | https://www.tigrisdata.com/docs/legal/data-processing/ |
+| Cloudflare | **link** | auto | DPF+SCC | JA (fd-sundhed, sanneandersen) | https://www.cloudflare.com/cloudflare-customer-dpa/ |
+| Resend | **link** | auto | DPF+SCC | JA (fd-sundhed, sanneandersen) | https://resend.com/legal/dpa |
+| Stripe | **link** | auto | DPF+SCC | JA (sanneandersen) | https://stripe.com/legal/dpa |
+| Supabase | **link** | auto | SCC | JA (fd-sundhed, fysiodk-aalborg-sport) | https://supabase.com/legal/dpa |
+| Turso | **acceptér/underskriv** | skal_accepteres | ukendt |  | https://turso.tech/terms-of-use |
+| Amazon Web Services | **link** | auto | DPF+SCC | JA (sanneandersen) | https://aws.amazon.com/compliance/gdpr-center/ |
+| Mistral AI | **link** | auto | EU |  | https://legal.mistral.ai/terms/data-processing-addendum |
+| OpenAI | **link** | auto | SCC |  | https://cdn.openai.com/pdf/openai-data-processing-addendum.pdf |
+| Anthropic | **link** | auto | SCC | JA (fd-sundhed, fysiodk-aalborg-sport) | https://www.anthropic.com/legal/data-processing-addendum |
+| Google (Gemini/Vertex AI) | **link** | auto | DPF |  | https://cloud.google.com/terms/data-processing-addendum |
+| DeepInfra | **erstat/begræns** | mangler | ukendt |  | https://deepinfra.com/privacy |
+| OpenRouter | **link** | auto | SCC | JA (sanneandersen) | https://openrouter.ai/data-processing-agreement |
+| DeepSeek | **erstat/begræns** | mangler | ukendt |  | https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html |
+| ElevenLabs | **link** | auto | DPF+SCC |  | https://elevenlabs.io/dpa |
+| Microsoft Azure | **link** | auto | DPF |  | https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA |
+| Black Forest Labs | **acceptér/underskriv** | skal_accepteres | SCC |  | https://bfl.ai/legal/privacy-policy |
+| GitHub | **link** | auto | DPF+SCC | JA (fd-sundhed, fysio-dk-aalborg, fysiodk-aalborg-sport, sanneandersen) | https://docs.github.com/en/site-policy/privacy-policies/github-data-protection-agreement |
+| Google (Workspace/Gmail/Calendar/OAuth) | **acceptér/underskriv** | skal_accepteres | DPF+SCC | JA (fd-sundhed, fysiodk-aalborg-sport, sanneandersen) | https://knowledge.workspace.google.com/admin/compliance/privacy-compliance-and-records-for-google-workspace-and-cloud-identity |
+| Google Maps | **ingen handling** | ikke_databehandler | DPF+SCC |  | https://mapsplatform.google.com/resources/trust-center/gdpr/ |
+| Google PageSpeed Insights | **ingen handling** | ikke_databehandler | ukendt |  | https://developers.google.com/speed/docs/insights/v5/get-started |
+| Google Firebase (FCM) | **link** | auto | DPF+SCC | JA (fd-sundhed, fysiodk-aalborg-sport) | https://firebase.google.com/terms/data-processing-terms |
+| Apple (APNs/Sign in/App Store) | **ingen handling** | ikke_databehandler | ukendt |  | https://developer.apple.com/support/terms/apple-developer-program-license-agreement/ |
+| Web Push (browserens push-tjeneste) | **ingen handling** | ikke_databehandler | ukendt |  | https://hacks.mozilla.org/2016/01/web-push-arrives-in-firefox-44/ |
+| LinkedIn | **ingen handling** | ikke_databehandler | SCC |  | https://www.linkedin.com/legal/l/bd-dpa |
+| Simply.com | **acceptér/underskriv** | skal_accepteres | EU |  | https://www.simply.com/compliance/ |
+| pCloud | **erstat/begræns** | mangler | ukendt |  | https://www.pcloud.com/business_agreement.html |
+| GatewayAPI | **acceptér/underskriv** | skal_accepteres | EU |  | https://onlinecity.io/legal-documents/gatewayapi/dpa-eu |
+| Twilio | **link** | auto | DPF+SCC |  | https://www.twilio.com/en-us/legal/data-protection-addendum |
+| Complimenta | **ingen handling** | ikke_databehandler | ukendt |  | https://complimenta.com/support/privatlivspolitik/ |
+| Opkald.ai | **acceptér/underskriv** | skal_accepteres | EU |  | https://opkald.ai/ |
+| Zoom | **link** | auto | DPF+SCC |  | https://explore.zoom.us/docs/doc/Zoom_GLOBAL_DPA.pdf |
+| Daily.co | **acceptér/underskriv** | skal_accepteres | DPF+SCC |  | https://www.daily.co/legal/data-processing-addendum/ |
+| LiveKit | **link** | auto | DPF+SCC |  | https://livekit.com/legal/data-processing-addendum |
+| OpenSubtitles | **ingen handling** | ikke_databehandler | ukendt |  |  |
+| SubDL | **ingen handling** | ikke_databehandler | ukendt |  |  |
+| TMDB | **ingen handling** | ikke_databehandler | ukendt |  | https://www.themoviedb.org/api-terms-of-use |
+| Unsplash | **ingen handling** | ikke_databehandler | ukendt |  | https://unsplash.com/api-terms |
+| DAWA (Dataforsyningen) | **ingen handling** | ikke_databehandler | EU |  | https://dawadocs.dataforsyningen.dk/dok/om |
+| Vercel | **acceptér/underskriv** | skal_accepteres | DPF+SCC |  | https://vercel.com/legal/dpa |
+| Netlify | **link** | auto | DPF+SCC |  | https://www.netlify.com/gdpr-ccpa/ |
+| npm | **ingen handling** | ikke_databehandler | ukendt |  | https://docs.npmjs.com/policies/privacy/ |
+| SMS.dk | **acceptér/underskriv** | skal_accepteres | EU |  | https://sms.dk/sms-dk-er-gdpr-kompatibel/ |
+| Verda (GPU-cloud) | **link** | auto | EU |  | https://verda.com/terms-and-conditions |
+| Tailscale | **link** | auto | SCC |  | https://tailscale.com/dpa |
+| Google Play | **ingen handling** | ikke_databehandler | SCC |  | https://play.google/developer-distribution-agreement.html |
+| DeepL | **link** | auto | EU |  | https://www.deepl.com/en/pro-license |
+| fal.ai | **link** | auto | SCC | JA (sanneandersen) | https://fal.ai/legal/data-processing-addendum |
+| Hugging Face | **acceptér/underskriv** | skal_accepteres | SCC | JA (fd-sundhed) | https://huggingface.co/docs/inference-endpoints/en/security |
+| RunPod | **acceptér/underskriv** | skal_accepteres | SCC |  | https://www.runpod.io/legal/data-processing-agreement |
+| Requesty | **acceptér/underskriv** | skal_accepteres | ukendt |  | https://www.requesty.ai/dpa |
+| Tavily | **acceptér/underskriv** | skal_accepteres | SCC |  | https://www.tavily.com/privacy |
+| Brave Search | **ingen handling** | ikke_databehandler | SCC |  | https://cdn.search.brave.com/search-api/web/v1/client/_app/immutable/assets/brave-search-api-dpa-2025-09-09.DRXCoye6.pdf |
+| Perplexity | **undersøg** | ukendt | DPF+SCC |  | https://www.perplexity.ai/hub/legal/dpa |
+| Bunny.net | **acceptér/underskriv** | skal_accepteres | EU |  | https://bunny.net/gdpr/ |
+| Backblaze B2 | **link** | auto | DPF+SCC |  | https://www.backblaze.com/company/policy/dpa-for-eea-eu-residents |
+| Scaleway | **link** | auto | EU |  | https://www-uploads.scaleway.com/DPA_2024_ENG_b0abb5cc26.pdf |
+| Hetzner | **acceptér/underskriv** | skal_accepteres | EU |  | https://docs.hetzner.com/general/company-and-policy/data-protection-at-hetzner/ |
+| Forward Email | **link** | auto | SCC |  | https://forwardemail.net/en/dpa |
+| inMobile | **acceptér/underskriv** | skal_accepteres | EU |  | https://www.inmobile.com/en/data-security-compliance |
+| QuickPay | **acceptér/underskriv** | skal_accepteres | EU |  | https://learn.quickpay.net/public/helpdesk/files/data_processing-agreement.pdf |
+| Polar | **link** | auto | SCC |  | https://polar.sh/legal/data-processing-addendum |
+| Flexprice | **link** | auto | ukendt |  | https://flexprice.io/data-handling |
+| Piwik PRO | **acceptér/underskriv** | skal_accepteres | EU |  | https://piwik.pro/wp-content/uploads/2025/08/Piwik-PRO-Business-Data-Agreement.pdf |
+| Google Analytics | **link** | auto | DPF+SCC |  | https://support.google.com/analytics/answer/3379636?hl=en |
+| Slack | **acceptér/underskriv** | skal_accepteres | DPF+SCC |  | https://slack.com/terms-of-service/data-processing |
+| Discord | **ingen handling** | ikke_databehandler | DPF+SCC |  | https://support.discord.com/hc/en-us/articles/37891902561687-Data-Processing-Agreement-Discord-as-a-Processor |
+| Gravatar | **ingen handling** | ikke_databehandler | DPF+SCC |  | https://automattic.com/privacy/ |
+| Vimeo | **acceptér/underskriv** | skal_accepteres | DPF+SCC | JA (sanneandersen) | https://help.vimeo.com/hc/en-us/articles/18332128580241-Does-Vimeo-offer-a-Data-Processing-Agreement |
 
 ## Ukendte udgående værter (skal vurderes — kan være en overset leverandør)
 

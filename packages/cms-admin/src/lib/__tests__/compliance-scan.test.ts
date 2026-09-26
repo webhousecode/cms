@@ -6,7 +6,7 @@ import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { scanProject, scanDir } from "../../../../../scripts/compliance-scan";
+import { scanProject, scanDir, recommend, type Assessment } from "../../../../../scripts/compliance-scan";
 
 function repoWith(files: Record<string, string>): string {
   const dir = mkdtempSync(path.join(tmpdir(), "cscan-"));
@@ -53,8 +53,51 @@ describe("compliance scan", () => {
     expect(scanDir("t/x", dir).hits.size).toBe(0);
   });
 
+  it("does not count its own catalogue or output as use", () => {
+    const dir = repoWith({
+      "scripts/compliance-scan.ts": "env: /^SENTRY_/, host: /sentry\\.io$/ // https://sentry.io",
+      "compliance/compliance.yaml": "- id: sentry # https://sentry.io",
+    });
+    expect(scanDir("t/x", dir).hits.size).toBe(0);
+  });
+
   it("lists an unknown outbound host for review instead of dropping it", () => {
     const dir = repoWith({ "src/a.ts": 'fetch("https://api.somenewvendor.io/v2")' });
     expect([...scanDir("t/x", dir).unknownHosts.keys()]).toEqual(["api.somenewvendor.io"]);
+  });
+});
+
+describe("vendor recommendation (F201.2)", () => {
+  const base: Assessment = { id: "v", dpa_status: "auto", dpa_url: "https://v.example/dpa", dpa_url_http: 200,
+    transfer_basis: "DPF", eu_region_possible: true, checked_at: "2026-09-26" };
+
+  it("links a DPA that is part of the terms", () => {
+    expect(recommend(base, ["cms"]).recommendation).toBe("link");
+  });
+
+  it("does NOT call a DPA 'auto' when its link could not be fetched", () => {
+    const r = recommend({ ...base, dpa_url_http: 404 }, ["cms"]);
+    expect(r.status).toBe("ukendt");
+    expect(r.recommendation).toBe("undersøg");
+  });
+
+  it("asks Christian to sign when the DPA must be accepted", () => {
+    expect(recommend({ ...base, dpa_status: "skal_accepteres" }, ["cms"]).recommendation).toBe("acceptér/underskriv");
+  });
+
+  it("an unassessed vendor is 'undersøg', never silently fine", () => {
+    expect(recommend(undefined, ["cms"]).recommendation).toBe("undersøg");
+  });
+
+  it("flags health products routed outside the EU — and not EU vendors", () => {
+    expect(recommend(base, ["fd-sundhed", "cms"]).sensitiveOutsideEU).toBe(true);
+    expect(recommend({ ...base, transfer_basis: "EU" }, ["fd-sundhed"]).sensitiveOutsideEU).toBe(false);
+    expect(recommend(base, ["cms"]).sensitiveOutsideEU).toBe(false);
+  });
+
+  it("a vendor that is not a processor needs nothing and is not flagged", () => {
+    const r = recommend({ ...base, dpa_status: "ikke_databehandler", transfer_basis: "ukendt" }, ["fd-sundhed"]);
+    expect(r.recommendation).toBe("ingen handling");
+    expect(r.sensitiveOutsideEU).toBe(false);
   });
 });

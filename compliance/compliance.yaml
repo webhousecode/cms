@@ -1,5 +1,5 @@
 # F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.
-scanned_at: "2026-09-26T08:36:56.748Z"
+scanned_at: "2026-09-26T08:48:10.457Z"
 projects_total: 40
 projects_scanned: 39
 vendors:
@@ -17,12 +17,19 @@ vendors:
       - "broberg-ai/broberg-id .github/workflows/deploy.yml:63 (env FLY_API_TOKEN)"
       - "broberg-ai/broberg-id .github/workflows/deploy.yml:63 (env FLY_API_TOKEN)"
       - "webhousecode/buddy .github/workflows/deploy-cloud-fly.yml:91 (env FLY_API_TOKEN)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://fly.io/documents/"
+    dpa_url_http: 200
+    action: "Sign in → Documents (fly.io/documents) → sign the DPA (pre-signed by Fly.io, active once customer signs)"
+    transfer_basis: "DPF"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: true
+    notes: "Fly.io is active on EU-US/UK/Swiss DPF; DPA not in effect until the customer signs it in the dashboard."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: tigris
     name: "Tigris"
     purpose: "Objektlager"
@@ -32,12 +39,19 @@ vendors:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:95 (host console.tigris.dev)"
       - "broberg-ai/trail apps/server/scripts/verify-f212-5-backup-freshness.ts:26 (host fly.storage.tigris.dev)"
       - "broberg-ai/trail apps/server/src/services/backup/freshness.ts:29 (host fly.storage.tigris.dev)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://www.tigrisdata.com/docs/legal/data-processing/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "Service Agreement §22.3 incorporates the DPA; SCC Module 2/3 in DPA; not on DPF list; EU-only possible via eur multi-region or fra+ams dual-region buckets (default is global)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: cloudflare
     name: "Cloudflare"
     purpose: "DNS, CDN, R2-lager, Turnstile"
@@ -51,12 +65,19 @@ vendors:
       - "broberg-ai/cardmem apps/lens-cloud/.env.example:23 (env R2_BUCKET)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:358 (host developers.cloudflare.com)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:362 (host api.cloudflare.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://www.cloudflare.com/cloudflare-customer-dpa/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "Self-Serve Subscription Agreement §6.1 incorporates the DPA by reference; R2 supports EU jurisdiction buckets but CDN/DNS process globally; DPF status 'Active - re-certification under review'."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: resend
     name: "Resend"
     purpose: "Transaktionsmails"
@@ -70,12 +91,19 @@ vendors:
       - "webhousecode/cms packages/cms-admin/package.json:27 (npm @broberg/mail)"
       - "webhousecode/cms packages/cms-admin/src/components/settings/email-settings-panel.tsx:248 (env RESEND_API_KEY)"
       - "broberg-ai/components packages/mail/src/index.ts:36 (env RESEND_ENDPOINT)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://resend.com/legal/dpa"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: false
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "eu-west-1 only changes the sending region; all account data, logs and metadata are stored in the US; DPF 'Active - re-certification under review'."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: stripe
     name: "Stripe"
     purpose: "Betaling"
@@ -89,12 +117,19 @@ vendors:
       - "broberg-ai/components packages/stripe/src/index.ts:30 (env STRIPE_API_VERSION)"
       - "broberg-ai/mailworker src/journey/booklet.ts:32 (env STRIPE_RE)"
       - "broberg-ai/mailworker src/journey/booklet.ts:38 (env STRIPE_RE)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://stripe.com/legal/dpa"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: false
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "DPA forms part of the Stripe agreement; EEA accounts contract with Stripe Payments Europe Ltd (Ireland) but data may be transferred globally."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: supabase
     name: "Supabase"
     purpose: "Database + auth"
@@ -108,12 +143,19 @@ vendors:
       - "webhousecode/fysiodk-aalborg-sport .github/workflows/renew-apple-secret.yml:30 (env SUPABASE_ACCESS_TOKEN)"
       - "webhousecode/fysiodk-aalborg-sport .github/workflows/renew-apple-secret.yml:30 (env SUPABASE_ACCESS_TOKEN)"
       - "webhousecode/whop app/(dashboard)/databases/database-card.tsx:20 (env SUPABASE_PLANS)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://supabase.com/legal/dpa"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "DPA says acceptance of the Agreement has the same effect as signing the SCCs; not on DPF list; EU regions incl. Stockholm eu-north-1 and Frankfurt."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: turso
     name: "Turso"
     purpose: "Database (libSQL)"
@@ -127,12 +169,19 @@ vendors:
       - "broberg-ai/components apps/discovery/enroll.ts:128 (env TURSO_DATABASE_URL)"
       - "broberg-ai/contentpush apps/web/.env.example:8 (env TURSO_DATABASE_URL)"
       - "broberg-ai/contentpush apps/web/drizzle.config.ts:5 (env TURSO_DATABASE_URL)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://turso.tech/terms-of-use"
+    dpa_url_http: 200
+    action: "Log in → Documents section → execute the Data Processing Agreement (paid subscribers only; blog says Scaler/Pro/Enterprise)"
+    transfer_basis: "ukendt"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "DPA only on paid plans and must be executed manually; not on DPF list; EU location aws-eu-west-1 (Ireland) available."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: aws
     name: "Amazon Web Services"
     purpose: "Hosting/lager (S3/Lightsail)"
@@ -145,12 +194,19 @@ vendors:
       - "broberg-ai/trail apps/server/package.json:14 (npm @aws-sdk/client-s3)"
       - "broberg-ai/trail apps/server/package.json:15 (npm @aws-sdk/lib-storage)"
       - "webhousecode/whop package.json:21 (npm @aws-sdk/client-lightsail)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://aws.amazon.com/compliance/gdpr-center/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "AWS DPA is part of the AWS Service Terms and SCCs apply automatically; Amazon Web Services, Inc. is a covered entity under Amazon.com's active DPF certification."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: mistral
     name: "Mistral AI"
     purpose: "AI-modeller (EU)"
@@ -164,12 +220,19 @@ vendors:
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (env MISTRAL_API_KEY)"
       - "broberg-ai/cardmem apps/agent/src/lens/critic-vision.selftest.ts:5 (env MISTRAL_API_KEY)"
       - "broberg-ai/cardmem apps/agent/src/lens/critic-vision.selftest.ts:5 (env MISTRAL_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://legal.mistral.ai/terms/data-processing-addendum"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "French company, data hosted in EU by default; API inputs/outputs are used for training by default unless opted out (Admin panel → Privacy toggle)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: openai
     name: "OpenAI"
     purpose: "AI-modeller"
@@ -183,12 +246,19 @@ vendors:
       - "broberg-ai/cardmem apps/web/src/components/settings-secrets.tsx:894 (env OPENAI_API_KEY)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:385 (host platform.openai.com)"
       - "webhousecode/cms packages/cms-admin/src/app/api/admin/deploy/download-zip/route.ts:69 (env OPENAI_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://cdn.openai.com/pdf/openai-data-processing-addendum.pdf"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "DPA is incorporated into the Services Agreement (EEA customers contract with OpenAI Ireland); a signed copy can also be executed via OpenAI's DPA form; not on DPF list; EU data residency only for sales-approved eligible customers on new projects."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: anthropic
     name: "Anthropic"
     purpose: "AI-modeller"
@@ -202,12 +272,19 @@ vendors:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:66 (host console.anthropic.com)"
       - "webhousecode/cms docker-compose.yml:16 (env ANTHROPIC_API_KEY)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:376 (host console.anthropic.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://www.anthropic.com/legal/data-processing-addendum"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: false
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "Commercial Terms incorporate the DPA and forbid training on customer content; first-party API offers only 'us'/'global' inference geo (EU only via Bedrock/Vertex); not on DPF list."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: google-ai
     name: "Google (Gemini/Vertex AI)"
     purpose: "AI-modeller"
@@ -221,12 +298,19 @@ vendors:
       - "webhousecode/cms packages/cms-admin/src/lib/ai-config.ts:134 (env GEMINI_API_KEY)"
       - "webhousecode/cms packages/cms-admin/src/lib/ai/client.ts:90 (env GEMINI_API_KEY)"
       - "broberg-ai/components scripts/inventory-data.mjs:94 (env GEMINI_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://cloud.google.com/terms/data-processing-addendum"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "CDPA is incorporated into Google Cloud terms (Vertex); Gemini API Paid Services use Google's processor DPA and no training, and EEA-facing apps must use Paid Services; Google LLC active on DPF (SCC appendix not verified)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: deepinfra
     name: "DeepInfra"
     purpose: "AI-modeller"
@@ -235,12 +319,19 @@ vendors:
       - "broberg-ai/ai-sdk .env.example:14 (env DEEPINFRA_API_KEY)"
       - "broberg-ai/ai-sdk src/cost/default-hosts.ts:18 (host api.deepinfra.com)"
       - "cbroberg/pitch lib/ai-routes.ts:76 (env DEEPINFRA_MODEL)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "mangler"
+    dpa_url: "https://deepinfra.com/privacy"
+    dpa_url_http: 200
+    action: "No public DPA found; ask policy@deepinfra.com or trust.deepinfra.com (portal returned 403)"
+    transfer_basis: "ukendt"
+    eu_region_possible: false
+    recommendation: "erstat/begræns"
+    sensitive_data_outside_eu: false
+    notes: "Privacy policy says data is processed in the United States; no DPA on public pages; not on DPF list; states it does not store or train on API inputs."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: openrouter
     name: "OpenRouter"
     purpose: "AI-routing"
@@ -254,12 +345,19 @@ vendors:
       - "broberg-ai/cardmem apps/agent/src/lens/critic-vision.ts:124 (env OPENROUTER_API_KEY)"
       - "broberg-ai/components packages/lens-engine/src/vision.ts:47 (env OPENROUTER_API_KEY)"
       - "webhousecode/sanneandersen site/.env.example:12 (env OPENROUTER_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://openrouter.ai/data-processing-agreement"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "Terms §10.2 incorporates the DPA for commercial users (help article says countersigned DPA is enterprise-only); EU-only processing requires the EU API via an enterprise Order Form; upstream model providers are separate sub-processors; not on DPF list."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: deepseek
     name: "DeepSeek"
     purpose: "AI-modeller"
@@ -271,12 +369,19 @@ vendors:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:69 (host platform.deepseek.com)"
       - "broberg-ai/components packages/secret-scan/src/index.ts:74 (env DEEPSEEK_API_KEY)"
       - "broberg-ai/components packages/secret-scan/src/index.ts:393 (env DEEPSEEK_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "mangler"
+    dpa_url: "https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: false
+    recommendation: "erstat/begræns"
+    sensitive_data_outside_eu: false
+    notes: "China-based (Hangzhou DeepSeek), PRC law governs, no DPA or processor terms offered; not suitable for personal data."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: elevenlabs
     name: "ElevenLabs"
     purpose: "Tale (TTS)"
@@ -290,12 +395,19 @@ vendors:
       - "webhousecode/cms packages/cms-admin/src/app/api/podcast/[slug]/estimate/route.ts:57 (env ELEVENLABS_API_KEY)"
       - "webhousecode/cms packages/cms-admin/src/lib/ai/client.ts:94 (env ELEVENLABS_API_KEY)"
       - "broberg-ai/contentpush apps/web/src/server/lib/scriptCompile.ts:42 (env ELEVENLABS_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://elevenlabs.io/dpa"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "DPA applies automatically to self-serve (Terms); EU data residency is Enterprise-only via a separate isolated environment."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: azure
     name: "Microsoft Azure"
     purpose: "Tale/AI"
@@ -309,12 +421,19 @@ vendors:
       - "webhousecode/buddy apps/voice/src/lytning.ts:56 (env AZURE_SPEECH_KEY)"
       - "broberg-ai/cardmem apps/server/src/api/tts.ts:6 (env AZURE_SPEECH_KEY)"
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:92 (host portal.azure.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://www.microsoft.com/licensing/docs/view/Microsoft-Products-and-Services-Data-Protection-Addendum-DPA"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "Microsoft Products and Services DPA governs Azure subscriptions; Speech processes data only in the resource's region and EU regions fall under the EU Data Boundary; Microsoft DPF 'Active - re-certification under review'."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: bfl
     name: "Black Forest Labs"
     purpose: "Billedgenerering"
@@ -324,12 +443,19 @@ vendors:
       - "broberg-ai/ai-sdk src/cost/default-hosts.ts:37 (host api.eu.bfl.ai)"
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:100 (host dashboard.bfl.ai)"
       - "broberg-ai/contentpush apps/web/src/server/env.ts:20 (env BFL_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://bfl.ai/legal/privacy-policy"
+    dpa_url_http: 200
+    action: "No public DPA; request via Contact Sales (enterprise contract) or privacy@blackforestlabs.ai"
+    transfer_basis: "SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Standard FLUX API terms have no DPA and grant BFL rights to use inputs/outputs incl. model training; only enterprise-contract data is treated as processed on behalf of customers (EEA entity: BFL GmbH, Freiburg)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: github
     name: "GitHub"
     purpose: "Kode, CI, API"
@@ -343,12 +469,19 @@ vendors:
       - "broberg-ai/broberg-id scripts/fikstur-app.ts:43 (env GITHUB_CLIENT_SECRET)"
       - "webhousecode/buddy .github/workflows/build-edge-image.yml:58 (env GITHUB_TOKEN)"
       - "webhousecode/buddy apps/server/src/queue/phantom-f-number.ts:42 (host github.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://docs.github.com/en/site-policy/privacy-policies/github-data-protection-agreement"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "DPA forms part of the GitHub Customer Agreement for Online Services (previews excluded); in-region storage only if you use a service offering a specific geographic area."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: google-workspace
     name: "Google (Workspace/Gmail/Calendar/OAuth)"
     purpose: "Mail, kalender, login"
@@ -362,24 +495,38 @@ vendors:
       - "broberg-ai/cardmem apps/server/src/auth.ts:413 (env GOOGLE_OAUTH_CLIENT_ID)"
       - "webhousecode/cms packages/cms-admin/src/lib/lighthouse/psi-engine.ts:9 (host www.googleapis.com)"
       - "cbroberg/coverletter-generator components/app-sidebar.tsx:93 (host drive.google.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://knowledge.workspace.google.com/admin/compliance/privacy-compliance-and-records-for-google-workspace-and-cloud-identity"
+    dpa_url_http: 200
+    action: "Admin console (super admin) → Menu → Account → Account settings → Legal and compliance → Security and Privacy Additional Terms → Cloud Data Processing Addendum → Review and Accept"
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: true
+    notes: "Google says opt-in is only needed if your agreement doesn't already incorporate the CDPA (https://cloud.google.com/terms/data-processing-addendum), and accepting is harmless if it does; Google OAuth login is identity only."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: google-maps
     name: "Google Maps"
     purpose: "Kort"
     products: ["cms"]
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/media/page.tsx:1907 (host maps.google.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://mapsplatform.google.com/resources/trust-center/gdpr/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Google acts as independent controller for Maps Platform under the Controller-Controller Data Protection Terms (https://business.safety.google/controllerterms/), which use SCCs/DPF."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: google-psi
     name: "Google PageSpeed Insights"
     purpose: "Performance-måling"
@@ -387,12 +534,19 @@ vendors:
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/api/admin/lighthouse/scan/route.ts:42 (env GOOGLE_PSI_API_KEY)"
       - "webhousecode/cms packages/cms-admin/src/lib/site-config.ts:351 (env GOOGLE_PSI_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://developers.google.com/speed/docs/insights/v5/get-started"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "The API only takes a public URL to analyse, so no personal data is sent; no DPA is offered."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: firebase
     name: "Google Firebase (FCM)"
     purpose: "Push-notifikationer"
@@ -404,12 +558,19 @@ vendors:
       - "broberg-ai/fd-sundhed apps/web/src/lib/api-health-check.ts:214 (env FIREBASE_PROJECT_ID)"
       - "webhousecode/fysiodk-aalborg-sport apps/web/.env.example:29 (env FIREBASE_PROJECT_ID)"
       - "webhousecode/fysiodk-aalborg-sport apps/web/.env.example:30 (env FIREBASE_CLIENT_EMAIL)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://firebase.google.com/terms/data-processing-terms"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "Firebase Data Processing and Security Terms are incorporated into the Firebase terms and explicitly cover Cloud Messaging; data may be processed wherever Google has facilities."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: apple
     name: "Apple (APNs/Sign in/App Store)"
     purpose: "Push, login, app-distribution"
@@ -423,12 +584,19 @@ vendors:
       - "broberg-ai/fd-sundhed .github/workflows/renew-apple-secret.yml:27 (env APPLE_TEAM_ID)"
       - "broberg-ai/fd-sundhed .github/workflows/renew-apple-secret.yml:27 (env APPLE_TEAM_ID)"
       - "webhousecode/fysiodk-aalborg-sport .github/workflows/renew-apple-secret.yml:26 (env APPLE_TEAM_ID)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://developer.apple.com/support/terms/apple-developer-program-license-agreement/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "The Apple Developer Program License Agreement contains no processor/DPA terms for APNs, Sign in with Apple or App Store Connect; Apple offers none."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: webpush
     name: "Web Push (browserens push-tjeneste)"
     purpose: "Push-notifikationer"
@@ -442,12 +610,19 @@ vendors:
       - "broberg-ai/fd-sundhed apps/web/package.json:53 (npm @broberg/webpush)"
       - "broberg-ai/fd-sundhed apps/web/src/lib/push.ts:35 (env VAPID_PRIVATE_KEY)"
       - "webhousecode/fysiodk-aalborg-sport apps/web/package.json:41 (npm @broberg/webpush)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://hacks.mozilla.org/2016/01/web-push-arrives-in-firefox-44/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: false
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Browser push services only relay payloads end-to-end encrypted to the browser with a per-site anonymous identifier; no vendor DPA exists (Chrome goes via FCM, Safari via Apple)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: linkedin
     name: "LinkedIn"
     purpose: "Login"
@@ -460,12 +635,19 @@ vendors:
       - "cbroberg/coverletter-generator app/(app)/create/page.tsx:155 (host linkedin.com)"
       - "cbroberg/coverletter-generator app/(app)/settings/page.tsx:541 (host linkedin.com)"
       - "broberg-ai/xrt81 apps/web/src/components/ProfileFields.tsx:70 (host www.linkedin.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://www.linkedin.com/legal/l/bd-dpa"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "For Sign In with LinkedIn, LinkedIn is the identity provider; the API Terms still automatically incorporate the BD DPA (controller-to-controller or processor modules, SCCs, Irish law)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: simply
     name: "Simply.com"
     purpose: "Domæner/DNS"
@@ -473,12 +655,19 @@ vendors:
     evidence:
       - "webhousecode/dns-mcp src/clients/simply.ts:1 (host api.simply.com)"
       - "webhousecode/dns-mcp src/clients/simply.ts:36 (env SIMPLY_ACCOUNT)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://www.simply.com/compliance/"
+    dpa_url_http: 200
+    action: "Simply.com Kontrolpanel (logged in) → find the databehandleraftale and sign it there"
+    transfer_basis: "EU"
+    eu_region_possible: "ukendt"
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Danish company with a fixed standard DPA they won't modify; must be signed in the control panel; hosting location isn't stated on the page."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: pcloud
     name: "pCloud"
     purpose: "Backup-lager"
@@ -486,12 +675,19 @@ vendors:
     evidence:
       - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/pcloud.ts:27 (host ewebdav.pcloud.com)"
       - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/pcloud.ts:28 (host webdav.pcloud.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "mangler"
+    dpa_url: "https://www.pcloud.com/business_agreement.html"
+    dpa_url_http: 200
+    action: "No public DPA found; request one from pCloud via https://www.pcloud.com/contact or privacy@pcloud.com"
+    transfer_basis: "ukendt"
+    eu_region_possible: true
+    recommendation: "erstat/begræns"
+    sensitive_data_outside_eu: false
+    notes: "Swiss entity (pCloud International AG); the Business Agreement has no Art. 28 DPA; the EU data region is Luxembourg and is chosen at signup."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: gatewayapi
     name: "GatewayAPI"
     purpose: "SMS"
@@ -500,24 +696,38 @@ vendors:
       - "broberg-ai/broberg-id src/contact-notify.ts:107 (env GATEWAYAPI_TOKEN)"
       - "broberg-ai/components packages/sms/src/delivery.ts:85 (env GATEWAYAPI_STATES)"
       - "broberg-ai/components packages/sms/src/delivery.ts:119 (env GATEWAYAPI_STATES)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://onlinecity.io/legal-documents/gatewayapi/dpa-eu"
+    dpa_url_http: 200
+    action: "DPA takes effect on both parties' signature; how to sign isn't stated online, so check the GatewayAPI dashboard or ask support"
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Danish (OnlineCity, Odense); sub-processors are Hetzner (DE/FI) and HeySender (DK), with an EU setup option; GatewayAPI acts as controller for the messaging itself and processor for the 30-day traffic log."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: twilio
     name: "Twilio"
     purpose: "SMS/tale"
     products: ["cardmem"]
     evidence:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:82 (host console.twilio.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://www.twilio.com/en-us/legal/data-protection-addendum"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "The DPA is deemed signed when you accept Twilio's terms; transfers use DPF, then BCRs, then SCCs; the Ireland (IE1) region exists but not every product is available there."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: complimenta
     name: "Complimenta"
     purpose: "Booking (klinik-system)"
@@ -527,12 +737,19 @@ vendors:
       - "broberg-ai/fd-sundhed apps/web/scripts/aflys-testtid.mjs:36 (env COMPLIMENTA_BASE_URL)"
       - "broberg-ai/fdaa packages/complimenta/.env.example:9 (env COMPLIMENTA_BASE_URL)"
       - "broberg-ai/fdaa packages/complimenta/.env.example:9 (host api-demo.complimentawork.dk)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://complimenta.com/support/privatlivspolitik/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Complimenta is the clinic's processor under the clinic's own DPA, not ours; our API access happens on the clinic's behalf, so we need a DPA with the clinic. Their privacy page still cites Privacy Shield/model clauses."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: opkald
     name: "Opkald.ai"
     purpose: "Telefonsvarer/opkald"
@@ -540,12 +757,19 @@ vendors:
     evidence:
       - "broberg-ai/fd-sundhed apps/web/src/app/api/opkald/demo-forloeb/route.ts:24 (env OPKALD_DEMO_API_KEY)"
       - "broberg-ai/fd-sundhed apps/web/src/app/api/opkald/demo-forloeb/route.ts:44 (env OPKALD_DEMO_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://opkald.ai/"
+    dpa_url_http: 200
+    action: "No public DPA document; request it from hej@opkald.ai"
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Danish service; its site says it works as data processor with a databehandleraftale and stores data in the EU."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: zoom
     name: "Zoom"
     purpose: "Videomøder"
@@ -553,12 +777,19 @@ vendors:
     evidence:
       - "broberg-ai/cardmem apps/web/src/components/chat.tsx:2975 (env ZOOM_OPTS)"
       - "broberg-ai/cardmem apps/web/src/components/chat.tsx:2982 (env ZOOM_OPTS)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://explore.zoom.us/docs/doc/Zoom_GLOBAL_DPA.pdf"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "Zoom's trust page (https://www.zoom.com/en/trust/gdpr/) says the DPA is incorporated into the Terms of Service; DPF participant since 10 Jul 2023; EU data-centre regions only on eligible paid accounts."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: daily
     name: "Daily.co"
     purpose: "Videomøder"
@@ -566,12 +797,19 @@ vendors:
     evidence:
       - "webhousecode/buddy apps/server/src/nightly-discord-report.ts:20 (env DAILY_INTERVAL_MS)"
       - "webhousecode/buddy apps/server/src/nightly-discord-report.ts:157 (env DAILY_INTERVAL_MS)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://www.daily.co/legal/data-processing-addendum/"
+    dpa_url_http: 200
+    action: "Request and sign via help@daily.co (per https://www.daily.co/security/gdpr-compliance/)"
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: false
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "The DPA says primary processing is in the US and transfers go via DPF with SCC fallback; DPF listing not independently verified."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: livekit
     name: "LiveKit"
     purpose: "Video/lyd i realtid"
@@ -579,12 +817,19 @@ vendors:
     evidence:
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host docs.livekit.io)"
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host blog.livekit.io)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://livekit.com/legal/data-processing-addendum"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "DPA forms part of the ToS; DPF first with SCCs as fallback. Region pinning covers media only; observability and inference data may leave the pinned region. DPF status comes from LiveKit's privacy policy (the DPF list page could not be read)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: opensubtitles
     name: "OpenSubtitles"
     purpose: "Undertekster"
@@ -592,12 +837,19 @@ vendors:
     evidence:
       - "cbroberg/moovyy watch-service/index.js:1251 (env OPENSUBTITLES_API_KEY)"
       - "cbroberg/moovyy watch-service/index.js:1252 (env OPENSUBTITLES_API_KEY)"
-    # F201.2
-    dpa_status: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
     dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    dpa_url_http: null
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Public subtitle lookup with an app API key and no personal data sent; the vendor's pages returned 403, so its terms could not be read."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: subdl
     name: "SubDL"
     purpose: "Undertekster"
@@ -605,12 +857,19 @@ vendors:
     evidence:
       - "cbroberg/moovyy watch-service/subtitle-fetch.js:257 (env SUBDL_S)"
       - "cbroberg/moovyy watch-service/subtitle-fetch.js:257 (host api.subdl.com)"
-    # F201.2
-    dpa_status: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
     dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    dpa_url_http: null
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Public subtitle lookup with no personal data sent; subdl.com/terms returned 403, and commercial API use requires an active paid plan (per a search snippet)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: tmdb
     name: "TMDB"
     purpose: "Filmdata"
@@ -618,24 +877,38 @@ vendors:
     evidence:
       - "cbroberg/moovyy cloud/src/api-oensker.js:182 (host api.themoviedb.org)"
       - "cbroberg/moovyy cloud/src/api-oensker.js:183 (env TMDB_TOKEN)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://www.themoviedb.org/api-terms-of-use"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "The API terms contain no DPA or GDPR clauses; this is a public metadata lookup where we only send an API key."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: unsplash
     name: "Unsplash"
     purpose: "Billeder"
     products: ["cms"]
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/editor/image-gallery-editor.tsx:177 (host images.unsplash.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://unsplash.com/api-terms"
+    dpa_url_http: 401
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "The API terms name the developer an independent controller. The required hotlinking lets Unsplash see end-user IPs and image views, which belongs in the privacy notice."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: dawa
     name: "DAWA (Dataforsyningen)"
     purpose: "Adresseopslag"
@@ -643,12 +916,19 @@ vendors:
     evidence:
       - "broberg-ai/xrt81 apps/server/src/lib/geocode.ts:22 (host api.dataforsyningen.dk)"
       - "broberg-ai/xrt81 apps/web/src/components/ui/AddressAutocomplete.tsx:62 (host api.dataforsyningen.dk)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://dawadocs.dataforsyningen.dk/dok/om"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Free Danish government address data (Grunddataprogrammet); only the lookup query is sent."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: vercel
     name: "Vercel"
     purpose: "Hosting"
@@ -657,12 +937,19 @@ vendors:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:78 (host vercel.com)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:340 (host vercel.com)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:344 (host api.vercel.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://vercel.com/legal/dpa"
+    dpa_url_http: 200
+    action: "Upgrade to a Pro or Enterprise plan. The DPA applies automatically there; Hobby (free) has no DPA."
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "The DPA text uses SCCs; the DPF certification comes from Vercel's changelog. Functions default to iad1 (US) and must be set to an EU region such as fra1 or cdg1."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: netlify
     name: "Netlify"
     purpose: "Hosting"
@@ -670,12 +957,19 @@ vendors:
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:349 (host docs.netlify.com)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:353 (host api.netlify.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://www.netlify.com/gdpr-ccpa/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "The GDPR page says the DPA (PDF at netlify.com/pdf/netlify-dpa.pdf) is incorporated into the terms. Functions default to us-east-2 and can be set to eu-central-1."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: npm
     name: "npm"
     purpose: "Pakke-udgivelse"
@@ -689,12 +983,19 @@ vendors:
       - "cbroberg/coverletter-generator package-lock.json:102 (host registry.npmjs.org)"
       - "cbroberg/coverletter-generator package-lock.json:114 (host registry.npmjs.org)"
       - "webhousecode/dns-mcp package-lock.json:29 (host registry.npmjs.org)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://docs.npmjs.com/policies/privacy/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: false
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Only public package publishing; npm's privacy page mentions no DPA covering npm (the GitHub DPA covers GitHub Online Services)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: smsdk
     name: "SMS.dk"
     purpose: "SMS"
@@ -702,12 +1003,19 @@ vendors:
     evidence:
       - "broberg-ai/components packages/sms/src/delivery.ts:221 (env SMSDK_STATES)"
       - "broberg-ai/components packages/sms/src/delivery.ts:229 (env SMSDK_LABELS)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://sms.dk/sms-dk-er-gdpr-kompatibel/"
+    dpa_url_http: 200
+    action: "Log in at SMS.dk, open the personal menu, choose 'GDPR' and enter the standard databehandleraftale."
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Run by Compaya A/S; the page says data is hosted in Denmark."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: verda
     name: "Verda (GPU-cloud)"
     purpose: "GPU/AI-hosting"
@@ -715,24 +1023,38 @@ vendors:
     evidence:
       - "broberg-ai/voice-engine scripts/gpu_drill.py:41 (env VERDA_CLIENT_ID)"
       - "broberg-ai/voice-engine scripts/gpu_drill.py:42 (env VERDA_CLIENT_SECRET)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://verda.com/terms-and-conditions"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "Section 10 ('Data Processing Terms') is built into the T&C. Data is stored in the EEA, with transfers only exceptionally under SCCs plus advance notice; sub-processors at trust.verda.com/subprocessors."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: tailscale
     name: "Tailscale"
     purpose: "Privat netværk"
     products: ["buddy"]
     evidence:
       - "webhousecode/buddy apps/ios/Buddy/Views/OnboardingView.swift:70 (host din-mac.ts.net)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://tailscale.com/dpa"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: false
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "The DPA is incorporated by reference for business use and relies on SCCs, with no DPF mention. Data is processed in Canada, Germany, the US and the UK, with no EU residency option."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: google-play
     name: "Google Play"
     purpose: "App-distribution"
@@ -744,12 +1066,19 @@ vendors:
       - "webhousecode/fysiodk-aalborg-sport apps/web/src/app/(app)/app/admin/kommunikation/campaign-form.tsx:53 (host play.google.com)"
       - "broberg-ai/storeform schemas/google-play.content-rating.yaml:46 (host play.google.com)"
       - "broberg-ai/storeform schemas/google-play.data-safety.location.yaml:31 (host play.google.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://play.google/developer-distribution-agreement.html"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: false
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "The DDA says using Play means accepting Google's controller-to-controller data protection terms, so Google is its own controller, not our processor; transfers use SCCs."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: deepl
     name: "DeepL"
     purpose: "Oversættelse"
@@ -758,12 +1087,19 @@ vendors:
       - "broberg-ai/ai-sdk src/providers/deepl.ts:20 (env DEEPL_API_KEY)"
       - "broberg-ai/ai-sdk src/providers/deepl.ts:21 (env DEEPL_API_KEY)"
       - "broberg-ai/components scripts/inventory-data.mjs:94 (env DEEPL_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://www.deepl.com/en/pro-license"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "EU"
+    eu_region_possible: "ukendt"
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "DeepL SE (Cologne). The DPA (in DeepL's Trust Centre) is part of the Pro terms and binds when you subscribe. The free API ('DeepL API Developer') forbids personal data, so a paid plan is required; DeepL chooses where data is processed."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: fal
     name: "fal.ai"
     purpose: "AI-modeller (billede/video)"
@@ -777,12 +1113,19 @@ vendors:
       - "webhousecode/sanneandersen site/src/lib/ai/client.ts:11 (env FAL_KEY)"
       - "webhousecode/sanneandersen site/src/lib/ai/client.ts:11 (env FAL_KEY)"
       - "broberg-ai/super-agent scripts/aidan/vink.mjs:31 (env FAL_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://fal.ai/legal/data-processing-addendum"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "link"
+    sensitive_data_outside_eu: true
+    notes: "The DPA is incorporated into the online terms and uses SCCs (DPF only if fal later notifies it); the privacy policy makes no DPF claim."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: huggingface
     name: "Hugging Face"
     purpose: "AI-modeller"
@@ -793,12 +1136,19 @@ vendors:
       - "broberg-ai/forager src/scout-da/sources/dynaword-client.ts:105 (host huggingface.co)"
       - "broberg-ai/voice-engine .github/workflows/image.yml:115 (host huggingface.co)"
       - "broberg-ai/voice-engine Dockerfile:181 (host huggingface.co)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://huggingface.co/docs/inference-endpoints/en/security"
+    dpa_url_http: 200
+    action: "Get an Enterprise Hub or Enterprise plan (huggingface.co/enterprise); the GDPR DPA is offered only through that subscription."
+    transfer_basis: "SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: true
+    notes: "Downloading public models sends no personal data, so no DPA is needed for that part. Inference with personal data needs the Enterprise DPA, which uses SCCs."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: runpod
     name: "RunPod"
     purpose: "GPU/AI-hosting"
@@ -808,12 +1158,19 @@ vendors:
       - "broberg-ai/trail apps/scout/training/runpod_train.py:78 (host api.runpod.io)"
       - "broberg-ai/voice-engine scripts/gpu_drill.py:51 (env RUNPOD_KEY_FILE)"
       - "broberg-ai/voice-engine scripts/gpu_drill.py:55 (env RUNPOD_KEY_FILE)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://www.runpod.io/legal/data-processing-agreement"
+    dpa_url_http: 200
+    action: "Fill in the signature block and required information in the DPA and submit it via the link on the DPA page; it binds only after that."
+    transfer_basis: "SCC"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Special-category data (incl. health) is barred. EU data centers can be chosen (e.g. EU-SE-1, EU-RO-1), but the DPA gives no hard EU residency guarantee."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: requesty
     name: "Requesty"
     purpose: "AI-routing"
@@ -821,12 +1178,19 @@ vendors:
     evidence:
       - "broberg-ai/ai-sdk src/providers/requesty.ts:5 (env REQUESTY_API_KEY)"
       - "broberg-ai/ai-sdk src/providers/requesty.ts:14 (host router.requesty.ai)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://www.requesty.ai/dpa"
+    dpa_url_http: 200
+    action: "Email sales@requesty.ai with company name + signatory contact; they send the standard Art. 28 DPA for e-signature. Zero Data Retention also only on written request."
+    transfer_basis: "ukendt"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "EU gateway in Frankfurt can keep the full request path in the EU; DPA page names no transfer mechanism and Requesty Ltd is not on the DPF list."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: tavily
     name: "Tavily"
     purpose: "Websøgning (AI)"
@@ -834,12 +1198,19 @@ vendors:
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:427 (host tavily.com)"
       - "webhousecode/cms packages/cms-admin/src/components/settings/ai-settings-panel.tsx:260 (host tavily.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://www.tavily.com/privacy"
+    dpa_url_http: 200
+    action: "Request the DPA from support@tavily.com (per Tavily Trust Center); not published publicly."
+    transfer_basis: "SCC"
+    eu_region_possible: false
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "US company (AlphaAI Technologies Inc.), not on DPF list; ToS lets Tavily and its AI providers use customer input for model training, and privacy policy says SCC protections apply to enterprise subscribers."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: brave
     name: "Brave Search"
     purpose: "Websøgning"
@@ -847,12 +1218,19 @@ vendors:
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/settings/ai-settings-panel.tsx:259 (host api.search.brave.com)"
       - "webhousecode/cms packages/cms-admin/src/components/settings/mcp-settings-panel.tsx:378 (env BRAVE_API_KEY)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://cdn.search.brave.com/search-api/web/v1/client/_app/immutable/assets/brave-search-api-dpa-2025-09-09.DRXCoye6.pdf"
+    dpa_url_http: 403
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Brave's DPA (referenced by the API ToS) explicitly excludes Search Query Data and states Brave is not a processor for it; DPA otherwise relies on EU SCCs; Brave Software not found on DPF list; query logs kept up to 90 days unless enterprise ZDR."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: perplexity
     name: "Perplexity"
     purpose: "AI-søgning"
@@ -860,12 +1238,19 @@ vendors:
     evidence:
       - "broberg-ai/ai-sdk inventory.json:11427 (host docs.perplexity.ai)"
       - "broberg-ai/ai-sdk inventory.json:11457 (host docs.perplexity.ai)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ukendt"
+    dpa_url: "https://www.perplexity.ai/hub/legal/dpa"
+    dpa_url_http: 403
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: false
+    recommendation: "undersøg"
+    sensitive_data_outside_eu: false
+    notes: "DPA page returned 403 to our fetch; per search-indexed text the DPA is incorporated into the API Terms and uses SCC Modules 2/3, Perplexity AI is active on DPF, and API infra is AWS North America with zero-day prompt retention."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: bunny
     name: "Bunny.net"
     purpose: "CDN/lager"
@@ -873,24 +1258,38 @@ vendors:
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/admin/inline-edit/connect/route.ts:163 (host fonts.bunny.net)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/inline-edit/connect/route.ts:164 (host fonts.bunny.net)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://bunny.net/gdpr/"
+    dpa_url_http: 200
+    action: "Log in to the bunny.net dashboard (panel) and complete the Data Processing Agreement there."
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "BunnyWay d.o.o. is in Ljubljana, Slovenia; CDN edges are global, so EU-only routing/storage regions must be chosen deliberately."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: backblaze
     name: "Backblaze B2"
     purpose: "Objektlager/backup"
     products: ["cms"]
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/settings/backup-settings-panel.tsx:388 (host s3.eu-central-003.backblazeb2.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://www.backblaze.com/company/policy/dpa-for-eea-eu-residents"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "DPA supplements the ToS and customers are deemed to have agreed to SCCs; Backblaze is active on DPF and offers an EU Central region (must be picked at account creation)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: scaleway
     name: "Scaleway"
     purpose: "Hosting/lager (EU)"
@@ -898,12 +1297,19 @@ vendors:
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/settings/backup-settings-panel.tsx:169 (host s3.fr-par.scw.cloud)"
       - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/s3.ts:13 (host s3.fr-par.scw.cloud)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://www-uploads.scaleway.com/DPA_2024_ENG_b0abb5cc26.pdf"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "DPA (June 2024) forms an integral part of the Scaleway services contract; services are located in the EU by default and region is chosen at order time; linked from https://www.scaleway.com/en/contracts/."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: hetzner
     name: "Hetzner"
     purpose: "Hosting/lager (EU)"
@@ -911,24 +1317,38 @@ vendors:
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/settings/backup-settings-panel.tsx:171 (host fsn1.your-objectstorage.com)"
       - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/s3.ts:16 (host fsn1.your-objectstorage.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://docs.hetzner.com/general/company-and-policy/data-protection-at-hetzner/"
+    dpa_url_http: 200
+    action: "In Hetzner account go to https://accounts.hetzner.com/account/dpa, fill data types + data subject categories (Appendix 1) and tick 'I agree to the agreement'."
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Without a concluded DPA Hetzner assumes no third-party personal data is processed; cloud data stays where the chosen location is (avoid US/Singapore locations)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: forwardemail
     name: "Forward Email"
     purpose: "Mail-videresendelse"
     products: ["moovyy"]
     evidence:
       - "cbroberg/moovyy package-lock.json:7576 (host forwardemail.net)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://forwardemail.net/en/dpa"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: false
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "DPA supplements the ToS with SCC Modules 2/3 deemed signed; Delaware (US) company not found on DPF list, subprocessors in US/UK."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: inmobile
     name: "inMobile"
     purpose: "SMS"
@@ -936,12 +1356,19 @@ vendors:
     evidence:
       - "broberg-ai/components packages/sms/src/delivery.ts:166 (env INMOBILE_STATES)"
       - "broberg-ai/components packages/sms/src/delivery.ts:199 (env INMOBILE_STATES)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://www.inmobile.com/en/data-security-compliance"
+    dpa_url_http: 200
+    action: "Existing customers: find/accept the data processing agreement in the inMobile account; otherwise order it via the 'Order Data Processing Agreement & ISAE 3000' form on that page."
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Danish provider hosting exclusively in EU data centres with ISAE 3000 type 2 report from Deloitte."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: quickpay
     name: "QuickPay"
     purpose: "Betaling"
@@ -949,12 +1376,19 @@ vendors:
     evidence:
       - "webhousecode/buddy docker/old-site/arkiv/_dk_webhouse_partnere_.html:161 (host www.quickpay.net)"
       - "webhousecode/buddy docker/old-site/arkiv/_en_webhouse_partners_.html:153 (host www.quickpay.net)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://learn.quickpay.net/public/helpdesk/files/data_processing-agreement.pdf"
+    dpa_url_http: 200
+    action: "Download the QuickPay DPA PDF, fill in our company details, sign and return to QuickPay (the agreement becomes effective on signing)."
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "QuickPay ApS (DK-21822434), Danish law; the helpdesk article that linked the DPA now 404s so return path is not documented."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: polar
     name: "Polar"
     purpose: "Betaling/abonnement"
@@ -962,24 +1396,38 @@ vendors:
     evidence:
       - "cbroberg/coverletter-generator package-lock.json:5634 (host polar.sh)"
       - "cbroberg/pitch package-lock.json:5447 (host polar.sh)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://polar.sh/legal/data-processing-addendum"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: "ukendt"
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "DPA forms part of the Polar Master Services Terms with SCC Module 2; Polar Software, Inc. (San Francisco) not found on DPF list, and as Merchant of Record Polar may be an independent controller for buyer checkout data."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: flexprice
     name: "Flexprice"
     purpose: "Fakturering/forbrug"
     products: ["buddy"]
     evidence:
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host flexprice.io)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://flexprice.io/data-handling"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "ukendt"
+    eu_region_possible: false
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "Clause 8 of the Master Terms (https://flexprice.io/msa) is the DPA; Indian company (Squirrelly Technologies Pvt Ltd) processing in India/US with no named transfer mechanism, and India has no EU adequacy decision."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: piwik
     name: "Piwik PRO"
     purpose: "Analyse"
@@ -987,12 +1435,19 @@ vendors:
     evidence:
       - "webhousecode/buddy docker/old-site/arkiv/_.html:43 (host webhouse.containers.piwik.pro)"
       - "webhousecode/buddy docker/old-site/arkiv/_dk_.html:44 (host webhouse.containers.piwik.pro)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://piwik.pro/wp-content/uploads/2025/08/Piwik-PRO-Business-Data-Agreement.pdf"
+    dpa_url_http: 200
+    action: "Download the Piwik PRO data processing clauses, sign and return countersigned copy to legal+dpa@piwik.pro (clauses take effect on both parties' signature)."
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Piwik PRO SA is in Wroclaw, Poland; default cloud hosting is Elastx in Sweden, with US/HK hosting options that must be avoided."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: google-analytics
     name: "Google Analytics"
     purpose: "Analyse"
@@ -1002,12 +1457,19 @@ vendors:
       - "webhousecode/buddy docker/old-site/arkiv/_dk_.html:260 (host www.google-analytics.com)"
       - "broberg-ai/xrt81 apps/server/src/lib/ga.ts:5 (env GA_AGENDA)"
       - "broberg-ai/xrt81 apps/server/src/lib/ga.ts:104 (env GA_AGENDA)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://support.google.com/analytics/answer/3379636?hl=en"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: false
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "For businesses established in the EEA the Google Ads Data Processing Terms (https://business.safety.google/adsprocessorterms/, which list Google Analytics) are already incorporated; Google LLC is active on DPF; GA4 still widely challenged by EU DPAs."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: slack
     name: "Slack"
     purpose: "Notifikationer"
@@ -1016,12 +1478,19 @@ vendors:
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (env SLACK_BOT_TOKEN)"
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (env SLACK_APP_TOKEN)"
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:97 (host api.slack.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://slack.com/terms-of-service/data-processing"
+    dpa_url_http: 200
+    action: "Have an authorised signatory execute the DPA via the link on slack.com/terms-of-service/data-processing (available on all plans)."
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: true
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: false
+    notes: "Salesforce (Slack) is active on DPF and the DPA includes SCCs; EU data residency exists only on paid plans."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: discord
     name: "Discord"
     purpose: "Notifikationer"
@@ -1035,12 +1504,19 @@ vendors:
       - "webhousecode/cms .github/workflows/security-gate.yml:105 (env DISCORD_WEBHOOK)"
       - "broberg-ai/contentpush apps/web/.env.example:14 (env DISCORD_WEBHOOK_URL)"
       - "broberg-ai/contentpush apps/web/src/server/env.ts:15 (env DISCORD_WEBHOOK_URL)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://support.discord.com/hc/en-us/articles/37891902561687-Data-Processing-Agreement-Discord-as-a-Processor"
+    dpa_url_http: 403
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: false
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Discord's processor DPA only covers partner products such as Custom Audiences, so for plain webhooks Discord acts as its own controller; Discord, Inc. is active on DPF."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: gravatar
     name: "Gravatar"
     purpose: "Profilbilleder (mail-hash)"
@@ -1054,12 +1530,19 @@ vendors:
       - "broberg-ai/fd-sundhed apps/web/src/lib/gravatar.ts:121 (host www.gravatar.com)"
       - "webhousecode/fysiodk-aalborg-sport apps/web/src/lib/gravatar.ts:121 (host www.gravatar.com)"
       - "cbroberg/pitch components/app-sidebar.tsx:17 (host www.gravatar.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://automattic.com/privacy/"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: false
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Gravatar is covered by Automattic's privacy policy with Aut O'Mattic A8C Ireland Ltd as controller for EU users; no Gravatar DPA found; Automattic Inc. is active on DPF, and visitor IPs reach US servers when images load."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: vimeo
     name: "Vimeo"
     purpose: "Video"
@@ -1070,11 +1553,18 @@ vendors:
       - "webhousecode/cms packages/cms-admin/src/components/editor/rich-text-editor.tsx:535 (host player.vimeo.com)"
       - "webhousecode/sanneandersen site/content/sektion-komponenter/qigong-samples-en.json:30 (host i.vimeocdn.com)"
       - "webhousecode/sanneandersen site/content/sektion-komponenter/qigong-samples-en.json:38 (host i.vimeocdn.com)"
-    # F201.2
-    dpa_status: null
-    dpa_url: null
-    transfer_basis: null
-    eu_region_possible: null
-    checked_at: null
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "skal_accepteres"
+    dpa_url: "https://help.vimeo.com/hc/en-us/articles/18332128580241-Does-Vimeo-offer-a-Data-Processing-Agreement"
+    dpa_url_http: 200
+    action: "DPA only on Enterprise/OTT plans (https://vimeo.com/legal/enterprise-terms/dpa); self-serve plans get none, but embed users can sign controller-to-controller SCCs via Vimeo's webform (https://www.vimeo.axdraft.com)."
+    transfer_basis: "DPF+SCC"
+    eu_region_possible: false
+    recommendation: "acceptér/underskriv"
+    sensitive_data_outside_eu: true
+    notes: "Vimeo.com, Inc. is active on DPF; self-serve accounts have no DPA."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
 not_scanned:
   - { project: "lens-fixture", repo: "", reason: "intet repo registreret i cardmem" }

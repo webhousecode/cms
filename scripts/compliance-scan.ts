@@ -125,7 +125,9 @@ const TEXT_EXT = /\.(ts|tsx|js|mjs|cjs|jsx|json|toml|ya?ml|sh|swift|kt|py|go|rb|
 const SKIP_PATH = /(^|\/)(node_modules|dist|build|\.next|vendor|coverage|\.git)\//;
 // Not evidence of USE: fleet hooks, tests, fixtures, docs and examples mention
 // vendors without sending them anything.
-const NOT_USE = /(^|\/)(\.claude|__tests__|tests?|fixtures?|docs?|examples?)\/|\.(test|spec)\.[a-z]+$/;
+const NOT_USE = /(^|\/)(\.claude|__tests__|tests?|fixtures?|docs?|examples?|compliance)\/|\.(test|spec)\.[a-z]+$|(^|\/)compliance-scan\.ts$/;
+// ^ the last two: this scanner's own vendor catalogue and output would
+// otherwise count as every vendor being "used" by the repo that hosts it.
 
 type Hit = { repo: string; file: string; line: number; signal: string };
 type ProjectResult = {
@@ -239,6 +241,50 @@ export function scanProject(p: { slug: string; repo: string | null }, cacheDir =
 // ── YAML (tiny emitter; the file is ours and flat) ───────────────────────────
 const q = (s: string) => JSON.stringify(s);
 
+// ── F201.2: assessments + recommendation ─────────────────────────────────────
+// compliance/assessments.json is the researched source (vendor's own pages,
+// with URL + date). The scan never invents these fields; it only merges them.
+export type Assessment = {
+  id: string;
+  dpa_status: "auto" | "skal_accepteres" | "mangler" | "ikke_databehandler" | "ukendt";
+  dpa_url: string | null;
+  dpa_url_http?: number | null; // measured when the URL was checked
+  action?: string | null;
+  transfer_basis: "EU" | "DPF" | "SCC" | "DPF+SCC" | "ukendt";
+  eu_region_possible: boolean | "ukendt";
+  notes?: string;
+  confidence?: string;
+  checked_at: string;
+};
+
+/** Products that handle health or health-adjacent data (plan §3). */
+export const SENSITIVE_PRODUCTS = new Set(["fd-sundhed", "fysiodk-aalborg-sport", "fysio-dk-aalborg", "sanneandersen", "kai"]);
+
+/**
+ * One recommendation per vendor. A URL that could not be fetched is not a
+ * DPA we can point to — it counts as unknown, never as "auto".
+ */
+export function recommend(a: Assessment | undefined, products: string[]) {
+  const sensitive = products.filter((p) => SENSITIVE_PRODUCTS.has(p));
+  const urlOk = !!a?.dpa_url && a.dpa_url_http === 200;
+  let status = a?.dpa_status ?? "ukendt";
+  if ((status === "auto" || status === "skal_accepteres") && !urlOk) status = "ukendt";
+  const recommendation =
+    status === "ikke_databehandler" ? "ingen handling" :
+    status === "auto" ? "link" :
+    status === "skal_accepteres" ? "acceptér/underskriv" :
+    status === "mangler" ? "erstat/begræns" : "undersøg";
+  const nonEU = !a || a.transfer_basis !== "EU";
+  const sensitiveOutsideEU = status !== "ikke_databehandler" && nonEU && sensitive.length > 0;
+  return { status, recommendation, sensitiveOutsideEU, sensitive };
+}
+
+function loadAssessments(): Map<string, Assessment> {
+  const f = path.join(OUT_DIR, "assessments.json");
+  if (!existsSync(f)) return new Map();
+  return new Map((JSON.parse(readFileSync(f, "utf-8")) as Assessment[]).map((a) => [a.id, a]));
+}
+
 async function main() {
   const only = process.argv.includes("--only") ? process.argv[process.argv.indexOf("--only") + 1] : null;
   const projects = (await listProjects()).filter((p) => !only || p.slug === only);
@@ -260,6 +306,7 @@ async function main() {
   }
 
   mkdirSync(OUT_DIR, { recursive: true });
+  const assessments = loadAssessments();
   const scanned = results.filter((r) => r.status === "scanned");
   const y: string[] = [
     "# F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.",
@@ -277,7 +324,15 @@ async function main() {
     if (v.id === "fly") y.push(`    regions: [${[...new Set(regions.map((r) => r.region))].sort().map(q).join(", ")}]`);
     y.push("    evidence:");
     for (const h of hs.slice(0, 8)) y.push(`      - ${q(`${h.repo} ${h.file}:${h.line} (${h.signal})`)}`);
-    y.push("    # F201.2", "    dpa_status: null", "    dpa_url: null", "    transfer_basis: null", "    eu_region_possible: null", "    checked_at: null");
+    const a = assessments.get(v.id);
+    const r = recommend(a, [...vendorProducts.get(v.id)!]);
+    y.push("    # F201.2 — fra leverandørens egne sider",
+      `    dpa_status: ${q(r.status)}`, `    dpa_url: ${a?.dpa_url ? q(a.dpa_url) : "null"}`,
+      `    dpa_url_http: ${a?.dpa_url_http ?? "null"}`, `    action: ${a?.action ? q(a.action) : "null"}`,
+      `    transfer_basis: ${q(a?.transfer_basis ?? "ukendt")}`, `    eu_region_possible: ${a ? JSON.stringify(a.eu_region_possible) : "null"}`,
+      `    recommendation: ${q(r.recommendation)}`, `    sensitive_data_outside_eu: ${r.sensitiveOutsideEU}`,
+      `    notes: ${a?.notes ? q(a.notes) : "null"}`, `    checked_at: ${a?.checked_at ? q(a.checked_at) : "null"}`,
+      "    dpa_signed_at: null", "    dpa_signed_by: null");
   }
   y.push("not_scanned:");
   for (const r of results.filter((x) => x.status === "not_scanned")) y.push(`  - { project: ${q(r.slug)}, repo: ${q(r.repo ?? "")}, reason: ${q(r.reason ?? "")} }`);
@@ -290,6 +345,13 @@ async function main() {
     ...results.map((r) => `| ${r.slug} | ${r.repo ?? "—"} | ${r.status === "scanned" ? "scannet" : `**IKKE scannet:** ${r.reason}`} | ${r.sha ?? ""} | ${r.files ?? ""} | ${(r.flyRegions ?? []).map((f) => `${f.app}=${f.region}`).join(", ")} |`),
     "", "## Leverandører", "", "| leverandør | produkter |", "|---|---|",
     ...VENDORS.filter((v) => vendorProducts.has(v.id)).map((v) => `| ${v.name} | ${[...vendorProducts.get(v.id)!].sort().join(", ")} |`),
+    "", "## Vurdering pr. leverandør (F201.2)", "",
+    "| leverandør | anbefaling | aftale | overførsel | helbredsdata uden for EU | link |", "|---|---|---|---|---|---|",
+    ...VENDORS.filter((v) => vendorProducts.has(v.id)).map((v) => {
+      const a = assessments.get(v.id);
+      const r = recommend(a, [...vendorProducts.get(v.id)!]);
+      return `| ${v.name} | **${r.recommendation}** | ${r.status} | ${a?.transfer_basis ?? "ukendt"} | ${r.sensitiveOutsideEU ? `JA (${r.sensitive.join(", ")})` : ""} | ${a?.dpa_url ?? ""} |`;
+    }),
     "", "## Ukendte udgående værter (skal vurderes — kan være en overset leverandør)", "",
     ...[...unknown.entries()].sort().map(([h, hs]) => `- \`${h}\` — ${hs.slice(0, 3).map((x) => `${x.repo} ${x.file}:${x.line}`).join("; ")}`),
   ];
