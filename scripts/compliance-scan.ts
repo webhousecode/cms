@@ -238,6 +238,38 @@ export function scanProject(p: { slug: string; repo: string | null }, cacheDir =
   return { result: { slug: p.slug, repo: p.repo, status: "scanned", sha: co.sha, files: scan.files, flyRegions: scan.flyRegions } as ProjectResult, scan };
 }
 
+// ── Production use (Christian 26/9: "KUN leverandører vi aktivt anvender i production") ──
+// A vendor mentioned in code is not a vendor we use. What proves use is a
+// credential configured on an app that is RUNNING: the NAMES of its Fly
+// secrets (never the values), plus endpoints measured once by host because the
+// secret name alone does not say who is behind it (AWS_ENDPOINT_URL_S3 is
+// Tigris on some apps and Cloudflare R2 on another).
+export type Endpoint = { app: string; env: string; host: string; vendor: string; measured_at: string };
+
+export function productionUse(secretsByApp: Record<string, string[]>, endpoints: Endpoint[]): Map<string, Set<string>> {
+  const use = new Map<string, Set<string>>();
+  const add = (vendor: string, app: string) => (use.get(vendor) ?? use.set(vendor, new Set()).get(vendor)!).add(app);
+  for (const [app, names] of Object.entries(secretsByApp)) {
+    add("fly", app); // every app here runs on Fly
+    for (const n of names) for (const v of VENDORS) if (v.env?.test(n)) add(v.id, app);
+  }
+  for (const e of endpoints) if (secretsByApp[e.app]?.includes(e.env)) add(e.vendor, e.app);
+  return use;
+}
+
+function measureProduction(): { measured: true; byApp: Record<string, string[]> } | { measured: false; reason: string } {
+  try {
+    const apps = (JSON.parse(sh("flyctl", ["apps", "list", "--json"])) as { Name: string; Status: string }[])
+      .filter((a) => a.Status === "deployed").map((a) => a.Name);
+    if (!apps.length) return { measured: false, reason: "flyctl gav 0 kørende apps" };
+    const byApp: Record<string, string[]> = {};
+    for (const app of apps) byApp[app] = (JSON.parse(sh("flyctl", ["secrets", "list", "-a", app, "--json"])) as { name: string }[]).map((x) => x.name);
+    return { measured: true, byApp };
+  } catch (e) {
+    return { measured: false, reason: String((e as Error).message).split("\n")[0].slice(0, 160) };
+  }
+}
+
 // ── YAML (tiny emitter; the file is ours and flat) ───────────────────────────
 const q = (s: string) => JSON.stringify(s);
 
@@ -255,7 +287,21 @@ export type Assessment = {
   notes?: string;
   confidence?: string;
   checked_at: string;
+  /** Set when Christian has accepted/signed the vendor's DPA (F201.3). */
+  dpa_signed_at?: string | null;
+  dpa_signed_by?: string | null;
 };
+
+/**
+ * A DPA marked done must say WHEN and BY WHOM — half a record reads as done
+ * while proving nothing. Returns the problem, or null when the record is sound.
+ */
+export function signedRecordProblem(a: Assessment): string | null {
+  const at = !!a.dpa_signed_at, by = !!a.dpa_signed_by;
+  if (at !== by) return `${a.id}: dpa_signed_at og dpa_signed_by skal udfyldes sammen`;
+  if (at && a.dpa_status !== "skal_accepteres") return `${a.id}: markeret underskrevet, men dpa_status er ${a.dpa_status}`;
+  return null;
+}
 
 /** Products that handle health or health-adjacent data (plan §3). */
 export const SENSITIVE_PRODUCTS = new Set(["fd-sundhed", "fysiodk-aalborg-sport", "fysio-dk-aalborg", "sanneandersen", "kai"]);
@@ -282,7 +328,10 @@ export function recommend(a: Assessment | undefined, products: string[]) {
 function loadAssessments(): Map<string, Assessment> {
   const f = path.join(OUT_DIR, "assessments.json");
   if (!existsSync(f)) return new Map();
-  return new Map((JSON.parse(readFileSync(f, "utf-8")) as Assessment[]).map((a) => [a.id, a]));
+  const rows = JSON.parse(readFileSync(f, "utf-8")) as Assessment[];
+  const problems = rows.map(signedRecordProblem).filter(Boolean);
+  if (problems.length) throw new Error(`assessments.json:\n  ${problems.join("\n  ")}`);
+  return new Map(rows.map((a) => [a.id, a]));
 }
 
 async function main() {
@@ -307,21 +356,29 @@ async function main() {
 
   mkdirSync(OUT_DIR, { recursive: true });
   const assessments = loadAssessments();
+  const prodMeasure = measureProduction();
+  const endpointsFile = path.join(OUT_DIR, "production-endpoints.json");
+  const endpoints: Endpoint[] = existsSync(endpointsFile) ? JSON.parse(readFileSync(endpointsFile, "utf-8")) : [];
+  const prod = prodMeasure.measured ? productionUse(prodMeasure.byApp, endpoints) : new Map<string, Set<string>>();
   const scanned = results.filter((r) => r.status === "scanned");
   const y: string[] = [
     "# F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.",
     `scanned_at: ${q(new Date().toISOString())}`,
     `projects_total: ${results.length}`,
     `projects_scanned: ${scanned.length}`,
+    `production_measured: ${prodMeasure.measured ? `"${Object.keys(prodMeasure.byApp).length} kørende Fly-apps"` : q(`NEJ — ${prodMeasure.reason}`)}`,
     "vendors:",
   ];
   for (const v of VENDORS) {
-    const hs = vendorHits.get(v.id);
-    if (!hs) continue;
+    const hs = vendorHits.get(v.id) ?? [];
+    const prodApps = [...(prod.get(v.id) ?? [])].sort();
+    if (!hs.length && !prodApps.length) continue;
+    if (!vendorProducts.has(v.id)) vendorProducts.set(v.id, new Set());
     const regions = scanned.flatMap((r) => (vendorProducts.get(v.id)?.has(r.slug) && v.id === "fly" ? r.flyRegions ?? [] : []));
     y.push(`  - id: ${v.id}`, `    name: ${q(v.name)}`, `    purpose: ${q(v.purpose)}`,
       `    products: [${[...vendorProducts.get(v.id)!].sort().map(q).join(", ")}]`);
     if (v.id === "fly") y.push(`    regions: [${[...new Set(regions.map((r) => r.region))].sort().map(q).join(", ")}]`);
+    y.push(`    in_production: ${prodMeasure.measured ? prodApps.length > 0 : "null"}`, `    production_apps: [${prodApps.map(q).join(", ")}]`);
     y.push("    evidence:");
     for (const h of hs.slice(0, 8)) y.push(`      - ${q(`${h.repo} ${h.file}:${h.line} (${h.signal})`)}`);
     const a = assessments.get(v.id);
@@ -332,7 +389,7 @@ async function main() {
       `    transfer_basis: ${q(a?.transfer_basis ?? "ukendt")}`, `    eu_region_possible: ${a ? JSON.stringify(a.eu_region_possible) : "null"}`,
       `    recommendation: ${q(r.recommendation)}`, `    sensitive_data_outside_eu: ${r.sensitiveOutsideEU}`,
       `    notes: ${a?.notes ? q(a.notes) : "null"}`, `    checked_at: ${a?.checked_at ? q(a.checked_at) : "null"}`,
-      "    dpa_signed_at: null", "    dpa_signed_by: null");
+      `    dpa_signed_at: ${a?.dpa_signed_at ? q(a.dpa_signed_at) : "null"}`, `    dpa_signed_by: ${a?.dpa_signed_by ? q(a.dpa_signed_by) : "null"}`);
   }
   y.push("not_scanned:");
   for (const r of results.filter((x) => x.status === "not_scanned")) y.push(`  - { project: ${q(r.slug)}, repo: ${q(r.repo ?? "")}, reason: ${q(r.reason ?? "")} }`);
@@ -351,6 +408,14 @@ async function main() {
       const a = assessments.get(v.id);
       const r = recommend(a, [...vendorProducts.get(v.id)!]);
       return `| ${v.name} | **${r.recommendation}** | ${r.status} | ${a?.transfer_basis ?? "ukendt"} | ${r.sensitiveOutsideEU ? `JA (${r.sensitive.join(", ")})` : ""} | ${a?.dpa_url ?? ""} |`;
+    }),
+    "", "## Handlinger for leverandører i DRIFT (grundlag for handlingslisten, F201.3)", "",
+    prodMeasure.measured ? `Målt på ${Object.keys(prodMeasure.byApp).length} kørende Fly-apps (nøgle-NAVNE + målte endpoints).` : `**Drift ikke målt:** ${prodMeasure.reason}`, "",
+    "| leverandør | anbefaling | apps i drift | hvad |", "|---|---|---|---|",
+    ...VENDORS.filter((v) => prod.has(v.id)).map((v) => {
+      const a = assessments.get(v.id);
+      const r = recommend(a, [...(vendorProducts.get(v.id) ?? [])]);
+      return `| ${v.name} | **${r.recommendation}** | ${[...prod.get(v.id)!].sort().join(", ")} | ${a?.action ?? ""} |`;
     }),
     "", "## Ukendte udgående værter (skal vurderes — kan være en overset leverandør)", "",
     ...[...unknown.entries()].sort().map(([h, hs]) => `- \`${h}\` — ${hs.slice(0, 3).map((x) => `${x.repo} ${x.file}:${x.line}`).join("; ")}`),

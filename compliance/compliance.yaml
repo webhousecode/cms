@@ -1,13 +1,16 @@
 # F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.
-scanned_at: "2026-09-26T08:48:10.457Z"
+scanned_at: "2026-09-26T09:16:13.172Z"
 projects_total: 40
 projects_scanned: 39
+production_measured: "34 kørende Fly-apps"
 vendors:
   - id: fly
     name: "Fly.io"
     purpose: "Hosting"
     products: ["ai-sdk", "autodoc", "broberg-ai-site", "broberg-id", "buddy", "cardmem", "cms", "components", "contentpush", "contract-manager", "coverletter-generator", "cronjobs", "dns-mcp", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "mailworker", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine", "whop", "xrt81-com"]
     regions: ["arn"]
+    in_production: true
+    production_apps: ["auto-scaling-container-app", "broberg-ai", "broberg-autodoc", "broberg-discovery", "broberg-helpdesk-api", "broberg-helpdesk-console", "broberg-helpdesk-db", "broberg-id", "broberg-services", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "buddy-voice", "cardmem", "cardmem-lens", "dns-mcp", "fd-sport", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-services", "sanneandersen-site", "trail-admin", "trail-db-001", "trail-engine-001", "trail-widget", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-dk", "webhouse-whapi", "webhouse-whop", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk scripts/verify-trainstyle.ts:27 (host sanneandersen-site.fly.dev)"
       - "broberg-ai/autodoc fly.toml:1 (fly.toml app=broberg-autodoc)"
@@ -34,6 +37,8 @@ vendors:
     name: "Tigris"
     purpose: "Objektlager"
     products: ["cardmem", "trail"]
+    in_production: true
+    production_apps: ["cardmem", "trail-db-001", "trail-engine-001", "upmetrics"]
     evidence:
       - "broberg-ai/cardmem apps/agent/src/lens/storage.ts:98 (host fly.storage.tigris.dev)"
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:95 (host console.tigris.dev)"
@@ -56,6 +61,8 @@ vendors:
     name: "Cloudflare"
     purpose: "DNS, CDN, R2-lager, Turnstile"
     products: ["broberg-ai-site", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "helpdesk", "notesmem", "sanneandersen", "upmetrics", "xrt81-com"]
+    in_production: true
+    production_apps: ["buddy-brain", "buddy-cloud", "buddy-edge-fly", "cardmem", "cardmem-lens", "dns-mcp", "fd-sundhed", "sanneandersen-site", "webhouse-app", "webhouse-contract-manager", "webhouse-dk", "xrt81"]
     evidence:
       - "broberg-ai/broberg-ai-site package.json:24 (npm @broberg/forms-turnstile)"
       - "broberg-ai/broberg-ai-site src/support.ts:144 (env TURNSTILE_SECRET_KEY)"
@@ -82,6 +89,8 @@ vendors:
     name: "Resend"
     purpose: "Transaktionsmails"
     products: ["broberg-ai-site", "broberg-id", "cardmem", "cms", "components", "contract-manager", "cronjobs", "fd-sundhed", "happy-little-place", "helpdesk", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "vn-leker", "whop", "xrt81-com"]
+    in_production: true
+    production_apps: ["broberg-ai", "broberg-helpdesk-api", "broberg-id", "cardmem", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-site", "trail-admin", "upmetrics", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-whapi", "webhouse-whop", "xrt81"]
     evidence:
       - "broberg-ai/broberg-ai-site package.json:25 (npm @broberg/mail)"
       - "broberg-ai/broberg-ai-site src/aidan-mail.ts:35 (env RESEND_API_KEY)"
@@ -108,6 +117,8 @@ vendors:
     name: "Stripe"
     purpose: "Betaling"
     products: ["cardmem", "cms", "components", "mailworker", "sanneandersen"]
+    in_production: true
+    production_apps: ["sanneandersen-site"]
     evidence:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:81 (host dashboard.stripe.com)"
       - "broberg-ai/cardmem packages/mcp-tools/src/lib/journey/booklet.ts:23 (env STRIPE_RE)"
@@ -134,6 +145,8 @@ vendors:
     name: "Supabase"
     purpose: "Database + auth"
     products: ["cardmem", "cms", "fd-sundhed", "fysiodk-aalborg-sport", "whop"]
+    in_production: true
+    production_apps: ["broberg-id", "fd-sundhed", "webhouse-whop"]
     evidence:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:77 (host supabase.com)"
       - "webhousecode/cms package.json:45 (npm @supabase/supabase-js)"
@@ -160,6 +173,8 @@ vendors:
     name: "Turso"
     purpose: "Database (libSQL)"
     products: ["buddy", "cardmem", "components", "contentpush", "happy-little-place", "helpdesk", "super", "trail", "xrt81-com"]
+    in_production: true
+    production_apps: ["broberg-discovery", "buddy-cloud"]
     evidence:
       - "webhousecode/buddy apps/server/package.json:16 (npm @broberg/db-sdk)"
       - "webhousecode/buddy apps/server/src/db/cloud.ts:13 (env TURSO_DATABASE_URL)"
@@ -186,6 +201,8 @@ vendors:
     name: "Amazon Web Services"
     purpose: "Hosting/lager (S3/Lightsail)"
     products: ["cms", "forager", "sanneandersen", "trail", "whop"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/package.json:98 (npm @aws-sdk/client-s3)"
       - "broberg-ai/forager data/measurements/probe2.py:45 (host discogs-data-dumps.s3.us-west-2.amazonaws.com)"
@@ -211,6 +228,8 @@ vendors:
     name: "Mistral AI"
     purpose: "AI-modeller (EU)"
     products: ["ai-sdk", "broberg-ai-site", "buddy", "cardmem", "cms", "components", "contentpush", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "helpdesk", "pitch", "trail", "xrt81-com"]
+    in_production: true
+    production_apps: ["broberg-ai", "broberg-autodoc", "broberg-helpdesk-api", "buddy-voice", "cardmem", "fd-sundhed", "pitch-vault", "sanneandersen-site", "trail-engine-001", "webhouse-app", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk inventory.json:9609 (host mistral.ai)"
       - "broberg-ai/ai-sdk inventory.json:12163 (host mistral.ai)"
@@ -237,6 +256,8 @@ vendors:
     name: "OpenAI"
     purpose: "AI-modeller"
     products: ["ai-sdk", "buddy", "cardmem", "cms", "trail", "xrt81-com"]
+    in_production: true
+    production_apps: ["xrt81"]
     evidence:
       - "broberg-ai/ai-sdk .env.example:8 (env OPENAI_API_KEY)"
       - "broberg-ai/ai-sdk inventory.json:2194 (host developers.openai.com)"
@@ -263,6 +284,8 @@ vendors:
     name: "Anthropic"
     purpose: "AI-modeller"
     products: ["ai-sdk", "buddy", "cardmem", "cms", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "trail", "whop", "xrt81-com"]
+    in_production: true
+    production_apps: ["webhouse-whop", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk .env.example:5 (env ANTHROPIC_API_KEY)"
       - "broberg-ai/ai-sdk inventory.json:13014 (host www.anthropic.com)"
@@ -289,6 +312,8 @@ vendors:
     name: "Google (Gemini/Vertex AI)"
     purpose: "AI-modeller"
     products: ["ai-sdk", "buddy", "cardmem", "cms", "components", "super"]
+    in_production: true
+    production_apps: ["webhouse-app"]
     evidence:
       - "broberg-ai/ai-sdk scripts/smoke-gemini-direct.mjs:2 (env GEMINI_API_KEY)"
       - "broberg-ai/ai-sdk src/catalogue/fetchers.ts:92 (env GEMINI_API_KEY)"
@@ -315,6 +340,8 @@ vendors:
     name: "DeepInfra"
     purpose: "AI-modeller"
     products: ["ai-sdk", "pitch"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/ai-sdk .env.example:14 (env DEEPINFRA_API_KEY)"
       - "broberg-ai/ai-sdk src/cost/default-hosts.ts:18 (host api.deepinfra.com)"
@@ -336,6 +363,8 @@ vendors:
     name: "OpenRouter"
     purpose: "AI-routing"
     products: ["ai-sdk", "buddy", "cardmem", "components", "sanneandersen", "trail", "upmetrics", "xrt81-com"]
+    in_production: true
+    production_apps: ["buddy-brain", "buddy-edge-fly", "cardmem", "sanneandersen-site", "trail-engine-001", "upmetrics", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk .env.example:17 (env OPENROUTER_API_KEY)"
       - "broberg-ai/ai-sdk inventory.json:562 (host openrouter.ai)"
@@ -362,6 +391,8 @@ vendors:
     name: "DeepSeek"
     purpose: "AI-modeller"
     products: ["ai-sdk", "buddy", "cardmem", "components"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/ai-sdk src/availability/registry.ts:61 (env DEEPSEEK_API_KEY)"
       - "broberg-ai/ai-sdk src/cost/default-hosts.ts:19 (host api.deepseek.com)"
@@ -386,6 +417,8 @@ vendors:
     name: "ElevenLabs"
     purpose: "Tale (TTS)"
     products: ["ai-sdk", "buddy", "cardmem", "cms", "contentpush"]
+    in_production: true
+    production_apps: ["webhouse-app"]
     evidence:
       - "broberg-ai/ai-sdk src/cost/default-hosts.ts:20 (host api.elevenlabs.io)"
       - "broberg-ai/ai-sdk src/index.ts:27 (env ELEVENLABS_DANISH_VOICES)"
@@ -412,6 +445,8 @@ vendors:
     name: "Microsoft Azure"
     purpose: "Tale/AI"
     products: ["ai-sdk", "broberg-ai-site", "buddy", "cardmem", "contentpush"]
+    in_production: true
+    production_apps: ["broberg-ai", "buddy-voice", "cardmem"]
     evidence:
       - "broberg-ai/ai-sdk src/index.ts:28 (env AZURE_DANISH_VOICES)"
       - "broberg-ai/ai-sdk src/index.ts:28 (env AZURE_DANISH_VOICE_LIST)"
@@ -438,6 +473,8 @@ vendors:
     name: "Black Forest Labs"
     purpose: "Billedgenerering"
     products: ["ai-sdk", "cardmem", "contentpush"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/ai-sdk src/cost/default-hosts.ts:29 (host api.eu.bfl.ai)"
       - "broberg-ai/ai-sdk src/cost/default-hosts.ts:37 (host api.eu.bfl.ai)"
@@ -460,6 +497,8 @@ vendors:
     name: "GitHub"
     purpose: "Kode, CI, API"
     products: ["ai-sdk", "autodoc", "broberg-id", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "fleet", "forager", "fysio-dk-aalborg", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "how", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine"]
+    in_production: true
+    production_apps: ["broberg-autodoc", "broberg-id", "buddy-edge-fly", "cardmem", "trail-admin", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-whapi"]
     evidence:
       - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GH_TOKEN)"
       - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GITHUB_TOKEN)"
@@ -486,6 +525,8 @@ vendors:
     name: "Google (Workspace/Gmail/Calendar/OAuth)"
     purpose: "Mail, kalender, login"
     products: ["ai-sdk", "broberg-id", "cardmem", "cms", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "mailworker", "moovyy", "sanneandersen", "trail", "xrt81-com"]
+    in_production: true
+    production_apps: ["broberg-id", "cardmem", "moovyy", "sanneandersen-site", "trail-admin", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk src/providers/vertex.ts:29 (host oauth2.googleapis.com)"
       - "broberg-ai/ai-sdk src/providers/vertex.ts:31 (host www.googleapis.com)"
@@ -512,6 +553,8 @@ vendors:
     name: "Google Maps"
     purpose: "Kort"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/media/page.tsx:1907 (host maps.google.com)"
     # F201.2 — fra leverandørens egne sider
@@ -531,6 +574,8 @@ vendors:
     name: "Google PageSpeed Insights"
     purpose: "Performance-måling"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/api/admin/lighthouse/scan/route.ts:42 (env GOOGLE_PSI_API_KEY)"
       - "webhousecode/cms packages/cms-admin/src/lib/site-config.ts:351 (env GOOGLE_PSI_API_KEY)"
@@ -551,6 +596,8 @@ vendors:
     name: "Google Firebase (FCM)"
     purpose: "Push-notifikationer"
     products: ["cms", "fd-sundhed", "fysiodk-aalborg-sport"]
+    in_production: true
+    production_apps: ["fd-sundhed"]
     evidence:
       - "webhousecode/cms packages/cms-admin/package.json:63 (npm firebase-admin)"
       - "webhousecode/cms packages/cms-admin/src/lib/push-send.ts:18 (env FIREBASE_PROJECT_ID)"
@@ -575,6 +622,8 @@ vendors:
     name: "Apple (APNs/Sign in/App Store)"
     purpose: "Push, login, app-distribution"
     products: ["broberg-id", "buddy", "cardmem", "fd-sundhed", "fysiodk-aalborg-sport", "moovyy", "storeform", "xrt81-com"]
+    in_production: true
+    production_apps: ["broberg-id", "xrt81"]
     evidence:
       - "broberg-ai/broberg-id scripts/apple-secret.ts:8 (env APPLE_CLIENT_ID)"
       - "broberg-ai/broberg-id scripts/apple-secret.ts:9 (env APPLE_TEAM_ID)"
@@ -601,6 +650,8 @@ vendors:
     name: "Web Push (browserens push-tjeneste)"
     purpose: "Push-notifikationer"
     products: ["cardmem", "cms", "components", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "moovyy", "trail", "xrt81-com"]
+    in_production: true
+    production_apps: ["cardmem", "fd-sundhed", "trail-engine-001", "webhouse-app", "xrt81"]
     evidence:
       - "broberg-ai/cardmem apps/server/package.json:24 (npm @broberg/webpush)"
       - "broberg-ai/cardmem apps/server/src/api/push.ts:48 (env VAPID_PUBLIC)"
@@ -627,6 +678,8 @@ vendors:
     name: "LinkedIn"
     purpose: "Login"
     products: ["buddy", "cms", "coverletter-generator", "xrt81-com"]
+    in_production: true
+    production_apps: ["broberg-id"]
     evidence:
       - "webhousecode/buddy docker/old-site/arkiv/_dk_webhouse_medarbejdere_christian_broberg.htm.html:178 (host dk.linkedin.com)"
       - "webhousecode/buddy docker/old-site/arkiv/_dk_webhouse_medarbejdere_christian_broberg.htm.html:178 (host dk.linkedin.com)"
@@ -648,10 +701,32 @@ vendors:
     checked_at: "2026-09-26"
     dpa_signed_at: null
     dpa_signed_by: null
+  - id: microsoft-login
+    name: "Microsoft (login)"
+    purpose: "Login"
+    products: []
+    in_production: true
+    production_apps: ["broberg-id"]
+    evidence:
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ikke_databehandler"
+    dpa_url: "https://learn.microsoft.com/en-us/entra/identity-platform/v2-overview"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "DPF"
+    eu_region_possible: "ukendt"
+    recommendation: "ingen handling"
+    sensitive_data_outside_eu: false
+    notes: "Used only as a login option in Broberg ID: the user signs in with their own Microsoft account, same role as Apple/LinkedIn login. Microsoft's own processor/controller wording for this use NOT confirmed on its pages (privacy statement returned 403)."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: simply
     name: "Simply.com"
     purpose: "Domæner/DNS"
     products: ["dns-mcp"]
+    in_production: true
+    production_apps: ["dns-mcp"]
     evidence:
       - "webhousecode/dns-mcp src/clients/simply.ts:1 (host api.simply.com)"
       - "webhousecode/dns-mcp src/clients/simply.ts:36 (env SIMPLY_ACCOUNT)"
@@ -672,6 +747,8 @@ vendors:
     name: "pCloud"
     purpose: "Backup-lager"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/pcloud.ts:27 (host ewebdav.pcloud.com)"
       - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/pcloud.ts:28 (host webdav.pcloud.com)"
@@ -692,6 +769,8 @@ vendors:
     name: "GatewayAPI"
     purpose: "SMS"
     products: ["broberg-id", "components"]
+    in_production: true
+    production_apps: ["broberg-id"]
     evidence:
       - "broberg-ai/broberg-id src/contact-notify.ts:107 (env GATEWAYAPI_TOKEN)"
       - "broberg-ai/components packages/sms/src/delivery.ts:85 (env GATEWAYAPI_STATES)"
@@ -713,6 +792,8 @@ vendors:
     name: "Twilio"
     purpose: "SMS/tale"
     products: ["cardmem"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:82 (host console.twilio.com)"
     # F201.2 — fra leverandørens egne sider
@@ -732,6 +813,8 @@ vendors:
     name: "Complimenta"
     purpose: "Booking (klinik-system)"
     products: ["fd-sundhed", "fysio-dk-aalborg"]
+    in_production: true
+    production_apps: ["fd-sundhed"]
     evidence:
       - "broberg-ai/fd-sundhed apps/web/package.json:42 (npm @broberg/complimenta-sdk)"
       - "broberg-ai/fd-sundhed apps/web/scripts/aflys-testtid.mjs:36 (env COMPLIMENTA_BASE_URL)"
@@ -754,6 +837,8 @@ vendors:
     name: "Opkald.ai"
     purpose: "Telefonsvarer/opkald"
     products: ["fd-sundhed"]
+    in_production: true
+    production_apps: ["fd-sundhed"]
     evidence:
       - "broberg-ai/fd-sundhed apps/web/src/app/api/opkald/demo-forloeb/route.ts:24 (env OPKALD_DEMO_API_KEY)"
       - "broberg-ai/fd-sundhed apps/web/src/app/api/opkald/demo-forloeb/route.ts:44 (env OPKALD_DEMO_API_KEY)"
@@ -774,6 +859,8 @@ vendors:
     name: "Zoom"
     purpose: "Videomøder"
     products: ["cardmem"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/cardmem apps/web/src/components/chat.tsx:2975 (env ZOOM_OPTS)"
       - "broberg-ai/cardmem apps/web/src/components/chat.tsx:2982 (env ZOOM_OPTS)"
@@ -794,6 +881,8 @@ vendors:
     name: "Daily.co"
     purpose: "Videomøder"
     products: ["buddy"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/buddy apps/server/src/nightly-discord-report.ts:20 (env DAILY_INTERVAL_MS)"
       - "webhousecode/buddy apps/server/src/nightly-discord-report.ts:157 (env DAILY_INTERVAL_MS)"
@@ -814,6 +903,8 @@ vendors:
     name: "LiveKit"
     purpose: "Video/lyd i realtid"
     products: ["buddy"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host docs.livekit.io)"
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host blog.livekit.io)"
@@ -834,6 +925,8 @@ vendors:
     name: "OpenSubtitles"
     purpose: "Undertekster"
     products: ["moovyy"]
+    in_production: false
+    production_apps: []
     evidence:
       - "cbroberg/moovyy watch-service/index.js:1251 (env OPENSUBTITLES_API_KEY)"
       - "cbroberg/moovyy watch-service/index.js:1252 (env OPENSUBTITLES_API_KEY)"
@@ -854,6 +947,8 @@ vendors:
     name: "SubDL"
     purpose: "Undertekster"
     products: ["moovyy"]
+    in_production: false
+    production_apps: []
     evidence:
       - "cbroberg/moovyy watch-service/subtitle-fetch.js:257 (env SUBDL_S)"
       - "cbroberg/moovyy watch-service/subtitle-fetch.js:257 (host api.subdl.com)"
@@ -874,6 +969,8 @@ vendors:
     name: "TMDB"
     purpose: "Filmdata"
     products: ["moovyy"]
+    in_production: true
+    production_apps: ["moovyy"]
     evidence:
       - "cbroberg/moovyy cloud/src/api-oensker.js:182 (host api.themoviedb.org)"
       - "cbroberg/moovyy cloud/src/api-oensker.js:183 (env TMDB_TOKEN)"
@@ -894,6 +991,8 @@ vendors:
     name: "Unsplash"
     purpose: "Billeder"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/editor/image-gallery-editor.tsx:177 (host images.unsplash.com)"
     # F201.2 — fra leverandørens egne sider
@@ -913,6 +1012,8 @@ vendors:
     name: "DAWA (Dataforsyningen)"
     purpose: "Adresseopslag"
     products: ["xrt81-com"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/xrt81 apps/server/src/lib/geocode.ts:22 (host api.dataforsyningen.dk)"
       - "broberg-ai/xrt81 apps/web/src/components/ui/AddressAutocomplete.tsx:62 (host api.dataforsyningen.dk)"
@@ -929,10 +1030,32 @@ vendors:
     checked_at: "2026-09-26"
     dpa_signed_at: null
     dpa_signed_by: null
+  - id: upstash
+    name: "Upstash"
+    purpose: "Redis/kø"
+    products: []
+    in_production: true
+    production_apps: ["auto-scaling-container-app"]
+    evidence:
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "auto"
+    dpa_url: "https://upstash.com/trust/dpa.pdf"
+    dpa_url_http: 200
+    action: null
+    transfer_basis: "SCC"
+    eu_region_possible: true
+    recommendation: "link"
+    sensitive_data_outside_eu: false
+    notes: "DPA (April 2025) is 'incorporated into and forms a binding and effective part of the Agreement'; SCCs deemed signed; Upstash Inc. (Delaware). Read from the PDF itself."
+    checked_at: "2026-09-26"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: vercel
     name: "Vercel"
     purpose: "Hosting"
     products: ["cardmem", "cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:78 (host vercel.com)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:340 (host vercel.com)"
@@ -954,6 +1077,8 @@ vendors:
     name: "Netlify"
     purpose: "Hosting"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:349 (host docs.netlify.com)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:353 (host api.netlify.com)"
@@ -974,6 +1099,8 @@ vendors:
     name: "npm"
     purpose: "Pakke-udgivelse"
     products: ["ai-sdk", "cms", "components", "coverletter-generator", "dns-mcp", "fleet", "fysio-dk-aalborg", "how", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "vn-leker"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/ai-sdk .github/workflows/publish.yml:35 (host registry.npmjs.org)"
       - "webhousecode/cms .github/workflows/publish.yml:46 (host registry.npmjs.org)"
@@ -1000,6 +1127,8 @@ vendors:
     name: "SMS.dk"
     purpose: "SMS"
     products: ["components"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/components packages/sms/src/delivery.ts:221 (env SMSDK_STATES)"
       - "broberg-ai/components packages/sms/src/delivery.ts:229 (env SMSDK_LABELS)"
@@ -1020,6 +1149,8 @@ vendors:
     name: "Verda (GPU-cloud)"
     purpose: "GPU/AI-hosting"
     products: ["voice-engine"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/voice-engine scripts/gpu_drill.py:41 (env VERDA_CLIENT_ID)"
       - "broberg-ai/voice-engine scripts/gpu_drill.py:42 (env VERDA_CLIENT_SECRET)"
@@ -1040,6 +1171,8 @@ vendors:
     name: "Tailscale"
     purpose: "Privat netværk"
     products: ["buddy"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/buddy apps/ios/Buddy/Views/OnboardingView.swift:70 (host din-mac.ts.net)"
     # F201.2 — fra leverandørens egne sider
@@ -1059,6 +1192,8 @@ vendors:
     name: "Google Play"
     purpose: "App-distribution"
     products: ["fd-sundhed", "fysiodk-aalborg-sport", "storeform"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/fd-sundhed apps/web/public/qr/MANIFEST.json:7 (host play.google.com)"
       - "broberg-ai/fd-sundhed apps/web/src/app/(app)/app/admin/developer/google-play-tab.tsx:20 (host play.google.com)"
@@ -1083,6 +1218,8 @@ vendors:
     name: "DeepL"
     purpose: "Oversættelse"
     products: ["ai-sdk", "components"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/ai-sdk src/providers/deepl.ts:20 (env DEEPL_API_KEY)"
       - "broberg-ai/ai-sdk src/providers/deepl.ts:21 (env DEEPL_API_KEY)"
@@ -1104,6 +1241,8 @@ vendors:
     name: "fal.ai"
     purpose: "AI-modeller (billede/video)"
     products: ["ai-sdk", "cardmem", "contentpush", "sanneandersen", "super"]
+    in_production: true
+    production_apps: ["sanneandersen-site"]
     evidence:
       - "broberg-ai/ai-sdk .env.example:20 (env FAL_KEY)"
       - "broberg-ai/ai-sdk scripts/verify-trainstyle.ts:3 (env FAL_KEY)"
@@ -1130,6 +1269,8 @@ vendors:
     name: "Hugging Face"
     purpose: "AI-modeller"
     products: ["fd-sundhed", "forager", "voice-engine"]
+    in_production: true
+    production_apps: ["broberg-services"]
     evidence:
       - "broberg-ai/fd-sundhed tools/moedeoptagelse/transskriber.mjs:79 (host huggingface.co)"
       - "broberg-ai/forager src/scout-da/sources/dynaword-client.ts:6 (host datasets-server.huggingface.co)"
@@ -1153,6 +1294,8 @@ vendors:
     name: "RunPod"
     purpose: "GPU/AI-hosting"
     products: ["trail", "voice-engine"]
+    in_production: true
+    production_apps: ["broberg-services"]
     evidence:
       - "broberg-ai/trail apps/scout/training/runpod_train.py:69 (host rest.runpod.io)"
       - "broberg-ai/trail apps/scout/training/runpod_train.py:78 (host api.runpod.io)"
@@ -1175,6 +1318,8 @@ vendors:
     name: "Requesty"
     purpose: "AI-routing"
     products: ["ai-sdk"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/ai-sdk src/providers/requesty.ts:5 (env REQUESTY_API_KEY)"
       - "broberg-ai/ai-sdk src/providers/requesty.ts:14 (host router.requesty.ai)"
@@ -1195,6 +1340,8 @@ vendors:
     name: "Tavily"
     purpose: "Websøgning (AI)"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:427 (host tavily.com)"
       - "webhousecode/cms packages/cms-admin/src/components/settings/ai-settings-panel.tsx:260 (host tavily.com)"
@@ -1215,6 +1362,8 @@ vendors:
     name: "Brave Search"
     purpose: "Websøgning"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/settings/ai-settings-panel.tsx:259 (host api.search.brave.com)"
       - "webhousecode/cms packages/cms-admin/src/components/settings/mcp-settings-panel.tsx:378 (env BRAVE_API_KEY)"
@@ -1235,6 +1384,8 @@ vendors:
     name: "Perplexity"
     purpose: "AI-søgning"
     products: ["ai-sdk"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/ai-sdk inventory.json:11427 (host docs.perplexity.ai)"
       - "broberg-ai/ai-sdk inventory.json:11457 (host docs.perplexity.ai)"
@@ -1255,6 +1406,8 @@ vendors:
     name: "Bunny.net"
     purpose: "CDN/lager"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/app/admin/inline-edit/connect/route.ts:163 (host fonts.bunny.net)"
       - "webhousecode/cms packages/cms-admin/src/app/admin/inline-edit/connect/route.ts:164 (host fonts.bunny.net)"
@@ -1275,6 +1428,8 @@ vendors:
     name: "Backblaze B2"
     purpose: "Objektlager/backup"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/settings/backup-settings-panel.tsx:388 (host s3.eu-central-003.backblazeb2.com)"
     # F201.2 — fra leverandørens egne sider
@@ -1294,6 +1449,8 @@ vendors:
     name: "Scaleway"
     purpose: "Hosting/lager (EU)"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/settings/backup-settings-panel.tsx:169 (host s3.fr-par.scw.cloud)"
       - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/s3.ts:13 (host s3.fr-par.scw.cloud)"
@@ -1314,6 +1471,8 @@ vendors:
     name: "Hetzner"
     purpose: "Hosting/lager (EU)"
     products: ["cms"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/cms packages/cms-admin/src/components/settings/backup-settings-panel.tsx:171 (host fsn1.your-objectstorage.com)"
       - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/s3.ts:16 (host fsn1.your-objectstorage.com)"
@@ -1334,6 +1493,8 @@ vendors:
     name: "Forward Email"
     purpose: "Mail-videresendelse"
     products: ["moovyy"]
+    in_production: false
+    production_apps: []
     evidence:
       - "cbroberg/moovyy package-lock.json:7576 (host forwardemail.net)"
     # F201.2 — fra leverandørens egne sider
@@ -1353,6 +1514,8 @@ vendors:
     name: "inMobile"
     purpose: "SMS"
     products: ["components"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/components packages/sms/src/delivery.ts:166 (env INMOBILE_STATES)"
       - "broberg-ai/components packages/sms/src/delivery.ts:199 (env INMOBILE_STATES)"
@@ -1373,6 +1536,8 @@ vendors:
     name: "QuickPay"
     purpose: "Betaling"
     products: ["buddy"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/buddy docker/old-site/arkiv/_dk_webhouse_partnere_.html:161 (host www.quickpay.net)"
       - "webhousecode/buddy docker/old-site/arkiv/_en_webhouse_partners_.html:153 (host www.quickpay.net)"
@@ -1393,6 +1558,8 @@ vendors:
     name: "Polar"
     purpose: "Betaling/abonnement"
     products: ["coverletter-generator", "pitch"]
+    in_production: false
+    production_apps: []
     evidence:
       - "cbroberg/coverletter-generator package-lock.json:5634 (host polar.sh)"
       - "cbroberg/pitch package-lock.json:5447 (host polar.sh)"
@@ -1413,6 +1580,8 @@ vendors:
     name: "Flexprice"
     purpose: "Fakturering/forbrug"
     products: ["buddy"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host flexprice.io)"
     # F201.2 — fra leverandørens egne sider
@@ -1432,6 +1601,8 @@ vendors:
     name: "Piwik PRO"
     purpose: "Analyse"
     products: ["buddy"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/buddy docker/old-site/arkiv/_.html:43 (host webhouse.containers.piwik.pro)"
       - "webhousecode/buddy docker/old-site/arkiv/_dk_.html:44 (host webhouse.containers.piwik.pro)"
@@ -1452,6 +1623,8 @@ vendors:
     name: "Google Analytics"
     purpose: "Analyse"
     products: ["buddy", "xrt81-com"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/buddy docker/old-site/arkiv/_.html:259 (host www.google-analytics.com)"
       - "webhousecode/buddy docker/old-site/arkiv/_dk_.html:260 (host www.google-analytics.com)"
@@ -1474,6 +1647,8 @@ vendors:
     name: "Slack"
     purpose: "Notifikationer"
     products: ["buddy", "cardmem"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (env SLACK_BOT_TOKEN)"
       - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (env SLACK_APP_TOKEN)"
@@ -1495,6 +1670,8 @@ vendors:
     name: "Discord"
     purpose: "Notifikationer"
     products: ["buddy", "cardmem", "cms", "contentpush", "cronjobs", "fd-sundhed", "fysiodk-aalborg-sport", "sanneandersen", "upmetrics", "whop"]
+    in_production: true
+    production_apps: ["cardmem", "webhouse-cronjobs", "webhouse-whop"]
     evidence:
       - "webhousecode/buddy apps/server/src/discord-bot.ts:20 (env DISCORD_BOT_TOKEN)"
       - "webhousecode/buddy apps/server/src/discord-bot.ts:21 (env DISCORD_CHANNEL_ID)"
@@ -1521,6 +1698,8 @@ vendors:
     name: "Gravatar"
     purpose: "Profilbilleder (mail-hash)"
     products: ["broberg-id", "cms", "components", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "pitch", "trail"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/broberg-id src/security-headers.ts:33 (host www.gravatar.com)"
       - "webhousecode/cms packages/cms-admin/src/app/api/auth/me/route.ts:9 (host www.gravatar.com)"
@@ -1547,6 +1726,8 @@ vendors:
     name: "Vimeo"
     purpose: "Video"
     products: ["cardmem", "cms", "sanneandersen"]
+    in_production: true
+    production_apps: ["sanneandersen-site"]
     evidence:
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:98 (host developer.vimeo.com)"
       - "webhousecode/cms packages/cms-admin/src/components/editor/field-editor.tsx:51 (host player.vimeo.com)"

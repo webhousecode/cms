@@ -6,7 +6,7 @@ import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { scanProject, scanDir, recommend, type Assessment } from "../../../../../scripts/compliance-scan";
+import { scanProject, scanDir, recommend, signedRecordProblem, productionUse, type Assessment } from "../../../../../scripts/compliance-scan";
 
 function repoWith(files: Record<string, string>): string {
   const dir = mkdtempSync(path.join(tmpdir(), "cscan-"));
@@ -99,5 +99,46 @@ describe("vendor recommendation (F201.2)", () => {
     const r = recommend({ ...base, dpa_status: "ikke_databehandler", transfer_basis: "ukendt" }, ["fd-sundhed"]);
     expect(r.recommendation).toBe("ingen handling");
     expect(r.sensitiveOutsideEU).toBe(false);
+  });
+});
+
+describe("signed-DPA record (F201.3)", () => {
+  const a: Assessment = { id: "fly", dpa_status: "skal_accepteres", dpa_url: "https://fly.io/documents/", dpa_url_http: 200,
+    transfer_basis: "DPF", eu_region_possible: true, checked_at: "2026-09-26" };
+
+  it("accepts an unsigned vendor and a fully signed one", () => {
+    expect(signedRecordProblem(a)).toBeNull();
+    expect(signedRecordProblem({ ...a, dpa_signed_at: "2026-09-26", dpa_signed_by: "Christian Broberg" })).toBeNull();
+  });
+
+  it("refuses a vendor marked done without who signed", () => {
+    expect(signedRecordProblem({ ...a, dpa_signed_at: "2026-09-26" })).toMatch(/sammen/);
+  });
+
+  it("refuses a vendor marked done without when", () => {
+    expect(signedRecordProblem({ ...a, dpa_signed_by: "Christian Broberg" })).toMatch(/sammen/);
+  });
+
+  it("refuses 'signed' on a vendor whose DPA did not need signing", () => {
+    expect(signedRecordProblem({ ...a, dpa_status: "auto", dpa_signed_at: "x", dpa_signed_by: "y" })).toMatch(/dpa_status/);
+  });
+});
+
+describe("production use (only vendors we actually run)", () => {
+  const endpoints = [{ app: "a", env: "AWS_ENDPOINT_URL_S3", host: "fly.storage.tigris.dev", vendor: "tigris", measured_at: "2026-09-26" }];
+
+  it("a vendor counts only when a running app holds its credential", () => {
+    const use = productionUse({ a: ["RESEND_API_KEY", "CMS_JWT_SECRET"], b: [] }, []);
+    expect([...use.get("resend")!]).toEqual(["a"]);
+    expect(use.has("stripe")).toBe(false);
+  });
+
+  it("every running app counts toward Fly, the host itself", () => {
+    expect([...productionUse({ a: [], b: [] }, []).get("fly")!].sort()).toEqual(["a", "b"]);
+  });
+
+  it("a measured endpoint counts only if that app still has the secret", () => {
+    expect(productionUse({ a: ["AWS_ENDPOINT_URL_S3"] }, endpoints).get("tigris")).toEqual(new Set(["a"]));
+    expect(productionUse({ a: [] }, endpoints).has("tigris")).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 # F201.1 — scanningsrapport
 
-Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
+Kørt 2026-09-26T09:16:13.176Z · 39 af 40 projekter scannet.
 
 ## Projekter
 
@@ -14,7 +14,7 @@ Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
 | broberg-id | broberg-ai/broberg-id | scannet | 8a682cf | 111 | broberg-id=arn |
 | buddy | webhousecode/buddy | scannet | 6c8cf0f | 690 | buddy-brain=arn, buddy-edge-fly=arn, webhouse-old=arn, buddy-voice=arn, buddy-cloud=arn |
 | cardmem | broberg-ai/cardmem | scannet | 6b34b87 | 1028 | cardmem-lens=arn, cardmem=arn |
-| cms | webhousecode/cms | scannet | 2e0222a | 1016 | webhouse-cms=arn, webhouse-app=arn |
+| cms | webhousecode/cms | scannet | 18b6cad | 1016 | webhouse-cms=arn, webhouse-app=arn |
 | components | broberg-ai/components | scannet | 7d36015 | 415 | broberg-discovery=arn |
 | contentpush | broberg-ai/contentpush | scannet | 8e66535 | 77 | contentpush=arn |
 | contract-manager | broberg-ai/contract-manager | scannet | 4d72c97 | 177 | webhouse-contract-manager=arn |
@@ -22,7 +22,7 @@ Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
 | cronjobs | webhousecode/cronjobs | scannet | ca61281 | 143 | webhouse-cronjobs=arn |
 | dns-mcp | webhousecode/dns-mcp | scannet | ccdee00 | 24 | dns-mcp=arn |
 | fd-ishoej | broberg-ai/fd-ishoej | scannet | 3a50a68 | 1 |  |
-| fd-sundhed | broberg-ai/fd-sundhed | scannet | 63aaf90 | 1165 | fd-sundhed=arn |
+| fd-sundhed | broberg-ai/fd-sundhed | scannet | 9b5c327 | 1165 | fd-sundhed=arn |
 | fleet | broberg-ai/fleet | scannet | 888b59e | 18 |  |
 | forager | broberg-ai/forager | scannet | 634cd3d | 56 |  |
 | fysio-dk-aalborg | broberg-ai/fdaa | scannet | f17bb41 | 15 |  |
@@ -30,7 +30,7 @@ Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
 | happy-little-place | broberg-ai/happy-little-place | scannet | 31a990b | 67 | happy-little-place=arn |
 | helpdesk | broberg-ai/helpdesk | scannet | ccf6644 | 234 | broberg-helpdesk-db=arn, broberg-helpdesk-api=arn |
 | how | broberg-ai/house-of-wellness | scannet | f64c05e | 8 |  |
-| kai | broberg-ai/kai | scannet | 569e9e7 | 2 |  |
+| kai | broberg-ai/kai | scannet | d014da5 | 2 |  |
 | lens-fixture | — | **IKKE scannet:** intet repo registreret i cardmem |  |  |  |
 | mailworker | broberg-ai/mailworker | scannet | 045a020 | 71 | mailworker-api=arn |
 | moovyy | cbroberg/moovyy | scannet | 457fdc4 | 211 | moovyy=arn |
@@ -77,6 +77,7 @@ Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
 | Apple (APNs/Sign in/App Store) | broberg-id, buddy, cardmem, fd-sundhed, fysiodk-aalborg-sport, moovyy, storeform, xrt81-com |
 | Web Push (browserens push-tjeneste) | cardmem, cms, components, fd-sundhed, fysiodk-aalborg-sport, happy-little-place, moovyy, trail, xrt81-com |
 | LinkedIn | buddy, cms, coverletter-generator, xrt81-com |
+| Microsoft (login) |  |
 | Simply.com | dns-mcp |
 | pCloud | cms |
 | GatewayAPI | broberg-id, components |
@@ -91,6 +92,7 @@ Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
 | TMDB | moovyy |
 | Unsplash | cms |
 | DAWA (Dataforsyningen) | xrt81-com |
+| Upstash |  |
 | Vercel | cardmem, cms |
 | Netlify | cms |
 | npm | ai-sdk, cms, components, coverletter-generator, dns-mcp, fleet, fysio-dk-aalborg, how, moovyy, pitch, sanneandersen, trail, upmetrics, vn-leker |
@@ -152,6 +154,7 @@ Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
 | Apple (APNs/Sign in/App Store) | **ingen handling** | ikke_databehandler | ukendt |  | https://developer.apple.com/support/terms/apple-developer-program-license-agreement/ |
 | Web Push (browserens push-tjeneste) | **ingen handling** | ikke_databehandler | ukendt |  | https://hacks.mozilla.org/2016/01/web-push-arrives-in-firefox-44/ |
 | LinkedIn | **ingen handling** | ikke_databehandler | SCC |  | https://www.linkedin.com/legal/l/bd-dpa |
+| Microsoft (login) | **ingen handling** | ikke_databehandler | DPF |  | https://learn.microsoft.com/en-us/entra/identity-platform/v2-overview |
 | Simply.com | **acceptér/underskriv** | skal_accepteres | EU |  | https://www.simply.com/compliance/ |
 | pCloud | **erstat/begræns** | mangler | ukendt |  | https://www.pcloud.com/business_agreement.html |
 | GatewayAPI | **acceptér/underskriv** | skal_accepteres | EU |  | https://onlinecity.io/legal-documents/gatewayapi/dpa-eu |
@@ -166,6 +169,7 @@ Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
 | TMDB | **ingen handling** | ikke_databehandler | ukendt |  | https://www.themoviedb.org/api-terms-of-use |
 | Unsplash | **ingen handling** | ikke_databehandler | ukendt |  | https://unsplash.com/api-terms |
 | DAWA (Dataforsyningen) | **ingen handling** | ikke_databehandler | EU |  | https://dawadocs.dataforsyningen.dk/dok/om |
+| Upstash | **link** | auto | SCC |  | https://upstash.com/trust/dpa.pdf |
 | Vercel | **acceptér/underskriv** | skal_accepteres | DPF+SCC |  | https://vercel.com/legal/dpa |
 | Netlify | **link** | auto | DPF+SCC |  | https://www.netlify.com/gdpr-ccpa/ |
 | npm | **ingen handling** | ikke_databehandler | ukendt |  | https://docs.npmjs.com/policies/privacy/ |
@@ -196,6 +200,45 @@ Kørt 2026-09-26T08:48:10.460Z · 39 af 40 projekter scannet.
 | Discord | **ingen handling** | ikke_databehandler | DPF+SCC |  | https://support.discord.com/hc/en-us/articles/37891902561687-Data-Processing-Agreement-Discord-as-a-Processor |
 | Gravatar | **ingen handling** | ikke_databehandler | DPF+SCC |  | https://automattic.com/privacy/ |
 | Vimeo | **acceptér/underskriv** | skal_accepteres | DPF+SCC | JA (sanneandersen) | https://help.vimeo.com/hc/en-us/articles/18332128580241-Does-Vimeo-offer-a-Data-Processing-Agreement |
+
+## Handlinger for leverandører i DRIFT (grundlag for handlingslisten, F201.3)
+
+Målt på 34 kørende Fly-apps (nøgle-NAVNE + målte endpoints).
+
+| leverandør | anbefaling | apps i drift | hvad |
+|---|---|---|---|
+| Fly.io | **acceptér/underskriv** | auto-scaling-container-app, broberg-ai, broberg-autodoc, broberg-discovery, broberg-helpdesk-api, broberg-helpdesk-console, broberg-helpdesk-db, broberg-id, broberg-services, buddy-brain, buddy-cloud, buddy-edge-fly, buddy-voice, cardmem, cardmem-lens, dns-mcp, fd-sport, fd-sundhed, moovyy, pitch-vault, sanneandersen-services, sanneandersen-site, trail-admin, trail-db-001, trail-engine-001, trail-widget, upmetrics, webhouse-app, webhouse-contract-manager, webhouse-cronjobs, webhouse-dk, webhouse-whapi, webhouse-whop, xrt81 | Sign in → Documents (fly.io/documents) → sign the DPA (pre-signed by Fly.io, active once customer signs) |
+| Tigris | **link** | cardmem, trail-db-001, trail-engine-001, upmetrics |  |
+| Cloudflare | **link** | buddy-brain, buddy-cloud, buddy-edge-fly, cardmem, cardmem-lens, dns-mcp, fd-sundhed, sanneandersen-site, webhouse-app, webhouse-contract-manager, webhouse-dk, xrt81 |  |
+| Resend | **link** | broberg-ai, broberg-helpdesk-api, broberg-id, cardmem, fd-sundhed, moovyy, pitch-vault, sanneandersen-site, trail-admin, upmetrics, webhouse-contract-manager, webhouse-cronjobs, webhouse-whapi, webhouse-whop, xrt81 |  |
+| Stripe | **link** | sanneandersen-site |  |
+| Supabase | **link** | broberg-id, fd-sundhed, webhouse-whop |  |
+| Turso | **acceptér/underskriv** | broberg-discovery, buddy-cloud | Log in → Documents section → execute the Data Processing Agreement (paid subscribers only; blog says Scaler/Pro/Enterprise) |
+| Mistral AI | **link** | broberg-ai, broberg-autodoc, broberg-helpdesk-api, buddy-voice, cardmem, fd-sundhed, pitch-vault, sanneandersen-site, trail-engine-001, webhouse-app, xrt81 |  |
+| OpenAI | **link** | xrt81 |  |
+| Anthropic | **link** | webhouse-whop, xrt81 |  |
+| Google (Gemini/Vertex AI) | **link** | webhouse-app |  |
+| OpenRouter | **link** | buddy-brain, buddy-edge-fly, cardmem, sanneandersen-site, trail-engine-001, upmetrics, xrt81 |  |
+| ElevenLabs | **link** | webhouse-app |  |
+| Microsoft Azure | **link** | broberg-ai, buddy-voice, cardmem |  |
+| GitHub | **link** | broberg-autodoc, broberg-id, buddy-edge-fly, cardmem, trail-admin, upmetrics, webhouse-app, webhouse-contract-manager, webhouse-whapi |  |
+| Google (Workspace/Gmail/Calendar/OAuth) | **acceptér/underskriv** | broberg-id, cardmem, moovyy, sanneandersen-site, trail-admin, xrt81 | Admin console (super admin) → Menu → Account → Account settings → Legal and compliance → Security and Privacy Additional Terms → Cloud Data Processing Addendum → Review and Accept |
+| Google Firebase (FCM) | **link** | fd-sundhed |  |
+| Apple (APNs/Sign in/App Store) | **ingen handling** | broberg-id, xrt81 |  |
+| Web Push (browserens push-tjeneste) | **ingen handling** | cardmem, fd-sundhed, trail-engine-001, webhouse-app, xrt81 |  |
+| LinkedIn | **ingen handling** | broberg-id |  |
+| Microsoft (login) | **ingen handling** | broberg-id |  |
+| Simply.com | **acceptér/underskriv** | dns-mcp | Simply.com Kontrolpanel (logged in) → find the databehandleraftale and sign it there |
+| GatewayAPI | **acceptér/underskriv** | broberg-id | DPA takes effect on both parties' signature; how to sign isn't stated online, so check the GatewayAPI dashboard or ask support |
+| Complimenta | **ingen handling** | fd-sundhed |  |
+| Opkald.ai | **acceptér/underskriv** | fd-sundhed | No public DPA document; request it from hej@opkald.ai |
+| TMDB | **ingen handling** | moovyy |  |
+| Upstash | **link** | auto-scaling-container-app |  |
+| fal.ai | **link** | sanneandersen-site |  |
+| Hugging Face | **acceptér/underskriv** | broberg-services | Get an Enterprise Hub or Enterprise plan (huggingface.co/enterprise); the GDPR DPA is offered only through that subscription. |
+| RunPod | **acceptér/underskriv** | broberg-services | Fill in the signature block and required information in the DPA and submit it via the link on the DPA page; it binds only after that. |
+| Discord | **ingen handling** | cardmem, webhouse-cronjobs, webhouse-whop |  |
+| Vimeo | **acceptér/underskriv** | sanneandersen-site | DPA only on Enterprise/OTT plans (https://vimeo.com/legal/enterprise-terms/dpa); self-serve plans get none, but embed users can sign controller-to-controller SCCs via Vimeo's webform (https://www.vimeo.axdraft.com). |
 
 ## Ukendte udgående værter (skal vurderes — kan være en overset leverandør)
 

@@ -432,6 +432,18 @@
     "checked_at": "2026-09-26"
   },
   {
+    "id": "microsoft-login",
+    "dpa_status": "ikke_databehandler",
+    "dpa_url": "https://learn.microsoft.com/en-us/entra/identity-platform/v2-overview",
+    "dpa_url_http": 200,
+    "action": null,
+    "transfer_basis": "DPF",
+    "eu_region_possible": "ukendt",
+    "notes": "Used only as a login option in Broberg ID: the user signs in with their own Microsoft account, same role as Apple/LinkedIn login. Microsoft's own processor/controller wording for this use NOT confirmed on its pages (privacy statement returned 403).",
+    "confidence": "low",
+    "checked_at": "2026-09-26"
+  },
+  {
     "id": "mistral",
     "dpa_status": "auto",
     "dpa_url": "https://legal.mistral.ai/terms/data-processing-addendum",
@@ -777,6 +789,18 @@
     "notes": "The API terms name the developer an independent controller. The required hotlinking lets Unsplash see end-user IPs and image views, which belongs in the privacy notice.",
     "confidence": "medium",
     "dpa_url_http": 401,
+    "checked_at": "2026-09-26"
+  },
+  {
+    "id": "upstash",
+    "dpa_status": "auto",
+    "dpa_url": "https://upstash.com/trust/dpa.pdf",
+    "dpa_url_http": 200,
+    "action": null,
+    "transfer_basis": "SCC",
+    "eu_region_possible": true,
+    "notes": "DPA (April 2025) is 'incorporated into and forms a binding and effective part of the Agreement'; SCCs deemed signed; Upstash Inc. (Delaware). Read from the PDF itself.",
+    "confidence": "high",
     "checked_at": "2026-09-26"
   },
   {

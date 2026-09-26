@@ -1,0 +1,11 @@
+[
+  { "app": "cardmem", "env": "AWS_ENDPOINT_URL_S3", "host": "fly.storage.tigris.dev", "vendor": "tigris", "measured_at": "2026-09-26" },
+  { "app": "cardmem", "env": "LITESTREAM_ENDPOINT", "host": "fly.storage.tigris.dev", "vendor": "tigris", "measured_at": "2026-09-26" },
+  { "app": "trail-db-001", "env": "AWS_ENDPOINT_URL_S3", "host": "fly.storage.tigris.dev", "vendor": "tigris", "measured_at": "2026-09-26" },
+  { "app": "trail-engine-001", "env": "AWS_ENDPOINT_URL_S3", "host": "fly.storage.tigris.dev", "vendor": "tigris", "measured_at": "2026-09-26" },
+  { "app": "trail-engine-001", "env": "TRAIL_DB_BACKUP_S3_ENDPOINT", "host": "fly.storage.tigris.dev", "vendor": "tigris", "measured_at": "2026-09-26" },
+  { "app": "upmetrics", "env": "AWS_ENDPOINT_URL_S3", "host": "fly.storage.tigris.dev", "vendor": "tigris", "measured_at": "2026-09-26" },
+  { "app": "sanneandersen-site", "env": "AWS_ENDPOINT_URL_S3", "host": "<account>.r2.cloudflarestorage.com", "vendor": "cloudflare", "measured_at": "2026-09-26" },
+  { "app": "broberg-id", "env": "BID_DATABASE_URL", "host": "aws-0-eu-north-1.pooler.supabase.com", "vendor": "supabase", "measured_at": "2026-09-26" },
+  { "app": "auto-scaling-container-app", "env": "REDIS_URL", "host": "<name>.upstash.io", "vendor": "upstash", "measured_at": "2026-09-26" }
+]
