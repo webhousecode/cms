@@ -1,0 +1,1080 @@
+# F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.
+scanned_at: "2026-09-26T08:36:56.748Z"
+projects_total: 40
+projects_scanned: 39
+vendors:
+  - id: fly
+    name: "Fly.io"
+    purpose: "Hosting"
+    products: ["ai-sdk", "autodoc", "broberg-ai-site", "broberg-id", "buddy", "cardmem", "cms", "components", "contentpush", "contract-manager", "coverletter-generator", "cronjobs", "dns-mcp", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "mailworker", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine", "whop", "xrt81-com"]
+    regions: ["arn"]
+    evidence:
+      - "broberg-ai/ai-sdk scripts/verify-trainstyle.ts:27 (host sanneandersen-site.fly.dev)"
+      - "broberg-ai/autodoc fly.toml:1 (fly.toml app=broberg-autodoc)"
+      - "broberg-ai/autodoc templates/autodoc-build.yml:35 (host broberg-autodoc.fly.dev)"
+      - "broberg-ai/broberg-ai-site .github/workflows/ci.yml:60 (env FLY_API_TOKEN)"
+      - "broberg-ai/broberg-ai-site .github/workflows/ci.yml:60 (env FLY_API_TOKEN)"
+      - "broberg-ai/broberg-id .github/workflows/deploy.yml:63 (env FLY_API_TOKEN)"
+      - "broberg-ai/broberg-id .github/workflows/deploy.yml:63 (env FLY_API_TOKEN)"
+      - "webhousecode/buddy .github/workflows/deploy-cloud-fly.yml:91 (env FLY_API_TOKEN)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: tigris
+    name: "Tigris"
+    purpose: "Objektlager"
+    products: ["cardmem", "trail"]
+    evidence:
+      - "broberg-ai/cardmem apps/agent/src/lens/storage.ts:98 (host fly.storage.tigris.dev)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:95 (host console.tigris.dev)"
+      - "broberg-ai/trail apps/server/scripts/verify-f212-5-backup-freshness.ts:26 (host fly.storage.tigris.dev)"
+      - "broberg-ai/trail apps/server/src/services/backup/freshness.ts:29 (host fly.storage.tigris.dev)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: cloudflare
+    name: "Cloudflare"
+    purpose: "DNS, CDN, R2-lager, Turnstile"
+    products: ["broberg-ai-site", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "helpdesk", "notesmem", "sanneandersen", "upmetrics", "xrt81-com"]
+    evidence:
+      - "broberg-ai/broberg-ai-site package.json:24 (npm @broberg/forms-turnstile)"
+      - "broberg-ai/broberg-ai-site src/support.ts:144 (env TURNSTILE_SECRET_KEY)"
+      - "webhousecode/buddy apps/server/src/orchestration-spawn.ts:251 (env CF_API_TOKEN)"
+      - "webhousecode/buddy apps/server/src/r2-staging.ts:26 (env R2_ACCOUNT_ID)"
+      - "broberg-ai/cardmem apps/lens-cloud/.env.example:22 (env R2_ENDPOINT)"
+      - "broberg-ai/cardmem apps/lens-cloud/.env.example:23 (env R2_BUCKET)"
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:358 (host developers.cloudflare.com)"
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:362 (host api.cloudflare.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: resend
+    name: "Resend"
+    purpose: "Transaktionsmails"
+    products: ["broberg-ai-site", "broberg-id", "cardmem", "cms", "components", "contract-manager", "cronjobs", "fd-sundhed", "happy-little-place", "helpdesk", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "vn-leker", "whop", "xrt81-com"]
+    evidence:
+      - "broberg-ai/broberg-ai-site package.json:25 (npm @broberg/mail)"
+      - "broberg-ai/broberg-ai-site src/aidan-mail.ts:35 (env RESEND_API_KEY)"
+      - "broberg-ai/broberg-id package.json:23 (npm @broberg/mail)"
+      - "broberg-ai/cardmem apps/agent/src/lens/critic-dom.selftest.ts:415 (env RESEND_ADMIN_API_KEY)"
+      - "broberg-ai/cardmem apps/agent/src/lens/critic-dom.selftest.ts:432 (env RESEND_ADMIN_API_KEY)"
+      - "webhousecode/cms packages/cms-admin/package.json:27 (npm @broberg/mail)"
+      - "webhousecode/cms packages/cms-admin/src/components/settings/email-settings-panel.tsx:248 (env RESEND_API_KEY)"
+      - "broberg-ai/components packages/mail/src/index.ts:36 (env RESEND_ENDPOINT)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: stripe
+    name: "Stripe"
+    purpose: "Betaling"
+    products: ["cardmem", "cms", "components", "mailworker", "sanneandersen"]
+    evidence:
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:81 (host dashboard.stripe.com)"
+      - "broberg-ai/cardmem packages/mcp-tools/src/lib/journey/booklet.ts:23 (env STRIPE_RE)"
+      - "webhousecode/cms packages/cms-shop/package.json:76 (npm stripe)"
+      - "webhousecode/cms packages/cms-shop/src/checkout/checkout.ts:11 (env STRIPE_SECRET_KEY)"
+      - "broberg-ai/components packages/stripe/package.json:34 (npm stripe)"
+      - "broberg-ai/components packages/stripe/src/index.ts:30 (env STRIPE_API_VERSION)"
+      - "broberg-ai/mailworker src/journey/booklet.ts:32 (env STRIPE_RE)"
+      - "broberg-ai/mailworker src/journey/booklet.ts:38 (env STRIPE_RE)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: supabase
+    name: "Supabase"
+    purpose: "Database + auth"
+    products: ["cardmem", "cms", "fd-sundhed", "fysiodk-aalborg-sport", "whop"]
+    evidence:
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:77 (host supabase.com)"
+      - "webhousecode/cms package.json:45 (npm @supabase/supabase-js)"
+      - "webhousecode/cms packages/cms/src/storage/supabase/adapter.ts:29 (host xxxxx.supabase.co)"
+      - "broberg-ai/fd-sundhed .github/workflows/renew-apple-secret.yml:31 (env SUPABASE_ACCESS_TOKEN)"
+      - "broberg-ai/fd-sundhed .github/workflows/renew-apple-secret.yml:31 (env SUPABASE_ACCESS_TOKEN)"
+      - "webhousecode/fysiodk-aalborg-sport .github/workflows/renew-apple-secret.yml:30 (env SUPABASE_ACCESS_TOKEN)"
+      - "webhousecode/fysiodk-aalborg-sport .github/workflows/renew-apple-secret.yml:30 (env SUPABASE_ACCESS_TOKEN)"
+      - "webhousecode/whop app/(dashboard)/databases/database-card.tsx:20 (env SUPABASE_PLANS)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: turso
+    name: "Turso"
+    purpose: "Database (libSQL)"
+    products: ["buddy", "cardmem", "components", "contentpush", "happy-little-place", "helpdesk", "super", "trail", "xrt81-com"]
+    evidence:
+      - "webhousecode/buddy apps/server/package.json:16 (npm @broberg/db-sdk)"
+      - "webhousecode/buddy apps/server/src/db/cloud.ts:13 (env TURSO_DATABASE_URL)"
+      - "broberg-ai/cardmem apps/server/package.json:25 (npm @libsql/client)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:76 (host app.turso.tech)"
+      - "broberg-ai/components apps/discovery/enroll.ts:123 (env TURSO_DATABASE_URL)"
+      - "broberg-ai/components apps/discovery/enroll.ts:128 (env TURSO_DATABASE_URL)"
+      - "broberg-ai/contentpush apps/web/.env.example:8 (env TURSO_DATABASE_URL)"
+      - "broberg-ai/contentpush apps/web/drizzle.config.ts:5 (env TURSO_DATABASE_URL)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: aws
+    name: "Amazon Web Services"
+    purpose: "Hosting/lager (S3/Lightsail)"
+    products: ["cms", "forager", "sanneandersen", "trail", "whop"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/package.json:98 (npm @aws-sdk/client-s3)"
+      - "broberg-ai/forager data/measurements/probe2.py:45 (host discogs-data-dumps.s3.us-west-2.amazonaws.com)"
+      - "webhousecode/sanneandersen site/package.json:34 (npm @aws-sdk/client-s3)"
+      - "webhousecode/sanneandersen site/package.json:35 (npm @aws-sdk/s3-request-presigner)"
+      - "broberg-ai/trail apps/server/package.json:14 (npm @aws-sdk/client-s3)"
+      - "broberg-ai/trail apps/server/package.json:15 (npm @aws-sdk/lib-storage)"
+      - "webhousecode/whop package.json:21 (npm @aws-sdk/client-lightsail)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: mistral
+    name: "Mistral AI"
+    purpose: "AI-modeller (EU)"
+    products: ["ai-sdk", "broberg-ai-site", "buddy", "cardmem", "cms", "components", "contentpush", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "helpdesk", "pitch", "trail", "xrt81-com"]
+    evidence:
+      - "broberg-ai/ai-sdk inventory.json:9609 (host mistral.ai)"
+      - "broberg-ai/ai-sdk inventory.json:12163 (host mistral.ai)"
+      - "broberg-ai/broberg-ai-site src/aidan.ts:14 (env MISTRAL_API_KEY)"
+      - "broberg-ai/broberg-ai-site src/aidan.ts:37 (env MISTRAL_API_KEY)"
+      - "webhousecode/buddy apps/server/src/ai-complete.ts:88 (env MISTRAL_API_KEY)"
+      - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (env MISTRAL_API_KEY)"
+      - "broberg-ai/cardmem apps/agent/src/lens/critic-vision.selftest.ts:5 (env MISTRAL_API_KEY)"
+      - "broberg-ai/cardmem apps/agent/src/lens/critic-vision.selftest.ts:5 (env MISTRAL_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: openai
+    name: "OpenAI"
+    purpose: "AI-modeller"
+    products: ["ai-sdk", "buddy", "cardmem", "cms", "trail", "xrt81-com"]
+    evidence:
+      - "broberg-ai/ai-sdk .env.example:8 (env OPENAI_API_KEY)"
+      - "broberg-ai/ai-sdk inventory.json:2194 (host developers.openai.com)"
+      - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host developers.openai.com)"
+      - "webhousecode/buddy apps/server/src/session-env.ts:33 (env OPENAI_)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:65 (host platform.openai.com)"
+      - "broberg-ai/cardmem apps/web/src/components/settings-secrets.tsx:894 (env OPENAI_API_KEY)"
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:385 (host platform.openai.com)"
+      - "webhousecode/cms packages/cms-admin/src/app/api/admin/deploy/download-zip/route.ts:69 (env OPENAI_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: anthropic
+    name: "Anthropic"
+    purpose: "AI-modeller"
+    products: ["ai-sdk", "buddy", "cardmem", "cms", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "trail", "whop", "xrt81-com"]
+    evidence:
+      - "broberg-ai/ai-sdk .env.example:5 (env ANTHROPIC_API_KEY)"
+      - "broberg-ai/ai-sdk inventory.json:13014 (host www.anthropic.com)"
+      - "webhousecode/buddy apps/server/scripts/recall-headtohead.ts:12 (env ANTHROPIC_API_KEY)"
+      - "webhousecode/buddy apps/server/src/routes/settings.ts:330 (env ANTHROPIC_API_KEY)"
+      - "broberg-ai/cardmem apps/server/.env.example:69 (env ANTHROPIC_API_KEY)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:66 (host console.anthropic.com)"
+      - "webhousecode/cms docker-compose.yml:16 (env ANTHROPIC_API_KEY)"
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:376 (host console.anthropic.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: google-ai
+    name: "Google (Gemini/Vertex AI)"
+    purpose: "AI-modeller"
+    products: ["ai-sdk", "buddy", "cardmem", "cms", "components", "super"]
+    evidence:
+      - "broberg-ai/ai-sdk scripts/smoke-gemini-direct.mjs:2 (env GEMINI_API_KEY)"
+      - "broberg-ai/ai-sdk src/catalogue/fetchers.ts:92 (env GEMINI_API_KEY)"
+      - "webhousecode/buddy apps/server/src/session-env.ts:33 (env GEMINI_)"
+      - "broberg-ai/cardmem packages/mcp-tools/src/lib/epic-suggest.ts:60 (env GEMINI_FALLBACK)"
+      - "broberg-ai/cardmem packages/mcp-tools/src/lib/epic-suggest.ts:111 (env GEMINI_FALLBACK)"
+      - "webhousecode/cms packages/cms-admin/src/lib/ai-config.ts:134 (env GEMINI_API_KEY)"
+      - "webhousecode/cms packages/cms-admin/src/lib/ai/client.ts:90 (env GEMINI_API_KEY)"
+      - "broberg-ai/components scripts/inventory-data.mjs:94 (env GEMINI_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: deepinfra
+    name: "DeepInfra"
+    purpose: "AI-modeller"
+    products: ["ai-sdk", "pitch"]
+    evidence:
+      - "broberg-ai/ai-sdk .env.example:14 (env DEEPINFRA_API_KEY)"
+      - "broberg-ai/ai-sdk src/cost/default-hosts.ts:18 (host api.deepinfra.com)"
+      - "cbroberg/pitch lib/ai-routes.ts:76 (env DEEPINFRA_MODEL)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: openrouter
+    name: "OpenRouter"
+    purpose: "AI-routing"
+    products: ["ai-sdk", "buddy", "cardmem", "components", "sanneandersen", "trail", "upmetrics", "xrt81-com"]
+    evidence:
+      - "broberg-ai/ai-sdk .env.example:17 (env OPENROUTER_API_KEY)"
+      - "broberg-ai/ai-sdk inventory.json:562 (host openrouter.ai)"
+      - "webhousecode/buddy apps/server/scripts/recall-headtohead.ts:12 (env OPENROUTER_API_KEY)"
+      - "webhousecode/buddy apps/server/src/ai-complete.ts:88 (env OPENROUTER_API_KEY)"
+      - "broberg-ai/cardmem apps/agent/src/lens/critic-vision.ts:124 (env OPENROUTER_API_KEY)"
+      - "broberg-ai/cardmem apps/agent/src/lens/critic-vision.ts:124 (env OPENROUTER_API_KEY)"
+      - "broberg-ai/components packages/lens-engine/src/vision.ts:47 (env OPENROUTER_API_KEY)"
+      - "webhousecode/sanneandersen site/.env.example:12 (env OPENROUTER_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: deepseek
+    name: "DeepSeek"
+    purpose: "AI-modeller"
+    products: ["ai-sdk", "buddy", "cardmem", "components"]
+    evidence:
+      - "broberg-ai/ai-sdk src/availability/registry.ts:61 (env DEEPSEEK_API_KEY)"
+      - "broberg-ai/ai-sdk src/cost/default-hosts.ts:19 (host api.deepseek.com)"
+      - "webhousecode/buddy apps/server/src/session-env.ts:33 (env DEEPSEEK_)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:69 (host platform.deepseek.com)"
+      - "broberg-ai/components packages/secret-scan/src/index.ts:74 (env DEEPSEEK_API_KEY)"
+      - "broberg-ai/components packages/secret-scan/src/index.ts:393 (env DEEPSEEK_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: elevenlabs
+    name: "ElevenLabs"
+    purpose: "Tale (TTS)"
+    products: ["ai-sdk", "buddy", "cardmem", "cms", "contentpush"]
+    evidence:
+      - "broberg-ai/ai-sdk src/cost/default-hosts.ts:20 (host api.elevenlabs.io)"
+      - "broberg-ai/ai-sdk src/index.ts:27 (env ELEVENLABS_DANISH_VOICES)"
+      - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host elevenlabs.io)"
+      - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host elevenlabs.io)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:71 (host elevenlabs.io)"
+      - "webhousecode/cms packages/cms-admin/src/app/api/podcast/[slug]/estimate/route.ts:57 (env ELEVENLABS_API_KEY)"
+      - "webhousecode/cms packages/cms-admin/src/lib/ai/client.ts:94 (env ELEVENLABS_API_KEY)"
+      - "broberg-ai/contentpush apps/web/src/server/lib/scriptCompile.ts:42 (env ELEVENLABS_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: azure
+    name: "Microsoft Azure"
+    purpose: "Tale/AI"
+    products: ["ai-sdk", "broberg-ai-site", "buddy", "cardmem", "contentpush"]
+    evidence:
+      - "broberg-ai/ai-sdk src/index.ts:28 (env AZURE_DANISH_VOICES)"
+      - "broberg-ai/ai-sdk src/index.ts:28 (env AZURE_DANISH_VOICE_LIST)"
+      - "broberg-ai/broberg-ai-site src/aidan-laes.ts:46 (env AZURE_SPEECH_KEY)"
+      - "broberg-ai/broberg-ai-site src/aidan-laes.ts:363 (env AZURE_STYKKE)"
+      - "webhousecode/buddy apps/voice/src/lytning.ts:10 (env AZURE_SPEECH_KEY)"
+      - "webhousecode/buddy apps/voice/src/lytning.ts:56 (env AZURE_SPEECH_KEY)"
+      - "broberg-ai/cardmem apps/server/src/api/tts.ts:6 (env AZURE_SPEECH_KEY)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:92 (host portal.azure.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: bfl
+    name: "Black Forest Labs"
+    purpose: "Billedgenerering"
+    products: ["ai-sdk", "cardmem", "contentpush"]
+    evidence:
+      - "broberg-ai/ai-sdk src/cost/default-hosts.ts:29 (host api.eu.bfl.ai)"
+      - "broberg-ai/ai-sdk src/cost/default-hosts.ts:37 (host api.eu.bfl.ai)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:100 (host dashboard.bfl.ai)"
+      - "broberg-ai/contentpush apps/web/src/server/env.ts:20 (env BFL_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: github
+    name: "GitHub"
+    purpose: "Kode, CI, API"
+    products: ["ai-sdk", "autodoc", "broberg-id", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "fleet", "forager", "fysio-dk-aalborg", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "how", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine"]
+    evidence:
+      - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GH_TOKEN)"
+      - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GITHUB_TOKEN)"
+      - "broberg-ai/autodoc scripts/dogfood.ts:27 (env GITHUB_TOKEN)"
+      - "broberg-ai/autodoc scripts/dogfood.ts:33 (env GITHUB_TOKEN)"
+      - "broberg-ai/broberg-id scripts/fikstur-app.ts:42 (env GITHUB_CLIENT_ID)"
+      - "broberg-ai/broberg-id scripts/fikstur-app.ts:43 (env GITHUB_CLIENT_SECRET)"
+      - "webhousecode/buddy .github/workflows/build-edge-image.yml:58 (env GITHUB_TOKEN)"
+      - "webhousecode/buddy apps/server/src/queue/phantom-f-number.ts:42 (host github.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: google-workspace
+    name: "Google (Workspace/Gmail/Calendar/OAuth)"
+    purpose: "Mail, kalender, login"
+    products: ["ai-sdk", "broberg-id", "cardmem", "cms", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "mailworker", "moovyy", "sanneandersen", "trail", "xrt81-com"]
+    evidence:
+      - "broberg-ai/ai-sdk src/providers/vertex.ts:29 (host oauth2.googleapis.com)"
+      - "broberg-ai/ai-sdk src/providers/vertex.ts:31 (host www.googleapis.com)"
+      - "broberg-ai/broberg-id scripts/fikstur-app.ts:40 (env GOOGLE_CLIENT_ID)"
+      - "broberg-ai/broberg-id scripts/fikstur-app.ts:41 (env GOOGLE_CLIENT_SECRET)"
+      - "broberg-ai/cardmem apps/server/src/api/meetings.ts:1088 (host meet.google.com)"
+      - "broberg-ai/cardmem apps/server/src/auth.ts:413 (env GOOGLE_OAUTH_CLIENT_ID)"
+      - "webhousecode/cms packages/cms-admin/src/lib/lighthouse/psi-engine.ts:9 (host www.googleapis.com)"
+      - "cbroberg/coverletter-generator components/app-sidebar.tsx:93 (host drive.google.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: google-maps
+    name: "Google Maps"
+    purpose: "Kort"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/media/page.tsx:1907 (host maps.google.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: google-psi
+    name: "Google PageSpeed Insights"
+    purpose: "Performance-måling"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/app/api/admin/lighthouse/scan/route.ts:42 (env GOOGLE_PSI_API_KEY)"
+      - "webhousecode/cms packages/cms-admin/src/lib/site-config.ts:351 (env GOOGLE_PSI_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: firebase
+    name: "Google Firebase (FCM)"
+    purpose: "Push-notifikationer"
+    products: ["cms", "fd-sundhed", "fysiodk-aalborg-sport"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/package.json:63 (npm firebase-admin)"
+      - "webhousecode/cms packages/cms-admin/src/lib/push-send.ts:18 (env FIREBASE_PROJECT_ID)"
+      - "broberg-ai/fd-sundhed apps/web/package.json:99 (npm firebase-admin)"
+      - "broberg-ai/fd-sundhed apps/web/src/lib/api-health-check.ts:214 (env FIREBASE_PROJECT_ID)"
+      - "webhousecode/fysiodk-aalborg-sport apps/web/.env.example:29 (env FIREBASE_PROJECT_ID)"
+      - "webhousecode/fysiodk-aalborg-sport apps/web/.env.example:30 (env FIREBASE_CLIENT_EMAIL)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: apple
+    name: "Apple (APNs/Sign in/App Store)"
+    purpose: "Push, login, app-distribution"
+    products: ["broberg-id", "buddy", "cardmem", "fd-sundhed", "fysiodk-aalborg-sport", "moovyy", "storeform", "xrt81-com"]
+    evidence:
+      - "broberg-ai/broberg-id scripts/apple-secret.ts:8 (env APPLE_CLIENT_ID)"
+      - "broberg-ai/broberg-id scripts/apple-secret.ts:9 (env APPLE_TEAM_ID)"
+      - "webhousecode/buddy apps/server/src/push/apns.ts:10 (env APNS_KEY_PATH)"
+      - "webhousecode/buddy apps/server/src/push/apns.ts:11 (env APNS_KEY_ID)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:94 (host appstoreconnect.apple.com)"
+      - "broberg-ai/fd-sundhed .github/workflows/renew-apple-secret.yml:27 (env APPLE_TEAM_ID)"
+      - "broberg-ai/fd-sundhed .github/workflows/renew-apple-secret.yml:27 (env APPLE_TEAM_ID)"
+      - "webhousecode/fysiodk-aalborg-sport .github/workflows/renew-apple-secret.yml:26 (env APPLE_TEAM_ID)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: webpush
+    name: "Web Push (browserens push-tjeneste)"
+    purpose: "Push-notifikationer"
+    products: ["cardmem", "cms", "components", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "moovyy", "trail", "xrt81-com"]
+    evidence:
+      - "broberg-ai/cardmem apps/server/package.json:24 (npm @broberg/webpush)"
+      - "broberg-ai/cardmem apps/server/src/api/push.ts:48 (env VAPID_PUBLIC)"
+      - "webhousecode/cms packages/cms-admin/package.json:94 (npm web-push)"
+      - "webhousecode/cms packages/cms-admin/src/app/api/admin/push/vapid-public-key/route.ts:16 (env VAPID_PUBLIC_KEY)"
+      - "broberg-ai/components packages/webpush/package.json:47 (npm web-push)"
+      - "broberg-ai/fd-sundhed apps/web/package.json:53 (npm @broberg/webpush)"
+      - "broberg-ai/fd-sundhed apps/web/src/lib/push.ts:35 (env VAPID_PRIVATE_KEY)"
+      - "webhousecode/fysiodk-aalborg-sport apps/web/package.json:41 (npm @broberg/webpush)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: linkedin
+    name: "LinkedIn"
+    purpose: "Login"
+    products: ["buddy", "cms", "coverletter-generator", "xrt81-com"]
+    evidence:
+      - "webhousecode/buddy docker/old-site/arkiv/_dk_webhouse_medarbejdere_christian_broberg.htm.html:178 (host dk.linkedin.com)"
+      - "webhousecode/buddy docker/old-site/arkiv/_dk_webhouse_medarbejdere_christian_broberg.htm.html:178 (host dk.linkedin.com)"
+      - "webhousecode/cms landing/webhouse-app-landing.html:830 (host www.linkedin.com)"
+      - "webhousecode/cms packages/cms-admin/public/home.html:875 (host www.linkedin.com)"
+      - "cbroberg/coverletter-generator app/(app)/create/page.tsx:155 (host linkedin.com)"
+      - "cbroberg/coverletter-generator app/(app)/settings/page.tsx:541 (host linkedin.com)"
+      - "broberg-ai/xrt81 apps/web/src/components/ProfileFields.tsx:70 (host www.linkedin.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: simply
+    name: "Simply.com"
+    purpose: "Domæner/DNS"
+    products: ["dns-mcp"]
+    evidence:
+      - "webhousecode/dns-mcp src/clients/simply.ts:1 (host api.simply.com)"
+      - "webhousecode/dns-mcp src/clients/simply.ts:36 (env SIMPLY_ACCOUNT)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: pcloud
+    name: "pCloud"
+    purpose: "Backup-lager"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/pcloud.ts:27 (host ewebdav.pcloud.com)"
+      - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/pcloud.ts:28 (host webdav.pcloud.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: gatewayapi
+    name: "GatewayAPI"
+    purpose: "SMS"
+    products: ["broberg-id", "components"]
+    evidence:
+      - "broberg-ai/broberg-id src/contact-notify.ts:107 (env GATEWAYAPI_TOKEN)"
+      - "broberg-ai/components packages/sms/src/delivery.ts:85 (env GATEWAYAPI_STATES)"
+      - "broberg-ai/components packages/sms/src/delivery.ts:119 (env GATEWAYAPI_STATES)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: twilio
+    name: "Twilio"
+    purpose: "SMS/tale"
+    products: ["cardmem"]
+    evidence:
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:82 (host console.twilio.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: complimenta
+    name: "Complimenta"
+    purpose: "Booking (klinik-system)"
+    products: ["fd-sundhed", "fysio-dk-aalborg"]
+    evidence:
+      - "broberg-ai/fd-sundhed apps/web/package.json:42 (npm @broberg/complimenta-sdk)"
+      - "broberg-ai/fd-sundhed apps/web/scripts/aflys-testtid.mjs:36 (env COMPLIMENTA_BASE_URL)"
+      - "broberg-ai/fdaa packages/complimenta/.env.example:9 (env COMPLIMENTA_BASE_URL)"
+      - "broberg-ai/fdaa packages/complimenta/.env.example:9 (host api-demo.complimentawork.dk)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: opkald
+    name: "Opkald.ai"
+    purpose: "Telefonsvarer/opkald"
+    products: ["fd-sundhed"]
+    evidence:
+      - "broberg-ai/fd-sundhed apps/web/src/app/api/opkald/demo-forloeb/route.ts:24 (env OPKALD_DEMO_API_KEY)"
+      - "broberg-ai/fd-sundhed apps/web/src/app/api/opkald/demo-forloeb/route.ts:44 (env OPKALD_DEMO_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: zoom
+    name: "Zoom"
+    purpose: "Videomøder"
+    products: ["cardmem"]
+    evidence:
+      - "broberg-ai/cardmem apps/web/src/components/chat.tsx:2975 (env ZOOM_OPTS)"
+      - "broberg-ai/cardmem apps/web/src/components/chat.tsx:2982 (env ZOOM_OPTS)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: daily
+    name: "Daily.co"
+    purpose: "Videomøder"
+    products: ["buddy"]
+    evidence:
+      - "webhousecode/buddy apps/server/src/nightly-discord-report.ts:20 (env DAILY_INTERVAL_MS)"
+      - "webhousecode/buddy apps/server/src/nightly-discord-report.ts:157 (env DAILY_INTERVAL_MS)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: livekit
+    name: "LiveKit"
+    purpose: "Video/lyd i realtid"
+    products: ["buddy"]
+    evidence:
+      - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host docs.livekit.io)"
+      - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host blog.livekit.io)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: opensubtitles
+    name: "OpenSubtitles"
+    purpose: "Undertekster"
+    products: ["moovyy"]
+    evidence:
+      - "cbroberg/moovyy watch-service/index.js:1251 (env OPENSUBTITLES_API_KEY)"
+      - "cbroberg/moovyy watch-service/index.js:1252 (env OPENSUBTITLES_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: subdl
+    name: "SubDL"
+    purpose: "Undertekster"
+    products: ["moovyy"]
+    evidence:
+      - "cbroberg/moovyy watch-service/subtitle-fetch.js:257 (env SUBDL_S)"
+      - "cbroberg/moovyy watch-service/subtitle-fetch.js:257 (host api.subdl.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: tmdb
+    name: "TMDB"
+    purpose: "Filmdata"
+    products: ["moovyy"]
+    evidence:
+      - "cbroberg/moovyy cloud/src/api-oensker.js:182 (host api.themoviedb.org)"
+      - "cbroberg/moovyy cloud/src/api-oensker.js:183 (env TMDB_TOKEN)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: unsplash
+    name: "Unsplash"
+    purpose: "Billeder"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/components/editor/image-gallery-editor.tsx:177 (host images.unsplash.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: dawa
+    name: "DAWA (Dataforsyningen)"
+    purpose: "Adresseopslag"
+    products: ["xrt81-com"]
+    evidence:
+      - "broberg-ai/xrt81 apps/server/src/lib/geocode.ts:22 (host api.dataforsyningen.dk)"
+      - "broberg-ai/xrt81 apps/web/src/components/ui/AddressAutocomplete.tsx:62 (host api.dataforsyningen.dk)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: vercel
+    name: "Vercel"
+    purpose: "Hosting"
+    products: ["cardmem", "cms"]
+    evidence:
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:78 (host vercel.com)"
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:340 (host vercel.com)"
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:344 (host api.vercel.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: netlify
+    name: "Netlify"
+    purpose: "Hosting"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:349 (host docs.netlify.com)"
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:353 (host api.netlify.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: npm
+    name: "npm"
+    purpose: "Pakke-udgivelse"
+    products: ["ai-sdk", "cms", "components", "coverletter-generator", "dns-mcp", "fleet", "fysio-dk-aalborg", "how", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "vn-leker"]
+    evidence:
+      - "broberg-ai/ai-sdk .github/workflows/publish.yml:35 (host registry.npmjs.org)"
+      - "webhousecode/cms .github/workflows/publish.yml:46 (host registry.npmjs.org)"
+      - "webhousecode/cms .github/workflows/publish.yml:189 (host registry.npmjs.org)"
+      - "broberg-ai/components .github/workflows/publish.yml:119 (host registry.npmjs.org)"
+      - "broberg-ai/components .github/workflows/publish.yml:184 (host registry.npmjs.org)"
+      - "cbroberg/coverletter-generator package-lock.json:102 (host registry.npmjs.org)"
+      - "cbroberg/coverletter-generator package-lock.json:114 (host registry.npmjs.org)"
+      - "webhousecode/dns-mcp package-lock.json:29 (host registry.npmjs.org)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: smsdk
+    name: "SMS.dk"
+    purpose: "SMS"
+    products: ["components"]
+    evidence:
+      - "broberg-ai/components packages/sms/src/delivery.ts:221 (env SMSDK_STATES)"
+      - "broberg-ai/components packages/sms/src/delivery.ts:229 (env SMSDK_LABELS)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: verda
+    name: "Verda (GPU-cloud)"
+    purpose: "GPU/AI-hosting"
+    products: ["voice-engine"]
+    evidence:
+      - "broberg-ai/voice-engine scripts/gpu_drill.py:41 (env VERDA_CLIENT_ID)"
+      - "broberg-ai/voice-engine scripts/gpu_drill.py:42 (env VERDA_CLIENT_SECRET)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: tailscale
+    name: "Tailscale"
+    purpose: "Privat netværk"
+    products: ["buddy"]
+    evidence:
+      - "webhousecode/buddy apps/ios/Buddy/Views/OnboardingView.swift:70 (host din-mac.ts.net)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: google-play
+    name: "Google Play"
+    purpose: "App-distribution"
+    products: ["fd-sundhed", "fysiodk-aalborg-sport", "storeform"]
+    evidence:
+      - "broberg-ai/fd-sundhed apps/web/public/qr/MANIFEST.json:7 (host play.google.com)"
+      - "broberg-ai/fd-sundhed apps/web/src/app/(app)/app/admin/developer/google-play-tab.tsx:20 (host play.google.com)"
+      - "webhousecode/fysiodk-aalborg-sport apps/web/src/app/(app)/app/admin/developer/google-play-tab.tsx:20 (host play.google.com)"
+      - "webhousecode/fysiodk-aalborg-sport apps/web/src/app/(app)/app/admin/kommunikation/campaign-form.tsx:53 (host play.google.com)"
+      - "broberg-ai/storeform schemas/google-play.content-rating.yaml:46 (host play.google.com)"
+      - "broberg-ai/storeform schemas/google-play.data-safety.location.yaml:31 (host play.google.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: deepl
+    name: "DeepL"
+    purpose: "Oversættelse"
+    products: ["ai-sdk", "components"]
+    evidence:
+      - "broberg-ai/ai-sdk src/providers/deepl.ts:20 (env DEEPL_API_KEY)"
+      - "broberg-ai/ai-sdk src/providers/deepl.ts:21 (env DEEPL_API_KEY)"
+      - "broberg-ai/components scripts/inventory-data.mjs:94 (env DEEPL_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: fal
+    name: "fal.ai"
+    purpose: "AI-modeller (billede/video)"
+    products: ["ai-sdk", "cardmem", "contentpush", "sanneandersen", "super"]
+    evidence:
+      - "broberg-ai/ai-sdk .env.example:20 (env FAL_KEY)"
+      - "broberg-ai/ai-sdk scripts/verify-trainstyle.ts:3 (env FAL_KEY)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:99 (host fal.ai)"
+      - "broberg-ai/contentpush apps/web/src/server/env.ts:19 (env FAL_KEY)"
+      - "broberg-ai/contentpush apps/web/src/server/env.ts:48 (env FAL_KEY)"
+      - "webhousecode/sanneandersen site/src/lib/ai/client.ts:11 (env FAL_KEY)"
+      - "webhousecode/sanneandersen site/src/lib/ai/client.ts:11 (env FAL_KEY)"
+      - "broberg-ai/super-agent scripts/aidan/vink.mjs:31 (env FAL_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: huggingface
+    name: "Hugging Face"
+    purpose: "AI-modeller"
+    products: ["fd-sundhed", "forager", "voice-engine"]
+    evidence:
+      - "broberg-ai/fd-sundhed tools/moedeoptagelse/transskriber.mjs:79 (host huggingface.co)"
+      - "broberg-ai/forager src/scout-da/sources/dynaword-client.ts:6 (host datasets-server.huggingface.co)"
+      - "broberg-ai/forager src/scout-da/sources/dynaword-client.ts:105 (host huggingface.co)"
+      - "broberg-ai/voice-engine .github/workflows/image.yml:115 (host huggingface.co)"
+      - "broberg-ai/voice-engine Dockerfile:181 (host huggingface.co)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: runpod
+    name: "RunPod"
+    purpose: "GPU/AI-hosting"
+    products: ["trail", "voice-engine"]
+    evidence:
+      - "broberg-ai/trail apps/scout/training/runpod_train.py:69 (host rest.runpod.io)"
+      - "broberg-ai/trail apps/scout/training/runpod_train.py:78 (host api.runpod.io)"
+      - "broberg-ai/voice-engine scripts/gpu_drill.py:51 (env RUNPOD_KEY_FILE)"
+      - "broberg-ai/voice-engine scripts/gpu_drill.py:55 (env RUNPOD_KEY_FILE)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: requesty
+    name: "Requesty"
+    purpose: "AI-routing"
+    products: ["ai-sdk"]
+    evidence:
+      - "broberg-ai/ai-sdk src/providers/requesty.ts:5 (env REQUESTY_API_KEY)"
+      - "broberg-ai/ai-sdk src/providers/requesty.ts:14 (host router.requesty.ai)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: tavily
+    name: "Tavily"
+    purpose: "Websøgning (AI)"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:427 (host tavily.com)"
+      - "webhousecode/cms packages/cms-admin/src/components/settings/ai-settings-panel.tsx:260 (host tavily.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: brave
+    name: "Brave Search"
+    purpose: "Websøgning"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/components/settings/ai-settings-panel.tsx:259 (host api.search.brave.com)"
+      - "webhousecode/cms packages/cms-admin/src/components/settings/mcp-settings-panel.tsx:378 (env BRAVE_API_KEY)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: perplexity
+    name: "Perplexity"
+    purpose: "AI-søgning"
+    products: ["ai-sdk"]
+    evidence:
+      - "broberg-ai/ai-sdk inventory.json:11427 (host docs.perplexity.ai)"
+      - "broberg-ai/ai-sdk inventory.json:11457 (host docs.perplexity.ai)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: bunny
+    name: "Bunny.net"
+    purpose: "CDN/lager"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/app/admin/inline-edit/connect/route.ts:163 (host fonts.bunny.net)"
+      - "webhousecode/cms packages/cms-admin/src/app/admin/inline-edit/connect/route.ts:164 (host fonts.bunny.net)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: backblaze
+    name: "Backblaze B2"
+    purpose: "Objektlager/backup"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/components/settings/backup-settings-panel.tsx:388 (host s3.eu-central-003.backblazeb2.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: scaleway
+    name: "Scaleway"
+    purpose: "Hosting/lager (EU)"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/components/settings/backup-settings-panel.tsx:169 (host s3.fr-par.scw.cloud)"
+      - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/s3.ts:13 (host s3.fr-par.scw.cloud)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: hetzner
+    name: "Hetzner"
+    purpose: "Hosting/lager (EU)"
+    products: ["cms"]
+    evidence:
+      - "webhousecode/cms packages/cms-admin/src/components/settings/backup-settings-panel.tsx:171 (host fsn1.your-objectstorage.com)"
+      - "webhousecode/cms packages/cms-admin/src/lib/backup/providers/s3.ts:16 (host fsn1.your-objectstorage.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: forwardemail
+    name: "Forward Email"
+    purpose: "Mail-videresendelse"
+    products: ["moovyy"]
+    evidence:
+      - "cbroberg/moovyy package-lock.json:7576 (host forwardemail.net)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: inmobile
+    name: "inMobile"
+    purpose: "SMS"
+    products: ["components"]
+    evidence:
+      - "broberg-ai/components packages/sms/src/delivery.ts:166 (env INMOBILE_STATES)"
+      - "broberg-ai/components packages/sms/src/delivery.ts:199 (env INMOBILE_STATES)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: quickpay
+    name: "QuickPay"
+    purpose: "Betaling"
+    products: ["buddy"]
+    evidence:
+      - "webhousecode/buddy docker/old-site/arkiv/_dk_webhouse_partnere_.html:161 (host www.quickpay.net)"
+      - "webhousecode/buddy docker/old-site/arkiv/_en_webhouse_partners_.html:153 (host www.quickpay.net)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: polar
+    name: "Polar"
+    purpose: "Betaling/abonnement"
+    products: ["coverletter-generator", "pitch"]
+    evidence:
+      - "cbroberg/coverletter-generator package-lock.json:5634 (host polar.sh)"
+      - "cbroberg/pitch package-lock.json:5447 (host polar.sh)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: flexprice
+    name: "Flexprice"
+    purpose: "Fakturering/forbrug"
+    products: ["buddy"]
+    evidence:
+      - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (host flexprice.io)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: piwik
+    name: "Piwik PRO"
+    purpose: "Analyse"
+    products: ["buddy"]
+    evidence:
+      - "webhousecode/buddy docker/old-site/arkiv/_.html:43 (host webhouse.containers.piwik.pro)"
+      - "webhousecode/buddy docker/old-site/arkiv/_dk_.html:44 (host webhouse.containers.piwik.pro)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: google-analytics
+    name: "Google Analytics"
+    purpose: "Analyse"
+    products: ["buddy", "xrt81-com"]
+    evidence:
+      - "webhousecode/buddy docker/old-site/arkiv/_.html:259 (host www.google-analytics.com)"
+      - "webhousecode/buddy docker/old-site/arkiv/_dk_.html:260 (host www.google-analytics.com)"
+      - "broberg-ai/xrt81 apps/server/src/lib/ga.ts:5 (env GA_AGENDA)"
+      - "broberg-ai/xrt81 apps/server/src/lib/ga.ts:104 (env GA_AGENDA)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: slack
+    name: "Slack"
+    purpose: "Notifikationer"
+    products: ["buddy", "cardmem"]
+    evidence:
+      - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (env SLACK_BOT_TOKEN)"
+      - "webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1 (env SLACK_APP_TOKEN)"
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:97 (host api.slack.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: discord
+    name: "Discord"
+    purpose: "Notifikationer"
+    products: ["buddy", "cardmem", "cms", "contentpush", "cronjobs", "fd-sundhed", "fysiodk-aalborg-sport", "sanneandersen", "upmetrics", "whop"]
+    evidence:
+      - "webhousecode/buddy apps/server/src/discord-bot.ts:20 (env DISCORD_BOT_TOKEN)"
+      - "webhousecode/buddy apps/server/src/discord-bot.ts:21 (env DISCORD_CHANNEL_ID)"
+      - "broberg-ai/cardmem apps/server/.env.example:77 (host discord.com)"
+      - "broberg-ai/cardmem apps/server/.env.example:80 (env DISCORD_WEBHOOK_URL)"
+      - "webhousecode/cms .github/workflows/security-gate.yml:71 (env DISCORD_WEBHOOK)"
+      - "webhousecode/cms .github/workflows/security-gate.yml:105 (env DISCORD_WEBHOOK)"
+      - "broberg-ai/contentpush apps/web/.env.example:14 (env DISCORD_WEBHOOK_URL)"
+      - "broberg-ai/contentpush apps/web/src/server/env.ts:15 (env DISCORD_WEBHOOK_URL)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: gravatar
+    name: "Gravatar"
+    purpose: "Profilbilleder (mail-hash)"
+    products: ["broberg-id", "cms", "components", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "pitch", "trail"]
+    evidence:
+      - "broberg-ai/broberg-id src/security-headers.ts:33 (host www.gravatar.com)"
+      - "webhousecode/cms packages/cms-admin/src/app/api/auth/me/route.ts:9 (host www.gravatar.com)"
+      - "webhousecode/cms packages/cms-admin/src/app/api/mobile/login/route.ts:8 (host www.gravatar.com)"
+      - "broberg-ai/components packages/gravatar/src/index.ts:40 (host www.gravatar.com)"
+      - "cbroberg/coverletter-generator components/nav-user.tsx:93 (host www.gravatar.com)"
+      - "broberg-ai/fd-sundhed apps/web/src/lib/gravatar.ts:121 (host www.gravatar.com)"
+      - "webhousecode/fysiodk-aalborg-sport apps/web/src/lib/gravatar.ts:121 (host www.gravatar.com)"
+      - "cbroberg/pitch components/app-sidebar.tsx:17 (host www.gravatar.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+  - id: vimeo
+    name: "Vimeo"
+    purpose: "Video"
+    products: ["cardmem", "cms", "sanneandersen"]
+    evidence:
+      - "broberg-ai/cardmem apps/server/src/api/vault.ts:98 (host developer.vimeo.com)"
+      - "webhousecode/cms packages/cms-admin/src/components/editor/field-editor.tsx:51 (host player.vimeo.com)"
+      - "webhousecode/cms packages/cms-admin/src/components/editor/rich-text-editor.tsx:535 (host player.vimeo.com)"
+      - "webhousecode/sanneandersen site/content/sektion-komponenter/qigong-samples-en.json:30 (host i.vimeocdn.com)"
+      - "webhousecode/sanneandersen site/content/sektion-komponenter/qigong-samples-en.json:38 (host i.vimeocdn.com)"
+    # F201.2
+    dpa_status: null
+    dpa_url: null
+    transfer_basis: null
+    eu_region_possible: null
+    checked_at: null
+not_scanned:
+  - { project: "lens-fixture", repo: "", reason: "intet repo registreret i cardmem" }
