@@ -6,7 +6,7 @@ import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { scanProject, scanDir, recommend, signedRecordProblem, productionUse, applyOwnerRulings, type Assessment } from "../../../../../scripts/compliance-scan";
+import { scanProject, scanDir, recommend, signedRecordProblem, productionUse, applyOwnerRulings, publicSubprocessors, type Assessment } from "../../../../../scripts/compliance-scan";
 
 function repoWith(files: Record<string, string>): string {
   const dir = mkdtempSync(path.join(tmpdir(), "cscan-"));
@@ -163,5 +163,40 @@ describe("owner ruling: not in production", () => {
   it("a ruling without a reason is refused", () => {
     expect(signedRecordProblem({ ...base, not_in_production: { ...ruling, reason: "" } })).toMatch(/not_in_production/);
     expect(signedRecordProblem({ ...base, not_in_production: ruling })).toBeNull();
+  });
+});
+
+describe("public sub-processor list (F201.4, broberg.ai/trust)", () => {
+  const loc = { class: "eu" as const, da: "Stockholm", en: "Stockholm", measured: true, at: "2026-09-27" };
+  const A = (id: string, extra: Partial<Assessment> = {}): Assessment => ({ id, dpa_status: "auto", dpa_url: null, transfer_basis: "EU", eu_region_possible: true, checked_at: "2026-09-27", location: loc, company_country: "USA", public: { name: id, purpose_da: "p", purpose_en: "p" }, ...extra });
+  const V = ["fly", "discord", "opkald", "turso", "resend", "stripe"].map((id) => ({ id, name: id, purpose: "p" }));
+  const ruling = { at: "2026-09-27", by: "cb@webhouse.dk", reason: "r" };
+  const as = new Map([
+    ["fly", A("fly")],
+    ["discord", A("discord", { dpa_status: "ikke_databehandler" })],
+    ["opkald", A("opkald", { not_in_production: ruling })],
+    ["turso", A("turso", { internal_only: ruling })],
+    ["resend", A("resend", { location: { ...loc, class: "mix" } })],
+  ]);
+
+  it("lists only processors in production, without owner rulings against them", () => {
+    const { rows } = publicSubprocessors(V, new Set(["fly", "discord", "opkald", "turso", "resend"]), as);
+    expect(rows.map((r) => r.id)).toEqual(["fly", "resend"]);
+  });
+
+  it("a vendor not measured in production is not listed", () => {
+    expect(publicSubprocessors(V, new Set(["resend"]), as).rows.map((r) => r.id)).toEqual(["resend"]);
+  });
+
+  it("a qualifying vendor WITHOUT a location is reported missing, never silently dropped", () => {
+    const withGap = new Map(as).set("stripe", A("stripe", { location: undefined }));
+    const { rows, missing } = publicSubprocessors(V, new Set(["fly", "stripe"]), withGap);
+    expect(missing).toEqual(["stripe"]);
+    expect(rows.map((r) => r.id)).toEqual(["fly"]);
+  });
+
+  it("never exposes the internal DPA status", () => {
+    const { rows } = publicSubprocessors(V, new Set(["fly"]), as);
+    expect(Object.keys(rows[0])).not.toContain("dpa_status");
   });
 });

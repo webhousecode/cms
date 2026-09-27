@@ -9,7 +9,20 @@
     "notes": "Commercial Terms incorporate the DPA and forbid training on customer content; first-party API offers only 'us'/'global' inference geo (EU only via Bedrock/Vertex); not on DPF list.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Anthropic",
+      "purpose_da": "AI-modeller",
+      "purpose_en": "AI models"
+    }
   },
   {
     "id": "apple",
@@ -45,7 +58,20 @@
     "notes": "Microsoft Products and Services DPA governs Azure subscriptions; Speech processes data only in the resource's region and EU regions fall under the EU Data Boundary; Microsoft DPF 'Active - re-certification under review'.",
     "confidence": "medium",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "eu",
+      "da": "Vesteuropa",
+      "en": "Western Europe",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Microsoft Azure",
+      "purpose_da": "Tale til tekst og oplæsning",
+      "purpose_en": "Speech-to-text and text-to-speech"
+    }
   },
   {
     "id": "backblaze",
@@ -105,7 +131,20 @@
     "notes": "Self-Serve Subscription Agreement §6.1 incorporates the DPA by reference; R2 supports EU jurisdiction buckets but CDN/DNS process globally; DPF status 'Active - re-certification under review'.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "mix",
+      "da": "Fillager: EU · DNS og netværk: globalt",
+      "en": "File storage: EU · DNS and network: global",
+      "measured": true,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Cloudflare",
+      "purpose_da": "Domæner, DNS, fillager og spamværn",
+      "purpose_en": "Domains, DNS, file storage and spam protection"
+    }
   },
   {
     "id": "complimenta",
@@ -201,7 +240,20 @@
     "notes": "DPA applies automatically to self-serve (Terms); EU data residency is Enterprise-only via a separate isolated environment.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "ElevenLabs",
+      "purpose_da": "Oplæsning (podcast)",
+      "purpose_en": "Text-to-speech (podcast)"
+    }
   },
   {
     "id": "fal",
@@ -213,7 +265,20 @@
     "notes": "The DPA is incorporated into the online terms and uses SCCs (DPF only if fal later notifies it); the privacy policy makes no DPF claim.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "fal.ai",
+      "purpose_da": "Billedgenerering",
+      "purpose_en": "Image generation"
+    }
   },
   {
     "id": "firebase",
@@ -225,7 +290,20 @@
     "notes": "Firebase Data Processing and Security Terms are incorporated into the Firebase terms and explicitly cover Cloud Messaging; data may be processed wherever Google has facilities.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "Globalt",
+      "en": "Global",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Google Firebase",
+      "purpose_da": "Push-beskeder til apps",
+      "purpose_en": "Push notifications to apps"
+    }
   },
   {
     "id": "flexprice",
@@ -249,7 +327,20 @@
     "notes": "Fly.io is active on EU-US/UK/Swiss DPF; DPA not in effect until the customer signs it in the dashboard.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "eu",
+      "da": "Stockholm",
+      "en": "Stockholm",
+      "measured": true,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Fly.io",
+      "purpose_da": "Hosting af vores tjenester",
+      "purpose_en": "Hosting of our services"
+    }
   },
   {
     "id": "forwardemail",
@@ -273,7 +364,20 @@
     "notes": "Danish (OnlineCity, Odense); sub-processors are Hetzner (DE/FI) and HeySender (DK), with an EU setup option; GatewayAPI acts as controller for the messaging itself and processor for the 30-day traffic log.",
     "confidence": "medium",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "eu",
+      "da": "Danmark, Tyskland, Finland",
+      "en": "Denmark, Germany, Finland",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "Danmark",
+    "public": {
+      "name": "GatewayAPI",
+      "purpose_da": "SMS-koder ved login",
+      "purpose_en": "SMS codes at sign-in"
+    }
   },
   {
     "id": "github",
@@ -285,7 +389,20 @@
     "notes": "DPA forms part of the GitHub Customer Agreement for Online Services (previews excluded); in-region storage only if you use a service offering a specific geographic area.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "GitHub",
+      "purpose_da": "Kildekode og automatisk udrulning",
+      "purpose_en": "Source code and automated deployment"
+    }
   },
   {
     "id": "google-ai",
@@ -297,7 +414,20 @@
     "notes": "CDPA is incorporated into Google Cloud terms (Vertex); Gemini API Paid Services use Google's processor DPA and no training, and EEA-facing apps must use Paid Services; Google LLC active on DPF (SCC appendix not verified).",
     "confidence": "medium",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Google Gemini",
+      "purpose_da": "AI-modeller (reserve)",
+      "purpose_en": "AI models (fallback)"
+    }
   },
   {
     "id": "google-analytics",
@@ -357,7 +487,20 @@
     "notes": "Google says opt-in is only needed if your agreement doesn't already incorporate the CDPA (https://cloud.google.com/terms/data-processing-addendum), and accepting is harmless if it does; Google OAuth login is identity only.",
     "confidence": "medium",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "Globalt",
+      "en": "Global",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Google Workspace",
+      "purpose_da": "Mail, kalender og login",
+      "purpose_en": "Email, calendar and sign-in"
+    }
   },
   {
     "id": "gravatar",
@@ -393,7 +536,20 @@
     "notes": "Downloading public models sends no personal data, so no DPA is needed for that part. Inference with personal data needs the Enterprise DPA, which uses SCCs.",
     "confidence": "medium",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Hugging Face",
+      "purpose_da": "AI-modeller",
+      "purpose_en": "AI models"
+    }
   },
   {
     "id": "inmobile",
@@ -453,7 +609,20 @@
     "notes": "French company, data hosted in EU by default; API inputs/outputs are used for training by default unless opted out (Admin panel → Privacy toggle).",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "eu",
+      "da": "Frankrig",
+      "en": "France",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "Frankrig",
+    "public": {
+      "name": "Mistral AI",
+      "purpose_da": "AI-sprogmodeller (vores standard)",
+      "purpose_en": "AI language models (our default)"
+    }
   },
   {
     "id": "netlify",
@@ -489,7 +658,20 @@
     "notes": "DPA is incorporated into the Services Agreement (EEA customers contract with OpenAI Ireland); a signed copy can also be executed via OpenAI's DPA form; not on DPF list; EU data residency only for sales-approved eligible customers on new projects.",
     "confidence": "medium",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "OpenAI",
+      "purpose_da": "AI-modeller",
+      "purpose_en": "AI models"
+    }
   },
   {
     "id": "openrouter",
@@ -501,7 +683,20 @@
     "notes": "Terms §10.2 incorporates the DPA for commercial users (help article says countersigned DPA is enterprise-only); EU-only processing requires the EU API via an enterprise Order Form; upstream model providers are separate sub-processors; not on DPF list. Recraft (billed-/logogenerering) nås gennem OpenRouter (model openrouter:recraft/recraft-v4.1 i @broberg/ai-sdk), så Recraft er OpenRouters underdatabehandler, ikke vores direkte.",
     "confidence": "medium",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "OpenRouter",
+      "purpose_da": "Adgang til AI-modeller, bl.a. billeder (Recraft)",
+      "purpose_en": "Access to AI models, incl. images (Recraft)"
+    }
   },
   {
     "id": "opensubtitles",
@@ -614,7 +809,20 @@
     "notes": "eu-west-1 only changes the sending region; all account data, logs and metadata are stored in the US; DPF 'Active - re-certification under review'.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "mix",
+      "da": "Afsendes fra Irland · oplysninger om mails i USA",
+      "en": "Sent from Ireland · mail metadata in the US",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Resend",
+      "purpose_da": "Afsendelse af mails",
+      "purpose_en": "Sending email"
+    }
   },
   {
     "id": "runpod",
@@ -626,7 +834,20 @@
     "notes": "Special-category data (incl. health) is barred. EU data centers can be chosen (e.g. EU-SE-1, EU-RO-1), but the DPA gives no hard EU residency guarantee.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "RunPod",
+      "purpose_da": "GPU til AI-modeller",
+      "purpose_en": "GPU for AI models"
+    }
   },
   {
     "id": "scaleway",
@@ -650,7 +871,20 @@
     "notes": "Danish company with a fixed standard DPA they won't modify; must be signed in the control panel; hosting location isn't stated on the page.",
     "confidence": "medium",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "eu",
+      "da": "Danmark",
+      "en": "Denmark",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "Danmark",
+    "public": {
+      "name": "Simply.com",
+      "purpose_da": "Domæner",
+      "purpose_en": "Domains"
+    }
   },
   {
     "id": "slack",
@@ -686,7 +920,20 @@
     "notes": "DPA forms part of the Stripe agreement; EEA accounts contract with Stripe Payments Europe Ltd (Ireland) but data may be transferred globally.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "mix",
+      "da": "Aftale i Irland · kan behandles globalt",
+      "en": "Contract in Ireland · may be processed globally",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Stripe",
+      "purpose_da": "Betaling",
+      "purpose_en": "Payments"
+    }
   },
   {
     "id": "subdl",
@@ -710,7 +957,20 @@
     "notes": "DPA says acceptance of the Agreement has the same effect as signing the SCCs; not on DPF list; EU regions incl. Stockholm eu-north-1 and Frankfurt.",
     "confidence": "medium",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "eu",
+      "da": "Stockholm",
+      "en": "Stockholm",
+      "measured": true,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Supabase",
+      "purpose_da": "Database og login",
+      "purpose_en": "Database and sign-in"
+    }
   },
   {
     "id": "tailscale",
@@ -746,7 +1006,20 @@
     "notes": "Service Agreement §22.3 incorporates the DPA; SCC Module 2/3 in DPA; not on DPF list; EU-only possible via eur multi-region or fra+ams dual-region buckets (default is global).",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "mix",
+      "da": "Flyttes til EU (i gang)",
+      "en": "Moving to the EU (in progress)",
+      "measured": true,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Tigris",
+      "purpose_da": "Fillager og sikkerhedskopier",
+      "purpose_en": "File storage and backups"
+    }
   },
   {
     "id": "tmdb",
@@ -852,7 +1125,20 @@
     "notes": "Vimeo.com, Inc. is active on DPF; self-serve accounts have no DPA.",
     "confidence": "high",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "location": {
+      "class": "out",
+      "da": "USA",
+      "en": "United States",
+      "measured": false,
+      "at": "2026-09-27"
+    },
+    "company_country": "USA",
+    "public": {
+      "name": "Vimeo",
+      "purpose_da": "Video",
+      "purpose_en": "Video"
+    }
   },
   {
     "id": "webpush",

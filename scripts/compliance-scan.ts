@@ -298,7 +298,42 @@ export type Assessment = {
   not_in_production?: { at: string; by: string; reason: string } | null;
   /** The owner's ruling that a vendor in production holds no CUSTOMER data (internal tools only). */
   internal_only?: { at: string; by: string; reason: string } | null;
+  /** F201.4 — where the instance WE use keeps data, as shown on broberg.ai/trust. */
+  location?: { class: "eu" | "mix" | "out"; da: string; en: string; measured: boolean; at: string } | null;
+  company_country?: string;
+  /** Name + purpose as a customer reads them (the VENDORS catalogue names are internal). */
+  public?: { name: string; purpose_da: string; purpose_en: string } | null;
 };
+
+export type PublicSubprocessor = {
+  id: string; name: string; purpose_da: string; purpose_en: string; company_country: string;
+  location: NonNullable<Assessment["location"]>; transfer_basis: Assessment["transfer_basis"];
+};
+
+/**
+ * F201.4 — the list broberg.ai/trust shows. Only vendors that are measured in
+ * production AND act as a processor; owner rulings (not in production, internal
+ * only) remove a vendor. A vendor that qualifies but has no `location` is NOT
+ * silently dropped — it is returned in `missing`, and the scan fails on it, so
+ * a new vendor can never fall off the public list unseen.
+ */
+export function publicSubprocessors(
+  vendors: { id: string; name: string; purpose: string }[],
+  inProduction: Set<string>,
+  assessments: Map<string, Assessment>,
+): { rows: PublicSubprocessor[]; missing: string[] } {
+  const rows: PublicSubprocessor[] = [], missing: string[] = [];
+  for (const v of vendors) {
+    const a = assessments.get(v.id);
+    if (!inProduction.has(v.id) || !a) continue;
+    if (a.dpa_status === "ikke_databehandler" || a.not_in_production || a.internal_only) continue;
+    if (!a.location || !a.company_country || !a.public) { missing.push(v.id); continue; }
+    rows.push({ id: v.id, name: a.public.name, purpose_da: a.public.purpose_da, purpose_en: a.public.purpose_en, company_country: a.company_country, location: a.location, transfer_basis: a.transfer_basis });
+  }
+  const order = { eu: 0, mix: 1, out: 2 } as const;
+  rows.sort((x, y) => order[x.location.class] - order[y.location.class] || x.name.localeCompare(y.name));
+  return { rows, missing };
+}
 
 /**
  * A DPA marked done must say WHEN and BY WHOM — half a record reads as done
@@ -413,6 +448,13 @@ async function main() {
   y.push("not_scanned:");
   for (const r of results.filter((x) => x.status === "not_scanned")) y.push(`  - { project: ${q(r.slug)}, repo: ${q(r.repo ?? "")}, reason: ${q(r.reason ?? "")} }`);
   writeFileSync(path.join(OUT_DIR, "compliance.yaml"), y.join("\n") + "\n");
+
+  // F201.4 — the public list. Refuses to write a list with a hole in it.
+  if (prodMeasure.measured) {
+    const pub = publicSubprocessors(VENDORS, new Set(prod.keys()), assessments);
+    if (pub.missing.length) throw new Error(`F201.4: i drift som databehandler, men uden location/company_country/public i assessments.json: ${pub.missing.join(", ")}`);
+    writeFileSync(path.join(OUT_DIR, "subprocessors.public.json"), JSON.stringify({ measured_at: new Date().toISOString().slice(0, 10), rows: pub.rows }, null, 2) + "\n");
+  }
 
   const rep: string[] = [
     "# F201.1 — scanningsrapport", "",

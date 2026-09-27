@@ -1,0 +1,305 @@
+{
+  "measured_at": "2026-09-27",
+  "rows": [
+    {
+      "id": "fly",
+      "name": "Fly.io",
+      "purpose_da": "Hosting af vores tjenester",
+      "purpose_en": "Hosting of our services",
+      "company_country": "USA",
+      "location": {
+        "class": "eu",
+        "da": "Stockholm",
+        "en": "Stockholm",
+        "measured": true,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF"
+    },
+    {
+      "id": "gatewayapi",
+      "name": "GatewayAPI",
+      "purpose_da": "SMS-koder ved login",
+      "purpose_en": "SMS codes at sign-in",
+      "company_country": "Danmark",
+      "location": {
+        "class": "eu",
+        "da": "Danmark, Tyskland, Finland",
+        "en": "Denmark, Germany, Finland",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "EU"
+    },
+    {
+      "id": "azure",
+      "name": "Microsoft Azure",
+      "purpose_da": "Tale til tekst og oplæsning",
+      "purpose_en": "Speech-to-text and text-to-speech",
+      "company_country": "USA",
+      "location": {
+        "class": "eu",
+        "da": "Vesteuropa",
+        "en": "Western Europe",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF"
+    },
+    {
+      "id": "mistral",
+      "name": "Mistral AI",
+      "purpose_da": "AI-sprogmodeller (vores standard)",
+      "purpose_en": "AI language models (our default)",
+      "company_country": "Frankrig",
+      "location": {
+        "class": "eu",
+        "da": "Frankrig",
+        "en": "France",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "EU"
+    },
+    {
+      "id": "simply",
+      "name": "Simply.com",
+      "purpose_da": "Domæner",
+      "purpose_en": "Domains",
+      "company_country": "Danmark",
+      "location": {
+        "class": "eu",
+        "da": "Danmark",
+        "en": "Denmark",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "EU"
+    },
+    {
+      "id": "supabase",
+      "name": "Supabase",
+      "purpose_da": "Database og login",
+      "purpose_en": "Database and sign-in",
+      "company_country": "USA",
+      "location": {
+        "class": "eu",
+        "da": "Stockholm",
+        "en": "Stockholm",
+        "measured": true,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "SCC"
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "purpose_da": "Domæner, DNS, fillager og spamværn",
+      "purpose_en": "Domains, DNS, file storage and spam protection",
+      "company_country": "USA",
+      "location": {
+        "class": "mix",
+        "da": "Fillager: EU · DNS og netværk: globalt",
+        "en": "File storage: EU · DNS and network: global",
+        "measured": true,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF+SCC"
+    },
+    {
+      "id": "resend",
+      "name": "Resend",
+      "purpose_da": "Afsendelse af mails",
+      "purpose_en": "Sending email",
+      "company_country": "USA",
+      "location": {
+        "class": "mix",
+        "da": "Afsendes fra Irland · oplysninger om mails i USA",
+        "en": "Sent from Ireland · mail metadata in the US",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF+SCC"
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "purpose_da": "Betaling",
+      "purpose_en": "Payments",
+      "company_country": "USA",
+      "location": {
+        "class": "mix",
+        "da": "Aftale i Irland · kan behandles globalt",
+        "en": "Contract in Ireland · may be processed globally",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF+SCC"
+    },
+    {
+      "id": "tigris",
+      "name": "Tigris",
+      "purpose_da": "Fillager og sikkerhedskopier",
+      "purpose_en": "File storage and backups",
+      "company_country": "USA",
+      "location": {
+        "class": "mix",
+        "da": "Flyttes til EU (i gang)",
+        "en": "Moving to the EU (in progress)",
+        "measured": true,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "SCC"
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "purpose_da": "AI-modeller",
+      "purpose_en": "AI models",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "USA",
+        "en": "United States",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "SCC"
+    },
+    {
+      "id": "elevenlabs",
+      "name": "ElevenLabs",
+      "purpose_da": "Oplæsning (podcast)",
+      "purpose_en": "Text-to-speech (podcast)",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "USA",
+        "en": "United States",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF+SCC"
+    },
+    {
+      "id": "fal",
+      "name": "fal.ai",
+      "purpose_da": "Billedgenerering",
+      "purpose_en": "Image generation",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "USA",
+        "en": "United States",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "SCC"
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "purpose_da": "Kildekode og automatisk udrulning",
+      "purpose_en": "Source code and automated deployment",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "USA",
+        "en": "United States",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF+SCC"
+    },
+    {
+      "id": "firebase",
+      "name": "Google Firebase",
+      "purpose_da": "Push-beskeder til apps",
+      "purpose_en": "Push notifications to apps",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "Globalt",
+        "en": "Global",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF+SCC"
+    },
+    {
+      "id": "google-ai",
+      "name": "Google Gemini",
+      "purpose_da": "AI-modeller (reserve)",
+      "purpose_en": "AI models (fallback)",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "USA",
+        "en": "United States",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF"
+    },
+    {
+      "id": "google-workspace",
+      "name": "Google Workspace",
+      "purpose_da": "Mail, kalender og login",
+      "purpose_en": "Email, calendar and sign-in",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "Globalt",
+        "en": "Global",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF+SCC"
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "purpose_da": "AI-modeller",
+      "purpose_en": "AI models",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "USA",
+        "en": "United States",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "SCC"
+    },
+    {
+      "id": "openrouter",
+      "name": "OpenRouter",
+      "purpose_da": "Adgang til AI-modeller, bl.a. billeder (Recraft)",
+      "purpose_en": "Access to AI models, incl. images (Recraft)",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "USA",
+        "en": "United States",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "SCC"
+    },
+    {
+      "id": "vimeo",
+      "name": "Vimeo",
+      "purpose_da": "Video",
+      "purpose_en": "Video",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "USA",
+        "en": "United States",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "DPF+SCC"
+    }
+  ]
+}
