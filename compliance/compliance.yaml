@@ -1,8 +1,8 @@
 # F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.
-scanned_at: "2026-09-26T09:16:13.172Z"
+scanned_at: "2026-09-27T08:37:50.915Z"
 projects_total: 40
 projects_scanned: 39
-production_measured: "34 kørende Fly-apps"
+production_measured: "33 kørende Fly-apps"
 vendors:
   - id: fly
     name: "Fly.io"
@@ -10,7 +10,7 @@ vendors:
     products: ["ai-sdk", "autodoc", "broberg-ai-site", "broberg-id", "buddy", "cardmem", "cms", "components", "contentpush", "contract-manager", "coverletter-generator", "cronjobs", "dns-mcp", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "mailworker", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine", "whop", "xrt81-com"]
     regions: ["arn"]
     in_production: true
-    production_apps: ["auto-scaling-container-app", "broberg-ai", "broberg-autodoc", "broberg-discovery", "broberg-helpdesk-api", "broberg-helpdesk-console", "broberg-helpdesk-db", "broberg-id", "broberg-services", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "buddy-voice", "cardmem", "cardmem-lens", "dns-mcp", "fd-sport", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-services", "sanneandersen-site", "trail-admin", "trail-db-001", "trail-engine-001", "trail-widget", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-dk", "webhouse-whapi", "webhouse-whop", "xrt81"]
+    production_apps: ["auto-scaling-container-app", "broberg-ai", "broberg-discovery", "broberg-helpdesk-api", "broberg-helpdesk-console", "broberg-helpdesk-db", "broberg-id", "broberg-services", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "buddy-voice", "cardmem", "cardmem-lens", "cms-docs", "dns-mcp", "fd-sport", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-services", "sanneandersen-site", "trail-admin", "trail-db-001", "trail-engine-001", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-dk", "webhouse-whapi", "webhouse-whop", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk scripts/verify-trainstyle.ts:27 (host sanneandersen-site.fly.dev)"
       - "broberg-ai/autodoc fly.toml:1 (fly.toml app=broberg-autodoc)"
@@ -229,7 +229,7 @@ vendors:
     purpose: "AI-modeller (EU)"
     products: ["ai-sdk", "broberg-ai-site", "buddy", "cardmem", "cms", "components", "contentpush", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "helpdesk", "pitch", "trail", "xrt81-com"]
     in_production: true
-    production_apps: ["broberg-ai", "broberg-autodoc", "broberg-helpdesk-api", "buddy-voice", "cardmem", "fd-sundhed", "pitch-vault", "sanneandersen-site", "trail-engine-001", "webhouse-app", "xrt81"]
+    production_apps: ["broberg-ai", "broberg-helpdesk-api", "buddy-voice", "cardmem", "fd-sundhed", "pitch-vault", "sanneandersen-site", "trail-engine-001", "webhouse-app", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk inventory.json:9609 (host mistral.ai)"
       - "broberg-ai/ai-sdk inventory.json:12163 (host mistral.ai)"
@@ -498,7 +498,7 @@ vendors:
     purpose: "Kode, CI, API"
     products: ["ai-sdk", "autodoc", "broberg-id", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "fleet", "forager", "fysio-dk-aalborg", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "how", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine"]
     in_production: true
-    production_apps: ["broberg-autodoc", "broberg-id", "buddy-edge-fly", "cardmem", "trail-admin", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-whapi"]
+    production_apps: ["broberg-id", "buddy-edge-fly", "cardmem", "trail-admin", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-whapi"]
     evidence:
       - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GH_TOKEN)"
       - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GITHUB_TOKEN)"
@@ -837,8 +837,9 @@ vendors:
     name: "Opkald.ai"
     purpose: "Telefonsvarer/opkald"
     products: ["fd-sundhed"]
-    in_production: true
-    production_apps: ["fd-sundhed"]
+    in_production: false
+    production_apps: []
+    not_in_production: { at: "2026-09-27", by: "cb@webhouse.dk", reason: "Christian 27/9-2026: «Vi anvender ikke aktivt opkald.ai i production.» fd-sundhed har kun en demo-nøgle (OPKALD_DEMO_API_KEY)." }
     evidence:
       - "broberg-ai/fd-sundhed apps/web/src/app/api/opkald/demo-forloeb/route.ts:24 (env OPKALD_DEMO_API_KEY)"
       - "broberg-ai/fd-sundhed apps/web/src/app/api/opkald/demo-forloeb/route.ts:44 (env OPKALD_DEMO_API_KEY)"

@@ -2,20 +2,19 @@
 
 **Kun leverandører vi faktisk bruger i drift.** Målt 26/9-2026 på de 31 apps, der kører på Fly: hvilke adgangsnøgler der er sat (kun navnene, aldrig indholdet), plus de lagerforbindelser jeg har slået op én for én.
 
-Af de 70 leverandører, der bliver nævnt i vores kode, er **32 i drift**. De øvrige 38 kræver ingen handling, fordi vi ikke sender dem noget.
+Af de 70 leverandører, der bliver nævnt i vores kode, er **31 i drift**. De øvrige 39 kræver ingen handling, fordi vi ikke sender dem noget. Opkald.ai har en nøgle på FD Sundhed, men det er en demo-nøgle, og du har afgjort 27/9, at den ikke er i drift.
 
 Når du har gjort et punkt, så sig til. Så noterer jeg dato og hvem i `compliance/assessments.json`.
 
 ---
 
-## 1. Du skal klikke eller underskrive (4)
+## 1. Du skal klikke eller underskrive (3)
 
 | # | Leverandør | Hvorfor | Hvad du gør | Tid |
 |---|---|---|---|---|
 | 1 | **Fly.io** | Alle 31 apps kører her | Log ind på fly.io → **Documents** (fly.io/documents) → underskriv databehandleraftalen. Fly har allerede underskrevet; den gælder først, når du gør det. | 2 min |
 | 2 | **Google Workspace** | Mail og login i Broberg ID, cardmem (læser din Gmail), Sanne, xrt81, Trail | admin.google.com (som superadmin) → Konto → Kontoindstillinger → **Juridisk og overholdelse** → *Cloud Data Processing Addendum* → Gennemse og acceptér. Google skriver, at det ikke skader at acceptere, hvis den allerede gælder. | 3 min |
 | 3 | **GatewayAPI** | Sender SMS-koder fra Broberg ID til brugernes telefonnumre | Aftalen findes (onlinecity.io/legal-documents/gatewayapi/dpa-eu), men gælder først, når begge har underskrevet. Siden siger ikke hvordan. Se i GatewayAPI-kontrolpanelet eller skriv til deres support. **Jeg kan skrive mailen for dig.** | 5 min |
-| 4 | **Opkald.ai** | Telefonsvarer for FD Sundhed. Helbredsnære data. | De skriver selv, at de har en databehandleraftale, men den er ikke offentlig. Den skal bestilles på hej@opkald.ai. **Jeg kan skrive mailen for dig.** | 5 min |
 
 ## 2. Indstilling der skal slås fra (1)
 

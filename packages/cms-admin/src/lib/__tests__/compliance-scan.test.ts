@@ -6,7 +6,7 @@ import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { scanProject, scanDir, recommend, signedRecordProblem, productionUse, type Assessment } from "../../../../../scripts/compliance-scan";
+import { scanProject, scanDir, recommend, signedRecordProblem, productionUse, applyOwnerRulings, type Assessment } from "../../../../../scripts/compliance-scan";
 
 function repoWith(files: Record<string, string>): string {
   const dir = mkdtempSync(path.join(tmpdir(), "cscan-"));
@@ -140,5 +140,28 @@ describe("production use (only vendors we actually run)", () => {
   it("a measured endpoint counts only if that app still has the secret", () => {
     expect(productionUse({ a: ["AWS_ENDPOINT_URL_S3"] }, endpoints).get("tigris")).toEqual(new Set(["a"]));
     expect(productionUse({ a: [] }, endpoints).has("tigris")).toBe(false);
+  });
+});
+
+describe("owner ruling: not in production", () => {
+  const base: Assessment = { id: "opkald", dpa_status: "skal_accepteres", dpa_url: null, transfer_basis: "EU", eu_region_possible: true, checked_at: "2026-09-26" };
+  const ruling = { at: "2026-09-27", by: "cb@webhouse.dk", reason: "kun demo-nøgle" };
+
+  it("removes a vendor the owner ruled out, even though its credential is set", () => {
+    const use = productionUse({ "fd-sundhed": ["OPKALD_DEMO_API_KEY", "RESEND_API_KEY"] }, []);
+    expect(use.has("opkald")).toBe(true);
+    const ruled = applyOwnerRulings(use, new Map([["opkald", { ...base, not_in_production: ruling }]]));
+    expect(ruled.has("opkald")).toBe(false);
+    expect(ruled.has("resend")).toBe(true);
+  });
+
+  it("leaves the measurement alone without a ruling", () => {
+    const use = productionUse({ "fd-sundhed": ["OPKALD_DEMO_API_KEY"] }, []);
+    expect(applyOwnerRulings(use, new Map([["opkald", base]])).has("opkald")).toBe(true);
+  });
+
+  it("a ruling without a reason is refused", () => {
+    expect(signedRecordProblem({ ...base, not_in_production: { ...ruling, reason: "" } })).toMatch(/not_in_production/);
+    expect(signedRecordProblem({ ...base, not_in_production: ruling })).toBeNull();
   });
 });

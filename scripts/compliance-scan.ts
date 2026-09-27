@@ -290,6 +290,12 @@ export type Assessment = {
   /** Set when Christian has accepted/signed the vendor's DPA (F201.3). */
   dpa_signed_at?: string | null;
   dpa_signed_by?: string | null;
+  /**
+   * The owner's ruling that a vendor is NOT in production although a credential
+   * for it is set (e.g. a demo key). Overrides the measurement, so it must say
+   * when, by whom and why — otherwise it is an unexplained hole in the list.
+   */
+  not_in_production?: { at: string; by: string; reason: string } | null;
 };
 
 /**
@@ -300,7 +306,14 @@ export function signedRecordProblem(a: Assessment): string | null {
   const at = !!a.dpa_signed_at, by = !!a.dpa_signed_by;
   if (at !== by) return `${a.id}: dpa_signed_at og dpa_signed_by skal udfyldes sammen`;
   if (at && a.dpa_status !== "skal_accepteres") return `${a.id}: markeret underskrevet, men dpa_status er ${a.dpa_status}`;
+  const n = a.not_in_production;
+  if (n && !(n.at && n.by && n.reason)) return `${a.id}: not_in_production kræver at, by og reason`;
   return null;
+}
+
+/** Drops vendors the owner has ruled out of production from the measured use. */
+export function applyOwnerRulings(use: Map<string, Set<string>>, assessments: Map<string, Assessment>): Map<string, Set<string>> {
+  return new Map([...use].filter(([id]) => !assessments.get(id)?.not_in_production));
 }
 
 /** Products that handle health or health-adjacent data (plan §3). */
@@ -359,7 +372,7 @@ async function main() {
   const prodMeasure = measureProduction();
   const endpointsFile = path.join(OUT_DIR, "production-endpoints.json");
   const endpoints: Endpoint[] = existsSync(endpointsFile) ? JSON.parse(readFileSync(endpointsFile, "utf-8")) : [];
-  const prod = prodMeasure.measured ? productionUse(prodMeasure.byApp, endpoints) : new Map<string, Set<string>>();
+  const prod = prodMeasure.measured ? applyOwnerRulings(productionUse(prodMeasure.byApp, endpoints), assessments) : new Map<string, Set<string>>();
   const scanned = results.filter((r) => r.status === "scanned");
   const y: string[] = [
     "# F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.",
@@ -379,6 +392,8 @@ async function main() {
       `    products: [${[...vendorProducts.get(v.id)!].sort().map(q).join(", ")}]`);
     if (v.id === "fly") y.push(`    regions: [${[...new Set(regions.map((r) => r.region))].sort().map(q).join(", ")}]`);
     y.push(`    in_production: ${prodMeasure.measured ? prodApps.length > 0 : "null"}`, `    production_apps: [${prodApps.map(q).join(", ")}]`);
+    const ruling = assessments.get(v.id)?.not_in_production;
+    if (ruling) y.push(`    not_in_production: { at: ${q(ruling.at)}, by: ${q(ruling.by)}, reason: ${q(ruling.reason)} }`);
     y.push("    evidence:");
     for (const h of hs.slice(0, 8)) y.push(`      - ${q(`${h.repo} ${h.file}:${h.line} (${h.signal})`)}`);
     const a = assessments.get(v.id);

@@ -525,7 +525,12 @@
     "notes": "Danish service; its site says it works as data processor with a databehandleraftale and stores data in the EU.",
     "confidence": "low",
     "dpa_url_http": 200,
-    "checked_at": "2026-09-26"
+    "checked_at": "2026-09-26",
+    "not_in_production": {
+      "at": "2026-09-27",
+      "by": "cb@webhouse.dk",
+      "reason": "Christian 27/9-2026: «Vi anvender ikke aktivt opkald.ai i production.» fd-sundhed har kun en demo-nøgle (OPKALD_DEMO_API_KEY)."
+    }
   },
   {
     "id": "pcloud",
