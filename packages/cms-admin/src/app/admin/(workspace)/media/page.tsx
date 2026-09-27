@@ -1088,7 +1088,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
             )}
 
             {/* AI generated badge — distinct from "analyzed". Marks images
-                created by Gemini Nano Banana via the agent generate_image tool. */}
+                created by the agent generate_image tool (FLUX 2, EU route). */}
             {isAiGenerated && file.isImage && (
               <span
                 title={

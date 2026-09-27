@@ -26,7 +26,7 @@ export interface MediaMeta {
   // EXIF data (from F44)
   exif?: ImageExif;
   // GenAI provenance — set to true when the image itself was created by
-  // an AI model (e.g. Gemini Nano Banana via the agent generate_image tool),
+  // an AI model (e.g. FLUX 2 via the agent generate_image tool),
   // not just analyzed by AI. Used by the media list filter + badge.
   generatedByAi?: boolean;
   /** Provider/model used to generate the image (e.g. "gemini-2.5-flash-image-preview"). */

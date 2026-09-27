@@ -1,54 +1,37 @@
 /**
- * AI image generation via Google Gemini (Nano Banana), routed through the
- * central @broberg/ai-sdk facade (ai.image, gemini provider — F013). Returns
- * raw bytes + mime type so the caller can pipe them through the existing media
- * processing pipeline (Sharp variants, EXIF, F44 vision analysis).
+ * AI image generation via Black Forest Labs FLUX 2 on the EU route
+ * (api.eu.bfl.ai), through the central @broberg/ai-sdk facade (ai.image,
+ * bfl provider, prompt-only since 0.49.2). Returns raw bytes + mime type so
+ * the caller can pipe them through the existing media processing pipeline
+ * (Sharp variants, EXIF, F44 vision analysis).
  *
- * Pricing as of 2026-04: $0.039 per image. The SDK stamps the real cost on
- * usage.costUsd and forwards it to the cost sink; the exported constant remains
- * for callers that report it against the cockpit budget via cockpit.addCost().
+ * F201.7: this replaced Gemini (Nano Banana), which ran in the US. There is
+ * deliberately NO fallback to another provider — a fallback is a route, and a
+ * US route would take the call out of the EU without any error. No key means
+ * the tool stays off (ship dark).
  */
-import { readAiConfig } from "@/lib/ai-config";
 import { getAI } from "@/lib/ai/client";
 
-/** Pricing snapshot — keep in sync with Google's published rate. */
-export const NANO_BANANA_COST_PER_IMAGE_USD = 0.039;
-
-// "Nano Banana 2" — Gemini 3 Pro Image (newer, smaller JPEGs, better quality).
-const MODEL_ID = "gemini-3-pro-image-preview";
+/** FLUX 2 pro — the SDK's price/quality default for plain text-to-image. */
+const MODEL_ID = "flux-2-pro";
 
 export interface GeneratedImage {
-  /** Raw image bytes (typically PNG). */
+  /** Raw image bytes. */
   buffer: Buffer;
-  /** MIME type as reported by Gemini, e.g. "image/png". */
+  /** MIME type of the downloaded image, e.g. "image/jpeg". */
   mimeType: string;
   /** Provider model name for audit trail. */
   provider: string;
-  /** Cost in USD that was incurred for this generation. */
+  /** Cost in USD as reported by BFL (via the SDK's usage stamp). */
   costUsd: number;
 }
 
-/**
- * Resolve the Google Generative AI API key. Mirrors image-analysis.ts:
- * config.geminiApiKey → GOOGLE_GENERATIVE_AI_API_KEY → GEMINI_API_KEY.
- * Returns null if no key is available so callers can degrade gracefully.
- */
-export async function getGeminiImageKey(): Promise<string | null> {
-  const config = await readAiConfig();
-  return (
-    config.geminiApiKey ??
-    process.env.GOOGLE_GENERATIVE_AI_API_KEY ??
-    process.env.GEMINI_API_KEY ??
-    null
-  );
+/** The BFL key, or null when image generation is not set up for this instance. */
+export function getImageGenerationKey(): string | null {
+  return process.env.BFL_API_KEY || null;
 }
 
-/**
- * Generate an image from a text prompt using Gemini (Nano Banana) via
- * `ai.image()`. The gemini adapter returns the image inline as a
- * `data:<mime>;base64,…` URL, which we decode back to raw bytes for the media
- * pipeline.
- */
+/** Generate an image from a text prompt on the EU route. */
 export async function generateImage(params: {
   prompt: string;
 }): Promise<GeneratedImage> {
@@ -60,35 +43,33 @@ export async function generateImage(params: {
   if (prompt.length > 4000) {
     throw new Error("Image generation prompt is too long (max 4000 characters)");
   }
-
-  const key = await getGeminiImageKey();
-  if (!key) {
-    throw new Error(
-      "No Google Gemini API key configured. Add a key in Settings → AI or on the Examples org settings.",
-    );
+  if (!getImageGenerationKey()) {
+    throw new Error("Image generation is not set up: BFL_API_KEY is missing.");
   }
 
   const ai = await getAI();
   const { url, usage } = await ai.image({
     prompt,
-    override: { provider: "gemini", model: MODEL_ID, transport: "http" },
+    override: { provider: "bfl", model: MODEL_ID, transport: "http" },
     purpose: "media.image-generation",
   });
 
-  // F013 returns a data:<mime>;base64,… URL (Gemini gives inline bytes, not a
-  // hosted URL). Decode back to raw bytes + mime for the Sharp/EXIF pipeline.
-  const comma = url.indexOf(",");
-  const semi = url.indexOf(";");
-  if (!url.startsWith("data:") || comma < 0 || semi < 0) {
-    throw new Error("Gemini did not return an inline image (unexpected ai.image url shape)");
+  // Residency is read off the RESPONSE — the route that actually answered —
+  // never assumed from the request.
+  if (usage.region !== "eu") {
+    throw new Error(`Image generation answered outside the EU (provider ${usage.provider}, region ${usage.region}); refused.`);
   }
-  const mimeType = url.slice(5, semi);
-  const buffer = Buffer.from(url.slice(comma + 1), "base64");
+
+  // BFL returns a short-lived delivery URL, not inline bytes.
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Image download failed: ${res.status}`);
+  const mimeType = (res.headers.get("content-type") ?? "").split(";")[0].trim();
+  if (!mimeType.startsWith("image/")) throw new Error(`Image download was not an image (${mimeType || "no content-type"})`);
 
   return {
-    buffer,
+    buffer: Buffer.from(await res.arrayBuffer()),
     mimeType,
     provider: MODEL_ID,
-    costUsd: usage.costUsd || NANO_BANANA_COST_PER_IMAGE_USD,
+    costUsd: usage.costUsd,
   };
 }

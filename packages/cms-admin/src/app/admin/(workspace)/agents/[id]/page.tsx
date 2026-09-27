@@ -568,7 +568,7 @@ export default function AgentDetailPage() {
           <div className="space-y-2">
             <Checkbox checked={webSearch} onChange={(v) => setWebSearch(v)} label="Web search" />
             <Checkbox checked={internalDatabase} onChange={(v) => setInternalDatabase(v)} label="Internal database" />
-            <Checkbox checked={imageGeneration} onChange={(v) => setImageGeneration(v)} label="Image generation (Gemini Nano Banana)" />
+            <Checkbox checked={imageGeneration} onChange={(v) => setImageGeneration(v)} label="Image generation (FLUX 2, EU)" />
           </div>
         </div>
 

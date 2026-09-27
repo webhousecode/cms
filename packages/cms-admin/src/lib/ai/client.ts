@@ -16,6 +16,7 @@ import {
   geminiAdapter,
   openaiAdapter,
   elevenlabsAdapter,
+  bflAdapter,
   upmetricsSink,
   noopSink,
   parseJsonLoose,
@@ -52,6 +53,7 @@ export function createAIWithKeys(keys: {
   gemini?: string;
   openai?: string;
   elevenlabs?: string;
+  bfl?: string;
 }): AiClient {
   const providers: Record<string, ProviderAdapter> = {
     mistral: mistralAdapter({ apiKey: keys.mistral }),
@@ -67,6 +69,9 @@ export function createAIWithKeys(keys: {
     // vi den betinget, ville den manglende nøgle i stedet melde «ukendt
     // udbyder», og det peger det forkerte sted hen.
     elevenlabs: elevenlabsAdapter({ apiKey: keys.elevenlabs }),
+    // F201.7 — image generation on the EU route (api.eu.bfl.ai). Same lazy
+    // key check as elevenlabs: registered always, fails at use without a key.
+    bfl: bflAdapter({ apiKey: keys.bfl }),
   };
   return createAI({ costSink: buildCostSink(), providers });
 }
@@ -92,6 +97,7 @@ export async function getAI(): Promise<AiClient> {
       process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     openai: cfg?.openaiApiKey ?? process.env.OPENAI_API_KEY,
     elevenlabs: cfg?.elevenlabsApiKey ?? process.env.ELEVENLABS_API_KEY,
+    bfl: process.env.BFL_API_KEY,
   });
 }
 

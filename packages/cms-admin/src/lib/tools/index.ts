@@ -47,7 +47,7 @@ export async function buildToolRegistry(agent: AgentConfig): Promise<ToolRegistr
     }
   }
 
-  // Image generation (Gemini Nano Banana)
+  // Image generation (FLUX 2, EU route)
   if (agent.tools.imageGeneration) {
     const imgTool = await buildImageGenerationTool();
     if (imgTool) {

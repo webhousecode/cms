@@ -1,8 +1,8 @@
 /**
- * `generate_image` agent tool — Gemini Nano Banana wrapper.
+ * `generate_image` agent tool — FLUX 2 on Black Forest Labs' EU route.
  *
  * The agent calls this tool with a text prompt; we generate an image
- * via Gemini 2.5 Flash Image, save it through the same media pipeline
+ * via FLUX 2 (api.eu.bfl.ai, F201.7), save it through the same media pipeline
  * as user uploads (so it gets WebP variants + AI vision analysis +
  * a sidecar entry in media-meta.json), and return a Markdown
  * `![alt](url)` snippet the agent can splat directly into its
@@ -16,7 +16,7 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { generateVariants, isProcessableImage } from "@/lib/media/image-processor";
 import { appendMediaMeta } from "@/lib/media/media-meta";
 import { analyzeImage } from "@/lib/ai/image-analysis";
-import { generateImage, getGeminiImageKey, NANO_BANANA_COST_PER_IMAGE_USD } from "@/lib/ai/image-generation";
+import { generateImage, getImageGenerationKey } from "@/lib/ai/image-generation";
 import { addCost } from "@/lib/cockpit";
 import type { ToolDefinition, ToolHandler } from "./index";
 
@@ -37,19 +37,18 @@ function slugifyPrompt(prompt: string): string {
 }
 
 /**
- * Build the generate_image tool. Returns null when no Gemini API key
+ * Build the generate_image tool. Returns null when no BFL API key
  * is configured so buildToolRegistry can skip it cleanly (same pattern
  * as buildWebSearchTool).
  */
 export async function buildImageGenerationTool(): Promise<ToolPair | null> {
-  const key = await getGeminiImageKey();
-  if (!key) return null;
+  if (!getImageGenerationKey()) return null;
 
   return {
     definition: {
       name: "generate_image",
       description:
-        "Generate a new image using Google Gemini Nano Banana. " +
+        "Generate a new image using FLUX 2 (Black Forest Labs, EU-hosted). " +
         "Use this when the content you're producing benefits from a custom illustration, " +
         "header image, or diagram. On success returns a Markdown image tag " +
         "(![alt](url)) you can embed directly in the article body — every " +
@@ -86,7 +85,7 @@ export async function buildImageGenerationTool(): Promise<ToolPair | null> {
       const folder = folderRaw.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 60) || "ai-generated";
 
       try {
-        // 1. Call Gemini Nano Banana
+        // 1. Generate on the EU route
         const generated = await generateImage({ prompt });
 
         // 2. Build a stable filename: <slug>-<hash>.<ext>
@@ -160,14 +159,14 @@ export async function buildImageGenerationTool(): Promise<ToolPair | null> {
         });
 
         // 7. Charge the cockpit budget. addCost is sync-safe; ignore failures.
-        await addCost(NANO_BANANA_COST_PER_IMAGE_USD).catch(() => {});
+        await addCost(generated.costUsd).catch(() => {});
 
         // 8. Return a Markdown image tag the agent can splat into its body.
         const safeAlt = alt.replace(/[\[\]]/g, "");
         return [
           `![${safeAlt}](${url})`,
           ``,
-          `Saved to media library as \`${metaKey}\`. Cost: $${NANO_BANANA_COST_PER_IMAGE_USD.toFixed(3)}.`,
+          `Saved to media library as \`${metaKey}\`. Cost: $${generated.costUsd.toFixed(3)}.`,
           tags.length > 0 ? `Tags: ${tags.join(", ")}.` : "",
         ]
           .filter(Boolean)

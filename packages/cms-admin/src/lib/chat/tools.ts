@@ -3051,7 +3051,7 @@ DESIGN GUIDELINES:
       definition: {
         name: "enable_image_generation",
         description:
-          "Toggle the image-generation tool on or off for an agent. When enabled, the agent gains a generate_image tool that calls Google Gemini Nano Banana ($0.039 per image) and saves the result to the media library with full AI-generated provenance. Requires a Gemini API key on the site or org.",
+          "Toggle the image-generation tool on or off for an agent. When enabled, the agent gains a generate_image tool that calls FLUX 2 on Black Forest Labs' EU route and saves the result to the media library with full AI-generated provenance. Requires BFL_API_KEY on the CMS instance.",
         input_schema: {
           type: "object",
           properties: {
