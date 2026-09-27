@@ -31,7 +31,7 @@ type Vendor = { id: string; name: string; purpose: string; npm?: string[]; env?:
 export const VENDORS: Vendor[] = [
   { id: "fly", name: "Fly.io", purpose: "Hosting", env: /^FLY_(API_TOKEN|APP_NAME)$/, host: /(^|\.)fly\.(dev|io)$|api\.machines\.dev$/ },
   { id: "tigris", name: "Tigris", purpose: "Objektlager", host: /tigris\.dev$|storage\.tigris/, env: /^TIGRIS_/ },
-  { id: "cloudflare", name: "Cloudflare", purpose: "DNS, CDN, R2-lager, Turnstile", npm: ["@broberg/forms-turnstile", "wrangler"], env: /^(CF_|CLOUDFLARE_|R2_|TURNSTILE_)/, host: /cloudflare\.com$|r2\.cloudflarestorage\.com$|r2\.dev$|workers\.dev$/ },
+  { id: "cloudflare", name: "Cloudflare", purpose: "Domæner, DNS, CDN, fillager (R2), spamværn (Turnstile)", npm: ["@broberg/forms-turnstile", "wrangler"], env: /^(CF_|CLOUDFLARE_|R2_|TURNSTILE_)/, host: /cloudflare\.com$|r2\.cloudflarestorage\.com$|r2\.dev$|workers\.dev$/ },
   { id: "resend", name: "Resend", purpose: "Transaktionsmails", npm: ["resend", "@broberg/mail"], env: /^RESEND_/, host: /api\.resend\.com$/ },
   { id: "stripe", name: "Stripe", purpose: "Betaling", npm: ["stripe", "@stripe/"], env: /^STRIPE_/, host: /stripe\.com$/ },
   { id: "supabase", name: "Supabase", purpose: "Database + auth", npm: ["@supabase/"], env: /^(NEXT_PUBLIC_)?SUPABASE_/, host: /supabase\.(co|com)$/ },
@@ -296,6 +296,8 @@ export type Assessment = {
    * when, by whom and why — otherwise it is an unexplained hole in the list.
    */
   not_in_production?: { at: string; by: string; reason: string } | null;
+  /** The owner's ruling that a vendor in production holds no CUSTOMER data (internal tools only). */
+  internal_only?: { at: string; by: string; reason: string } | null;
 };
 
 /**
@@ -394,6 +396,8 @@ async function main() {
     y.push(`    in_production: ${prodMeasure.measured ? prodApps.length > 0 : "null"}`, `    production_apps: [${prodApps.map(q).join(", ")}]`);
     const ruling = assessments.get(v.id)?.not_in_production;
     if (ruling) y.push(`    not_in_production: { at: ${q(ruling.at)}, by: ${q(ruling.by)}, reason: ${q(ruling.reason)} }`);
+    const internal = assessments.get(v.id)?.internal_only;
+    if (internal) y.push(`    internal_only: { at: ${q(internal.at)}, by: ${q(internal.by)}, reason: ${q(internal.reason)} }`);
     y.push("    evidence:");
     for (const h of hs.slice(0, 8)) y.push(`      - ${q(`${h.repo} ${h.file}:${h.line} (${h.signal})`)}`);
     const a = assessments.get(v.id);

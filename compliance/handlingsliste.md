@@ -2,7 +2,7 @@
 
 **Kun leverandører vi faktisk bruger i drift.** Målt 26/9-2026 på de 31 apps, der kører på Fly: hvilke adgangsnøgler der er sat (kun navnene, aldrig indholdet), plus de lagerforbindelser jeg har slået op én for én.
 
-Af de 70 leverandører, der bliver nævnt i vores kode, er **31 i drift**. De øvrige 39 kræver ingen handling, fordi vi ikke sender dem noget. Opkald.ai har en nøgle på FD Sundhed, men det er en demo-nøgle, og du har afgjort 27/9, at den ikke er i drift.
+Af de 70 leverandører, der bliver nævnt i vores kode, er **29 i drift**. De øvrige 41 kræver ingen handling, fordi vi ikke sender dem noget. Opkald.ai har en nøgle på FD Sundhed, men det er en demo-nøgle, og du har afgjort 27/9, at den ikke er i drift. Det samme gælder Upstash (kun test, afgjort 27/9).
 
 Når du har gjort et punkt, så sig til. Så noterer jeg dato og hvem i `compliance/assessments.json`.
 
@@ -26,8 +26,8 @@ Når du har gjort et punkt, så sig til. Så noterer jeg dato og hvem i `complia
 
 | Leverandør | Bruges til | Hvad der skal til |
 |---|---|---|
-| **Turso** | Discovery og buddy-cloud (vores egne værktøjer, ingen kundedata) | Aftalen gælder kun på betalte planer: log ind → Documents → underskriv. Kun nødvendig, hvis der kommer kundedata derind. |
-| **Simply.com** | DNS for domæner | Kontrolpanel → databehandleraftale → underskriv. DNS indeholder ikke persondata, så det er mest for en god ordens skyld. |
+| **Turso** | Discovery og buddy-cloud (vores egne værktøjer, ingen kundedata — målt og bekræftet af dig 27/9) | Aftalen gælder kun på betalte planer: log ind → Documents → underskriv. Kun nødvendig, hvis der kommer kundedata derind. |
+| **Simply.com** | Domæner. Tælles ikke længere med i målingen, fordi appen der brugte nøglen (dns-mcp) er sat på pause 27/9 — men domænerne ligger der stadig | Kontrolpanel → databehandleraftale → underskriv. DNS indeholder ikke persondata, så det er mest for en god ordens skyld. |
 | **Vimeo** | Videoer på Sannes site | Vores plan har ingen databehandleraftale (kun Enterprise). Til indlejrede videoer tilbyder Vimeo i stedet en aftale om, at vi hver især er selvstændigt ansvarlige, via en webformular (vimeo.axdraft.com). Tjek først, om Sannes videoer vises for besøgende uden login. |
 
 ## 4. Det skal du vide, men det er ikke en underskrift
@@ -38,7 +38,7 @@ Når du har gjort et punkt, så sig til. Så noterer jeg dato og hvem i `complia
 
 ## 5. Allerede i orden: aftalen følger med vilkårene (link til den)
 
-Tigris, Cloudflare, Resend, Stripe, Supabase, OpenAI, Anthropic, Google Gemini, OpenRouter, ElevenLabs, Microsoft Azure, GitHub, Firebase, Upstash og fal.ai. Ingen handling, bortset fra at de skal stå på listen over underleverandører på broberg.ai/trust senere.
+Tigris, Cloudflare, Resend, Stripe, Supabase, OpenAI, Anthropic, Google Gemini, OpenRouter, ElevenLabs, Microsoft Azure, GitHub, Firebase og fal.ai. Cloudflare dækker både domæner, DNS og fillager (R2). Recraft (billeder) bruges gennem OpenRouter og er derfor dækket af OpenRouters aftale. Ingen handling, bortset fra at de skal stå på listen over underleverandører på broberg.ai/trust senere.
 
 **Ikke databehandlere for os:** Apple- og Microsoft-login, LinkedIn-login, browserens push-tjeneste, Discord (notifikationer til os selv) og TMDB (filmdata).
 

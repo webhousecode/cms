@@ -1,8 +1,8 @@
 # F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.
-scanned_at: "2026-09-27T08:37:50.915Z"
+scanned_at: "2026-09-27T14:23:47.508Z"
 projects_total: 40
 projects_scanned: 39
-production_measured: "33 kørende Fly-apps"
+production_measured: "32 kørende Fly-apps"
 vendors:
   - id: fly
     name: "Fly.io"
@@ -10,7 +10,7 @@ vendors:
     products: ["ai-sdk", "autodoc", "broberg-ai-site", "broberg-id", "buddy", "cardmem", "cms", "components", "contentpush", "contract-manager", "coverletter-generator", "cronjobs", "dns-mcp", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "mailworker", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine", "whop", "xrt81-com"]
     regions: ["arn"]
     in_production: true
-    production_apps: ["auto-scaling-container-app", "broberg-ai", "broberg-discovery", "broberg-helpdesk-api", "broberg-helpdesk-console", "broberg-helpdesk-db", "broberg-id", "broberg-services", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "buddy-voice", "cardmem", "cardmem-lens", "cms-docs", "dns-mcp", "fd-sport", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-services", "sanneandersen-site", "trail-admin", "trail-db-001", "trail-engine-001", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-dk", "webhouse-whapi", "webhouse-whop", "xrt81"]
+    production_apps: ["apple-music-mcp", "auto-scaling-container-app", "broberg-ai", "broberg-discovery", "broberg-helpdesk-api", "broberg-helpdesk-console", "broberg-helpdesk-db", "broberg-id", "broberg-services", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "buddy-voice", "cardmem", "cardmem-lens", "fd-sport", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-services", "sanneandersen-site", "trail-admin", "trail-db-001", "trail-engine-001", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-dk", "webhouse-whapi", "webhouse-whop", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk scripts/verify-trainstyle.ts:27 (host sanneandersen-site.fly.dev)"
       - "broberg-ai/autodoc fly.toml:1 (fly.toml app=broberg-autodoc)"
@@ -59,10 +59,10 @@ vendors:
     dpa_signed_by: null
   - id: cloudflare
     name: "Cloudflare"
-    purpose: "DNS, CDN, R2-lager, Turnstile"
+    purpose: "Domæner, DNS, CDN, fillager (R2), spamværn (Turnstile)"
     products: ["broberg-ai-site", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "helpdesk", "notesmem", "sanneandersen", "upmetrics", "xrt81-com"]
     in_production: true
-    production_apps: ["buddy-brain", "buddy-cloud", "buddy-edge-fly", "cardmem", "cardmem-lens", "dns-mcp", "fd-sundhed", "sanneandersen-site", "webhouse-app", "webhouse-contract-manager", "webhouse-dk", "xrt81"]
+    production_apps: ["buddy-brain", "buddy-cloud", "buddy-edge-fly", "cardmem", "cardmem-lens", "fd-sundhed", "sanneandersen-site", "webhouse-app", "webhouse-contract-manager", "webhouse-dk", "xrt81"]
     evidence:
       - "broberg-ai/broberg-ai-site package.json:24 (npm @broberg/forms-turnstile)"
       - "broberg-ai/broberg-ai-site src/support.ts:144 (env TURNSTILE_SECRET_KEY)"
@@ -175,6 +175,7 @@ vendors:
     products: ["buddy", "cardmem", "components", "contentpush", "happy-little-place", "helpdesk", "super", "trail", "xrt81-com"]
     in_production: true
     production_apps: ["broberg-discovery", "buddy-cloud"]
+    internal_only: { at: "2026-09-27", by: "cb@webhouse.dk", reason: "Christian 27/9-2026: «Vi har ikke kunde drift i Turso p.t.» Målt 27/9: kun broberg-discovery (pakkekatalog) og buddy-cloud (flådeværktøj) har TURSO_-nøgler." }
     evidence:
       - "webhousecode/buddy apps/server/package.json:16 (npm @broberg/db-sdk)"
       - "webhousecode/buddy apps/server/src/db/cloud.ts:13 (env TURSO_DATABASE_URL)"
@@ -285,7 +286,7 @@ vendors:
     purpose: "AI-modeller"
     products: ["ai-sdk", "buddy", "cardmem", "cms", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "trail", "whop", "xrt81-com"]
     in_production: true
-    production_apps: ["webhouse-whop", "xrt81"]
+    production_apps: ["apple-music-mcp", "webhouse-whop", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk .env.example:5 (env ANTHROPIC_API_KEY)"
       - "broberg-ai/ai-sdk inventory.json:13014 (host www.anthropic.com)"
@@ -383,7 +384,7 @@ vendors:
     eu_region_possible: true
     recommendation: "link"
     sensitive_data_outside_eu: true
-    notes: "Terms §10.2 incorporates the DPA for commercial users (help article says countersigned DPA is enterprise-only); EU-only processing requires the EU API via an enterprise Order Form; upstream model providers are separate sub-processors; not on DPF list."
+    notes: "Terms §10.2 incorporates the DPA for commercial users (help article says countersigned DPA is enterprise-only); EU-only processing requires the EU API via an enterprise Order Form; upstream model providers are separate sub-processors; not on DPF list. Recraft (billed-/logogenerering) nås gennem OpenRouter (model openrouter:recraft/recraft-v4.1 i @broberg/ai-sdk), så Recraft er OpenRouters underdatabehandler, ikke vores direkte."
     checked_at: "2026-09-26"
     dpa_signed_at: null
     dpa_signed_by: null
@@ -498,7 +499,7 @@ vendors:
     purpose: "Kode, CI, API"
     products: ["ai-sdk", "autodoc", "broberg-id", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "fleet", "forager", "fysio-dk-aalborg", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "how", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine"]
     in_production: true
-    production_apps: ["broberg-id", "buddy-edge-fly", "cardmem", "trail-admin", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-whapi"]
+    production_apps: ["apple-music-mcp", "broberg-id", "buddy-edge-fly", "cardmem", "trail-admin", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-whapi"]
     evidence:
       - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GH_TOKEN)"
       - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GITHUB_TOKEN)"
@@ -623,7 +624,7 @@ vendors:
     purpose: "Push, login, app-distribution"
     products: ["broberg-id", "buddy", "cardmem", "fd-sundhed", "fysiodk-aalborg-sport", "moovyy", "storeform", "xrt81-com"]
     in_production: true
-    production_apps: ["broberg-id", "xrt81"]
+    production_apps: ["apple-music-mcp", "broberg-id", "xrt81"]
     evidence:
       - "broberg-ai/broberg-id scripts/apple-secret.ts:8 (env APPLE_CLIENT_ID)"
       - "broberg-ai/broberg-id scripts/apple-secret.ts:9 (env APPLE_TEAM_ID)"
@@ -725,8 +726,8 @@ vendors:
     name: "Simply.com"
     purpose: "Domæner/DNS"
     products: ["dns-mcp"]
-    in_production: true
-    production_apps: ["dns-mcp"]
+    in_production: false
+    production_apps: []
     evidence:
       - "webhousecode/dns-mcp src/clients/simply.ts:1 (host api.simply.com)"
       - "webhousecode/dns-mcp src/clients/simply.ts:36 (env SIMPLY_ACCOUNT)"
@@ -772,7 +773,7 @@ vendors:
     in_production: true
     production_apps: ["broberg-id"]
     evidence:
-      - "broberg-ai/broberg-id src/contact-notify.ts:107 (env GATEWAYAPI_TOKEN)"
+      - "broberg-ai/broberg-id src/contact-notify.ts:132 (env GATEWAYAPI_TOKEN)"
       - "broberg-ai/components packages/sms/src/delivery.ts:85 (env GATEWAYAPI_STATES)"
       - "broberg-ai/components packages/sms/src/delivery.ts:119 (env GATEWAYAPI_STATES)"
     # F201.2 — fra leverandørens egne sider
@@ -1028,26 +1029,6 @@ vendors:
     recommendation: "ingen handling"
     sensitive_data_outside_eu: false
     notes: "Free Danish government address data (Grunddataprogrammet); only the lookup query is sent."
-    checked_at: "2026-09-26"
-    dpa_signed_at: null
-    dpa_signed_by: null
-  - id: upstash
-    name: "Upstash"
-    purpose: "Redis/kø"
-    products: []
-    in_production: true
-    production_apps: ["auto-scaling-container-app"]
-    evidence:
-    # F201.2 — fra leverandørens egne sider
-    dpa_status: "auto"
-    dpa_url: "https://upstash.com/trust/dpa.pdf"
-    dpa_url_http: 200
-    action: null
-    transfer_basis: "SCC"
-    eu_region_possible: true
-    recommendation: "link"
-    sensitive_data_outside_eu: false
-    notes: "DPA (April 2025) is 'incorporated into and forms a binding and effective part of the Agreement'; SCCs deemed signed; Upstash Inc. (Delaware). Read from the PDF itself."
     checked_at: "2026-09-26"
     dpa_signed_at: null
     dpa_signed_by: null

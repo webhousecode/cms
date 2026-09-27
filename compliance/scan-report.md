@@ -1,20 +1,20 @@
 # F201.1 — scanningsrapport
 
-Kørt 2026-09-27T08:37:50.921Z · 39 af 40 projekter scannet.
+Kørt 2026-09-27T14:23:47.511Z · 39 af 40 projekter scannet.
 
 ## Projekter
 
 | projekt | repo | status | commit | filer | Fly-regioner |
 |---|---|---|---|---|---|
-| ai-sdk | broberg-ai/ai-sdk | scannet | a8876f6 | 97 |  |
+| ai-sdk | broberg-ai/ai-sdk | scannet | 6a8fd22 | 97 |  |
 | anna | broberg-ai/annaslothart | scannet | 21c747a | 1 |  |
 | autodoc | broberg-ai/autodoc | scannet | 8fab60c | 52 | broberg-autodoc=arn |
 | beacon | broberg-ai/beacon | scannet | 94de1c6 | 175 |  |
 | broberg-ai-site | broberg-ai/broberg-ai-site | scannet | 2720df0 | 107 | broberg-ai=arn |
-| broberg-id | broberg-ai/broberg-id | scannet | 8a682cf | 111 | broberg-id=arn |
+| broberg-id | broberg-ai/broberg-id | scannet | 75e961d | 115 | broberg-id=arn |
 | buddy | webhousecode/buddy | scannet | 6c8cf0f | 690 | buddy-brain=arn, buddy-edge-fly=arn, webhouse-old=arn, buddy-voice=arn, buddy-cloud=arn |
 | cardmem | broberg-ai/cardmem | scannet | 0a5bf46 | 1028 | cardmem-lens=arn, cardmem=arn |
-| cms | webhousecode/cms | scannet | ef803a5 | 1016 | webhouse-cms=arn, webhouse-app=arn |
+| cms | webhousecode/cms | scannet | e601400 | 1016 | webhouse-cms=arn, webhouse-app=arn |
 | components | broberg-ai/components | scannet | 4383a17 | 415 | broberg-discovery=arn |
 | contentpush | broberg-ai/contentpush | scannet | 8e66535 | 77 | contentpush=arn |
 | contract-manager | broberg-ai/contract-manager | scannet | 4d72c97 | 177 | webhouse-contract-manager=arn |
@@ -30,13 +30,13 @@ Kørt 2026-09-27T08:37:50.921Z · 39 af 40 projekter scannet.
 | happy-little-place | broberg-ai/happy-little-place | scannet | 31a990b | 67 | happy-little-place=arn |
 | helpdesk | broberg-ai/helpdesk | scannet | ccf6644 | 234 | broberg-helpdesk-db=arn, broberg-helpdesk-api=arn |
 | how | broberg-ai/house-of-wellness | scannet | f64c05e | 8 |  |
-| kai | broberg-ai/kai | scannet | afc3559 | 2 |  |
+| kai | broberg-ai/kai | scannet | 77f0584 | 3 |  |
 | lens-fixture | — | **IKKE scannet:** intet repo registreret i cardmem |  |  |  |
 | mailworker | broberg-ai/mailworker | scannet | 045a020 | 71 | mailworker-api=arn |
 | moovyy | cbroberg/moovyy | scannet | 457fdc4 | 211 | moovyy=arn |
 | notesmem | broberg-ai/notesmem | scannet | ae73b28 | 29 |  |
 | openbuddy | broberg-ai/openbuddy | scannet | 02f6c04 | 16 |  |
-| pitch | cbroberg/pitch | scannet | 5ad4f31 | 270 | pitch-vault=arn |
+| pitch | cbroberg/pitch | scannet | 218a92f | 270 | pitch-vault=arn |
 | sanneandersen | webhousecode/sanneandersen | scannet | 87eb9b0 | 976 | sanneandersen-site=arn |
 | storeform | broberg-ai/storeform | scannet | 70bd53a | 24 |  |
 | super | broberg-ai/super-agent | scannet | 7d41eeb | 66 |  |
@@ -92,7 +92,6 @@ Kørt 2026-09-27T08:37:50.921Z · 39 af 40 projekter scannet.
 | TMDB | moovyy |
 | Unsplash | cms |
 | DAWA (Dataforsyningen) | xrt81-com |
-| Upstash |  |
 | Vercel | cardmem, cms |
 | Netlify | cms |
 | npm | ai-sdk, cms, components, coverletter-generator, dns-mcp, fleet, fysio-dk-aalborg, how, moovyy, pitch, sanneandersen, trail, upmetrics, vn-leker |
@@ -169,7 +168,6 @@ Kørt 2026-09-27T08:37:50.921Z · 39 af 40 projekter scannet.
 | TMDB | **ingen handling** | ikke_databehandler | ukendt |  | https://www.themoviedb.org/api-terms-of-use |
 | Unsplash | **ingen handling** | ikke_databehandler | ukendt |  | https://unsplash.com/api-terms |
 | DAWA (Dataforsyningen) | **ingen handling** | ikke_databehandler | EU |  | https://dawadocs.dataforsyningen.dk/dok/om |
-| Upstash | **link** | auto | SCC |  | https://upstash.com/trust/dpa.pdf |
 | Vercel | **acceptér/underskriv** | skal_accepteres | DPF+SCC |  | https://vercel.com/legal/dpa |
 | Netlify | **link** | auto | DPF+SCC |  | https://www.netlify.com/gdpr-ccpa/ |
 | npm | **ingen handling** | ikke_databehandler | ukendt |  | https://docs.npmjs.com/policies/privacy/ |
@@ -203,36 +201,34 @@ Kørt 2026-09-27T08:37:50.921Z · 39 af 40 projekter scannet.
 
 ## Handlinger for leverandører i DRIFT (grundlag for handlingslisten, F201.3)
 
-Målt på 33 kørende Fly-apps (nøgle-NAVNE + målte endpoints).
+Målt på 32 kørende Fly-apps (nøgle-NAVNE + målte endpoints).
 
 | leverandør | anbefaling | apps i drift | hvad |
 |---|---|---|---|
-| Fly.io | **acceptér/underskriv** | auto-scaling-container-app, broberg-ai, broberg-discovery, broberg-helpdesk-api, broberg-helpdesk-console, broberg-helpdesk-db, broberg-id, broberg-services, buddy-brain, buddy-cloud, buddy-edge-fly, buddy-voice, cardmem, cardmem-lens, cms-docs, dns-mcp, fd-sport, fd-sundhed, moovyy, pitch-vault, sanneandersen-services, sanneandersen-site, trail-admin, trail-db-001, trail-engine-001, upmetrics, webhouse-app, webhouse-contract-manager, webhouse-cronjobs, webhouse-dk, webhouse-whapi, webhouse-whop, xrt81 | Sign in → Documents (fly.io/documents) → sign the DPA (pre-signed by Fly.io, active once customer signs) |
+| Fly.io | **acceptér/underskriv** | apple-music-mcp, auto-scaling-container-app, broberg-ai, broberg-discovery, broberg-helpdesk-api, broberg-helpdesk-console, broberg-helpdesk-db, broberg-id, broberg-services, buddy-brain, buddy-cloud, buddy-edge-fly, buddy-voice, cardmem, cardmem-lens, fd-sport, fd-sundhed, moovyy, pitch-vault, sanneandersen-services, sanneandersen-site, trail-admin, trail-db-001, trail-engine-001, upmetrics, webhouse-app, webhouse-contract-manager, webhouse-cronjobs, webhouse-dk, webhouse-whapi, webhouse-whop, xrt81 | Sign in → Documents (fly.io/documents) → sign the DPA (pre-signed by Fly.io, active once customer signs) |
 | Tigris | **link** | cardmem, trail-db-001, trail-engine-001, upmetrics |  |
-| Cloudflare | **link** | buddy-brain, buddy-cloud, buddy-edge-fly, cardmem, cardmem-lens, dns-mcp, fd-sundhed, sanneandersen-site, webhouse-app, webhouse-contract-manager, webhouse-dk, xrt81 |  |
+| Cloudflare | **link** | buddy-brain, buddy-cloud, buddy-edge-fly, cardmem, cardmem-lens, fd-sundhed, sanneandersen-site, webhouse-app, webhouse-contract-manager, webhouse-dk, xrt81 |  |
 | Resend | **link** | broberg-ai, broberg-helpdesk-api, broberg-id, cardmem, fd-sundhed, moovyy, pitch-vault, sanneandersen-site, trail-admin, upmetrics, webhouse-contract-manager, webhouse-cronjobs, webhouse-whapi, webhouse-whop, xrt81 |  |
 | Stripe | **link** | sanneandersen-site |  |
 | Supabase | **link** | broberg-id, fd-sundhed, webhouse-whop |  |
 | Turso | **acceptér/underskriv** | broberg-discovery, buddy-cloud | Log in → Documents section → execute the Data Processing Agreement (paid subscribers only; blog says Scaler/Pro/Enterprise) |
 | Mistral AI | **link** | broberg-ai, broberg-helpdesk-api, buddy-voice, cardmem, fd-sundhed, pitch-vault, sanneandersen-site, trail-engine-001, webhouse-app, xrt81 |  |
 | OpenAI | **link** | xrt81 |  |
-| Anthropic | **link** | webhouse-whop, xrt81 |  |
+| Anthropic | **link** | apple-music-mcp, webhouse-whop, xrt81 |  |
 | Google (Gemini/Vertex AI) | **link** | webhouse-app |  |
 | OpenRouter | **link** | buddy-brain, buddy-edge-fly, cardmem, sanneandersen-site, trail-engine-001, upmetrics, xrt81 |  |
 | ElevenLabs | **link** | webhouse-app |  |
 | Microsoft Azure | **link** | broberg-ai, buddy-voice, cardmem |  |
-| GitHub | **link** | broberg-id, buddy-edge-fly, cardmem, trail-admin, upmetrics, webhouse-app, webhouse-contract-manager, webhouse-whapi |  |
+| GitHub | **link** | apple-music-mcp, broberg-id, buddy-edge-fly, cardmem, trail-admin, upmetrics, webhouse-app, webhouse-contract-manager, webhouse-whapi |  |
 | Google (Workspace/Gmail/Calendar/OAuth) | **acceptér/underskriv** | broberg-id, cardmem, moovyy, sanneandersen-site, trail-admin, xrt81 | Admin console (super admin) → Menu → Account → Account settings → Legal and compliance → Security and Privacy Additional Terms → Cloud Data Processing Addendum → Review and Accept |
 | Google Firebase (FCM) | **link** | fd-sundhed |  |
-| Apple (APNs/Sign in/App Store) | **ingen handling** | broberg-id, xrt81 |  |
+| Apple (APNs/Sign in/App Store) | **ingen handling** | apple-music-mcp, broberg-id, xrt81 |  |
 | Web Push (browserens push-tjeneste) | **ingen handling** | cardmem, fd-sundhed, trail-engine-001, webhouse-app, xrt81 |  |
 | LinkedIn | **ingen handling** | broberg-id |  |
 | Microsoft (login) | **ingen handling** | broberg-id |  |
-| Simply.com | **acceptér/underskriv** | dns-mcp | Simply.com Kontrolpanel (logged in) → find the databehandleraftale and sign it there |
 | GatewayAPI | **acceptér/underskriv** | broberg-id | DPA takes effect on both parties' signature; how to sign isn't stated online, so check the GatewayAPI dashboard or ask support |
 | Complimenta | **ingen handling** | fd-sundhed |  |
 | TMDB | **ingen handling** | moovyy |  |
-| Upstash | **link** | auto-scaling-container-app |  |
 | fal.ai | **link** | sanneandersen-site |  |
 | Hugging Face | **acceptér/underskriv** | broberg-services | Get an Enterprise Hub or Enterprise plan (huggingface.co/enterprise); the GDPR DPA is offered only through that subscription. |
 | RunPod | **acceptér/underskriv** | broberg-services | Fill in the signature block and required information in the DPA and submit it via the link on the DPA page; it binds only after that. |
