@@ -102,7 +102,7 @@ footer{padding:40px 0;color:var(--muted);font-size:.8rem;border-top:1px solid va
     <div class="ctrl"><h3>Kryptering <span class="st ok">På plads</span></h3><p>Al trafik er krypteret (TLS). Data på disk og i backup er krypteret hos hostingleverandøren.</p><a class="ev" href="#">Bevis: TLS-tjek af alle domæner →</a></div>
     <div class="ctrl"><h3>Adskilte kunder <span class="st ok">På plads</span></h3><p>Hver kundes data er adskilt. En automatisk test sikrer, at én kunde ikke kan se en andens data.</p><a class="ev" href="#">Bevis: isolationstest →</a></div>
     <div class="ctrl"><h3>Ændringer gennemgås <span class="st ok">På plads</span></h3><p>Hver ændring er knyttet til en opgave og gennemgår et automatisk kvalitetstjek, før den går i drift.</p><a class="ev" href="#">Bevis: gennemgangshistorik →</a></div>
-    <div class="ctrl"><h3>Login med to faktorer <span class="st wip">I gang</span></h3><p>Samlet login (Broberg ID) med passkeys. To-faktor bliver påkrævet for alle administratorer.</p></div>
+    <div class="ctrl"><h3>Login med to faktorer <span class="st ok">På plads</span></h3><p>Samlet login (Broberg ID) med passkeys og to-faktor. Rulles ud til alle produkter.</p><a class="ev" href="#">Bevis: Broberg ID →</a></div>
     <div class="ctrl"><h3>Backup og gendannelse <span class="st wip">I gang</span></h3><p>Daglig backup. Vi tester hver måned automatisk, at en backup rent faktisk kan læses tilbage.</p></div>
     <div class="ctrl"><h3>Plan for sikkerhedshændelser <span class="st wip">I gang</span></h3><p>Skriftlig plan: Datatilsynet får besked inden 72 timer, og du hører fra os uden unødig forsinkelse.</p></div>
   </div>
@@ -138,18 +138,16 @@ footer{padding:40px 0;color:var(--muted);font-size:.8rem;border-top:1px solid va
   </div>
 </div></section>
 
-<footer><div class="wrap">WebHouse ApS · Aalborg · Siden er sidst bygget 27. september 2026</div></footer>
+<footer><div class="wrap">Web House ApS · CVR 21221198 · Aalborg · Siden er sidst bygget 27. september 2026</div></footer>
 
-<div class="note" data-testid="trust-mockup-note">MOCKUP · Leverandørlisten er rigtige data fra compliance.yaml (26.–27/9). "I gang"-kontroller, security@ og AI-løfterne (træning slået fra, EU-regel for helbredsdata) er forslag — de vises først når de er sande — se åbne spørgsmål i F201.4.</div>
+<div class="note" data-testid="trust-mockup-note">MOCKUP · Leverandørlisten er rigtige data fra compliance.yaml (26.–27/9). "I gang"-kontroller og AI-løfterne (træning slået fra, EU-regel for helbredsdata) er forslag — de vises først når de er sande — se åbne spørgsmål i F201.4.</div>
 
 <script>
 const V=[
 ["Fly.io","Hosting af alle vores tjenester","USA","DPF","us"],
 ["Tigris","Fil- og objektlager","USA","SCC","us"],
-["Cloudflare","DNS, netværk, spamværn","USA","DPF + SCC","us"],
+["Cloudflare","Domæner, DNS, fillager og spamværn","USA","DPF + SCC","us"],
 ["Supabase","Database og login","USA","SCC","us"],
-["Turso","Database (interne værktøjer)","USA","Afklares","us"],
-["Upstash","Kø og cache","USA","SCC","us"],
 ["GitHub","Kode og automatisk udrulning","USA","DPF + SCC","us"],
 ["Resend","Afsendelse af mails","USA","DPF + SCC","us"],
 ["Google Workspace","Mail, kalender og login","USA","DPF + SCC","us"],
@@ -163,7 +161,7 @@ const V=[
 ["Google (Gemini)","AI-modeller","USA","DPF","us","ai"],
 ["OpenAI","AI-modeller","USA","SCC","us","ai"],
 ["Anthropic","AI-modeller","USA","SCC","us","ai"],
-["OpenRouter","Adgang til AI-modeller","USA","SCC","us","ai"],
+["OpenRouter","Adgang til AI-modeller, bl.a. Recraft (billeder)","USA","SCC","us","ai"],
 ["ElevenLabs","Oplæsning (tale)","USA","DPF + SCC","us","ai"],
 ["fal.ai","Billed-AI","USA","SCC","us","ai"]];
 function draw(f){const r=document.getElementById('rows');r.innerHTML='';
