@@ -348,6 +348,16 @@ export function signedRecordProblem(a: Assessment): string | null {
   return null;
 }
 
+/**
+ * F201.4 — the date the public list last CHANGED, not the date it was last
+ * measured. A customer is promised 30 days' notice of a new sub-processor; a
+ * date that moves on every scan would say "changed today" when nothing did.
+ */
+export function listChangedAt(prev: { list_changed_at?: string; rows?: unknown } | null, rows: unknown, today: string): string {
+  if (prev?.list_changed_at && JSON.stringify(prev.rows) === JSON.stringify(rows)) return prev.list_changed_at;
+  return today;
+}
+
 /** Drops vendors the owner has ruled out of production from the measured use. */
 export function applyOwnerRulings(use: Map<string, Set<string>>, assessments: Map<string, Assessment>): Map<string, Set<string>> {
   return new Map([...use].filter(([id]) => !assessments.get(id)?.not_in_production));
@@ -453,7 +463,9 @@ async function main() {
   if (prodMeasure.measured) {
     const pub = publicSubprocessors(VENDORS, new Set(prod.keys()), assessments);
     if (pub.missing.length) throw new Error(`F201.4: i drift som databehandler, men uden location/company_country/public i assessments.json: ${pub.missing.join(", ")}`);
-    writeFileSync(path.join(OUT_DIR, "subprocessors.public.json"), JSON.stringify({ measured_at: new Date().toISOString().slice(0, 10), rows: pub.rows }, null, 2) + "\n");
+    const file = path.join(OUT_DIR, "subprocessors.public.json");
+    const prev = existsSync(file) ? (JSON.parse(readFileSync(file, "utf-8")) as { list_changed_at?: string; rows?: unknown }) : null;
+    writeFileSync(file, JSON.stringify({ list_changed_at: listChangedAt(prev, pub.rows, new Date().toISOString().slice(0, 10)), rows: pub.rows }, null, 2) + "\n");
   }
 
   const rep: string[] = [

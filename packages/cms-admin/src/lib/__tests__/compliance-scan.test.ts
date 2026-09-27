@@ -6,7 +6,7 @@ import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { scanProject, scanDir, recommend, signedRecordProblem, productionUse, applyOwnerRulings, publicSubprocessors, type Assessment } from "../../../../../scripts/compliance-scan";
+import { scanProject, scanDir, recommend, signedRecordProblem, productionUse, applyOwnerRulings, publicSubprocessors, listChangedAt, type Assessment } from "../../../../../scripts/compliance-scan";
 
 function repoWith(files: Record<string, string>): string {
   const dir = mkdtempSync(path.join(tmpdir(), "cscan-"));
@@ -198,5 +198,17 @@ describe("public sub-processor list (F201.4, broberg.ai/trust)", () => {
   it("never exposes the internal DPA status", () => {
     const { rows } = publicSubprocessors(V, new Set(["fly"]), as);
     expect(Object.keys(rows[0])).not.toContain("dpa_status");
+  });
+});
+
+describe("list_changed_at (F201.4)", () => {
+  it("keeps the old date when the list is unchanged", () => {
+    expect(listChangedAt({ list_changed_at: "2026-09-01", rows: [{ id: "a" }] }, [{ id: "a" }], "2026-09-27")).toBe("2026-09-01");
+  });
+  it("moves to today when a row changes", () => {
+    expect(listChangedAt({ list_changed_at: "2026-09-01", rows: [{ id: "a" }] }, [{ id: "a" }, { id: "b" }], "2026-09-27")).toBe("2026-09-27");
+  });
+  it("starts at today with no previous file", () => {
+    expect(listChangedAt(null, [], "2026-09-27")).toBe("2026-09-27");
   });
 });
