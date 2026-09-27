@@ -39,7 +39,11 @@ td{padding:12px 14px;border-top:1px solid var(--card-border);vertical-align:top}
 td.name{font-weight:600}
 .tag{display:inline-block;font-size:.72rem;padding:2px 9px;border-radius:999px;border:1px solid var(--card-border);white-space:nowrap}
 .tag.eu{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
-.tag.us{border-color:var(--card-border);color:var(--muted)}
+.tag.out{border-color:var(--card-border);color:var(--muted)}
+.tag.mix{border-color:var(--orange-text);color:var(--orange-text);background:var(--orange-soft)}
+.tag{white-space:normal}
+.m{font-size:.7rem;color:var(--muted)}
+td.co{color:var(--muted);font-size:.85rem}
 .meta{font-size:.8rem;color:var(--muted);margin-top:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
 .ctrl{background:var(--card);border:1px solid var(--card-border);border-radius:14px;padding:18px}
@@ -80,15 +84,16 @@ footer{padding:40px 0;color:var(--muted);font-size:.8rem;border-top:1px solid va
 
 <section id="sub"><div class="wrap">
   <h2>Underdatabehandlere</h2>
-  <p class="sub">Leverandører der behandler persondata på vores vegne. Kommer der en ny til, står den her mindst 30 dage før den tages i brug.</p>
+  <p class="sub">Leverandører der behandler persondata på vores vegne, og hvor den udgave vi bruger faktisk kører. Hvor der står «målt», har vi aflæst det i vores egen opsætning. Alle leverandører uden for EU er dækket af en EU-godkendt overførselsaftale. Kommer der en ny til, står den her mindst 30 dage før den tages i brug.</p>
   <div class="filters">
     <button class="chip on" data-f="all" data-testid="trust-filter-all">Alle</button>
-    <button class="chip" data-f="eu" data-testid="trust-filter-eu">Selskab i EU</button>
-    <button class="chip" data-f="us" data-testid="trust-filter-outside">Uden for EU</button>
+    <button class="chip" data-f="eu" data-testid="trust-filter-eu">Data i EU</button>
+    <button class="chip" data-f="mix" data-testid="trust-filter-mixed">Delvist i EU</button>
+    <button class="chip" data-f="out" data-testid="trust-filter-outside">Uden for EU</button>
     <button class="chip" data-f="ai" data-testid="trust-filter-ai">AI</button>
   </div>
   <div class="tablebox"><table data-testid="trust-subprocessor-table">
-    <thead><tr><th>Leverandør</th><th>Bruges til</th><th>Selskab</th><th>Overførselsgrundlag</th></tr></thead>
+    <thead><tr><th>Leverandør</th><th>Bruges til</th><th>Hvor data ligger</th><th>Selskab</th></tr></thead>
     <tbody id="rows"></tbody>
   </table></div>
   <div class="meta"><span>Listen blev senest ændret 27. september 2026</span><span>Målt mod vores kørende systemer · <a class="ev" style="display:inline" href="#">Hvordan listen laves</a></span></div>
@@ -144,28 +149,28 @@ footer{padding:40px 0;color:var(--muted);font-size:.8rem;border-top:1px solid va
 
 <script>
 const V=[
-["Fly.io","Hosting af alle vores tjenester","USA","DPF","us"],
-["Tigris","Fil- og objektlager","USA","SCC","us"],
-["Cloudflare","Domæner, DNS, fillager og spamværn","USA","DPF + SCC","us"],
-["Supabase","Database og login","USA","SCC","us"],
-["GitHub","Kode og automatisk udrulning","USA","DPF + SCC","us"],
-["Resend","Afsendelse af mails","USA","DPF + SCC","us"],
-["Google Workspace","Mail, kalender og login","USA","DPF + SCC","us"],
-["Google Firebase","Push-beskeder til apps","USA","DPF + SCC","us"],
-["Simply.com","Domæner","Danmark","EU","eu"],
-["GatewayAPI","SMS-koder ved login","Danmark","EU","eu"],
-["Stripe","Betaling","USA/Irland","DPF + SCC","us"],
-["Vimeo","Video","USA","DPF + SCC","us"],
-["Mistral AI","AI-sprogmodeller (standard)","Frankrig","EU","eu","ai"],
-["Microsoft Azure","Tale og AI","USA","DPF","us","ai"],
-["Google (Gemini)","AI-modeller","USA","DPF","us","ai"],
-["OpenAI","AI-modeller","USA","SCC","us","ai"],
-["Anthropic","AI-modeller","USA","SCC","us","ai"],
-["OpenRouter","Adgang til AI-modeller, bl.a. Recraft (billeder)","USA","SCC","us","ai"],
-["ElevenLabs","Oplæsning (tale)","USA","DPF + SCC","us","ai"],
-["fal.ai","Billed-AI","USA","SCC","us","ai"]];
+["Fly.io","Hosting af alle vores tjenester","Stockholm","eu","USA",1],
+["Supabase","Database og login","Stockholm","eu","USA",1],
+["Mistral AI","AI-sprogmodeller (standard)","Frankrig","eu","Frankrig",0],
+["Microsoft Azure","Tale og AI","Vesteuropa","eu","USA",0],
+["GatewayAPI","SMS-koder ved login","Danmark, Tyskland, Finland","eu","Danmark",0],
+["Simply.com","Domæner","Danmark","eu","Danmark",0],
+["Resend","Afsendelse af mails","Afsendes fra Irland · oplysninger om mails i USA","mix","USA",0],
+["Stripe","Betaling","Aftale i Irland · kan behandles globalt","mix","USA",0],
+["Cloudflare","Domæner, DNS, fillager og spamværn","Filer: afklares · DNS/netværk: globalt","mix","USA",0],
+["Tigris","Fil- og objektlager","Globalt (ikke låst til EU)","out","USA",1],
+["Google Workspace","Mail, kalender og login","Globalt","out","USA",0],
+["Google Firebase","Push-beskeder til apps","Globalt","out","USA",0],
+["GitHub","Kode og automatisk udrulning","USA","out","USA",0],
+["Vimeo","Video","USA","out","USA",0],
+["Google (Gemini)","AI-modeller","Afklares · EU-rute findes","mix","USA",0,"ai"],
+["OpenAI","AI-modeller","USA","out","USA",0,"ai"],
+["Anthropic","AI-modeller","USA","out","USA",0,"ai"],
+["OpenRouter","Adgang til AI-modeller, bl.a. Recraft (billeder)","USA","out","USA",0,"ai"],
+["ElevenLabs","Oplæsning (tale)","USA","out","USA",0,"ai"],
+["fal.ai","Billed-AI","USA","out","USA",0,"ai"]];
 function draw(f){const r=document.getElementById('rows');r.innerHTML='';
-V.filter(v=>f==='all'||(f==='ai'?v[5]==='ai':v[4]===f)).forEach(v=>{r.insertAdjacentHTML('beforeend',`<tr><td class="name">${v[0]}</td><td>${v[1]}</td><td>${v[2]}</td><td><span class="tag ${v[4]}">${v[3]}</span></td></tr>`)});}
+V.filter(v=>f==='all'||(f==='ai'?v[6]==='ai':v[3]===f)).forEach(v=>{r.insertAdjacentHTML('beforeend',`<tr><td class="name">${v[0]}</td><td>${v[1]}</td><td><span class="tag ${v[3]}">${v[2]}</span>${v[5]?' <span class="m">målt</span>':''}</td><td class="co">${v[4]}</td></tr>`)});}
 document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');draw(c.dataset.f)});
 draw('all');document.getElementById('s-count').textContent=V.length;
 function t(){const h=document.documentElement;h.dataset.theme=h.dataset.theme==='dark'?'light':'dark'}

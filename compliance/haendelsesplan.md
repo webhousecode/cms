@@ -1,7 +1,7 @@
 # Plan for sikkerhedshændelser
 
 **Web House ApS · CVR 21221198** · gælder alle produkter under broberg.ai og webhouse.app
-Version 1 · 27. september 2026 · ejer: Christian Broberg (cb@webhouse.dk)
+Version 1 · godkendt af Christian Broberg 27. september 2026 · ejer: Christian Broberg (cb@webhouse.dk)
 
 Planen svarer på tre spørgsmål: **hvordan opdager vi det, hvem gør hvad, og hvem skal have besked hvornår.** Den er skrevet så den kan følges klokken tre om natten af en person, der ikke har læst den før.
 
@@ -38,7 +38,7 @@ Alle henvendelser til security@broberg.ai skal besvares inden for én arbejdsdag
 |---|---|---|
 | **Hændelsesansvarlig** | Christian Broberg | Beslutter alvorlighed, godkender al udadgående kommunikation, anmelder til Datatilsynet |
 | **Teknisk håndtering** | cc-sessionen, der ejer det ramte system (se cardmem) | Inddæmmer, undersøger, retter, dokumenterer |
-| **Stedfortræder** | *Skal udpeges* | Overtager hvis Christian ikke kan nås inden for 4 timer |
+| **Stedfortræder** | Mikkel Broberg · mb@broberg.ai | Overtager hvis Christian ikke kan nås inden for 4 timer |
 
 En agent (cc-session) må altid **inddæmme** med det samme — rotere en nøgle, spærre en konto, slå en funktion fra — uden at vente. En agent må **aldrig** selv kontakte kunder, Datatilsynet eller offentligheden. Den kommunikation går altid gennem Christian.
 
@@ -101,14 +101,27 @@ Vores rolle afgør, hvem vi skal underrette.
 | Hvem | Hvordan |
 |---|---|
 | Hændelsesansvarlig | Christian Broberg · cb@webhouse.dk |
+| Stedfortræder | Mikkel Broberg · mb@broberg.ai |
 | Sikkerhedshenvendelser udefra | security@broberg.ai |
 | Datatilsynet | datatilsynet.dk → Anmeld brud på persondatasikkerheden |
 | Leverandører | Se listen over underdatabehandlere, broberg.ai/trust |
 
 ---
 
+## 10. Kunder vi er databehandler for
+
+Dem vi skal give besked inden for 24 timer (afsnit 6), hvis deres data er berørt.
+
+| Kunde | Produkter | Kontaktperson | Kontakt |
+|---|---|---|---|
+| Sanne Andersen | sanneandersen.dk (site, booking, webshop) | Sanne Andersen | *mangler* |
+| FD Aalborg | FD Sundhed, FD Sport | Morten Skjoldager | *mangler* |
+
+Kommer der en ny kunde til, skrives den på her, før de første data kommer ind.
+
+---
+
 ## Åbent før planen er "på plads"
-1. **Stedfortræder** er ikke udpeget.
-2. **Kunder vi er databehandler for**: der skal ligge en liste med kontaktperson pr. kunde, så trin 4 ikke starter med at lede efter en mailadresse. Hænger sammen med spørgsmålet om databehandleraftalen med FD Aalborg.
-3. **security.txt** er ikke publiceret endnu (F201.4).
-4. **Første øvelse** er ikke holdt.
+1. **Kontaktoplysninger** på kunderne i afsnit 10 (Christian finder dem).
+2. **security.txt** er ikke publiceret endnu (F201.4).
+3. **Første øvelse** holdes, når alt andet er grønt, og backup er testet og læst tilbage (Christians beslutning 27/9).
