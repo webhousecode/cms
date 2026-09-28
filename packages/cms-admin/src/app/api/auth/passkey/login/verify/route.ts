@@ -3,6 +3,7 @@ import { SignJWT } from "jose";
 import { COOKIE_NAME, createToken } from "@/lib/auth";
 import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
 import { confirmAuthentication, getRpFromRequest } from "@/lib/webauthn";
+import { legacyLoginAllowed, LEGACY_LOGIN_REFUSED } from "@/lib/bid";
 
 const CHALLENGE_COOKIE = "cms-webauthn-challenge";
 const TOTP_PENDING_COOKIE = "cms-totp-pending";
@@ -29,6 +30,9 @@ export async function POST(req: NextRequest) {
       rp,
       challenge,
     );
+    if (!legacyLoginAllowed(user)) {
+      return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
+    }
     if (user.totp) {
       const pending = await createTotpPendingToken(user.id);
       const r = NextResponse.json({ totpRequired: true });

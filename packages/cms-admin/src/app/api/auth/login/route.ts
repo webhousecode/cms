@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { verifyPassword, createToken, getUsers, COOKIE_NAME } from "@/lib/auth";
 import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
+import { legacyLoginAllowed, LEGACY_LOGIN_REFUSED } from "@/lib/bid";
 
 const TOTP_PENDING_COOKIE = "cms-totp-pending";
 
@@ -36,6 +37,11 @@ export async function POST(request: NextRequest) {
         await logLoginFailed(String(email), "invalid_credentials", hashIp(ip));
       } catch { /* non-fatal */ }
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    // F199.3 — with Broberg ID on, the password is the admin-only emergency door.
+    if (!legacyLoginAllowed(user)) {
+      return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
     }
 
     // If TOTP is enabled, don't issue the real session cookie yet —

@@ -64,3 +64,16 @@ export function safeReturnTo(raw: string | null | undefined): string {
     return "/admin";
   }
 }
+
+/**
+ * F199.3 — Christian 28/9: «Kun Broberg ID + skjult nøddør». Once BID is on,
+ * password / passkey / GitHub sign-in are the emergency door for an ADMIN only,
+ * for when BID itself is down. Enforced where each session is issued — hiding
+ * the form is presentation, this is the rule. Without BID configured (a
+ * self-hosted @webhouse/cms install) nothing changes: BID is optional forever.
+ */
+export function legacyLoginAllowed(user: { role?: string }, env: NodeJS.ProcessEnv = process.env): boolean {
+  return !isBidConfigured(env) || (user.role ?? "admin") === "admin";
+}
+
+export const LEGACY_LOGIN_REFUSED = "Sign in with Broberg ID";

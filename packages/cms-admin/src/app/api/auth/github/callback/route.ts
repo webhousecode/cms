@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { redirectTo } from "@/lib/redirect";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { getUsers, createUser, createToken, updateUser, COOKIE_NAME } from "@/lib/auth";
+import { isBidConfigured, legacyLoginAllowed } from "@/lib/bid";
 import fs from "fs/promises";
 import path from "path";
 
@@ -89,6 +90,9 @@ export async function GET(request: NextRequest) {
     const users = await getUsers();
     let user = users.find((u) => u.email.toLowerCase() === primaryEmail!.toLowerCase());
 
+    // F199.3 — with Broberg ID on, GitHub never creates an account.
+    if (!user && isBidConfigured()) return redirectTo("/admin/login?error=bid_required");
+
     if (user) {
       // Existing user — link GitHub if not already linked
       if (!user.githubUsername) {
@@ -118,6 +122,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Issue CMS session JWT
+    if (!legacyLoginAllowed(user)) return redirectTo("/admin/login?error=bid_required");
     const sessionToken = await createToken(user);
     const response = redirectTo("/admin");
 

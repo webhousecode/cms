@@ -187,7 +187,13 @@ eu-north-1 (F084.65, 23/9), og F084.38 er ikke længere en blokering for SKIFTET
   browseren, så «for gammel», «aldrig startet» og «ikke vores» får hver sit svar.
 - **Kendt afvigelse:** et BID-login springer cms' egen TOTP over — BID er
   identitetsudbyderen, og dens egen login-styrke gælder.
-- **Kodeords-login står** indtil F199.3 er afgjort af Christian. No naked cutover.
+- **F199.3 afgjort af Christian 28/9, efter hans eget BID-login virkede:** «Kun
+  Broberg ID + skjult nøddør». /admin/login viser én knap. `/admin/login?nod=1`
+  (ikke linket nogen steder) åbner kodeords-formularen, og `legacyLoginAllowed()`
+  i `lib/bid.ts` lader kun en ADMIN komme ind ad den — håndhævet dér hvor
+  sessionen udstedes (kodeord, passkey, TOTP, GitHub), ikke kun ved at skjule
+  knapper. GitHub opretter ingen ny bruger når BID er slået til. Uden BID-miljø
+  (selvhostet) er alt uændret.
 - **Sanne:** BID's egen invitationsmail («webhouse.app flytter til Broberg ID»)
   sendes af broberg-id, først når login er bevist på webhouse.app. Hendes konto
   oprettes med mail@sanneandersen.dk, så første BID-login binder automatisk.

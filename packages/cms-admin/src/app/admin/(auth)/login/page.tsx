@@ -9,6 +9,10 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const from = params.get("from") ?? "/admin";
+  // F199.3 — Christian 28/9: «Kun Broberg ID + skjult nøddør». With BID on, the
+  // page shows one button. ?nod=1 (not linked anywhere) opens the password form
+  // as the admin-only emergency door; the server refuses it for everyone else.
+  const emergency = params.get("nod") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -91,6 +95,7 @@ function LoginForm() {
     else if (ghError === "bid_login_expired") setError("The Broberg ID sign-in took too long — try again");
     else if (ghError === "bid_sub_taken") setError("This Broberg ID account is already connected to another webhouse.app user");
     else if (ghError === "bid_already_linked") setError("Your user is already connected to a different Broberg ID account");
+    else if (ghError === "bid_required") setError("Sign in with Broberg ID");
     else if (ghError?.startsWith("bid_")) setError("Broberg ID sign-in could not complete — try again");
   }, [params]);
 
@@ -316,6 +321,7 @@ function LoginForm() {
             </form>
           ) : (
           <>
+          {(!hasBid || emergency) && (
           <form data-testid="login-password-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Email</label>
@@ -399,6 +405,7 @@ function LoginForm() {
               {loading ? "Signing in…" : "Sign in"}
             </button>
 
+            {!hasBid && (
             <button
               data-testid="login-passkey-button"
               type="button"
@@ -422,29 +429,39 @@ function LoginForm() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="12" r="4"/><path d="M14 12h8"/><path d="M18 12v4"/><path d="M22 12v2"/></svg>
               Sign in with passkey
             </button>
+            )}
           </form>
+          )}
+
+          {hasBid && !emergency && error && (
+            <p style={{ fontSize: "0.8rem", color: "hsl(0 70% 60%)", background: "hsl(0 50% 15% / 0.5)", padding: "0.5rem 0.75rem", borderRadius: "6px", margin: "0 0 0.75rem" }}>{error}</p>
+          )}
 
           {hasBid && (
             <a
               data-testid="login-bid-link"
               href={`/api/auth/bid/login?returnTo=${encodeURIComponent(from)}`}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
-                width: "100%", padding: "0.55rem", marginTop: "0.5rem",
-                borderRadius: "7px", border: "1px solid hsl(0 0% 20%)",
-                background: "hsl(0 0% 10%)", color: "hsl(0 0% 85%)",
-                fontSize: "0.875rem", fontWeight: 500, textDecoration: "none",
-                cursor: "pointer", transition: "border-color 150ms, color 150ms",
-                boxSizing: "border-box",
+              onClick={() => setLoading(true)}
+              style={emergency ? {
+                display: "block", textAlign: "center", marginTop: "0.75rem",
+                fontSize: "0.8rem", color: "hsl(0 0% 60%)", textDecoration: "underline",
+              } : {
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: "100%", padding: "0.6rem", boxSizing: "border-box",
+                borderRadius: "7px", border: "none",
+                background: loading ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
+                color: loading ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
+                fontSize: "0.875rem", fontWeight: 600, textDecoration: "none",
+                cursor: loading ? "wait" : "pointer", transition: "opacity 150ms",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 40%)"; e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 20%)"; e.currentTarget.style.color = "hsl(0 0% 85%)"; }}
+              onMouseDown={(e) => { e.currentTarget.style.opacity = "0.85"; }}
+              onMouseUp={(e) => { e.currentTarget.style.opacity = "1"; }}
             >
-              Sign in with Broberg ID
+              {loading && !emergency ? "Opening Broberg ID…" : emergency ? "Back to Broberg ID" : "Sign in with Broberg ID"}
             </a>
           )}
 
-          {hasGitHub && (
+          {hasGitHub && !hasBid && (
             <>
               <div style={{
                 display: "flex", alignItems: "center", gap: "0.75rem",

@@ -3,6 +3,7 @@ import { jwtVerify } from "jose";
 import { COOKIE_NAME, createToken, getUserById } from "@/lib/auth";
 import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
 import { verifyLoginCode } from "@/lib/totp";
+import { legacyLoginAllowed, LEGACY_LOGIN_REFUSED } from "@/lib/bid";
 
 const TOTP_PENDING_COOKIE = "cms-totp-pending";
 
@@ -36,6 +37,10 @@ export async function POST(req: NextRequest) {
 
   const user = await getUserById(userId);
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  if (!legacyLoginAllowed(user)) {
+    return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
+  }
 
   const ok = await verifyLoginCode(user, body.code);
   if (!ok) return NextResponse.json({ error: "Invalid code" }, { status: 401 });
