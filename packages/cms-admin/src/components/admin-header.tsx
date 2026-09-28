@@ -109,8 +109,9 @@ function UserNav({ user }: { user: SessionUser | null }) {
 
   async function logout() {
     sessionStorage.removeItem("cms-session-user");
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
+    const res = await fetch("/api/auth/logout", { method: "POST" });
+    const { redirect } = (await res.json().catch(() => ({}))) as { redirect?: string };
+    window.location.href = redirect ?? "/";
   }
 
   return (

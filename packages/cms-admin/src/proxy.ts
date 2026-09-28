@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify, SignJWT } from "jose";
 import { parseSiteSlugPath } from "./lib/site-slug-routing";
 import { resolveJwtSecret } from "./lib/dev-jwt-secret";
+import { isBidConfigured } from "./lib/bid-config";
 
 const COOKIE_NAME = "cms-session";
 
@@ -127,6 +128,22 @@ export async function proxy(request: NextRequest) {
   // Root path: always show landing page (login is at /admin/login)
   if (pathname === "/") {
     return NextResponse.rewrite(new URL("/home.html", request.url));
+  }
+
+  // F199.5 — BID's login rule: with Broberg ID on, webhouse.app HAS no login
+  // page. /admin/login (and signup/setup) answer 302 straight to BID's own
+  // dialog — no cms page, logo or button in between. The one exception is a
+  // named error from the BID callback (?error=bid_*): bouncing that back to BID
+  // would loop on e.g. an unknown account, so it renders an error, not a login.
+  const bidOn = isBidConfigured();
+  const toBid = (returnTo: string) => {
+    const u = new URL("/api/auth/bid/login", request.url);
+    u.searchParams.set("returnTo", returnTo);
+    return NextResponse.redirect(u, 302);
+  };
+  if (bidOn && (pathname === "/admin/signup" || pathname === "/admin/setup"
+      || (pathname === "/admin/login" && !request.nextUrl.searchParams.has("error")))) {
+    return toBid(request.nextUrl.searchParams.get("from") ?? "/admin");
   }
 
   // Allow public paths (non-API — these never call getActiveSitePaths(), so
@@ -453,6 +470,7 @@ export async function proxy(request: NextRequest) {
     if (isRsc) {
       return new NextResponse(null, { status: 204 });
     }
+    if (bidOn) return toBid(pathname + request.nextUrl.search);
     const loginUrl = new URL("/admin/login", request.url);
     // Preserve the query string too — routes like /admin/inline-edit/connect
     // carry required params (?site=&return=) that must survive the login
@@ -486,7 +504,9 @@ export async function proxy(request: NextRequest) {
     }
     const response = isApi
       ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      : NextResponse.redirect(new URL("/admin/login", request.url));
+      : bidOn
+        ? toBid(pathname + request.nextUrl.search)
+        : NextResponse.redirect(new URL("/admin/login", request.url));
 
     // Clear invalid cookie
     response.cookies.delete(COOKIE_NAME);

@@ -13,6 +13,8 @@
  * and inline-edit's editSession mint all keep working unchanged.
  */
 import { createSsoClient, loadSsoConfig, type SsoClient, type SsoConfig } from "@broberg/sso";
+import { isBidConfigured } from "./bid-config";
+export { isBidConfigured, BID_ID_TOKEN_COOKIE } from "./bid-config";
 
 export const BID_FLOW_COOKIE = "cms-bid-flow";
 /** Server-side window for a login round-trip, stamped INTO the signature. */
@@ -30,9 +32,6 @@ export interface BidFlow {
   linkUserId: string | null;
 }
 
-export function isBidConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
-  return Boolean(env.BID_ISSUER && env.SSO_CLIENT_ID && env.SSO_REDIRECT_URI && env.SSO_COOKIE_SECRET);
-}
 
 // Config comes from process env, which is the same for every request and every
 // tenant — caching it is not per-request state.

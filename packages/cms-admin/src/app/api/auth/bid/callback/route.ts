@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { verifyValue } from "@broberg/sso";
 import { redirectTo } from "@/lib/redirect";
 import { COOKIE_NAME, createToken, getSessionUser, getUserById, getUsers, saveUser } from "@/lib/auth";
-import { BID_FLOW_COOKIE, BID_FLOW_MAX_AGE, getBid, isBidConfigured, type BidFlow } from "@/lib/bid";
+import { BID_FLOW_COOKIE, BID_FLOW_MAX_AGE, BID_ID_TOKEN_COOKIE, getBid, isBidConfigured, type BidFlow } from "@/lib/bid";
 import { resolveBidUser } from "@/lib/bid-resolve";
 
 /**
@@ -37,8 +37,9 @@ export async function GET(request: NextRequest) {
   const flow = JSON.parse(flowJson) as BidFlow;
 
   let claims;
+  let idToken: string;
   try {
-    ({ claims } = await sso.completeLogin({
+    ({ claims, idToken } = await sso.completeLogin({
       params: request.nextUrl.searchParams,
       state: flow.state,
       codeVerifier: flow.codeVerifier,
@@ -89,6 +90,11 @@ export async function GET(request: NextRequest) {
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 7, // 7 days — same as a password login
     path: "/",
+  });
+  // Kept only so logout can pass id_token_hint to BID's end-session.
+  response.cookies.set(BID_ID_TOKEN_COOKIE, idToken, {
+    httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 7, path: "/api/auth",
   });
   if (user.lastActiveOrg) response.cookies.set("cms-active-org", user.lastActiveOrg, { path: "/", maxAge: 60 * 60 * 24 * 365 });
   if (user.lastActiveSite) response.cookies.set("cms-active-site", user.lastActiveSite, { path: "/", maxAge: 60 * 60 * 24 * 365 });

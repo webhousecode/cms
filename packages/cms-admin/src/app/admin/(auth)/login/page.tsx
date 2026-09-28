@@ -261,7 +261,7 @@ function LoginForm() {
           <div style={{ marginBottom: "1.75rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
             <img src="/webhouse.app-dark-icon.svg" alt="" style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
             <img src="/webhouse-wordmark-dark.svg" alt="webhouse.app" style={{ height: "28px", width: "auto" }} />
-            <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>Sign in to continue</p>
+            <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>{hasBid ? "Broberg ID sign-in did not complete" : "Sign in to continue"}</p>
           </div>
 
           {totpRequired ? (
@@ -452,7 +452,7 @@ function LoginForm() {
               onMouseDown={(e) => { e.currentTarget.style.opacity = "0.85"; }}
               onMouseUp={(e) => { e.currentTarget.style.opacity = "1"; }}
             >
-              {loading ? "Opening Broberg ID…" : "Sign in with Broberg ID"}
+              {loading ? "Opening Broberg ID…" : "Try again with Broberg ID"}
             </a>
           )}
 

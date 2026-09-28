@@ -160,10 +160,13 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const canUse = useCapabilities();
 
   const logout = useCallback(() => {
-    fetch("/api/auth/logout", { method: "POST" }).then(() => {
-      router.push("/admin/login");
-      onClose();
-    });
+    fetch("/api/auth/logout", { method: "POST" })
+      .then((r) => r.json().catch(() => ({})) as Promise<{ redirect?: string }>)
+      .then(({ redirect }) => {
+        onClose();
+        // A full navigation, not router.push: the target may be BID's end-session.
+        window.location.href = redirect ?? "/admin/login";
+      });
   }, [router, onClose]);
 
   const [collections, setCollections] = useState<{ name: string; label: string }[]>([]);
