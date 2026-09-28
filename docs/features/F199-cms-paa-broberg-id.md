@@ -187,13 +187,15 @@ eu-north-1 (F084.65, 23/9), og F084.38 er ikke længere en blokering for SKIFTET
   browseren, så «for gammel», «aldrig startet» og «ikke vores» får hver sit svar.
 - **Kendt afvigelse:** et BID-login springer cms' egen TOTP over — BID er
   identitetsudbyderen, og dens egen login-styrke gælder.
-- **F199.3 afgjort af Christian 28/9, efter hans eget BID-login virkede:** «Kun
-  Broberg ID + skjult nøddør». /admin/login viser én knap. `/admin/login?nod=1`
-  (ikke linket nogen steder) åbner kodeords-formularen, og `legacyLoginAllowed()`
-  i `lib/bid.ts` lader kun en ADMIN komme ind ad den — håndhævet dér hvor
-  sessionen udstedes (kodeord, passkey, TOTP, GitHub), ikke kun ved at skjule
-  knapper. GitHub opretter ingen ny bruger når BID er slået til. Uden BID-miljø
-  (selvhostet) er alt uændret.
+- **F199.3 → F199.4, samme aften:** Christian valgte først «Kun Broberg ID +
+  skjult nøddør», og trak nøddøren tilbage timer senere med BID's login-regel
+  (gælder alle apps på BID): **én login-dialog, BID's.** Med BID-miljø sat har
+  webhouse.app ingen egen kode-, passkey-, TOTP-, GitHub- eller QR-login for
+  nogen — heller ikke admin. `legacyLoginAllowed()` i `lib/bid.ts` håndhæver det
+  dér hvor sessionen udstedes; Account → Security skjuler de paneler.
+  **Koden er slået fra, ikke slettet:** en selvhostet @webhouse/cms uden BID har
+  stadig sit login (non-goal B-modellen). Konsekvensen er skrevet ned: er BID nede,
+  kan ingen logge NYT ind på webhouse.app; eksisterende sessioner kører videre.
 - **Sanne:** BID's egen invitationsmail («webhouse.app flytter til Broberg ID»)
   sendes af broberg-id, først når login er bevist på webhouse.app. Hendes konto
   oprettes med mail@sanneandersen.dk, så første BID-login binder automatisk.

@@ -9,10 +9,8 @@ function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const from = params.get("from") ?? "/admin";
-  // F199.3 — Christian 28/9: «Kun Broberg ID + skjult nøddør». With BID on, the
-  // page shows one button. ?nod=1 (not linked anywhere) opens the password form
-  // as the admin-only emergency door; the server refuses it for everyone else.
-  const emergency = params.get("nod") === "1";
+  // F199.4 — BID's login rule: with Broberg ID on there is ONE login element,
+  // the button to BID. No password, passkey, GitHub or QR — for anyone.
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -321,7 +319,7 @@ function LoginForm() {
             </form>
           ) : (
           <>
-          {(!hasBid || emergency) && (
+          {!hasBid && (
           <form data-testid="login-password-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Email</label>
@@ -433,7 +431,7 @@ function LoginForm() {
           </form>
           )}
 
-          {hasBid && !emergency && error && (
+          {hasBid && error && (
             <p style={{ fontSize: "0.8rem", color: "hsl(0 70% 60%)", background: "hsl(0 50% 15% / 0.5)", padding: "0.5rem 0.75rem", borderRadius: "6px", margin: "0 0 0.75rem" }}>{error}</p>
           )}
 
@@ -442,10 +440,7 @@ function LoginForm() {
               data-testid="login-bid-link"
               href={`/api/auth/bid/login?returnTo=${encodeURIComponent(from)}`}
               onClick={() => setLoading(true)}
-              style={emergency ? {
-                display: "block", textAlign: "center", marginTop: "0.75rem",
-                fontSize: "0.8rem", color: "hsl(0 0% 60%)", textDecoration: "underline",
-              } : {
+              style={{
                 display: "flex", alignItems: "center", justifyContent: "center",
                 width: "100%", padding: "0.6rem", boxSizing: "border-box",
                 borderRadius: "7px", border: "none",
@@ -457,7 +452,7 @@ function LoginForm() {
               onMouseDown={(e) => { e.currentTarget.style.opacity = "0.85"; }}
               onMouseUp={(e) => { e.currentTarget.style.opacity = "1"; }}
             >
-              {loading && !emergency ? "Opening Broberg ID…" : emergency ? "Back to Broberg ID" : "Sign in with Broberg ID"}
+              {loading ? "Opening Broberg ID…" : "Sign in with Broberg ID"}
             </a>
           )}
 
@@ -496,7 +491,7 @@ function LoginForm() {
         </div>
 
         {/* QR code panel — Discord-style. Hidden behind NEXT_PUBLIC_CMS_ENABLE_QR_LOGIN until the mobile app ships. */}
-        {qrLoginEnabled && <div style={{
+        {qrLoginEnabled && !hasBid && <div style={{
           width: "260px",
           padding: "2rem 1.5rem",
           background: "hsl(0 0% 8% / 0.8)",

@@ -1,6 +1,7 @@
 /**
- * F199.3 — Christian 28/9: «Kun Broberg ID + skjult nøddør».
- * With BID on, password/passkey/GitHub are the ADMIN-only emergency door.
+ * F199.4 — BID's login rule (Christian 28/9): with Broberg ID on, there is ONE
+ * login dialog, BID's. No password/passkey/TOTP/GitHub/QR for anyone — the
+ * F199.3 admin emergency door was withdrawn the same day.
  * Without BID (a self-hosted install) nothing changes.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -10,8 +11,8 @@ import { legacyLoginAllowed } from "../bid";
 const BID_ENV = { BID_ISSUER: "https://id.broberg.ai", SSO_CLIENT_ID: "cms", SSO_REDIRECT_URI: "https://x/cb", SSO_COOKIE_SECRET: "s".repeat(64) } as unknown as NodeJS.ProcessEnv;
 
 describe("legacyLoginAllowed", () => {
-  it("BID on: an admin may use the emergency door", () => {
-    expect(legacyLoginAllowed({ role: "admin" }, BID_ENV)).toBe(true);
+  it("BID on: not even an admin gets a password door", () => {
+    expect(legacyLoginAllowed({ role: "admin" }, BID_ENV)).toBe(false);
   });
   it("BID on: an editor may not — Broberg ID is her only door", () => {
     expect(legacyLoginAllowed({ role: "editor" }, BID_ENV)).toBe(false);
@@ -60,7 +61,14 @@ describe("POST /api/auth/login with Broberg ID on", () => {
     Object.assign(process.env, BID_ENV);
   });
 
-  it("the admin's correct password still issues a session (the emergency door works)", async () => {
+  it("the admin's CORRECT password is refused and issues no session", async () => {
+    const res = await login("cb@webhouse.dk");
+    expect(res.status).toBe(403);
+    expect(res.headers.get("set-cookie") ?? "").not.toContain("cms-session");
+  });
+
+  it("positive control: with BID OFF the same correct password DOES issue a session", async () => {
+    for (const k of Object.keys(BID_ENV)) delete process.env[k];
     const res = await login("cb@webhouse.dk");
     expect(res.status).toBe(200);
     expect(res.headers.get("set-cookie")).toContain("cms-session=token-for-cb");

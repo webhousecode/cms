@@ -5,6 +5,7 @@ import { GeneralSettingsPanel, PasswordChangePanel } from "@/components/settings
 import { PasskeysPanel } from "@/components/settings/passkeys-panel";
 import { TotpPanel } from "@/components/settings/totp-panel";
 import { BidPanel } from "@/components/settings/bid-panel";
+import { isBidConfigured } from "@/lib/bid";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { MobilePairingClient } from "./mobile-pairing/client";
 import { getSiteRole } from "@/lib/require-role";
@@ -19,6 +20,9 @@ export default async function AccountPage({
   const { tab = "general" } = await searchParams;
   const role = await getSiteRole();
   const isAdmin = role === "admin";
+  // F199.4 — with Broberg ID on, password/passkey/TOTP are not ways in any more,
+  // so they are not offered as settings either. BID owns those credentials.
+  const bid = isBidConfigured();
 
   const tabs = [
     { id: "general", label: "General" },
@@ -70,16 +74,16 @@ export default async function AccountPage({
             </div>
 
             {/* Change password — real form */}
-            <PasswordChangePanel />
+            {!bid && <PasswordChangePanel />}
 
             {/* Broberg ID (F199) — hidden unless the server has BID configured */}
             <Suspense fallback={null}><BidPanel /></Suspense>
 
             {/* Passkeys (F59) */}
-            <PasskeysPanel />
+            {!bid && <PasskeysPanel />}
 
             {/* TOTP — Authenticator app (F59 phase 4) */}
-            <TotpPanel />
+            {!bid && <TotpPanel />}
           </div>
         )}
 

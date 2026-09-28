@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { COOKIE_NAME, createToken, getUserById } from "@/lib/auth";
 import { claimQrSession } from "@/lib/qr-sessions";
+import { legacyLoginAllowed, LEGACY_LOGIN_REFUSED } from "@/lib/bid";
 
 /**
  * POST /api/auth/qr/claim
@@ -19,6 +20,7 @@ export async function POST(req: NextRequest) {
 
   const user = await getUserById(claim.userId);
   if (!user) return NextResponse.json({ error: "User no longer exists" }, { status: 404 });
+  if (!legacyLoginAllowed(user)) return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
 
   const token = await createToken(user);
   const res = NextResponse.json({ ok: true, email: user.email, name: user.name });
