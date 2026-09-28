@@ -9,6 +9,7 @@ import { saveRevision } from "@/lib/revisions";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
+import { fireContentEvent } from "@/lib/webhook-events";
 
 type Ctx = { params: Promise<{ collection: string }> };
 
@@ -165,6 +166,17 @@ export async function POST(req: NextRequest, { params }: Ctx) {
           }
         }
       } catch { /* non-fatal */ }
+    }
+
+    // F35 — the content lifecycle webhook, same as the PATCH path. Without it a
+    // document created PUBLISHED in one call never reached a site's content
+    // subscribers: broberg.ai's Trail-ingest never saw the Mailworker page
+    // (28/9-2026), because only an edit fired the event, never a create.
+    {
+      const { getSessionWithSiteRole } = await import("@/lib/require-role");
+      const actor = await getSessionWithSiteRole().catch(() => null);
+      fireContentEvent(status === "published" ? "published" : "created", collection, body.slug, doc,
+        actor ? `user:${actor.email}` : undefined).catch(() => {});
     }
 
     await invalidateQuickCacheOnWrite(); // F158: content created → refresh overview/drafts
