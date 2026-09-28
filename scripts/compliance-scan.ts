@@ -244,7 +244,12 @@ export function scanProject(p: { slug: string; repo: string | null }, cacheDir =
 // secrets (never the values), plus endpoints measured once by host because the
 // secret name alone does not say who is behind it (AWS_ENDPOINT_URL_S3 is
 // Tigris on some apps and Cloudflare R2 on another).
-export type Endpoint = { app: string; env: string; host: string; vendor: string; measured_at: string };
+export type Endpoint = {
+  app: string; env: string; host: string; vendor: string; measured_at: string;
+  // F201.7 — where the bucket behind this endpoint physically lives, measured
+  // with the app's own keys (Tigris: "eur" = EU multi-region, "fra"/"ams" = one EU region).
+  bucket?: string; location?: string; location_measured_at?: string; location_measured_by?: string;
+};
 
 export function productionUse(secretsByApp: Record<string, string[]>, endpoints: Endpoint[]): Map<string, Set<string>> {
   const use = new Map<string, Set<string>>();
