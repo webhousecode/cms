@@ -1009,10 +1009,10 @@
     "checked_at": "2026-09-26",
     "location": {
       "class": "mix",
-      "da": "Flyttes til EU (i gang)",
-      "en": "Moving to the EU (in progress)",
+      "da": "EU-låst (eur) · gamle kopier venter på sletning",
+      "en": "EU-locked (eur) · old copies awaiting deletion",
       "measured": true,
-      "at": "2026-09-27"
+      "at": "2026-09-28"
     },
     "company_country": "USA",
     "public": {

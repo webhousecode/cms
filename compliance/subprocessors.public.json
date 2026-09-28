@@ -1,5 +1,5 @@
 {
-  "list_changed_at": "2026-09-27",
+  "list_changed_at": "2026-09-28",
   "rows": [
     {
       "id": "fly",
@@ -144,10 +144,10 @@
       "company_country": "USA",
       "location": {
         "class": "mix",
-        "da": "Flyttes til EU (i gang)",
-        "en": "Moving to the EU (in progress)",
+        "da": "EU-låst (eur) · gamle kopier venter på sletning",
+        "en": "EU-locked (eur) · old copies awaiting deletion",
         "measured": true,
-        "at": "2026-09-27"
+        "at": "2026-09-28"
       },
       "transfer_basis": "SCC"
     },
