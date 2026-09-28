@@ -29,6 +29,7 @@ export interface User {
   invitedBy?: string; // user ID of inviter
   source?: "local" | "github" | "invite"; // how the user was created
   githubUsername?: string; // linked GitHub username
+  bidSub?: string; // F199 — Broberg ID `sub`; the identity key, never the address
   zoom?: number; // UI zoom level in percent, e.g. 110
   lastActiveOrg?: string; // last active org ID (persists across devices)
   lastActiveSite?: string; // last active site ID (persists across devices)

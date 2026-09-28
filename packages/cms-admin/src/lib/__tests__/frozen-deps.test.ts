@@ -51,6 +51,14 @@ const LEDGER: Record<string, string> = {
     "per-request timeout and was fixed the same day, so a newer release is " +
     "taken deliberately, with fly-machines.test.ts run against it. " +
     "0.5.0 (F200.2, same day): a machine that 404s on the first poll now throws.",
+  "@broberg/sso":
+    "Exact-pinned 0.3.2 on 2026-09-28 (F199.2) — the Broberg ID login. Exact on " +
+    "purpose: it is the auth chokepoint, and the package has shipped real " +
+    "behaviour changes inside a minor (0.2.1 hardcoded RS256/ES256 and refused " +
+    "every token BID issues; 0.2.3 added the signed flow-cookie expiry we rely " +
+    "on). A newer release is taken deliberately, with bid-login.test.ts run " +
+    "against it — including its aud test, which proves the installed version " +
+    "still refuses a token issued to another client.",
   "@broberg/cms-chat-client":
     "0.4.14 vs 0.4.20 — same minor, so the caret DOES reach it. Not frozen.",
   "@broberg/ui-controls-core":

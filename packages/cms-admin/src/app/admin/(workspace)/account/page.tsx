@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { GeneralSettingsPanel, PasswordChangePanel } from "@/components/settings/general-settings-panel";
 import { PasskeysPanel } from "@/components/settings/passkeys-panel";
 import { TotpPanel } from "@/components/settings/totp-panel";
+import { BidPanel } from "@/components/settings/bid-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { MobilePairingClient } from "./mobile-pairing/client";
 import { getSiteRole } from "@/lib/require-role";
@@ -69,6 +71,9 @@ export default async function AccountPage({
 
             {/* Change password — real form */}
             <PasswordChangePanel />
+
+            {/* Broberg ID (F199) — hidden unless the server has BID configured */}
+            <Suspense fallback={null}><BidPanel /></Suspense>
 
             {/* Passkeys (F59) */}
             <PasskeysPanel />

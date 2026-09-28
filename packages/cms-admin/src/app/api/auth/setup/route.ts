@@ -3,6 +3,7 @@ import { existsSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { getUsers, createUser, createToken, COOKIE_NAME } from "@/lib/auth";
 import { getAdminDataDir } from "@/lib/site-registry";
+import { isBidConfigured } from "@/lib/bid";
 
 /**
  * Setup endpoint — used ONCE on first install to create the initial admin.
@@ -70,6 +71,7 @@ export async function GET() {
     return NextResponse.json({
       hasUsers: true,
       hasGitHub: !!process.env.GITHUB_OAUTH_CLIENT_ID,
+      hasBid: isBidConfigured(),
       setupClosed: true,
     });
   }
@@ -84,6 +86,7 @@ export async function GET() {
   return NextResponse.json({
     hasUsers: users.length > 0,
     hasGitHub: !!process.env.GITHUB_OAUTH_CLIENT_ID,
+      hasBid: isBidConfigured(),
   });
 }
 

@@ -258,7 +258,7 @@ interface ActorLike {
   ipHash?: string;
 }
 
-export async function logLogin(actor: ActorLike, method?: "password" | "passkey" | "github" | "totp" | "magic-link"): Promise<void> {
+export async function logLogin(actor: ActorLike, method?: "password" | "passkey" | "github" | "totp" | "magic-link" | "bid"): Promise<void> {
   await auditLog("auth.login", { type: "user", ...actor }, undefined, method ? { method } : undefined);
 }
 

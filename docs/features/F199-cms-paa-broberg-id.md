@@ -159,6 +159,39 @@ Havde nogen læst den forkerte, var svaret pæ «bruger nogen GitHub-login?» bl
 det modsatte. **Ikke slettet** — det er destruktivt på produktionsdata og kræver
 Christians egne ord.
 
+## Genoptaget 28/9-2026 — sådan blev koblingen bygget (F199.2)
+
+Christian 28/9: «gør dig klar til at blive rullet ind i BID … husk inline-edit
+login … send mail til Sanne Andersen og andre RIGTIGE cms brugere». Begge
+betingelser fra pausen er opfyldt: BID kører på to maskiner mod Supabase i
+eu-north-1 (F084.65, 23/9), og F084.38 er ikke længere en blokering for SKIFTET
+(se nedenfor) — kun for NÆSTE invitation.
+
+- **Klient:** `cms`, confidential, registreret af broberg-id og læst tilbage
+  (redirect `https://webhouse.app/api/auth/bid/callback` + localhost:3010).
+  Hemmeligheden ligger i cms' vault (`01a0e935…`, env `SSO_CLIENT_SECRET`).
+- **Pakke:** `@broberg/sso` 0.3.2, exact-pinned (frozen-deps LEDGER). Next.js
+  bruger kernen, ingen adapter.
+- **Identitet på `sub`, aldrig adresse.** `users.json` fik `bidSub`.
+  `lib/bid-resolve.ts` er den eneste kobling: kendt `sub` → den bruger; ellers en
+  BID-**verificeret** adresse der matcher præcis én ubundet bruger → bind. Ellers
+  ingen adgang og ingen ny bruger (fail-closed).
+- **«Kobl Broberg ID» fra en logget-ind session** (Account → Security). Det er
+  sådan Christian kobles: hans BID-primære er cb@broberg.ai, cms kender ham som
+  cb@webhouse.dk. cms-sessionen er beviset på hvem han er, så adressen behøver
+  ikke matche. Det løser F084.38-klassen for eksisterende brugere generelt.
+- **Samme cms-session bagefter.** Callback'en udsteder præcis det JWT et
+  kodeords-login giver (`createToken`), så `getSiteRole()`, team.json, proxy og
+  inline-edit's editSession-mint er urørte. Inline-redigering følger med.
+- **Flow-cookien** er signeret med udløb på signaturen (600 s) og lever 3× i
+  browseren, så «for gammel», «aldrig startet» og «ikke vores» får hver sit svar.
+- **Kendt afvigelse:** et BID-login springer cms' egen TOTP over — BID er
+  identitetsudbyderen, og dens egen login-styrke gælder.
+- **Kodeords-login står** indtil F199.3 er afgjort af Christian. No naked cutover.
+- **Sanne:** BID's egen invitationsmail («webhouse.app flytter til Broberg ID»)
+  sendes af broberg-id, først når login er bevist på webhouse.app. Hendes konto
+  oprettes med mail@sanneandersen.dk, så første BID-login binder automatisk.
+
 ## Non-goals
 
 - **B-modellen:** at enhver der installerer `@webhouse/cms-admin` skal logge sine

@@ -16,6 +16,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [hasGitHub, setHasGitHub] = useState(true); // always show — GitHub OAuth is part of the platform
+  const [hasBid, setHasBid] = useState(false); // F199 — only when the server has BID configured
   const [totpRequired, setTotpRequired] = useState(false);
   const [totpCode, setTotpCode] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
@@ -29,7 +30,8 @@ function LoginForm() {
   useEffect(() => {
     fetch("/api/auth/setup")
       .then((r) => r.json())
-      .then((d: { hasUsers?: boolean; hasGitHub?: boolean }) => {
+      .then((d: { hasUsers?: boolean; hasGitHub?: boolean; hasBid?: boolean }) => {
+        setHasBid(d.hasBid === true);
         if (!d.hasUsers) router.replace("/admin/setup");
         else setChecking(false);
       })
@@ -84,6 +86,12 @@ function LoginForm() {
     else if (ghError === "github_csrf") setError("GitHub login failed (CSRF) — try again");
     else if (ghError === "github_api_failed") setError("Could not reach GitHub — try again");
     else if (ghError === "github_token_failed") setError("GitHub token exchange failed — try again");
+    // F199 — Broberg ID callback errors (/api/auth/bid/callback)
+    else if (ghError === "bid_unknown_account") setError("This Broberg ID account has no access to webhouse.app. Sign in with your password and connect Broberg ID under Account, or ask your administrator for an invitation.");
+    else if (ghError === "bid_login_expired") setError("The Broberg ID sign-in took too long — try again");
+    else if (ghError === "bid_sub_taken") setError("This Broberg ID account is already connected to another webhouse.app user");
+    else if (ghError === "bid_already_linked") setError("Your user is already connected to a different Broberg ID account");
+    else if (ghError?.startsWith("bid_")) setError("Broberg ID sign-in could not complete — try again");
   }, [params]);
 
   if (checking) {
@@ -415,6 +423,26 @@ function LoginForm() {
               Sign in with passkey
             </button>
           </form>
+
+          {hasBid && (
+            <a
+              data-testid="login-bid-link"
+              href={`/api/auth/bid/login?returnTo=${encodeURIComponent(from)}`}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+                width: "100%", padding: "0.55rem", marginTop: "0.5rem",
+                borderRadius: "7px", border: "1px solid hsl(0 0% 20%)",
+                background: "hsl(0 0% 10%)", color: "hsl(0 0% 85%)",
+                fontSize: "0.875rem", fontWeight: 500, textDecoration: "none",
+                cursor: "pointer", transition: "border-color 150ms, color 150ms",
+                boxSizing: "border-box",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 40%)"; e.currentTarget.style.color = "#fff"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 20%)"; e.currentTarget.style.color = "hsl(0 0% 85%)"; }}
+            >
+              Sign in with Broberg ID
+            </a>
+          )}
 
           {hasGitHub && (
             <>
