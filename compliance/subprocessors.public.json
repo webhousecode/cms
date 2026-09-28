@@ -257,8 +257,8 @@
       "transfer_basis": "DPF+SCC"
     },
     {
-      "id": "openai",
-      "name": "OpenAI",
+      "id": "huggingface",
+      "name": "Hugging Face",
       "purpose_da": "AI-modeller",
       "purpose_en": "AI models",
       "company_country": "USA",
@@ -276,6 +276,21 @@
       "name": "OpenRouter",
       "purpose_da": "Adgang til AI-modeller, bl.a. billeder (Recraft)",
       "purpose_en": "Access to AI models, incl. images (Recraft)",
+      "company_country": "USA",
+      "location": {
+        "class": "out",
+        "da": "USA",
+        "en": "United States",
+        "measured": false,
+        "at": "2026-09-27"
+      },
+      "transfer_basis": "SCC"
+    },
+    {
+      "id": "runpod",
+      "name": "RunPod",
+      "purpose_da": "GPU til AI-modeller",
+      "purpose_en": "GPU for AI models",
       "company_country": "USA",
       "location": {
         "class": "out",

@@ -1,16 +1,16 @@
 # F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.
-scanned_at: "2026-09-27T16:00:16.714Z"
+scanned_at: "2026-09-28T18:06:43.699Z"
 projects_total: 40
 projects_scanned: 39
-production_measured: "34 kørende Fly-apps"
+production_measured: "33 kørende Fly-apps"
 vendors:
   - id: fly
     name: "Fly.io"
     purpose: "Hosting"
-    products: ["ai-sdk", "autodoc", "broberg-ai-site", "broberg-id", "buddy", "cardmem", "cms", "components", "contentpush", "contract-manager", "coverletter-generator", "cronjobs", "dns-mcp", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "mailworker", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine", "whop", "xrt81-com"]
+    products: ["ai-sdk", "autodoc", "broberg-ai", "broberg-id", "buddy", "cardmem", "cms", "components", "contentpush", "contract-manager", "coverletter-generator", "cronjobs", "dns-mcp", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "mailworker", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine", "whop", "xrt81-com"]
     regions: ["arn"]
     in_production: true
-    production_apps: ["apple-music-mcp", "auto-scaling-container-app", "broberg-ai", "broberg-discovery", "broberg-helpdesk-api", "broberg-helpdesk-console", "broberg-helpdesk-db", "broberg-id", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "buddy-voice", "cardmem", "cardmem-lens", "cms-docs", "dns-mcp", "fd-sport", "fd-sundhed", "mailworker-api", "moovyy", "pitch-vault", "sanneandersen-services", "sanneandersen-site", "trail-admin", "trail-db-001", "trail-engine-001", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-dk", "webhouse-whapi", "webhouse-whop", "xrt81"]
+    production_apps: ["auto-scaling-container-app", "broberg-ai", "broberg-discovery", "broberg-helpdesk-api", "broberg-helpdesk-console", "broberg-helpdesk-db", "broberg-id", "broberg-services", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "buddy-voice", "cardmem", "cardmem-lens", "cms-docs", "dns-mcp", "fd-sport", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-services", "sanneandersen-site", "trail-admin", "trail-db-001", "trail-engine-001", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-dk", "webhouse-whapi", "webhouse-whop", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk scripts/verify-trainstyle.ts:27 (host sanneandersen-site.fly.dev)"
       - "broberg-ai/autodoc fly.toml:1 (fly.toml app=broberg-autodoc)"
@@ -60,12 +60,12 @@ vendors:
   - id: cloudflare
     name: "Cloudflare"
     purpose: "Domæner, DNS, CDN, fillager (R2), spamværn (Turnstile)"
-    products: ["broberg-ai-site", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "helpdesk", "notesmem", "sanneandersen", "upmetrics", "xrt81-com"]
+    products: ["broberg-ai", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "helpdesk", "notesmem", "sanneandersen", "upmetrics", "xrt81-com"]
     in_production: true
-    production_apps: ["buddy-brain", "buddy-cloud", "buddy-edge-fly", "cardmem", "cardmem-lens", "dns-mcp", "fd-sundhed", "sanneandersen-site", "webhouse-app", "webhouse-contract-manager", "webhouse-dk", "xrt81"]
+    production_apps: ["broberg-ai", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "cardmem", "cardmem-lens", "dns-mcp", "fd-sundhed", "sanneandersen-site", "webhouse-app", "webhouse-contract-manager", "webhouse-dk", "xrt81"]
     evidence:
       - "broberg-ai/broberg-ai-site package.json:24 (npm @broberg/forms-turnstile)"
-      - "broberg-ai/broberg-ai-site src/support.ts:144 (env TURNSTILE_SECRET_KEY)"
+      - "broberg-ai/broberg-ai-site src/client/turnstile.tsx:64 (env TURNSTILE_SECRET_KEY)"
       - "webhousecode/buddy apps/server/src/orchestration-spawn.ts:251 (env CF_API_TOKEN)"
       - "webhousecode/buddy apps/server/src/r2-staging.ts:26 (env R2_ACCOUNT_ID)"
       - "broberg-ai/cardmem apps/lens-cloud/.env.example:22 (env R2_ENDPOINT)"
@@ -88,7 +88,7 @@ vendors:
   - id: resend
     name: "Resend"
     purpose: "Transaktionsmails"
-    products: ["broberg-ai-site", "broberg-id", "cardmem", "cms", "components", "contract-manager", "cronjobs", "fd-sundhed", "happy-little-place", "helpdesk", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "vn-leker", "whop", "xrt81-com"]
+    products: ["broberg-ai", "broberg-id", "cardmem", "cms", "components", "contract-manager", "cronjobs", "fd-sundhed", "happy-little-place", "helpdesk", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "vn-leker", "whop", "xrt81-com"]
     in_production: true
     production_apps: ["broberg-ai", "broberg-helpdesk-api", "broberg-id", "cardmem", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-site", "trail-admin", "upmetrics", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-whapi", "webhouse-whop", "xrt81"]
     evidence:
@@ -228,9 +228,9 @@ vendors:
   - id: mistral
     name: "Mistral AI"
     purpose: "AI-modeller (EU)"
-    products: ["ai-sdk", "broberg-ai-site", "buddy", "cardmem", "cms", "components", "contentpush", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "helpdesk", "pitch", "trail", "xrt81-com"]
+    products: ["ai-sdk", "broberg-ai", "buddy", "cardmem", "cms", "components", "contentpush", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "helpdesk", "pitch", "trail", "xrt81-com"]
     in_production: true
-    production_apps: ["broberg-ai", "broberg-helpdesk-api", "buddy-voice", "cardmem", "fd-sundhed", "mailworker-api", "pitch-vault", "sanneandersen-site", "trail-engine-001", "webhouse-app", "xrt81"]
+    production_apps: ["broberg-ai", "broberg-helpdesk-api", "buddy-voice", "cardmem", "fd-sundhed", "pitch-vault", "sanneandersen-site", "trail-engine-001", "webhouse-app", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk inventory.json:9609 (host mistral.ai)"
       - "broberg-ai/ai-sdk inventory.json:12163 (host mistral.ai)"
@@ -257,8 +257,8 @@ vendors:
     name: "OpenAI"
     purpose: "AI-modeller"
     products: ["ai-sdk", "buddy", "cardmem", "cms", "trail", "xrt81-com"]
-    in_production: true
-    production_apps: ["xrt81"]
+    in_production: false
+    production_apps: []
     evidence:
       - "broberg-ai/ai-sdk .env.example:8 (env OPENAI_API_KEY)"
       - "broberg-ai/ai-sdk inventory.json:2194 (host developers.openai.com)"
@@ -286,7 +286,7 @@ vendors:
     purpose: "AI-modeller"
     products: ["ai-sdk", "buddy", "cardmem", "cms", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "trail", "whop", "xrt81-com"]
     in_production: true
-    production_apps: ["apple-music-mcp", "webhouse-whop", "xrt81"]
+    production_apps: ["webhouse-whop"]
     evidence:
       - "broberg-ai/ai-sdk .env.example:5 (env ANTHROPIC_API_KEY)"
       - "broberg-ai/ai-sdk inventory.json:13014 (host www.anthropic.com)"
@@ -365,7 +365,7 @@ vendors:
     purpose: "AI-routing"
     products: ["ai-sdk", "buddy", "cardmem", "components", "sanneandersen", "trail", "upmetrics", "xrt81-com"]
     in_production: true
-    production_apps: ["buddy-brain", "buddy-edge-fly", "cardmem", "sanneandersen-site", "trail-engine-001", "upmetrics", "xrt81"]
+    production_apps: ["cardmem", "sanneandersen-site", "trail-engine-001", "upmetrics", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk .env.example:17 (env OPENROUTER_API_KEY)"
       - "broberg-ai/ai-sdk inventory.json:562 (host openrouter.ai)"
@@ -445,7 +445,7 @@ vendors:
   - id: azure
     name: "Microsoft Azure"
     purpose: "Tale/AI"
-    products: ["ai-sdk", "broberg-ai-site", "buddy", "cardmem", "contentpush"]
+    products: ["ai-sdk", "broberg-ai", "buddy", "cardmem", "contentpush"]
     in_production: true
     production_apps: ["broberg-ai", "buddy-voice", "cardmem"]
     evidence:
@@ -502,7 +502,7 @@ vendors:
     purpose: "Kode, CI, API"
     products: ["ai-sdk", "autodoc", "broberg-id", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "fleet", "forager", "fysio-dk-aalborg", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "how", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine"]
     in_production: true
-    production_apps: ["apple-music-mcp", "broberg-id", "buddy-edge-fly", "cardmem", "trail-admin", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-whapi"]
+    production_apps: ["broberg-id", "buddy-edge-fly", "cardmem", "trail-admin", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-whapi"]
     evidence:
       - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GH_TOKEN)"
       - "broberg-ai/ai-sdk .github/workflows/research-models.yml:58 (env GITHUB_TOKEN)"
@@ -536,7 +536,7 @@ vendors:
       - "broberg-ai/ai-sdk src/providers/vertex.ts:31 (host www.googleapis.com)"
       - "broberg-ai/broberg-id scripts/fikstur-app.ts:40 (env GOOGLE_CLIENT_ID)"
       - "broberg-ai/broberg-id scripts/fikstur-app.ts:41 (env GOOGLE_CLIENT_SECRET)"
-      - "broberg-ai/cardmem apps/server/src/api/meetings.ts:1088 (host meet.google.com)"
+      - "broberg-ai/cardmem apps/server/src/api/meetings.ts:1068 (host meet.google.com)"
       - "broberg-ai/cardmem apps/server/src/auth.ts:413 (env GOOGLE_OAUTH_CLIENT_ID)"
       - "webhousecode/cms packages/cms-admin/src/lib/lighthouse/psi-engine.ts:9 (host www.googleapis.com)"
       - "cbroberg/coverletter-generator components/app-sidebar.tsx:93 (host drive.google.com)"
@@ -625,18 +625,18 @@ vendors:
   - id: apple
     name: "Apple (APNs/Sign in/App Store)"
     purpose: "Push, login, app-distribution"
-    products: ["broberg-id", "buddy", "cardmem", "fd-sundhed", "fysiodk-aalborg-sport", "moovyy", "storeform", "xrt81-com"]
+    products: ["broberg-ai", "broberg-id", "buddy", "cardmem", "fd-sundhed", "fysiodk-aalborg-sport", "moovyy", "storeform", "xrt81-com"]
     in_production: true
-    production_apps: ["apple-music-mcp", "broberg-id", "xrt81"]
+    production_apps: ["broberg-id", "xrt81"]
     evidence:
+      - "broberg-ai/broberg-ai-site src/render/html.tsx:26 (env APPLE_TOUCH_HREF)"
+      - "broberg-ai/broberg-ai-site src/render/html.tsx:66 (env APPLE_TOUCH_HREF)"
       - "broberg-ai/broberg-id scripts/apple-secret.ts:8 (env APPLE_CLIENT_ID)"
       - "broberg-ai/broberg-id scripts/apple-secret.ts:9 (env APPLE_TEAM_ID)"
       - "webhousecode/buddy apps/server/src/push/apns.ts:10 (env APNS_KEY_PATH)"
       - "webhousecode/buddy apps/server/src/push/apns.ts:11 (env APNS_KEY_ID)"
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:94 (host appstoreconnect.apple.com)"
       - "broberg-ai/fd-sundhed .github/workflows/renew-apple-secret.yml:27 (env APPLE_TEAM_ID)"
-      - "broberg-ai/fd-sundhed .github/workflows/renew-apple-secret.yml:27 (env APPLE_TEAM_ID)"
-      - "webhousecode/fysiodk-aalborg-sport .github/workflows/renew-apple-secret.yml:26 (env APPLE_TEAM_ID)"
     # F201.2 — fra leverandørens egne sider
     dpa_status: "ikke_databehandler"
     dpa_url: "https://developer.apple.com/support/terms/apple-developer-program-license-agreement/"
@@ -653,9 +653,9 @@ vendors:
   - id: webpush
     name: "Web Push (browserens push-tjeneste)"
     purpose: "Push-notifikationer"
-    products: ["cardmem", "cms", "components", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "moovyy", "trail", "xrt81-com"]
+    products: ["cardmem", "cms", "components", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "moovyy", "trail", "xrt81-com"]
     in_production: true
-    production_apps: ["cardmem", "fd-sundhed", "trail-engine-001", "webhouse-app", "xrt81"]
+    production_apps: ["broberg-helpdesk-api", "cardmem", "fd-sundhed", "trail-engine-001", "webhouse-app", "xrt81"]
     evidence:
       - "broberg-ai/cardmem apps/server/package.json:24 (npm @broberg/webpush)"
       - "broberg-ai/cardmem apps/server/src/api/push.ts:48 (env VAPID_PUBLIC)"
@@ -776,7 +776,7 @@ vendors:
     in_production: true
     production_apps: ["broberg-id"]
     evidence:
-      - "broberg-ai/broberg-id src/contact-notify.ts:132 (env GATEWAYAPI_TOKEN)"
+      - "broberg-ai/broberg-id src/contact-notify.ts:162 (env GATEWAYAPI_TOKEN)"
       - "broberg-ai/components packages/sms/src/delivery.ts:85 (env GATEWAYAPI_STATES)"
       - "broberg-ai/components packages/sms/src/delivery.ts:119 (env GATEWAYAPI_STATES)"
     # F201.2 — fra leverandørens egne sider
@@ -863,12 +863,14 @@ vendors:
   - id: zoom
     name: "Zoom"
     purpose: "Videomøder"
-    products: ["cardmem"]
+    products: ["cardmem", "mailworker"]
     in_production: false
     production_apps: []
     evidence:
       - "broberg-ai/cardmem apps/web/src/components/chat.tsx:2975 (env ZOOM_OPTS)"
       - "broberg-ai/cardmem apps/web/src/components/chat.tsx:2982 (env ZOOM_OPTS)"
+      - "broberg-ai/mailworker src/console/shell.tsx:12 (env ZOOM_MAX)"
+      - "broberg-ai/mailworker src/console/shell.tsx:12 (env ZOOM_MIN)"
     # F201.2 — fra leverandørens egne sider
     dpa_status: "auto"
     dpa_url: "https://explore.zoom.us/docs/doc/Zoom_GLOBAL_DPA.pdf"
@@ -1254,8 +1256,8 @@ vendors:
     name: "Hugging Face"
     purpose: "AI-modeller"
     products: ["fd-sundhed", "forager", "voice-engine"]
-    in_production: false
-    production_apps: []
+    in_production: true
+    production_apps: ["broberg-services"]
     evidence:
       - "broberg-ai/fd-sundhed tools/moedeoptagelse/transskriber.mjs:79 (host huggingface.co)"
       - "broberg-ai/forager src/scout-da/sources/dynaword-client.ts:6 (host datasets-server.huggingface.co)"
@@ -1279,8 +1281,8 @@ vendors:
     name: "RunPod"
     purpose: "GPU/AI-hosting"
     products: ["trail", "voice-engine"]
-    in_production: false
-    production_apps: []
+    in_production: true
+    production_apps: ["broberg-services"]
     evidence:
       - "broberg-ai/trail apps/scout/training/runpod_train.py:69 (host rest.runpod.io)"
       - "broberg-ai/trail apps/scout/training/runpod_train.py:78 (host api.runpod.io)"
@@ -1547,7 +1549,7 @@ vendors:
     production_apps: []
     evidence:
       - "cbroberg/coverletter-generator package-lock.json:5634 (host polar.sh)"
-      - "cbroberg/pitch package-lock.json:5447 (host polar.sh)"
+      - "cbroberg/pitch package-lock.json:5465 (host polar.sh)"
     # F201.2 — fra leverandørens egne sider
     dpa_status: "auto"
     dpa_url: "https://polar.sh/legal/data-processing-addendum"

@@ -9,7 +9,8 @@ afhænger af om en anden nøgle findes i drift, står det som «uklart».
 | App → tjeneste | Hvad | Hvorfor det er kundedata | Repo |
 |---|---|---|---|
 | **xrt81 → OpenRouter** | AI-beskrivelse af klubvideoer (Gemma/Gemini); fotos og årsrapport falder tilbage hertil hvis Mistral-nøglen mangler | Videoerne viser medlemmernes ansigter. Koden kalder det selv et åbent compliance-hul | `broberg/xrt81` — `apps/server/src/lib/vision.ts:116-127`, `packages/shared/src/pii-routes.ts:41,71` |
-| **trail-engine-001 → OpenRouter + Anthropic** | Behandling af uploadede dokumenter, billedanalyse, chat over vidensbasen. Failover Anthropic → OpenRouter | Kundernes egne dokumenter og samtaler | `broberg/trail/apps/server` — `src/lib/ai.ts:183-192`, `src/services/ingest.ts:773,1009-1023` |
+
+**trail-engine-001 — rettet af trail 28/9, målt i prod:** ingen Anthropic-nøgle i drift; ingest, chat og billeder kører primært på Mistral (EU), 0 tenants har egne nøgler. Lækket var kun SIDSTE nødudvej (gemini-2.5-flash via OpenRouter ved Mistral-nedbrud) — fjernet i trail `b1c72e8` (F290.1), kæden er nu Mistral small → large og fejler synligt. Udrulles 28/9 aften. Åbent hos Christian: `/local-ingest` kompilerer kundekilder i Claude Code (Anthropic, USA).
 
 ## Uklart
 
@@ -36,7 +37,7 @@ afhænger af om en anden nøgle findes i drift, står det som «uklart».
 | buddy-brain → OpenRouter | Kaldet er mærket EU-only, og EU-vagten afviser alt andet end Mistral |
 | buddy-edge-fly → OpenRouter | Kode-review-køen kører ikke på de maskiner |
 
-Fjernes kun på Christians ord (det er env-ændringer i andre apps).
+**Fjernet 28/9 på Christians ord** («Ja, fjern nøglerne»): alle fire, læst tilbage med `flyctl secrets list`; alle tre apps kører igen.
 
 ## Ikke undersøgt
 
