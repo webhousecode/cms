@@ -10,7 +10,7 @@ afhænger af om en anden nøgle findes i drift, står det som «uklart».
 |---|---|---|---|
 | **xrt81 → OpenRouter** | AI-beskrivelse af klubvideoer (Gemma/Gemini); fotos og årsrapport falder tilbage hertil hvis Mistral-nøglen mangler | Videoerne viser medlemmernes ansigter. Koden kalder det selv et åbent compliance-hul | `broberg/xrt81` — `apps/server/src/lib/vision.ts:116-127`, `packages/shared/src/pii-routes.ts:41,71` |
 
-**trail-engine-001 — rettet af trail 28/9, målt i prod:** ingen Anthropic-nøgle i drift; ingest, chat og billeder kører primært på Mistral (EU), 0 tenants har egne nøgler. Lækket var kun SIDSTE nødudvej (gemini-2.5-flash via OpenRouter ved Mistral-nedbrud) — fjernet i trail `b1c72e8` (F290.1), kæden er nu Mistral small → large og fejler synligt. Udrulles 28/9 aften. Åbent hos Christian: `/local-ingest` kompilerer kundekilder i Claude Code (Anthropic, USA).
+**trail-engine-001 — rettet af trail 28/9, målt i prod:** ingen Anthropic-nøgle i drift; ingest, chat og billeder kører primært på Mistral (EU), 0 tenants har egne nøgler. Lækket var kun SIDSTE nødudvej (gemini-2.5-flash via OpenRouter ved Mistral-nedbrud) — fjernet i trail `b1c72e8` (F290.1), kæden er nu Mistral small → large og fejler synligt. **Live 28/9** på trail-engine-001 (release v259, /api/health ok). `/local-ingest` kompilerer kundekilder i Claude Code (Anthropic, USA) — **Christian 28/9: må fortsætte** («stort set offentligt det hele»).
 
 ## Uklart
 
