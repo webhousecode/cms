@@ -92,6 +92,21 @@
       "transfer_basis": "SCC"
     },
     {
+      "id": "tigris",
+      "name": "Tigris",
+      "purpose_da": "Fillager og sikkerhedskopier",
+      "purpose_en": "File storage and backups",
+      "company_country": "USA",
+      "location": {
+        "class": "eu",
+        "da": "EU",
+        "en": "EU",
+        "measured": true,
+        "at": "2026-09-28"
+      },
+      "transfer_basis": "SCC"
+    },
+    {
       "id": "cloudflare",
       "name": "Cloudflare",
       "purpose_da": "Domæner, DNS, fillager og spamværn",
@@ -135,21 +150,6 @@
         "at": "2026-09-27"
       },
       "transfer_basis": "DPF+SCC"
-    },
-    {
-      "id": "tigris",
-      "name": "Tigris",
-      "purpose_da": "Fillager og sikkerhedskopier",
-      "purpose_en": "File storage and backups",
-      "company_country": "USA",
-      "location": {
-        "class": "mix",
-        "da": "EU-låst (eur) · gamle kopier venter på sletning",
-        "en": "EU-locked (eur) · old copies awaiting deletion",
-        "measured": true,
-        "at": "2026-09-28"
-      },
-      "transfer_basis": "SCC"
     },
     {
       "id": "anthropic",

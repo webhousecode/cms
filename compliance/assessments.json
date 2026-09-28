@@ -1008,9 +1008,9 @@
     "dpa_url_http": 200,
     "checked_at": "2026-09-26",
     "location": {
-      "class": "mix",
-      "da": "EU-låst (eur) · gamle kopier venter på sletning",
-      "en": "EU-locked (eur) · old copies awaiting deletion",
+      "class": "eu",
+      "da": "EU",
+      "en": "EU",
       "measured": true,
       "at": "2026-09-28"
     },
