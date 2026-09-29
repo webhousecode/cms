@@ -35,27 +35,21 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
     setVerified(false);
 
     try {
-      const res = await fetch("https://api.fly.io/graphql", {
+      // F200.3 — verified server-side through @broberg/deploy-core, not by
+      // calling Fly's API from the browser.
+      const res = await fetch("/api/admin/deploy/fly-orgs", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${flyToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: `{ organizations { nodes { slug name type } } }`,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ flyToken }),
       });
-
+      const data = (await res.json().catch(() => ({}))) as {
+        orgs?: Array<{ slug: string; name: string }>;
+        error?: string;
+      };
       if (!res.ok) {
-        throw new Error(`Token verification failed (HTTP ${res.status})`);
+        throw new Error(data.error ?? `Token verification failed (HTTP ${res.status})`);
       }
-
-      const data = await res.json();
-      const orgNodes = data.data?.organizations?.nodes ?? [];
-
-      if (orgNodes.length === 0) {
-        throw new Error("No organizations found for this token");
-      }
+      const orgNodes = data.orgs ?? [];
 
       setOrgs(orgNodes);
       // Auto-select "personal" org if available, otherwise first org
