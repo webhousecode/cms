@@ -63,6 +63,7 @@ export const VENDORS: Vendor[] = [
   { id: "sentry", name: "Sentry", purpose: "Fejlovervågning", npm: ["@sentry/"], env: /^SENTRY_/, host: /sentry\.io$/ },
   { id: "posthog", name: "PostHog", purpose: "Analyse", npm: ["posthog-js", "posthog-node"], env: /^(NEXT_PUBLIC_)?POSTHOG_/, host: /posthog\.com$/ },
   { id: "plausible", name: "Plausible", purpose: "Analyse", host: /plausible\.io$/ },
+  { id: "upcloud", name: "UpCloud", purpose: "Database (reservekopi, Managed PostgreSQL)", env: /^UPCLOUD_/, host: /(^|\.)upcloud(databases)?\.com$/ },
   { id: "gatewayapi", name: "GatewayAPI", purpose: "SMS", env: /^GATEWAYAPI_/, host: /gatewayapi\.(com|eu)$/ },
   { id: "twilio", name: "Twilio", purpose: "SMS/tale", npm: ["twilio"], env: /^TWILIO_/, host: /twilio\.com$/ },
   { id: "complimenta", name: "Complimenta", purpose: "Booking (klinik-system)", npm: ["@broberg/complimenta-sdk"], env: /^COMPLIMENTA_/, host: /complimenta/ },
@@ -301,6 +302,12 @@ export type Assessment = {
    * when, by whom and why — otherwise it is an unexplained hole in the list.
    */
   not_in_production?: { at: string; by: string; reason: string } | null;
+  /**
+   * F201.8 — a vendor in production that no Fly app holds a key for (e.g. a
+   * Postgres replica fed straight from Supabase). The measurement cannot see it,
+   * so the registration must say when, by whom and on what evidence.
+   */
+  in_production_outside_fly?: { at: string; by: string; evidence: string } | null;
   /** The owner's ruling that a vendor in production holds no CUSTOMER data (internal tools only). */
   internal_only?: { at: string; by: string; reason: string } | null;
   /** F201.4 — where the instance WE use keeps data, as shown on broberg.ai/trust. */
@@ -350,6 +357,8 @@ export function signedRecordProblem(a: Assessment): string | null {
   if (at && a.dpa_status !== "skal_accepteres") return `${a.id}: markeret underskrevet, men dpa_status er ${a.dpa_status}`;
   const n = a.not_in_production;
   if (n && !(n.at && n.by && n.reason)) return `${a.id}: not_in_production kræver at, by og reason`;
+  const o = a.in_production_outside_fly;
+  if (o && !(o.at && o.by && o.evidence)) return `${a.id}: in_production_outside_fly kræver at, by og evidence`;
   return null;
 }
 
@@ -358,6 +367,15 @@ export function signedRecordProblem(a: Assessment): string | null {
  * measured. A customer is promised 30 days' notice of a new sub-processor; a
  * date that moves on every scan would say "changed today" when nothing did.
  */
+/**
+ * The calendar day in Denmark. The date is printed on broberg.ai/trust for
+ * Danish readers; a UTC date is the previous day between 00:00 and 02:00 here.
+ * Zone by NAME, never a fixed offset — the offset changes with daylight saving.
+ */
+export function copenhagenDate(d: Date = new Date()): string {
+  return d.toLocaleDateString("sv-SE", { timeZone: "Europe/Copenhagen" });
+}
+
 export function listChangedAt(prev: { list_changed_at?: string; rows?: unknown } | null, rows: unknown, today: string): string {
   if (prev?.list_changed_at && JSON.stringify(prev.rows) === JSON.stringify(rows)) return prev.list_changed_at;
   return today;
@@ -365,7 +383,11 @@ export function listChangedAt(prev: { list_changed_at?: string; rows?: unknown }
 
 /** Drops vendors the owner has ruled out of production from the measured use. */
 export function applyOwnerRulings(use: Map<string, Set<string>>, assessments: Map<string, Assessment>): Map<string, Set<string>> {
-  return new Map([...use].filter(([id]) => !assessments.get(id)?.not_in_production));
+  const out = new Map([...use].filter(([id]) => !assessments.get(id)?.not_in_production));
+  for (const [id, a] of assessments) {
+    if (a.in_production_outside_fly && !a.not_in_production && !out.has(id)) out.set(id, new Set([`uden for Fly: ${a.in_production_outside_fly.evidence}`]));
+  }
+  return out;
 }
 
 /** Products that handle health or health-adjacent data (plan §3). */
@@ -470,7 +492,7 @@ async function main() {
     if (pub.missing.length) throw new Error(`F201.4: i drift som databehandler, men uden location/company_country/public i assessments.json: ${pub.missing.join(", ")}`);
     const file = path.join(OUT_DIR, "subprocessors.public.json");
     const prev = existsSync(file) ? (JSON.parse(readFileSync(file, "utf-8")) as { list_changed_at?: string; rows?: unknown }) : null;
-    writeFileSync(file, JSON.stringify({ list_changed_at: listChangedAt(prev, pub.rows, new Date().toISOString().slice(0, 10)), rows: pub.rows }, null, 2) + "\n");
+    writeFileSync(file, JSON.stringify({ list_changed_at: listChangedAt(prev, pub.rows, copenhagenDate()), rows: pub.rows }, null, 2) + "\n");
   }
 
   const rep: string[] = [

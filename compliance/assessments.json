@@ -884,6 +884,11 @@
       "name": "Simply.com",
       "purpose_da": "Domæner",
       "purpose_en": "Domains"
+    },
+    "in_production_outside_fly": {
+      "at": "2026-09-30",
+      "by": "buddy (#33902, measured with flyctl on dns-api + dns-mcp)",
+      "evidence": "Registrar for our .dk domains (DNS on ppi.dk). The Simply key moved out of Fly-app dns-mcp into its local .env on M1; client webhousecode/dns-mcp src/clients/simply.ts"
     }
   },
   {
@@ -1163,5 +1168,35 @@
     "confidence": "high",
     "dpa_url_http": 200,
     "checked_at": "2026-09-26"
+  },
+  {
+    "id": "upcloud",
+    "dpa_status": "auto",
+    "dpa_url": "https://upcloud.com/global/terms-of-service/",
+    "dpa_url_http": 403,
+    "action": "DPA is part of the Terms of Service and binding on acceptance (UpCloud's own wording, via search); the page answers 403 to automated checks (Cloudflare challenge, also in Lens), so open it by hand and confirm",
+    "transfer_basis": "EU",
+    "eu_region_possible": true,
+    "notes": "UpCloud Oy, Helsinki (Finland). Managed PostgreSQL in dk-cph1 (Copenhagen) as live standby copy for FD Sundhed and Broberg ID. CISPE Code of Conduct member. DPA incorporated into the Terms of Service, no separate signature (search result on upcloud.com, page itself not fetchable).",
+    "confidence": "medium",
+    "checked_at": "2026-09-30",
+    "in_production_outside_fly": {
+      "at": "2026-09-30",
+      "by": "fd-sundhed (on Christian's order, relayed by broberg-ai #33897)",
+      "evidence": "broberg-ai/fd-sundhed 69d4f112 infra/replika-upcloud/runbook.md — database fd-sundhed-replika, zone dk-cph1, replicating 55 tables"
+    },
+    "location": {
+      "class": "eu",
+      "da": "Danmark (København)",
+      "en": "Denmark (Copenhagen)",
+      "measured": true,
+      "at": "2026-09-30"
+    },
+    "company_country": "Finland",
+    "public": {
+      "name": "UpCloud",
+      "purpose_da": "Reservekopi af databaser",
+      "purpose_en": "Standby copy of databases"
+    }
   }
 ]

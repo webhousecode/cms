@@ -1,5 +1,5 @@
 {
-  "list_changed_at": "2026-09-28",
+  "list_changed_at": "2026-09-30",
   "rows": [
     {
       "id": "fly",
@@ -105,6 +105,21 @@
         "at": "2026-09-28"
       },
       "transfer_basis": "SCC"
+    },
+    {
+      "id": "upcloud",
+      "name": "UpCloud",
+      "purpose_da": "Reservekopi af databaser",
+      "purpose_en": "Standby copy of databases",
+      "company_country": "Finland",
+      "location": {
+        "class": "eu",
+        "da": "Danmark (København)",
+        "en": "Denmark (Copenhagen)",
+        "measured": true,
+        "at": "2026-09-30"
+      },
+      "transfer_basis": "EU"
     },
     {
       "id": "cloudflare",

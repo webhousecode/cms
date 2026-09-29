@@ -1,7 +1,7 @@
 # F201 — compliance-kilden. Genereret af scripts/compliance-scan.ts; F201.2 udfylder vurderingsfelterne.
-scanned_at: "2026-09-28T18:06:43.699Z"
-projects_total: 40
-projects_scanned: 39
+scanned_at: "2026-09-29T23:57:45.991Z"
+projects_total: 41
+projects_scanned: 40
 production_measured: "33 kørende Fly-apps"
 vendors:
   - id: fly
@@ -10,7 +10,7 @@ vendors:
     products: ["ai-sdk", "autodoc", "broberg-ai", "broberg-id", "buddy", "cardmem", "cms", "components", "contentpush", "contract-manager", "coverletter-generator", "cronjobs", "dns-mcp", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "mailworker", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "voice-engine", "whop", "xrt81-com"]
     regions: ["arn"]
     in_production: true
-    production_apps: ["auto-scaling-container-app", "broberg-ai", "broberg-discovery", "broberg-helpdesk-api", "broberg-helpdesk-console", "broberg-helpdesk-db", "broberg-id", "broberg-services", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "buddy-voice", "cardmem", "cardmem-lens", "cms-docs", "dns-mcp", "fd-sport", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-services", "sanneandersen-site", "trail-admin", "trail-db-001", "trail-engine-001", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-dk", "webhouse-whapi", "webhouse-whop", "xrt81"]
+    production_apps: ["auto-scaling-container-app", "broberg-ai", "broberg-discovery", "broberg-helpdesk-console", "broberg-helpdesk-db", "broberg-id", "broberg-services", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "buddy-voice", "cardmem", "cardmem-lens", "dns-api", "dns-mcp", "fd-sport", "fd-sundhed", "fd-sundhed-replika", "moovyy", "pitch-vault", "sanneandersen-services", "sanneandersen-site", "trail-admin", "trail-db-001", "trail-engine-001", "upmetrics", "webhouse-app", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-dk", "webhouse-whapi", "webhouse-whop", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk scripts/verify-trainstyle.ts:27 (host sanneandersen-site.fly.dev)"
       - "broberg-ai/autodoc fly.toml:1 (fly.toml app=broberg-autodoc)"
@@ -62,9 +62,9 @@ vendors:
     purpose: "Domæner, DNS, CDN, fillager (R2), spamværn (Turnstile)"
     products: ["broberg-ai", "buddy", "cardmem", "cms", "components", "contract-manager", "coverletter-generator", "dns-mcp", "fd-sundhed", "helpdesk", "notesmem", "sanneandersen", "upmetrics", "xrt81-com"]
     in_production: true
-    production_apps: ["broberg-ai", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "cardmem", "cardmem-lens", "dns-mcp", "fd-sundhed", "sanneandersen-site", "webhouse-app", "webhouse-contract-manager", "webhouse-dk", "xrt81"]
+    production_apps: ["broberg-ai", "buddy-brain", "buddy-cloud", "buddy-edge-fly", "cardmem", "cardmem-lens", "dns-api", "dns-mcp", "fd-sundhed", "sanneandersen-site", "webhouse-app", "webhouse-contract-manager", "webhouse-dk", "xrt81"]
     evidence:
-      - "broberg-ai/broberg-ai-site package.json:24 (npm @broberg/forms-turnstile)"
+      - "broberg-ai/broberg-ai-site package.json:25 (npm @broberg/forms-turnstile)"
       - "broberg-ai/broberg-ai-site src/client/turnstile.tsx:64 (env TURNSTILE_SECRET_KEY)"
       - "webhousecode/buddy apps/server/src/orchestration-spawn.ts:251 (env CF_API_TOKEN)"
       - "webhousecode/buddy apps/server/src/r2-staging.ts:26 (env R2_ACCOUNT_ID)"
@@ -90,14 +90,14 @@ vendors:
     purpose: "Transaktionsmails"
     products: ["broberg-ai", "broberg-id", "cardmem", "cms", "components", "contract-manager", "cronjobs", "fd-sundhed", "happy-little-place", "helpdesk", "moovyy", "pitch", "sanneandersen", "trail", "upmetrics", "vn-leker", "whop", "xrt81-com"]
     in_production: true
-    production_apps: ["broberg-ai", "broberg-helpdesk-api", "broberg-id", "cardmem", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-site", "trail-admin", "upmetrics", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-whapi", "webhouse-whop", "xrt81"]
+    production_apps: ["broberg-ai", "broberg-id", "cardmem", "fd-sundhed", "moovyy", "pitch-vault", "sanneandersen-site", "trail-admin", "upmetrics", "webhouse-contract-manager", "webhouse-cronjobs", "webhouse-whapi", "webhouse-whop", "xrt81"]
     evidence:
-      - "broberg-ai/broberg-ai-site package.json:25 (npm @broberg/mail)"
+      - "broberg-ai/broberg-ai-site package.json:26 (npm @broberg/mail)"
       - "broberg-ai/broberg-ai-site src/aidan-mail.ts:35 (env RESEND_API_KEY)"
       - "broberg-ai/broberg-id package.json:23 (npm @broberg/mail)"
       - "broberg-ai/cardmem apps/agent/src/lens/critic-dom.selftest.ts:415 (env RESEND_ADMIN_API_KEY)"
       - "broberg-ai/cardmem apps/agent/src/lens/critic-dom.selftest.ts:432 (env RESEND_ADMIN_API_KEY)"
-      - "webhousecode/cms packages/cms-admin/package.json:27 (npm @broberg/mail)"
+      - "webhousecode/cms packages/cms-admin/package.json:30 (npm @broberg/mail)"
       - "webhousecode/cms packages/cms-admin/src/components/settings/email-settings-panel.tsx:248 (env RESEND_API_KEY)"
       - "broberg-ai/components packages/mail/src/index.ts:36 (env RESEND_ENDPOINT)"
     # F201.2 — fra leverandørens egne sider
@@ -179,7 +179,7 @@ vendors:
     evidence:
       - "webhousecode/buddy apps/server/package.json:16 (npm @broberg/db-sdk)"
       - "webhousecode/buddy apps/server/src/db/cloud.ts:13 (env TURSO_DATABASE_URL)"
-      - "broberg-ai/cardmem apps/server/package.json:25 (npm @libsql/client)"
+      - "broberg-ai/cardmem apps/server/package.json:26 (npm @libsql/client)"
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:76 (host app.turso.tech)"
       - "broberg-ai/components apps/discovery/enroll.ts:123 (env TURSO_DATABASE_URL)"
       - "broberg-ai/components apps/discovery/enroll.ts:128 (env TURSO_DATABASE_URL)"
@@ -205,7 +205,7 @@ vendors:
     in_production: false
     production_apps: []
     evidence:
-      - "webhousecode/cms packages/cms-admin/package.json:98 (npm @aws-sdk/client-s3)"
+      - "webhousecode/cms packages/cms-admin/package.json:102 (npm @aws-sdk/client-s3)"
       - "broberg-ai/forager data/measurements/probe2.py:45 (host discogs-data-dumps.s3.us-west-2.amazonaws.com)"
       - "webhousecode/sanneandersen site/package.json:34 (npm @aws-sdk/client-s3)"
       - "webhousecode/sanneandersen site/package.json:35 (npm @aws-sdk/s3-request-presigner)"
@@ -230,7 +230,7 @@ vendors:
     purpose: "AI-modeller (EU)"
     products: ["ai-sdk", "broberg-ai", "buddy", "cardmem", "cms", "components", "contentpush", "coverletter-generator", "fd-sundhed", "fysiodk-aalborg-sport", "helpdesk", "pitch", "trail", "xrt81-com"]
     in_production: true
-    production_apps: ["broberg-ai", "broberg-helpdesk-api", "buddy-voice", "cardmem", "fd-sundhed", "pitch-vault", "sanneandersen-site", "trail-engine-001", "webhouse-app", "xrt81"]
+    production_apps: ["broberg-ai", "buddy-voice", "cardmem", "fd-sundhed", "pitch-vault", "sanneandersen-site", "trail-engine-001", "webhouse-app", "xrt81"]
     evidence:
       - "broberg-ai/ai-sdk inventory.json:9609 (host mistral.ai)"
       - "broberg-ai/ai-sdk inventory.json:12163 (host mistral.ai)"
@@ -312,7 +312,7 @@ vendors:
   - id: google-ai
     name: "Google (Gemini/Vertex AI)"
     purpose: "AI-modeller"
-    products: ["ai-sdk", "buddy", "cardmem", "cms", "components", "super"]
+    products: ["ai-sdk", "buddy", "cardmem", "cms", "components", "super", "xrt81-com"]
     in_production: true
     production_apps: ["webhouse-app"]
     evidence:
@@ -400,7 +400,7 @@ vendors:
       - "webhousecode/buddy apps/server/src/session-env.ts:33 (env DEEPSEEK_)"
       - "broberg-ai/cardmem apps/server/src/api/vault.ts:69 (host platform.deepseek.com)"
       - "broberg-ai/components packages/secret-scan/src/index.ts:74 (env DEEPSEEK_API_KEY)"
-      - "broberg-ai/components packages/secret-scan/src/index.ts:393 (env DEEPSEEK_API_KEY)"
+      - "broberg-ai/components packages/secret-scan/src/index.ts:410 (env DEEPSEEK_API_KEY)"
     # F201.2 — fra leverandørens egne sider
     dpa_status: "mangler"
     dpa_url: "https://cdn.deepseek.com/policies/en-US/deepseek-open-platform-terms-of-service.html"
@@ -603,9 +603,9 @@ vendors:
     in_production: true
     production_apps: ["fd-sundhed"]
     evidence:
-      - "webhousecode/cms packages/cms-admin/package.json:63 (npm firebase-admin)"
+      - "webhousecode/cms packages/cms-admin/package.json:67 (npm firebase-admin)"
       - "webhousecode/cms packages/cms-admin/src/lib/push-send.ts:18 (env FIREBASE_PROJECT_ID)"
-      - "broberg-ai/fd-sundhed apps/web/package.json:99 (npm firebase-admin)"
+      - "broberg-ai/fd-sundhed apps/web/package.json:100 (npm firebase-admin)"
       - "broberg-ai/fd-sundhed apps/web/src/lib/api-health-check.ts:214 (env FIREBASE_PROJECT_ID)"
       - "webhousecode/fysiodk-aalborg-sport apps/web/.env.example:29 (env FIREBASE_PROJECT_ID)"
       - "webhousecode/fysiodk-aalborg-sport apps/web/.env.example:30 (env FIREBASE_CLIENT_EMAIL)"
@@ -655,14 +655,14 @@ vendors:
     purpose: "Push-notifikationer"
     products: ["cardmem", "cms", "components", "fd-sundhed", "fysiodk-aalborg-sport", "happy-little-place", "helpdesk", "moovyy", "trail", "xrt81-com"]
     in_production: true
-    production_apps: ["broberg-helpdesk-api", "cardmem", "fd-sundhed", "trail-engine-001", "webhouse-app", "xrt81"]
+    production_apps: ["cardmem", "fd-sundhed", "trail-engine-001", "webhouse-app", "xrt81"]
     evidence:
-      - "broberg-ai/cardmem apps/server/package.json:24 (npm @broberg/webpush)"
+      - "broberg-ai/cardmem apps/server/package.json:25 (npm @broberg/webpush)"
       - "broberg-ai/cardmem apps/server/src/api/push.ts:48 (env VAPID_PUBLIC)"
-      - "webhousecode/cms packages/cms-admin/package.json:94 (npm web-push)"
+      - "webhousecode/cms packages/cms-admin/package.json:98 (npm web-push)"
       - "webhousecode/cms packages/cms-admin/src/app/api/admin/push/vapid-public-key/route.ts:16 (env VAPID_PUBLIC_KEY)"
       - "broberg-ai/components packages/webpush/package.json:47 (npm web-push)"
-      - "broberg-ai/fd-sundhed apps/web/package.json:53 (npm @broberg/webpush)"
+      - "broberg-ai/fd-sundhed apps/web/package.json:54 (npm @broberg/webpush)"
       - "broberg-ai/fd-sundhed apps/web/src/lib/push.ts:35 (env VAPID_PRIVATE_KEY)"
       - "webhousecode/fysiodk-aalborg-sport apps/web/package.json:41 (npm @broberg/webpush)"
     # F201.2 — fra leverandørens egne sider
@@ -769,6 +769,28 @@ vendors:
     checked_at: "2026-09-26"
     dpa_signed_at: null
     dpa_signed_by: null
+  - id: upcloud
+    name: "UpCloud"
+    purpose: "Database (reservekopi, Managed PostgreSQL)"
+    products: ["fd-sundhed"]
+    in_production: true
+    production_apps: ["uden for Fly: broberg-ai/fd-sundhed 69d4f112 infra/replika-upcloud/runbook.md — database fd-sundhed-replika, zone dk-cph1, replicating 55 tables"]
+    evidence:
+      - "broberg-ai/fd-sundhed infra/replika-upcloud/bevis.sh:6 (env UPCLOUD_REPLIKA_URL)"
+      - "broberg-ai/fd-sundhed infra/replika-upcloud/bevis.sh:12 (env UPCLOUD_REPLIKA_URL)"
+    # F201.2 — fra leverandørens egne sider
+    dpa_status: "ukendt"
+    dpa_url: "https://upcloud.com/global/terms-of-service/"
+    dpa_url_http: 403
+    action: "DPA is part of the Terms of Service and binding on acceptance (UpCloud's own wording, via search); the page answers 403 to automated checks (Cloudflare challenge, also in Lens), so open it by hand and confirm"
+    transfer_basis: "EU"
+    eu_region_possible: true
+    recommendation: "undersøg"
+    sensitive_data_outside_eu: false
+    notes: "UpCloud Oy, Helsinki (Finland). Managed PostgreSQL in dk-cph1 (Copenhagen) as live standby copy for FD Sundhed and Broberg ID. CISPE Code of Conduct member. DPA incorporated into the Terms of Service, no separate signature (search result on upcloud.com, page itself not fetchable)."
+    checked_at: "2026-09-30"
+    dpa_signed_at: null
+    dpa_signed_by: null
   - id: gatewayapi
     name: "GatewayAPI"
     purpose: "SMS"
@@ -776,7 +798,7 @@ vendors:
     in_production: true
     production_apps: ["broberg-id"]
     evidence:
-      - "broberg-ai/broberg-id src/contact-notify.ts:162 (env GATEWAYAPI_TOKEN)"
+      - "broberg-ai/broberg-id src/contact-notify.ts:164 (env GATEWAYAPI_TOKEN)"
       - "broberg-ai/components packages/sms/src/delivery.ts:85 (env GATEWAYAPI_STATES)"
       - "broberg-ai/components packages/sms/src/delivery.ts:119 (env GATEWAYAPI_STATES)"
     # F201.2 — fra leverandørens egne sider
@@ -1157,11 +1179,13 @@ vendors:
   - id: tailscale
     name: "Tailscale"
     purpose: "Privat netværk"
-    products: ["buddy"]
+    products: ["buddy", "camera9"]
     in_production: false
     production_apps: []
     evidence:
       - "webhousecode/buddy apps/ios/Buddy/Views/OnboardingView.swift:70 (host din-mac.ts.net)"
+      - "broberg-ai/camera9 .env.example:63 (host cb-ubuntu.taile1a732.ts.net)"
+      - "broberg-ai/camera9 .env.example:64 (host cb-ubuntu.taile1a732.ts.net)"
     # F201.2 — fra leverandørens egne sider
     dpa_status: "auto"
     dpa_url: "https://tailscale.com/dpa"
@@ -1284,8 +1308,8 @@ vendors:
     in_production: true
     production_apps: ["broberg-services"]
     evidence:
-      - "broberg-ai/trail apps/scout/training/runpod_train.py:69 (host rest.runpod.io)"
-      - "broberg-ai/trail apps/scout/training/runpod_train.py:78 (host api.runpod.io)"
+      - "broberg-ai/trail apps/scout/training/runpod_train.py:90 (host rest.runpod.io)"
+      - "broberg-ai/trail apps/scout/training/runpod_train.py:99 (host api.runpod.io)"
       - "broberg-ai/voice-engine scripts/gpu_drill.py:51 (env RUNPOD_KEY_FILE)"
       - "broberg-ai/voice-engine scripts/gpu_drill.py:55 (env RUNPOD_KEY_FILE)"
     # F201.2 — fra leverandørens egne sider

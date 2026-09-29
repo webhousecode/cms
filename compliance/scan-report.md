@@ -1,6 +1,6 @@
 # F201.1 — scanningsrapport
 
-Kørt 2026-09-28T18:06:43.720Z · 39 af 40 projekter scannet.
+Kørt 2026-09-29T23:57:46.009Z · 40 af 41 projekter scannet.
 
 ## Projekter
 
@@ -10,42 +10,43 @@ Kørt 2026-09-28T18:06:43.720Z · 39 af 40 projekter scannet.
 | anna | broberg-ai/annaslothart | scannet | 21c747a | 1 |  |
 | autodoc | broberg-ai/autodoc | scannet | 8fab60c | 52 | broberg-autodoc=arn |
 | beacon | broberg-ai/beacon | scannet | 94de1c6 | 175 |  |
-| broberg-ai | broberg-ai/broberg-ai-site | scannet | b431b8c | 112 | broberg-ai=arn |
-| broberg-id | broberg-ai/broberg-id | scannet | 8fcc96d | 126 | broberg-id=arn |
-| buddy | webhousecode/buddy | scannet | 76ca0ff | 693 | buddy-brain=arn, buddy-edge-fly=arn, webhouse-old=arn, buddy-voice=arn, buddy-cloud=arn |
-| cardmem | broberg-ai/cardmem | scannet | 09171fd | 1033 | cardmem-lens=arn, cardmem=arn |
-| cms | webhousecode/cms | scannet | c8f352a | 1017 | webhouse-cms=arn, webhouse-app=arn |
-| components | broberg-ai/components | scannet | 692e33e | 416 | broberg-discovery=arn |
+| broberg-ai | broberg-ai/broberg-ai-site | scannet | 3131b36 | 115 | broberg-ai=arn |
+| broberg-id | broberg-ai/broberg-id | scannet | a5a2e6d | 150 | broberg-id=arn |
+| buddy | webhousecode/buddy | scannet | 9cc98af | 696 | buddy-brain=arn, buddy-edge-fly=arn, webhouse-old=arn, buddy-voice=arn, buddy-cloud=arn |
+| camera9 | broberg-ai/camera9 | scannet | 7d7063a | 29 |  |
+| cardmem | broberg-ai/cardmem | scannet | f26a319 | 1040 | cardmem-lens=arn, cardmem=arn |
+| cms | webhousecode/cms | scannet | 966db5e | 1027 | webhouse-cms=arn, webhouse-app=arn |
+| components | broberg-ai/components | scannet | fc812fc | 416 | broberg-discovery=arn |
 | contentpush | broberg-ai/contentpush | scannet | 8e66535 | 77 | contentpush=arn |
 | contract-manager | broberg-ai/contract-manager | scannet | 4d72c97 | 177 | webhouse-contract-manager=arn |
 | coverletter-generator | cbroberg/coverletter-generator | scannet | 90fd64f | 271 | coverletter-generator=arn |
 | cronjobs | webhousecode/cronjobs | scannet | ca61281 | 143 | webhouse-cronjobs=arn |
 | dns-mcp | webhousecode/dns-mcp | scannet | ccdee00 | 24 | dns-mcp=arn |
-| fd-ishoej | broberg-ai/fd-ishoej | scannet | 9aa7a95 | 3 |  |
-| fd-sundhed | broberg-ai/fd-sundhed | scannet | 4dd4de8 | 1168 | fd-sundhed=arn |
+| fd-ishoej | broberg-ai/fd-ishoej | scannet | 9cfc439 | 3 |  |
+| fd-sundhed | broberg-ai/fd-sundhed | scannet | 69d4f11 | 1173 | fd-sundhed=arn, fd-sundhed-replika=arn |
 | fleet | broberg-ai/fleet | scannet | 888b59e | 18 |  |
 | forager | broberg-ai/forager | scannet | 634cd3d | 56 |  |
 | fysio-dk-aalborg | broberg-ai/fdaa | scannet | f17bb41 | 15 |  |
 | fysiodk-aalborg-sport | webhousecode/fysiodk-aalborg-sport | scannet | 2751fba | 431 | fd-sport=arn |
 | happy-little-place | broberg-ai/happy-little-place | scannet | 31a990b | 67 | happy-little-place=arn |
-| helpdesk | broberg-ai/helpdesk | scannet | 2183c39 | 246 | broberg-helpdesk-db=arn, broberg-helpdesk-api=arn |
+| helpdesk | broberg-ai/helpdesk | scannet | 715be1e | 248 | broberg-helpdesk-db=arn, broberg-helpdesk-api=arn |
 | how | broberg-ai/house-of-wellness | scannet | f64c05e | 8 |  |
 | kai | broberg-ai/kai | scannet | c62ad6a | 4 |  |
 | lens-fixture | — | **IKKE scannet:** intet repo registreret i cardmem |  |  |  |
-| mailworker | broberg-ai/mailworker | scannet | 758407b | 103 | mailworker-api=arn |
+| mailworker | broberg-ai/mailworker | scannet | 3fbea8a | 103 | mailworker-api=arn |
 | moovyy | cbroberg/moovyy | scannet | 457fdc4 | 211 | moovyy=arn |
 | notesmem | broberg-ai/notesmem | scannet | ae73b28 | 29 |  |
 | openbuddy | broberg-ai/openbuddy | scannet | 02f6c04 | 16 |  |
-| pitch | cbroberg/pitch | scannet | 9609cb5 | 275 | pitch-vault=arn |
-| sanneandersen | webhousecode/sanneandersen | scannet | 528c11a | 984 | sanneandersen-site=arn |
+| pitch | cbroberg/pitch | scannet | 4b606f7 | 278 | pitch-vault=arn |
+| sanneandersen | webhousecode/sanneandersen | scannet | 14d8355 | 986 | sanneandersen-site=arn |
 | storeform | broberg-ai/storeform | scannet | 70bd53a | 24 |  |
 | super | broberg-ai/super-agent | scannet | 7d41eeb | 66 |  |
-| trail | broberg-ai/trail | scannet | b1c72e8 | 854 | trail-admin=arn, trail-db-001=arn, trail-landing=arn, trail-engine-001=arn, trail-widget=arn, trail-engine=arn |
-| upmetrics | broberg-ai/upmetrics | scannet | eac831c | 140 | upmetrics=arn |
+| trail | broberg-ai/trail | scannet | 28aeaf9 | 864 | trail-admin=arn, trail-db-001=arn, trail-landing=arn, trail-engine-001=arn, trail-widget=arn, trail-engine=arn |
+| upmetrics | broberg-ai/upmetrics | scannet | 6ebd9de | 140 | upmetrics=arn |
 | vn-leker | webhousecode/vnlekerv2 | scannet | bc73500 | 13 |  |
-| voice-engine | broberg-ai/voice-engine | scannet | 4b67461 | 66 | broberg-services=arn |
+| voice-engine | broberg-ai/voice-engine | scannet | db941c9 | 66 | broberg-services=arn |
 | whop | webhousecode/whop | scannet | 2d231ca | 103 | webhouse-whop=arn |
-| xrt81-com | broberg-ai/xrt81 | scannet | a137938 | 329 | xrt81=arn |
+| xrt81-com | broberg-ai/xrt81 | scannet | 3ddf68d | 331 | xrt81=arn |
 
 ## Leverandører
 
@@ -62,7 +63,7 @@ Kørt 2026-09-28T18:06:43.720Z · 39 af 40 projekter scannet.
 | Mistral AI | ai-sdk, broberg-ai, buddy, cardmem, cms, components, contentpush, coverletter-generator, fd-sundhed, fysiodk-aalborg-sport, helpdesk, pitch, trail, xrt81-com |
 | OpenAI | ai-sdk, buddy, cardmem, cms, trail, xrt81-com |
 | Anthropic | ai-sdk, buddy, cardmem, cms, coverletter-generator, fd-sundhed, fysiodk-aalborg-sport, happy-little-place, trail, whop, xrt81-com |
-| Google (Gemini/Vertex AI) | ai-sdk, buddy, cardmem, cms, components, super |
+| Google (Gemini/Vertex AI) | ai-sdk, buddy, cardmem, cms, components, super, xrt81-com |
 | DeepInfra | ai-sdk, pitch |
 | OpenRouter | ai-sdk, buddy, cardmem, components, sanneandersen, trail, upmetrics, xrt81-com |
 | DeepSeek | ai-sdk, buddy, cardmem, components |
@@ -80,6 +81,7 @@ Kørt 2026-09-28T18:06:43.720Z · 39 af 40 projekter scannet.
 | Microsoft (login) |  |
 | Simply.com | dns-mcp |
 | pCloud | cms |
+| UpCloud | fd-sundhed |
 | GatewayAPI | broberg-id, components |
 | Twilio | cardmem |
 | Complimenta | fd-sundhed, fysio-dk-aalborg |
@@ -97,7 +99,7 @@ Kørt 2026-09-28T18:06:43.720Z · 39 af 40 projekter scannet.
 | npm | ai-sdk, cms, components, coverletter-generator, dns-mcp, fleet, fysio-dk-aalborg, how, moovyy, pitch, sanneandersen, trail, upmetrics, vn-leker |
 | SMS.dk | components |
 | Verda (GPU-cloud) | voice-engine |
-| Tailscale | buddy |
+| Tailscale | buddy, camera9 |
 | Google Play | fd-sundhed, fysiodk-aalborg-sport, storeform |
 | DeepL | ai-sdk, components |
 | fal.ai | ai-sdk, cardmem, contentpush, sanneandersen, super |
@@ -156,6 +158,7 @@ Kørt 2026-09-28T18:06:43.720Z · 39 af 40 projekter scannet.
 | Microsoft (login) | **ingen handling** | ikke_databehandler | DPF |  | https://learn.microsoft.com/en-us/entra/identity-platform/v2-overview |
 | Simply.com | **acceptér/underskriv** | skal_accepteres | EU |  | https://www.simply.com/compliance/ |
 | pCloud | **erstat/begræns** | mangler | ukendt |  | https://www.pcloud.com/business_agreement.html |
+| UpCloud | **undersøg** | ukendt | EU |  | https://upcloud.com/global/terms-of-service/ |
 | GatewayAPI | **acceptér/underskriv** | skal_accepteres | EU |  | https://onlinecity.io/legal-documents/gatewayapi/dpa-eu |
 | Twilio | **link** | auto | DPF+SCC |  | https://www.twilio.com/en-us/legal/data-protection-addendum |
 | Complimenta | **ingen handling** | ikke_databehandler | ukendt |  | https://complimenta.com/support/privatlivspolitik/ |
@@ -205,14 +208,14 @@ Målt på 33 kørende Fly-apps (nøgle-NAVNE + målte endpoints).
 
 | leverandør | anbefaling | apps i drift | hvad |
 |---|---|---|---|
-| Fly.io | **acceptér/underskriv** | auto-scaling-container-app, broberg-ai, broberg-discovery, broberg-helpdesk-api, broberg-helpdesk-console, broberg-helpdesk-db, broberg-id, broberg-services, buddy-brain, buddy-cloud, buddy-edge-fly, buddy-voice, cardmem, cardmem-lens, cms-docs, dns-mcp, fd-sport, fd-sundhed, moovyy, pitch-vault, sanneandersen-services, sanneandersen-site, trail-admin, trail-db-001, trail-engine-001, upmetrics, webhouse-app, webhouse-contract-manager, webhouse-cronjobs, webhouse-dk, webhouse-whapi, webhouse-whop, xrt81 | Sign in → Documents (fly.io/documents) → sign the DPA (pre-signed by Fly.io, active once customer signs) |
+| Fly.io | **acceptér/underskriv** | auto-scaling-container-app, broberg-ai, broberg-discovery, broberg-helpdesk-console, broberg-helpdesk-db, broberg-id, broberg-services, buddy-brain, buddy-cloud, buddy-edge-fly, buddy-voice, cardmem, cardmem-lens, dns-api, dns-mcp, fd-sport, fd-sundhed, fd-sundhed-replika, moovyy, pitch-vault, sanneandersen-services, sanneandersen-site, trail-admin, trail-db-001, trail-engine-001, upmetrics, webhouse-app, webhouse-contract-manager, webhouse-cronjobs, webhouse-dk, webhouse-whapi, webhouse-whop, xrt81 | Sign in → Documents (fly.io/documents) → sign the DPA (pre-signed by Fly.io, active once customer signs) |
 | Tigris | **link** | cardmem, trail-db-001, trail-engine-001, upmetrics |  |
-| Cloudflare | **link** | broberg-ai, buddy-brain, buddy-cloud, buddy-edge-fly, cardmem, cardmem-lens, dns-mcp, fd-sundhed, sanneandersen-site, webhouse-app, webhouse-contract-manager, webhouse-dk, xrt81 |  |
-| Resend | **link** | broberg-ai, broberg-helpdesk-api, broberg-id, cardmem, fd-sundhed, moovyy, pitch-vault, sanneandersen-site, trail-admin, upmetrics, webhouse-contract-manager, webhouse-cronjobs, webhouse-whapi, webhouse-whop, xrt81 |  |
+| Cloudflare | **link** | broberg-ai, buddy-brain, buddy-cloud, buddy-edge-fly, cardmem, cardmem-lens, dns-api, dns-mcp, fd-sundhed, sanneandersen-site, webhouse-app, webhouse-contract-manager, webhouse-dk, xrt81 |  |
+| Resend | **link** | broberg-ai, broberg-id, cardmem, fd-sundhed, moovyy, pitch-vault, sanneandersen-site, trail-admin, upmetrics, webhouse-contract-manager, webhouse-cronjobs, webhouse-whapi, webhouse-whop, xrt81 |  |
 | Stripe | **link** | sanneandersen-site |  |
 | Supabase | **link** | broberg-id, fd-sundhed, webhouse-whop |  |
 | Turso | **acceptér/underskriv** | broberg-discovery, buddy-cloud | Log in → Documents section → execute the Data Processing Agreement (paid subscribers only; blog says Scaler/Pro/Enterprise) |
-| Mistral AI | **link** | broberg-ai, broberg-helpdesk-api, buddy-voice, cardmem, fd-sundhed, pitch-vault, sanneandersen-site, trail-engine-001, webhouse-app, xrt81 |  |
+| Mistral AI | **link** | broberg-ai, buddy-voice, cardmem, fd-sundhed, pitch-vault, sanneandersen-site, trail-engine-001, webhouse-app, xrt81 |  |
 | Anthropic | **link** | webhouse-whop |  |
 | Google (Gemini/Vertex AI) | **link** | webhouse-app |  |
 | OpenRouter | **link** | cardmem, sanneandersen-site, trail-engine-001, upmetrics, xrt81 |  |
@@ -222,10 +225,11 @@ Målt på 33 kørende Fly-apps (nøgle-NAVNE + målte endpoints).
 | Google (Workspace/Gmail/Calendar/OAuth) | **acceptér/underskriv** | broberg-id, cardmem, moovyy, sanneandersen-site, trail-admin, xrt81 | Admin console (super admin) → Menu → Account → Account settings → Legal and compliance → Security and Privacy Additional Terms → Cloud Data Processing Addendum → Review and Accept |
 | Google Firebase (FCM) | **link** | fd-sundhed |  |
 | Apple (APNs/Sign in/App Store) | **ingen handling** | broberg-id, xrt81 |  |
-| Web Push (browserens push-tjeneste) | **ingen handling** | broberg-helpdesk-api, cardmem, fd-sundhed, trail-engine-001, webhouse-app, xrt81 |  |
+| Web Push (browserens push-tjeneste) | **ingen handling** | cardmem, fd-sundhed, trail-engine-001, webhouse-app, xrt81 |  |
 | LinkedIn | **ingen handling** | broberg-id |  |
 | Microsoft (login) | **ingen handling** | broberg-id |  |
 | Simply.com | **acceptér/underskriv** | dns-mcp | Simply.com Kontrolpanel (logged in) → find the databehandleraftale and sign it there |
+| UpCloud | **undersøg** | uden for Fly: broberg-ai/fd-sundhed 69d4f112 infra/replika-upcloud/runbook.md — database fd-sundhed-replika, zone dk-cph1, replicating 55 tables | DPA is part of the Terms of Service and binding on acceptance (UpCloud's own wording, via search); the page answers 403 to automated checks (Cloudflare challenge, also in Lens), so open it by hand and confirm |
 | GatewayAPI | **acceptér/underskriv** | broberg-id | DPA takes effect on both parties' signature; how to sign isn't stated online, so check the GatewayAPI dashboard or ask support |
 | Complimenta | **ingen handling** | fd-sundhed |  |
 | TMDB | **ingen handling** | moovyy |  |
@@ -273,9 +277,9 @@ Målt på 33 kørende Fly-apps (nøgle-NAVNE + målte endpoints).
 - `download.pytorch.org` — broberg-ai/voice-engine Dockerfile:141
 - `editorial.rottentomatoes.com` — cbroberg/moovyy watch-service/news-sources.js:41
 - `eksempel-der-ikke-er-tilladt.dk` — broberg-ai/broberg-id scripts/fikstur-app.ts:119
-- `eslint.org` — cbroberg/coverletter-generator package-lock.json:6779; broberg-ai/fd-sundhed pnpm-lock.yaml:3270; webhousecode/fysiodk-aalborg-sport pnpm-lock.yaml:2662
+- `eslint.org` — cbroberg/coverletter-generator package-lock.json:6779; broberg-ai/fd-sundhed pnpm-lock.yaml:3276; webhousecode/fysiodk-aalborg-sport pnpm-lock.yaml:2662
 - `evil.com` — webhousecode/cms packages/cms-admin/src/app/admin/switch/[slug]/route.ts:47
-- `evil.dk` — broberg-ai/broberg-id scripts/security-gate.ts:191; broberg-ai/components packages/sso/src/hono.ts:94
+- `evil.dk` — broberg-ai/broberg-id scripts/security-gate.ts:191; broberg-ai/components packages/sso/src/hono.ts:135
 - `falsk-login.dk` — broberg-ai/fd-sundhed apps/web/src/app/api/godkender/vink/route.ts:152
 - `fdsundhed.dk` — broberg-ai/fd-sundhed apps/web/src/app/(app)/app/platformen-bag/page.tsx:118; broberg-ai/helpdesk mockups/helpdesk-widget-paa-kundesite.html:267
 - `feeds.feedburner.com` — cbroberg/moovyy watch-service/news-sources.js:45
@@ -327,6 +331,7 @@ Målt på 33 kørende Fly-apps (nøgle-NAVNE + målte endpoints).
 - `reflexology-europe.org` — webhousecode/sanneandersen arkiv/www.sanneandersen.dk/dk/om_sanne/samarbejdspartnere/index.html:344
 - `resend.com` — broberg-ai/cardmem apps/server/src/api/vault.ts:80; webhousecode/cms packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx:508
 - `s7.addthis.com` — webhousecode/buddy docker/old-site/arkiv/_.html:119
+- `schemas.openid.net` — broberg-ai/broberg-id src/logout-everywhere.ts:46; broberg-ai/components packages/sso/src/client.ts:192
 - `schemas.xmlsoap.org` — webhousecode/sanneandersen site/src/app/api/shop/pakkeshop-lookup/route.ts:66
 - `screenrant.com` — cbroberg/moovyy watch-service/news-sources.js:36
 - `shelly-api-docs.shelly.cloud` — webhousecode/buddy apps/server/src/harvest/__fixtures__/ture.json:1
@@ -340,7 +345,7 @@ Målt på 33 kørende Fly-apps (nøgle-NAVNE + målte endpoints).
 - `thepiratebay.org` — cbroberg/moovyy server.js:847
 - `tidelift.com` — cbroberg/coverletter-generator package-lock.json:5438; cbroberg/moovyy package-lock.json:2638; cbroberg/pitch package-lock.json:5361
 - `tsx.hirok.io` — broberg-ai/beacon pnpm-lock.yaml:154; webhousecode/buddy pnpm-lock.yaml:427
-- `tsx.is` — broberg-ai/cardmem pnpm-lock.yaml:736; broberg-ai/contract-manager pnpm-lock.yaml:208; cbroberg/coverletter-generator package-lock.json:312
+- `tsx.is` — broberg-ai/cardmem pnpm-lock.yaml:753; broberg-ai/contract-manager pnpm-lock.yaml:208; cbroberg/coverletter-generator package-lock.json:312
 - `turbo.build` — broberg-ai/beacon turbo.json:2; webhousecode/buddy turbo.json:2; webhousecode/cms turbo.json:2
 - `turborepo.com` — broberg-ai/cardmem turbo.json:2; broberg-ai/helpdesk turbo.json:2
 - `ui.shadcn.com` — webhousecode/cms packages/cms-admin/components.json:2; broberg-ai/contract-manager components.json:2; cbroberg/coverletter-generator components.json:2
@@ -400,7 +405,7 @@ Målt på 33 kørende Fly-apps (nøgle-NAVNE + målte endpoints).
 - `www.thewrap.com` — cbroberg/moovyy watch-service/news-sources.js:31
 - `www.thimm.dk` — webhousecode/buddy docker/old-site/arkiv/_en_webhouse_partners_.html:153
 - `www.virgil.dk` — webhousecode/buddy docker/old-site/arkiv/_en_webhouse_partners_.html:153
-- `www.youtube-nocookie.com` — cbroberg/moovyy cloud/src/web/app.js:578
+- `www.youtube-nocookie.com` — cbroberg/moovyy cloud/src/web/app.js:578; webhousecode/sanneandersen site/src/app/[locale]/uddannelse/[slug]/[module]/[lesson]/page.tsx:249
 - `www.zct.dk` — webhousecode/sanneandersen arkiv/www.sanneandersen.dk/dk/om_sanne/samarbejdspartnere/index.html:334
 - `x.dk` — webhousecode/cms packages/cms-admin/src/lib/link-check-classify.ts:58; broberg-ai/components packages/mail-core/verify-no-drift.mjs:29; broberg-ai/trail packages/shared/scripts/verify-wiki-links.ts:186
 - `yourwebsite.com` — cbroberg/coverletter-generator app/(app)/settings/page.tsx:551

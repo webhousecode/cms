@@ -6,7 +6,7 @@ import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { scanProject, scanDir, recommend, signedRecordProblem, productionUse, applyOwnerRulings, publicSubprocessors, listChangedAt, type Assessment } from "../../../../../scripts/compliance-scan";
+import { scanProject, scanDir, recommend, copenhagenDate, signedRecordProblem, productionUse, applyOwnerRulings, publicSubprocessors, listChangedAt, type Assessment } from "../../../../../scripts/compliance-scan";
 
 function repoWith(files: Record<string, string>): string {
   const dir = mkdtempSync(path.join(tmpdir(), "cscan-"));
@@ -166,6 +166,35 @@ describe("owner ruling: not in production", () => {
   });
 });
 
+// F201.8 — a vendor in production that no Fly app holds a key for (UpCloud:
+// a Postgres replica fed straight from Supabase) is invisible to the measurement.
+describe("registered: in production outside Fly", () => {
+  const base: Assessment = { id: "upcloud", dpa_status: "auto", dpa_url: null, transfer_basis: "EU", eu_region_possible: true, checked_at: "2026-09-30" };
+  const reg = { at: "2026-09-30", by: "fd-sundhed", evidence: "broberg-ai/fd-sundhed 69d4f112 infra/replika-upcloud/runbook.md" };
+
+  it("adds the vendor to production use although no Fly app carries its key", () => {
+    const use = productionUse({ "fd-sundhed": ["RESEND_API_KEY"] }, []);
+    expect(use.has("upcloud")).toBe(false);
+    const withReg = applyOwnerRulings(use, new Map([["upcloud", { ...base, in_production_outside_fly: reg }]]));
+    expect(withReg.has("upcloud")).toBe(true);
+    expect(withReg.has("resend")).toBe(true);
+  });
+
+  it("reaches the public list once it has a location", () => {
+    const a: Assessment = { ...base, in_production_outside_fly: reg, company_country: "Finland",
+      location: { class: "eu", da: "Danmark", en: "Denmark", measured: true, at: "2026-09-30" },
+      public: { name: "UpCloud", purpose_da: "x", purpose_en: "x" } };
+    const as = new Map([["upcloud", a]]);
+    const prod = applyOwnerRulings(productionUse({}, []), as);
+    expect(publicSubprocessors([{ id: "upcloud", name: "UpCloud", purpose: "db" }], new Set(prod.keys()), as).rows.map((r) => r.id)).toEqual(["upcloud"]);
+  });
+
+  it("a registration without evidence is refused", () => {
+    expect(signedRecordProblem({ ...base, in_production_outside_fly: { ...reg, evidence: "" } })).toMatch(/in_production_outside_fly/);
+    expect(signedRecordProblem({ ...base, in_production_outside_fly: reg })).toBeNull();
+  });
+});
+
 describe("public sub-processor list (F201.4, broberg.ai/trust)", () => {
   const loc = { class: "eu" as const, da: "Stockholm", en: "Stockholm", measured: true, at: "2026-09-27" };
   const A = (id: string, extra: Partial<Assessment> = {}): Assessment => ({ id, dpa_status: "auto", dpa_url: null, transfer_basis: "EU", eu_region_possible: true, checked_at: "2026-09-27", location: loc, company_country: "USA", public: { name: id, purpose_da: "p", purpose_en: "p" }, ...extra });
@@ -202,6 +231,11 @@ describe("public sub-processor list (F201.4, broberg.ai/trust)", () => {
 });
 
 describe("list_changed_at (F201.4)", () => {
+  it("is dated in Danish time, not UTC (F201.8)", () => {
+    expect(copenhagenDate(new Date("2026-09-29T23:52:00Z"))).toBe("2026-09-30"); // 01:52 CEST
+    expect(copenhagenDate(new Date("2026-12-31T23:30:00Z"))).toBe("2027-01-01"); // 00:30 CET
+    expect(copenhagenDate(new Date("2026-09-29T21:00:00Z"))).toBe("2026-09-29"); // 23:00 CEST
+  });
   it("keeps the old date when the list is unchanged", () => {
     expect(listChangedAt({ list_changed_at: "2026-09-01", rows: [{ id: "a" }] }, [{ id: "a" }], "2026-09-27")).toBe("2026-09-01");
   });
