@@ -60,7 +60,8 @@ const LEDGER: Record<string, string> = {
     "against it — including its aud test, which proves the installed version " +
     "still refuses a token issued to another client. " +
     "0.4.0 (2026-09-29): additive — addressOwnership() for invitation redemption. " +
-    "0.5.0 (same day): additive — inviteUsers(), migrationStatus(), timeoutMs.",
+    "0.5.0 (same day): additive — inviteUsers(), migrationStatus(), timeoutMs. " +
+    "0.6.0 (same day): additive — verifyLogoutToken() + backchannel ssoRoutes (unused by cms).",
   "@broberg/consent-cookie":
     "Exact-pinned 0.5.0 on 2026-09-29 (F203.3) — the shared cookie banner on the " +
     "public landing page (public/home.html). Not imported by any module: " +
