@@ -22,10 +22,8 @@
  * fly-deployment plumbing already requires this, so no new secret.
  */
 
-import { FlyClient, FlyTimeoutError } from "@broberg/deploy-core";
+import { FlyApiError, FlyClient, FlyTimeoutError, isRetryableStatus } from "@broberg/deploy-core";
 
-const FLY_API_BASE = "https://api.machines.dev";
-const DEFAULT_TIMEOUT_MS = 30_000;
 
 export interface SpawnBuilderOptions {
   /** Fly app that hosts the builder VM (must exist; use `webhouse-builders` or similar shared app). */
@@ -69,13 +67,6 @@ export interface BuilderCompletion {
   exitCode: number | null;
   durationMs: number;
   finalState: string;
-}
-
-function flyHeaders(token: string): Record<string, string> {
-  return {
-    "Authorization": `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
 }
 
 function resolveToken(override?: string): string {
@@ -178,44 +169,49 @@ export async function awaitBuilderCompletion(args: {
 }
 
 /**
- * Stream stdout/stderr from a builder machine's logs as they appear.
- * Returns a cancel function. Auto-stops when machine reaches a terminal
- * state.
+ * Stream a builder machine's log lines as they appear.
+ * Returns a cancel function.
  *
- * Uses Fly's logs API which supports tail-style polling. Implemented as
- * setInterval to avoid SSE complexity; trades sub-second latency for
- * predictable behavior across edge cases.
+ * F200.4 — this used to GET api.machines.dev/.../machines/<id>/logs, an
+ * address Fly does not serve (404), and swallowed every non-ok answer, so the
+ * builder log never showed a single line while nothing ever went red.
+ * FlyClient.getMachineLogs() talks to Fly's real logs API, and each poll hands
+ * back a nextToken so only newer lines are fetched.
+ *
+ * A failure is REPORTED, not swallowed: onError gets it (console.error when no
+ * handler is given). A permanent refusal (4xx other than 408/429) stops the
+ * stream — polling a wrong token every two seconds for the length of a build
+ * only repeats the same no.
  */
 export function streamBuilderLogs(args: {
   appName: string;
   machineId: string;
   onLine: (line: string) => void;
+  onError?: (err: unknown) => void;
   flyToken?: string;
   pollIntervalMs?: number;
 }): () => void {
   const token = resolveToken(args.flyToken);
   const pollMs = args.pollIntervalMs ?? 2_000;
+  const report = args.onError ?? ((err: unknown) => {
+    console.error("[builder-logs]", err instanceof Error ? err.message : err);
+  });
   let cancelled = false;
-  let lastTimestamp = 0;
+  let nextToken: string | null = null;
 
   const poll = async () => {
     if (cancelled) return;
     try {
-      const url = `${FLY_API_BASE}/v1/apps/${encodeURIComponent(args.appName)}/machines/${encodeURIComponent(args.machineId)}/logs`;
-      const res = await fetch(url, {
-        headers: flyHeaders(token),
-        signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
-      });
-      if (res.ok) {
-        const data = (await res.json()) as { logs?: Array<{ timestamp?: number; message?: string }> };
-        for (const entry of data.logs ?? []) {
-          const ts = entry.timestamp ?? 0;
-          if (ts <= lastTimestamp) continue;
-          lastTimestamp = ts;
-          if (entry.message) args.onLine(entry.message);
-        }
+      const page = await new FlyClient({ token }).getMachineLogs(args.appName, args.machineId, { nextToken });
+      if (page.nextToken) nextToken = page.nextToken;
+      for (const entry of page.entries) {
+        if (cancelled) break;
+        args.onLine(entry.message);
       }
-    } catch { /* swallow — next poll retries */ }
+    } catch (err) {
+      report(err);
+      if (err instanceof FlyApiError && !isRetryableStatus(err.status)) return; // permanent: stop
+    }
 
     if (!cancelled) setTimeout(poll, pollMs);
   };

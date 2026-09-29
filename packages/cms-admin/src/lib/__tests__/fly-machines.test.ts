@@ -316,65 +316,63 @@ describe("awaitBuilderCompletion", () => {
 });
 
 describe("streamBuilderLogs", () => {
-  it("yields each new log line via onLine callback", async () => {
+  // Fly's logs API shape (api.fly.io/api/v1/apps/<app>/logs), as FlyClient
+  // parses it. F200.4: the old tests mocked `{ logs: [...] }` from an address
+  // Fly does not serve, so they stayed green while the real stream showed nothing.
+  const page = (lines: Array<[string, string]>, next: string | null) =>
+    new Response(JSON.stringify({
+      data: lines.map(([timestamp, message]) => ({ attributes: { timestamp, message } })),
+      meta: next ? { next_token: next } : {},
+    }));
+
+  it("yields new lines and asks only for lines after the last nextToken", async () => {
+    const urls: string[] = [];
     let calls = 0;
-    mockFetch(async () => {
+    mockFetch(async (url) => {
+      urls.push(url);
       calls++;
-      if (calls === 1) {
-        return new Response(JSON.stringify({
-          logs: [
-            { timestamp: 1, message: "first" },
-            { timestamp: 2, message: "second" },
-          ],
-        }));
-      }
-      return new Response(JSON.stringify({
-        logs: [
-          { timestamp: 1, message: "first (dup)" },
-          { timestamp: 2, message: "second (dup)" },
-          { timestamp: 3, message: "third" },
-        ],
-      }));
+      if (calls === 1) return page([["2026-09-29T21:00:00Z", "first"], ["2026-09-29T21:00:01Z", "second"]], "tok-1");
+      if (calls === 2) return page([["2026-09-29T21:00:02Z", "third"]], "tok-2");
+      return page([], null);
     });
 
     const lines: string[] = [];
-    const cancel = streamBuilderLogs({
-      appName: "wb",
-      machineId: "m1",
-      flyToken: "f",
-      pollIntervalMs: 10,
-      onLine: (l) => lines.push(l),
-    });
-
-    await new Promise((r) => setTimeout(r, 50));
+    const cancel = streamBuilderLogs({ appName: "wb", machineId: "m1", flyToken: "f", pollIntervalMs: 10, onLine: (l) => lines.push(l) });
+    await new Promise((r) => setTimeout(r, 60));
     cancel();
     await new Promise((r) => setTimeout(r, 30));
 
-    // first poll yields ["first", "second"]; second yields ["third"]
-    // duplicates filtered by timestamp comparison
     expect(lines).toEqual(["first", "second", "third"]);
+    expect(urls[0]).toContain("/apps/wb/logs");
+    expect(urls[0]).toContain("instance=m1");
+    expect(urls[0]).not.toContain("next_token");
+    expect(urls[1]).toContain("next_token=tok-1");
+    expect(urls[2]).toContain("next_token=tok-2");
+  });
+
+  it("reports a permanent refusal instead of swallowing it, and stops polling", async () => {
+    let calls = 0;
+    mockFetch(async () => { calls++; return new Response("page not found", { status: 404 }); });
+    const errors: unknown[] = [];
+    const cancel = streamBuilderLogs({
+      appName: "wb", machineId: "m1", flyToken: "f", pollIntervalMs: 5,
+      onLine: () => {}, onError: (e) => errors.push(e),
+    });
+    await new Promise((r) => setTimeout(r, 60));
+    cancel();
+    expect(errors).toHaveLength(1);
+    expect(calls).toBe(1);
   });
 
   it("can be cancelled — onLine stops being called", async () => {
-    mockFetch(async () =>
-      new Response(JSON.stringify({
-        logs: [{ timestamp: Date.now() + Math.random(), message: "spam" }],
-      })),
-    );
+    let n = 0;
+    mockFetch(async () => page([[`2026-09-29T21:00:${String(n++ % 60).padStart(2, "0")}Z`, "spam"]], `t${n}`));
     let count = 0;
-    const cancel = streamBuilderLogs({
-      appName: "wb",
-      machineId: "m1",
-      flyToken: "f",
-      pollIntervalMs: 5,
-      onLine: () => { count++; },
-    });
+    const cancel = streamBuilderLogs({ appName: "wb", machineId: "m1", flyToken: "f", pollIntervalMs: 5, onLine: () => { count++; } });
     await new Promise((r) => setTimeout(r, 30));
     cancel();
     const countAtCancel = count;
     await new Promise((r) => setTimeout(r, 30));
-    // After cancel, count should not grow (or grow by very little — one
-    // in-flight poll might land)
     expect(count).toBeLessThanOrEqual(countAtCancel + 1);
   });
 });

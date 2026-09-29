@@ -50,7 +50,8 @@ const LEDGER: Record<string, string> = {
     "hand-rolled Fly clients. Exact on purpose: 0.4.0 shipped without a " +
     "per-request timeout and was fixed the same day, so a newer release is " +
     "taken deliberately, with fly-machines.test.ts run against it. " +
-    "0.5.0 (F200.2, same day): a machine that 404s on the first poll now throws.",
+    "0.5.0 (F200.2, same day): a machine that 404s on the first poll now throws. " +
+    "0.6.0 (F200.4, 2026-09-29): getMachineLogs() — the builder log stream's only source.",
   "@broberg/sso":
     "Exact-pinned 0.3.2 on 2026-09-28 (F199.2) — the Broberg ID login. Exact on " +
     "purpose: it is the auth chokepoint, and the package has shipped real " +

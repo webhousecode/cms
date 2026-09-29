@@ -263,8 +263,8 @@ importers:
         specifier: 0.5.0
         version: 0.5.0
       '@broberg/deploy-core':
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
       '@broberg/mail':
         specifier: 0.7.1
         version: 0.7.1
@@ -1146,8 +1146,8 @@ packages:
   '@broberg/consent-cookie@0.5.0':
     resolution: {integrity: sha512-cedUOCJCrqS94QF/XsoaaI6u9RnVuNQ9AIR05SjzSxxiOuUdbLEgCTukZRq4HGTCWmxVNXxkS6K11/aHsNPCDQ==}
 
-  '@broberg/deploy-core@0.5.0':
-    resolution: {integrity: sha512-JMUyRsuiKn237W96lHCh2SMz8KMW4dZbBJ9jK+FEQikoWDiD14pMLsQziplSyXbzN7IUzk2kC7h8w2Iv0a1+xw==}
+  '@broberg/deploy-core@0.6.0':
+    resolution: {integrity: sha512-WFis0WP7xyK52vlc25DMPXFLJFadin2kZQRvaoOk/I/ex+8+jjdgr0EcVuHQvnNaVm03eSO17WuS73btAxEFnA==}
 
   '@broberg/lens-engine@0.4.0':
     resolution: {integrity: sha512-/blOeHkjo6kxxQE7d9y9BFSqaoyFE3k8+Gbu6UcGLXAf9HmEJ0T0zhdbbbWQX4mejtpRKr0CzpwhiiwAoSLoaw==}
@@ -7363,7 +7363,7 @@ snapshots:
 
   '@broberg/consent-cookie@0.5.0': {}
 
-  '@broberg/deploy-core@0.5.0': {}
+  '@broberg/deploy-core@0.6.0': {}
 
   '@broberg/lens-engine@0.4.0':
     dependencies:
