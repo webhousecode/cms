@@ -58,7 +58,8 @@ const LEDGER: Record<string, string> = {
     "every token BID issues; 0.2.3 added the signed flow-cookie expiry we rely " +
     "on). A newer release is taken deliberately, with bid-login.test.ts run " +
     "against it — including its aud test, which proves the installed version " +
-    "still refuses a token issued to another client.",
+    "still refuses a token issued to another client. " +
+    "0.4.0 (2026-09-29): additive — addressOwnership() for invitation redemption.",
   "@broberg/cms-chat-client":
     "0.4.14 vs 0.4.20 — same minor, so the caret DOES reach it. Not frozen.",
   "@broberg/ui-controls-core":
