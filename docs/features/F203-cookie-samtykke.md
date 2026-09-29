@@ -3,13 +3,13 @@
 **Ordre:** Christian 29/9-2026, videresendt af components: «rul det ud til alle live sites». Hvert live website skal have cookie-banneret `@broberg/consent-cookie`.
 
 ## Motivation
-Et site der sætter sporings-cookies eller loader trackere før besøgende har sagt ja, bryder cookie-reglerne. Målt 29/9: docs.webhouse.app loader Microsoft Clarity på hver side uden samtykke — det er ikke kosmetik, det er et reelt brud i dag.
+Christian vil have ét ensartet samtykke-banner på hvert live site. Målt 29/9 (rettet samme dag): INGEN af de tre sites loader trackere i dag — et første tjek så «clarity» og «Vimeo» i docs-sidernes HTML, men det var ord i artikelteksten, ikke scripts. Opgaven er derfor banneret selv, så sitet er klar den dag en tracker kommer til.
 
 ## Scope — de tre sites cms ejer
 | Site | Repo | Tracker i dag |
 |---|---|---|
 | webhouse.app (offentlig forside) | cms / packages/cms-admin | ingen fundet |
-| docs.webhouse.app | cms-docs (Fly `cms-docs`) | **Microsoft Clarity**, Vimeo-embeds |
+| docs.webhouse.app | cms-docs (Fly `cms-docs`) | ingen fundet |
 | www.webhouse.dk | webhouse-site (Fly `webhouse-dk`) | ingen fundet |
 
 **Non-goals:** broberg.ai (broberg-ai-sessionen), sanneandersen (egen session), fd-sport/fd-sundhed (egne sessioner). /admin-fladerne i webhouse.app får IKKE banneret (login-app, ikke website) — og login/betaling mærkes aldrig som tracker.
@@ -32,4 +32,4 @@ Lens mod PROD-URL: første besøg viser banneret, «Afvis alle» gemmer cookien 
 `@broberg/consent-cookie` (owner components) — intet bygges selv.
 
 ## Rollout
-Ét site ad gangen, docs.webhouse.app først (den med den aktive tracker).
+Ét site ad gangen: docs.webhouse.app, www.webhouse.dk, webhouse.app.
