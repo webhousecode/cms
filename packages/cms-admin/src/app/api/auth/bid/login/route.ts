@@ -13,6 +13,9 @@ import {
  *   ?returnTo=/admin/…   where to land afterwards (validated, /admin only)
  *   ?link=1              a signed-in user connects their BID account; the
  *                        callback then binds BID's `sub` to THIS cms user
+ *   ?prompt=login|none   passed on to BID (F199.9 — logout lands here with
+ *                        prompt=login); any other value is dropped, the same
+ *                        rule @broberg/sso's own routes apply
  *
  * Always a full-page redirect to BID, never a frame (BID fails in a frame on
  * iPhone). The three one-time values ride in a SIGNED, time-stamped cookie so a
@@ -31,7 +34,8 @@ export async function GET(request: NextRequest) {
   }
 
   const { config, sso } = getBid();
-  const start = await sso.beginLogin();
+  const prompt = request.nextUrl.searchParams.get("prompt");
+  const start = await sso.beginLogin(prompt === "login" || prompt === "none" ? { prompt } : undefined);
   const flow: BidFlow = {
     state: start.state,
     codeVerifier: start.codeVerifier,

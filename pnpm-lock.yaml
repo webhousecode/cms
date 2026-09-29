@@ -272,8 +272,8 @@ importers:
         specifier: '>=0.8.0 <1'
         version: 0.8.0
       '@broberg/sso':
-        specifier: 0.6.0
-        version: 0.6.0(hono@4.12.5)
+        specifier: 0.7.0
+        version: 0.7.0(hono@4.12.5)
       '@broberg/ui-controls-core':
         specifier: 0.2.2
         version: 0.2.2
@@ -1158,8 +1158,8 @@ packages:
   '@broberg/mail@0.7.1':
     resolution: {integrity: sha512-UjOFan+y2vBbIbH4iSYaHu74ngkiatu7QtZ2THoTcokF0Pt3PtIsKSP7RePL9PMx6efXojHEsz/vsDkPEozu9Q==}
 
-  '@broberg/sso@0.6.0':
-    resolution: {integrity: sha512-mNYibSGbvjFgVP5WAfb0Wnc9cQ1m6uQ6FazzYRsX2B3/8mZ/xCq+I/kStoJWs57AfjqzTv4TDMuVkqOIY6iRaA==}
+  '@broberg/sso@0.7.0':
+    resolution: {integrity: sha512-l1Jkg0Vw/nK+hkvatkjrZMHjRtYPCZgox15o4uh7wJRK3Q4vw+5n74XxedKCvYdZZ8uUTMFN7g7+Ao4jVZigaw==}
     peerDependencies:
       hono: ^4
     peerDependenciesMeta:
@@ -7383,7 +7383,7 @@ snapshots:
 
   '@broberg/mail@0.7.1': {}
 
-  '@broberg/sso@0.6.0(hono@4.12.5)':
+  '@broberg/sso@0.7.0(hono@4.12.5)':
     dependencies:
       jose: 6.2.1
     optionalDependencies:

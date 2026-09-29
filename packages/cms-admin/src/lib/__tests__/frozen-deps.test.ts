@@ -62,7 +62,10 @@ const LEDGER: Record<string, string> = {
     "still refuses a token issued to another client. " +
     "0.4.0 (2026-09-29): additive — addressOwnership() for invitation redemption. " +
     "0.5.0 (same day): additive — inviteUsers(), migrationStatus(), timeoutMs. " +
-    "0.6.0 (same day): additive — verifyLogoutToken() + backchannel ssoRoutes (unused by cms).",
+    "0.6.0 (same day): additive — verifyLogoutToken() + backchannel ssoRoutes (unused by cms). " +
+    "0.7.0 (same day, F199.9): ssoRoutes' /logout became app-only + prompt=login, and " +
+    "session.email_verified. cms uses neither route, so its own logout was changed to " +
+    "match (bid-logout.test.ts); email binding already required email_verified === true.",
   "@broberg/consent-cookie":
     "Exact-pinned 0.5.0 on 2026-09-29 (F203.3) — the shared cookie banner on the " +
     "public landing page (public/home.html). Not imported by any module: " +
