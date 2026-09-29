@@ -912,5 +912,12 @@ mobileMenu.querySelectorAll('a').forEach(a => {
   a.addEventListener('click', () => mobileMenu.classList.remove('open'));
 });
 </script>
+<!-- F203.3 — shared cookie banner (@broberg/consent-cookie), served from our own
+     domain (copied in at build by scripts/copy-consent-element.mjs). The page
+     sets no statistics or marketing cookies, so categories="" and the text says
+     so. Colours map this page's tokens onto the names the banner reads. -->
+<script type="module" src="/vendor/consent-cookie/element.js"></script>
+<broberg-consent policy-version="2026-09" categories="" lang="en" data-testid="consent-root"
+  style="--card:var(--dark-card);--card-foreground:var(--white);--primary:var(--gold);--primary-foreground:var(--dark);--muted-foreground:var(--grey-400);--border:var(--dark-border);--secondary:var(--dark-surface)"></broberg-consent>
 </body>
 </html>

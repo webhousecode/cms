@@ -9,3 +9,6 @@ node_modules/
 # Any alternate Next build dir (NEXT_DIST_DIR) — the E2E suite uses .next-e2e,
 # an ad-hoc probe may use another. One pattern so a new one cannot leak into git.
 .next-*
+
+# F203.3 — generated at build from @broberg/consent-cookie (scripts/copy-consent-element.mjs)
+public/vendor/consent-cookie/

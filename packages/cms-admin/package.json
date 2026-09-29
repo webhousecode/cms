@@ -4,8 +4,10 @@
   "description": "Admin UI for @webhouse/cms",
   "private": false,
   "scripts": {
+    "predev": "node scripts/copy-consent-element.mjs",
     "dev": "next dev --port 3010",
     "dev:https": "next dev --port 3010 --experimental-https --experimental-https-key .certs/localhost-key.pem --experimental-https-cert .certs/localhost.pem --hostname 0.0.0.0",
+    "prebuild": "node scripts/copy-consent-element.mjs",
     "build": "next build",
     "start": "next start --port 3010",
     "start:prod": "next start --port 4010",
@@ -23,6 +25,7 @@
     "@broberg/chat": ">=0.5.0 <1",
     "@broberg/cms-chat-client": "^0.4.14",
     "@broberg/cms-inline-edit": ">=0.6.3 <1",
+    "@broberg/consent-cookie": "0.5.0",
     "@broberg/deploy-core": "0.5.0",
     "@broberg/mail": "0.7.1",
     "@broberg/mail-core": ">=0.8.0 <1",

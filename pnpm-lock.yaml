@@ -259,6 +259,9 @@ importers:
       '@broberg/cms-inline-edit':
         specifier: '>=0.6.3 <1'
         version: 0.6.3
+      '@broberg/consent-cookie':
+        specifier: 0.5.0
+        version: 0.5.0
       '@broberg/deploy-core':
         specifier: 0.5.0
         version: 0.5.0
@@ -1139,6 +1142,9 @@ packages:
   '@broberg/cms-inline-edit@0.6.3':
     resolution: {integrity: sha512-YAGWSsTMGbg/x7hZWeHdzjVjXrgNL4YuJ8dUhz6Ya2TW7NJQHqUsHerDnxVmGeC7M8/41ZkkYpr1TrBJS3t7+A==}
     engines: {node: '>=22'}
+
+  '@broberg/consent-cookie@0.5.0':
+    resolution: {integrity: sha512-cedUOCJCrqS94QF/XsoaaI6u9RnVuNQ9AIR05SjzSxxiOuUdbLEgCTukZRq4HGTCWmxVNXxkS6K11/aHsNPCDQ==}
 
   '@broberg/deploy-core@0.5.0':
     resolution: {integrity: sha512-JMUyRsuiKn237W96lHCh2SMz8KMW4dZbBJ9jK+FEQikoWDiD14pMLsQziplSyXbzN7IUzk2kC7h8w2Iv0a1+xw==}
@@ -7354,6 +7360,8 @@ snapshots:
   '@broberg/cms-chat-client@0.4.14': {}
 
   '@broberg/cms-inline-edit@0.6.3': {}
+
+  '@broberg/consent-cookie@0.5.0': {}
 
   '@broberg/deploy-core@0.5.0': {}
 

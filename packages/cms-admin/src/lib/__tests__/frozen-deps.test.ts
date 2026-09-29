@@ -61,6 +61,14 @@ const LEDGER: Record<string, string> = {
     "still refuses a token issued to another client. " +
     "0.4.0 (2026-09-29): additive — addressOwnership() for invitation redemption. " +
     "0.5.0 (same day): additive — inviteUsers(), migrationStatus(), timeoutMs.",
+  "@broberg/consent-cookie":
+    "Exact-pinned 0.5.0 on 2026-09-29 (F203.3) — the shared cookie banner on the " +
+    "public landing page (public/home.html). Not imported by any module: " +
+    "scripts/copy-consent-element.mjs copies its dist into public/vendor at build, " +
+    "so a bump changes what every visitor sees. Exact because 0.5.0 is the first " +
+    "version whose text can truthfully say we set no statistics/marketing cookies " +
+    "(categories=\"\"); 0.4.1 said the opposite. Take a newer release with a " +
+    "Lens run of the landing page.",
   "@broberg/cms-chat-client":
     "0.4.14 vs 0.4.20 — same minor, so the caret DOES reach it. Not frozen.",
   "@broberg/ui-controls-core":
