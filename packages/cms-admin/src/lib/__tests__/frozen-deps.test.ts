@@ -59,7 +59,8 @@ const LEDGER: Record<string, string> = {
     "on). A newer release is taken deliberately, with bid-login.test.ts run " +
     "against it — including its aud test, which proves the installed version " +
     "still refuses a token issued to another client. " +
-    "0.4.0 (2026-09-29): additive — addressOwnership() for invitation redemption.",
+    "0.4.0 (2026-09-29): additive — addressOwnership() for invitation redemption. " +
+    "0.5.0 (same day): additive — inviteUsers(), migrationStatus(), timeoutMs.",
   "@broberg/cms-chat-client":
     "0.4.14 vs 0.4.20 — same minor, so the caret DOES reach it. Not frozen.",
   "@broberg/ui-controls-core":
