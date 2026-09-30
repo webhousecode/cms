@@ -20,7 +20,7 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 const T = {
   da: {
     heading: "Leverandører der behandler data for os",
-    lead: "Underdatabehandlere i drift, og hvor den udgave vi bruger kører. «Målt» betyder, at vi har aflæst det i vores egen opsætning; resten er fra leverandørens egne sider. Alle leverandører uden for EU er dækket af en EU-godkendt overførselsaftale. Nye leverandører kommer på listen, når vi tager dem i brug.",
+    lead: "Underdatabehandlere i drift, og hvor den udgave vi bruger kører. «Målt» betyder, at vi har aflæst det i vores egen opsætning; resten er fra leverandørens egne sider. Alle leverandører uden for EU er dækket af en EU-godkendt overførselsaftale. Nye leverandører kommer på listen, når vi tager dem i brug. Kunder med databehandleraftale får besked mindst 14 dage før.",
     groups: { eu: "Data i EU", mix: "Delvist i EU", out: "Uden for EU" },
     cols: ["Leverandør", "Bruges til", "Hvor data ligger", "Selskab", "Overførsel"],
     transfer: { EU: "Inden for EU", DPF: "EU-US Data Privacy Framework", SCC: "EU's standardkontrakt", "DPF+SCC": "Data Privacy Framework + standardkontrakt", ukendt: "Afklares" },
@@ -30,7 +30,7 @@ const T = {
   },
   en: {
     heading: "Suppliers who process data for us",
-    lead: "Sub-processors in production, and where the instance we use runs. «Measured» means we read it from our own setup; the rest comes from the supplier's own pages. Every supplier outside the EU is covered by an EU-approved transfer mechanism. New suppliers are added to this list when we start using them.",
+    lead: "Sub-processors in production, and where the instance we use runs. «Measured» means we read it from our own setup; the rest comes from the supplier's own pages. Every supplier outside the EU is covered by an EU-approved transfer mechanism. New suppliers are added to this list when we start using them. Customers with a data processing agreement are notified at least 14 days in advance.",
     groups: { eu: "Data in the EU", mix: "Partly in the EU", out: "Outside the EU" },
     cols: ["Supplier", "Used for", "Where data lives", "Company", "Transfer"],
     transfer: { EU: "Within the EU", DPF: "EU-US Data Privacy Framework", SCC: "EU standard contractual clauses", "DPF+SCC": "Data Privacy Framework + standard clauses", ukendt: "Being clarified" },
