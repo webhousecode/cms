@@ -16,7 +16,7 @@ The user wants to do a comprehensive improvement pass on the Agents architecture
 2. **Org-level keys configured:** The Examples org (`/Users/cb/Apps/webhouse/webhouse-site/_admin/_data/org-settings/examples.json`) has real Anthropic, Gemini, and Resend API keys + sensible model defaults. All sites under Examples (including Agentic Tester) inherit these via F87 Org Settings inheritance.
 3. **Deploy is enabled** on Agentic Tester to its OWN GitHub repo (`cbroberg/agentic-cms-demo-site`) — not the CMS Demo repo. Safe to spam.
 4. **Future clones default to deploy=off** thanks to a fix in `lib/site-clone.ts` from the previous session — clones are sandboxes by default unless you flip `deployOnSave: true` manually.
-5. **F35 webhooks fire** `agent.started` and `agent.completed` events from agent-runner.ts. Discord test webhook for the user is `https://discord.com/api/webhooks/1471574318726250496/Qgzmm_IROBuLa-9ldwZmFs31fe7_Me_yZ5PvRV1JLsosLMpxf7gNxlcu3FaJwIlXtJXL` (their "reports" channel).
+5. **F35 webhooks fire** `agent.started` and `agent.completed` events from agent-runner.ts. Discord test webhook for the user is `<Discord webhook — stored as a secret, never in the repo>` (their "reports" channel).
 
 **Hard rules to remember:**
 - **NEVER touch port 3010.** It's the live CMS admin dev server. Don't kill, restart, bind, or `lsof -i :3010` it. The user starts/stops it themselves. Checking it's up via `curl http://localhost:3010/admin/login` is fine.

@@ -1,4 +1,22 @@
-# Gitleaks configuration — suppress known false positives
+# Gitleaks configuration.
+#
+# [extend] useDefault = true is load-bearing: a config file WITHOUT it replaces
+# gitleaks' built-in rules instead of adding to them — this file used to hold
+# only an allowlist, so every scan ran with ZERO rules and reported "no leaks"
+# for anything (a Discord webhook sat in a public doc for six months; found by
+# an outside scanner on 2026-09-30, not by us).
+
+[extend]
+  useDefault = true
+
+# Not in gitleaks' defaults: a Discord webhook URL IS the credential.
+[[rules]]
+  id = "discord-webhook-url"
+  description = "Discord webhook URL (id + token)"
+  regex = '''https://(?:ptb\.|canary\.)?discord(?:app)?\.com/api/webhooks/[0-9]{17,20}/[A-Za-z0-9_-]{60,70}'''
+  keywords = ["discord"]
+
+# Suppress known false positives:
 # Dev JWT secrets in test files and e2e specs are intentional test fixtures
 
 [allowlist]
