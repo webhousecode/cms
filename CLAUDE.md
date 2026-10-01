@@ -817,14 +817,14 @@ Reads (the gap check) need no key; only `POST /api/enroll` uses your `DISCOVERY_
 import { createAI } from "@broberg/ai-sdk";
 const ai = createAI();                         // real adapters; keys from env (ANTHROPIC_API_KEY, …)
 const { text, usage } = await ai.chat({ prompt: "Hej", tier: "smart" });
-// also: ai.vision · ai.video · ai.translate · ai.image · ai.embedding · ai.transcribe · ai.ocr · ai.moderate · ai.contracts.{extract,classify,…}
+// also: ai.vision · ai.video · ai.translate · ai.image · ai.embedding · ai.transcribe · ai.ocr · ai.moderate · ai.judge · ai.contracts.{extract,classify,…}
 ```
 
 **Route by tier, not by model-string.** Tiers → current model (overridable per call):
 **Every text tier is Mistral EU** (F030, v0.21+) — Claude is override-only:
-`fast`=mistral-small-latest · `smart`=mistral-large-latest · `powerful`=mistral-large-latest · `cheap`=mistral-small-latest · `vision`=mistral-small-latest · `video`=gemini-2.5-flash-lite (US) · `embedding`=text-embedding-3-small (US).
+`fast`=mistral-small-latest · `smart`=mistral-large-latest · `powerful`=mistral-large-latest · `cheap`=mistral-small-latest · `vision`=mistral-medium-latest · `video`=gemini-2.5-flash-lite (US) · `embedding`=text-embedding-3-small (US).
 
-> This block named Claude for `smart`/`powerful`/`vision` for ~3 months after F030 moved them. Nobody was endangered — it UNDERSTATED how EU-safe the defaults are — but the same drift also lived in code (`resolveModel('smart')` answered claude-sonnet-4-6 while the call went to Mistral), and there it was dangerous: that lookup is what a reasonable person would use to show or decide where data goes. Fixed in v0.29 by deriving the registry's tier aliases from the router. **The `video` and `embedding` DEFAULTS still leave the EU** — do not send personal data through them without an override. But read the next paragraph before concluding there is no EU route: in September 2026 that same sentence, correct as written, was cited by another session as proof the fleet had no EU path for video. A default is not a capability.
+> This block named Claude for `smart`/`powerful`/`vision` for ~3 months after F030 moved them. Nobody was endangered — it UNDERSTATED how EU-safe the defaults are — but the same drift also lived in code (`resolveModel('smart')` answered claude-sonnet-4-6 while the call went to Mistral), and there it was dangerous: that lookup is what a reasonable person would use to show or decide where data goes. Fixed in v0.29 by deriving the registry's tier aliases from the router, and MEASURED on 0.47.1 (16 Sep 2026): `resolveModel('smart')` and the router now both answer `mistral-large-latest`. The lookup agrees with the route again. **The `video` and `embedding` DEFAULTS still leave the EU** — do not send personal data through them without an override. But read the next paragraph before concluding there is no EU route: in September 2026 that same sentence, correct as written, was cited by another session as proof the fleet had no EU path for video. A default is not a capability.
 
 **Cost & provider policy.** Anthropic/Claude is what we **build and code with** (Claude Code) — it is *not* the reflexive API default. For cost-sensitive / high-volume cloud-API workloads, default to the **cheapest model that's good enough** (start cheap, only move up if a real test shows it's needed) — that's what the `cheap` tier is for. `claude -p` is retired as a route; don't reach for the Anthropic API just because it's familiar. The quality tiers (`smart`/`powerful`) resolve to **Mistral Large** (EU), not Claude — reach for Claude only via an explicit `override`, and never for personal data.
 
@@ -870,6 +870,15 @@ alone. Only Mistral takes a key; openai/deepseek/gemini cache automatically.
 
 **GDPR:** for any client/personal/health data, use the EU tier — `override:{ provider:"mistral", model:"mistral-large-latest" }` (Mistral, Paris-hosted, no Schrems II). Never route personal data through US/CN models.
 
+**Jev (TypeSafe) — use `ai.judge`, never `api.typesafe.ai` directly (v0.50+, F066).**
+Not a chat model: typed yes/no, choice and score questions about a piece of content,
+each answer with a calibrated probability and a `confidence` to gate on. $0.042 per
+million input tokens, output free. Key `TYPESAFE_API_KEY` (Global Vault — one shared
+$5 trial key). **US-hosted and input is retained (zero retention is enterprise-only):
+NOT for personal, customer or health data** — measured 2026-10-01. Do not install
+TypeSafe's Claude Code plugin (`typesafe@typesafe-ai`) — owner decision 2026-10-02. It
+knows only their direct API and SDKs; `ai.judge` is the fleet's door.
+
 **A TIER TABLE SAYS WHERE A CALL GOES BY DEFAULT. IT IS NOT A LIST OF THE ROUTES THAT EXIST.**
 A reader deciding whether personal data may leave the country needs the SECOND list,
 and a document carrying only the first answers a narrower question than the one being
@@ -885,7 +894,7 @@ discovery.broberg.ai is the source; verify there before relying on a line here):
 |---|---|---|
 | Danish speech-to-text | `ai.transcribe` — Azure **da-DK**, a 2nd EU STT beside Voxtral | F029, v0.22.0 |
 | video + image ANALYSIS | `override:{ provider:'vertex', model:'gemini-2.5-flash' }` on `ai.video` / `ai.vision`. One env var `GOOGLE_VERTEX_CREDENTIALS`; region defaults `europe-west1`, `europe-west4` also works | F038, v0.27.0 — **live-verified 2026-08-11** |
-| faces / portraits | Black Forest Labs, whole chain hard-pinned to EU hosts | F023, v0.15.0 |
+| image generation (text-to-image AND faces/portraits) | Black Forest Labs — `override:{ provider:'bfl', model:'flux-2-pro' }` (`flux-2-max` = premium), whole chain hard-pinned to EU hosts. The DEFAULT image route (fal) stays US | F023, v0.15.0; text-to-image v0.49.2 — **mock-measured 27/9, not live-verified yet** |
 
 **Upgrading does NOT move you to the EU.** These are overrides you set deliberately on
 your PII paths. The owner refused to switch everyone's default silently.
