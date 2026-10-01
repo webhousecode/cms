@@ -873,8 +873,9 @@ alone. Only Mistral takes a key; openai/deepseek/gemini cache automatically.
 **Jev (TypeSafe) — use `ai.judge`, never `api.typesafe.ai` directly (v0.50+, F066).**
 Not a chat model: typed yes/no, choice and score questions about a piece of content,
 each answer with a calibrated probability and a `confidence` to gate on. $0.042 per
-million input tokens, output free. Key `TYPESAFE_API_KEY` (Global Vault — one shared
-$5 trial key). **US-hosted and input is retained (zero retention is enterprise-only):
+million input tokens, output free. Key `TYPESAFE_API_KEY` (Global Vault — one shared,
+prepaid trial key with a small balance, owner's choice 2026-10-01 — one runaway loop can
+empty it for everyone, and TypeSafe has no balance API to warn first). **US-hosted and input is retained (zero retention is enterprise-only):
 NOT for personal, customer or health data** — measured 2026-10-01. Do not install
 TypeSafe's Claude Code plugin (`typesafe@typesafe-ai`) — owner decision 2026-10-02. It
 knows only their direct API and SDKs; `ai.judge` is the fleet's door.
