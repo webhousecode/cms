@@ -56,9 +56,13 @@ jobs:
     uses: ./.github/workflows/test.yml
     secrets: inherit
 
+  # F201.17 — no deploy while a secret sits anywhere in the history.
+  secret-gate:
+    uses: broberg-ai/components/.github/workflows/secret-gate.yml@secret-gate-v1
+
   deploy:
     name: Deploy to Fly.io
-    needs: gate
+    needs: [gate, secret-gate]
     runs-on: ubuntu-latest
     # Measured max 375 s over 15 runs; the default 360 min would let a hung
     # deploy sit invisible for six hours (F200.2).

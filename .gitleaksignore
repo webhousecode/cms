@@ -1,0 +1,28 @@
+# Known findings in this repo's history, reviewed one by one (F201.17, 2026-10-01).
+# A fingerprint is commit:file:rule:line — it suppresses ONLY that exact
+# occurrence. A new secret anywhere, including in these files, still fails.
+
+# Placeholder in a plan-doc example (beam_abc123…).
+6b9c2f107bfbc413c65f386120f9b957e1488e52:docs/features/F122-beam.md:generic-api-key:167
+# Placeholder in a plan-doc example (beam_abc123…).
+6b9c2f107bfbc413c65f386120f9b957e1488e52:docs/features/F122-beam.md:generic-api-key:173
+# Discord webhook, leaked 2026-04-06, DELETED by Discord 2026-09-30 (404). Removed from the tree in 419cb1fb; only history remains (F201.16).
+2e48cb9828e16a2044b824cf4920e989bf10ef2c:docs/memo/AGENTS-OVERHAUL-HANDOFF.md:discord-webhook-url:19
+# Test fixture (fly_secret_abc).
+a27bf2965cf093b2f0c3d3a4af63e5878c639340:packages/cms-admin/src/lib/__tests__/beam.test.ts:generic-api-key:66
+# Test fixture (abc123def456).
+fa048ed132aaa0f8bc1a4b82abadcfdfd39f326a:packages/cms-admin/src/lib/__tests__/org-settings.test.ts:generic-api-key:562
+# Test fixture (ghp_secret123).
+058e1530f7e5a59bb8e1cf2dcf6e5148421a2e9c:packages/cms-admin/src/lib/__tests__/source-fetch.test.ts:generic-api-key:185
+# Deliberate default Google PSI key, restricted to pagespeedonline.googleapis.com (see comment in runner.ts).
+791cf07026bc9cac99789327f718c2b867fa8ceb:packages/cms-admin/src/lib/lighthouse/runner.ts:gcp-api-key:16
+# LOCAL dev-login token for localhost:3010 (file deleted since). Measured 2026-10-01: refused by production (401).
+8493034f5cd1a1b27bb686504ce736ca90ff6725:scripts/f63-component-audit.ts:generic-api-key:16
+# Supabase local-demo JWT (iss supabase-demo) — the public default every Supabase CLI install ships.
+06cc4f8217fe337cc8756ed54709445723912944:scripts/seed-supabase.ts:jwt:5
+# Supabase local-demo JWT (iss supabase-demo) — the public default every Supabase CLI install ships.
+06cc4f8217fe337cc8756ed54709445723912944:scripts/seed-supabase.ts:jwt:6
+# Supabase local-demo JWT (iss supabase-demo) — the public default every Supabase CLI install ships.
+3f01ff16fc547aef253d729e15ef118bda0e4f26:scripts/test-supabase.ts:jwt:9
+# Supabase local-demo JWT (iss supabase-demo) — the public default every Supabase CLI install ships.
+3f01ff16fc547aef253d729e15ef118bda0e4f26:scripts/test-supabase.ts:jwt:10
