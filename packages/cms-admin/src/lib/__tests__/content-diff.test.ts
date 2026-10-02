@@ -112,8 +112,8 @@ describe("fetchLiveContentTree", () => {
     // URL derived from revalidateUrl
     expect(observedUrl).toBe("https://test-site.fly.dev/api/admin/content-tree");
 
-    // HMAC header present
-    const sig = observedHeaders?.get("x-cms-signature");
+    // HMAC header present (V2, timestamped — F205.4)
+    const sig = observedHeaders?.get("x-cms-signature-v2");
     expect(sig).toMatch(/^sha256=[0-9a-f]{64}$/);
 
     expect(result.total).toBe(1);
@@ -147,8 +147,8 @@ describe("fetchLiveContentTree", () => {
     }
     expect(seen[0].get("x-cms-timestamp")).toBe(String(Date.parse("2026-10-02T17:00:00Z") / 1000));
     expect(seen[0].get("x-cms-signature-v2")).not.toBe(seen[1].get("x-cms-signature-v2"));
-    // Transition: the old header is still sent until the site has switched.
-    expect(seen[0].get("x-cms-signature")).toMatch(/^sha256=[0-9a-f]{64}$/);
+    // The replayable empty-body signature is gone for good.
+    expect(seen[0].get("x-cms-signature")).toBeNull();
   });
 
   it("throws when live returns non-2xx", async () => {
