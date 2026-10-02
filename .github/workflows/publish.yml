@@ -79,6 +79,11 @@ jobs:
       # aldrig, og porten stod inert fra 28. august til 8. september. En
       # undtagelse med en navngiven slutning er stadig permanent hvis ingen
       # kommer tilbage til den — så den er væk nu, hvor suiten er grøn.
+      # Same as test.yml (F191.3): the podcast stitch suite needs ffmpeg and
+      # fails loudly without it — so the gate needs it here too.
+      - name: ffmpeg (podcast-lyd)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && ffmpeg -version | head -1
+
       - name: CMS core tests
         run: cd packages/cms && npx vitest run
 
