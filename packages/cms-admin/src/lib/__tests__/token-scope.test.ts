@@ -39,6 +39,15 @@ describe("site scope", () => {
     expect(decide(trail, "PATCH", "/api/cms/pages/x", null)).toMatchObject({ allow: false, kind: "no-site" });
   });
 
+  it("refuses another site on routes the table does not know, too — not just log it", () => {
+    // Found in review of 2028d017: an unmapped route returned "unmapped" before any
+    // site comparison, and "unmapped" is log-only, so the cross-site hole stayed
+    // open through every route not in the table.
+    for (const path of ["/api/admin/site-config", "/api/schema/pages", "/api/admin/access-tokens"]) {
+      expect(decide(trail, "POST", path, "broberg-ai")).toMatchObject({ allow: false, kind: "site-mismatch" });
+    }
+  });
+
   it("still lets an unrestricted token through without a site", () => {
     const all = tok({ permissions: ["content:read", "content:write"], resources: [] });
     expect(decide(all, "PATCH", "/api/cms/pages/x", null).allow).toBe(true);

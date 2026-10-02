@@ -66,3 +66,10 @@ describe("proxy: a trail-only token", () => {
     expect(res.status).toBe(403);
   });
 });
+
+describe("proxy: a trail-only token naming no site", () => {
+  it("is refused instead of landing on the registry's default site", async () => {
+    const res = await hit("/api/admin/site-config", "POST");
+    expect(res.status).toBe(403);
+  });
+});

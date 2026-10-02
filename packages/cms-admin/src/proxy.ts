@@ -391,10 +391,11 @@ export async function proxy(request: NextRequest) {
         const tokenEntry = await verifyAccessToken(bearerToken);
         if (tokenEntry) {
           // F205.1 — the token's own sites + permissions decide, not its creator's.
-          // ENFORCED now: naming a site outside the token's list, and an unreadable
-          // resource list — neither is ever legitimate. LOGGED only (until
-          // TOKEN_SCOPE_ENFORCE=all): missing permission, unmapped route, no ?site=
-          // on a site-limited token — existing callers may rely on those today.
+          // ENFORCED now, on every route: naming a site outside the token's list,
+          // a site-limited token naming no site (it would land on the registry
+          // default — another site), and an unreadable resource list. LOGGED only
+          // (until TOKEN_SCOPE_ENFORCE=all): a missing permission or an unmapped
+          // route on the token's OWN site — existing callers may rely on those.
           const { decideTokenRequest } = await import("./lib/token-scope");
           const decision = decideTokenRequest({
             token: tokenEntry,
@@ -404,7 +405,7 @@ export async function proxy(request: NextRequest) {
             clientIp: request.headers.get("fly-client-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "",
           });
           if (!decision.allow) {
-            const hard = decision.kind === "site-mismatch" || decision.kind === "malformed";
+            const hard = decision.kind === "site-mismatch" || decision.kind === "no-site" || decision.kind === "malformed";
             const enforce = hard || process.env.TOKEN_SCOPE_ENFORCE === "all";
             console.warn(`[token-scope] ${enforce ? "DENY" : "would-deny"} token=${tokenEntry.id} (${tokenEntry.name}) ${request.method} ${pathname} site=${request.nextUrl.searchParams.get("site") ?? "-"} kind=${decision.kind}: ${decision.reason}`);
             if (enforce) {

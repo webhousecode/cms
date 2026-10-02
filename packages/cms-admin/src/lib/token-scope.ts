@@ -109,14 +109,27 @@ export function decideTokenRequest(input: {
   const token: StoredToken = { ...input.token, resources, ipFilters: input.token.ipFilters ?? [] };
   const perms = token.permissions ?? [];
 
+  // The site rule comes FIRST and applies to every route, mapped or not: naming
+  // a site outside the token's list is never legitimate. Checked after the route
+  // table it only covered mapped routes, and every unmapped one stayed open.
+  if (input.site !== null) {
+    const siteCheck = evaluateToken({ ...token, permissions: ["*"] }, "content:read", `site:${input.site}`, input.clientIp, input.now);
+    if (!siteCheck.allow && siteCheck.reason?.startsWith("resource")) {
+      return { allow: false, reason: siteCheck.reason, kind: "site-mismatch" };
+    }
+  }
+
   const need = requiredFor(input.method, input.pathname);
+
+  // A site-limited token that names no site would act on the registry's DEFAULT
+  // site — which is some other site. Refused on every route except "who am I".
+  if (input.site === null && isSiteRestricted(resources) && need?.permission !== "any") {
+    return { allow: false, reason: "this token is limited to specific sites; name the site with ?site=", kind: "no-site" };
+  }
+
   if (need === null) {
     if (perms.includes("*")) return { allow: true, permission: "*" };
     return { allow: false, reason: `route ${input.method} ${input.pathname} requires a full-access token`, kind: "unmapped" };
-  }
-
-  if (need.scope === "site" && input.site === null && isSiteRestricted(resources)) {
-    return { allow: false, reason: "this token is limited to specific sites; name the site with ?site=", kind: "no-site" };
   }
 
   const resource: Resource = need.scope === "site" ? (input.site ? `site:${input.site}` : "site:*") : "org:*";
