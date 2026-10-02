@@ -150,11 +150,23 @@ export async function fetchLiveContentTree(
     .update(body)
     .digest("hex");
 
+  // F205.4 — the signature above covers an EMPTY body, so it is identical on
+  // every call: anyone who saw one request can replay it forever. V2 signs a
+  // timestamp the site checks against a 5-minute window. The old header stays
+  // until the receiving site has switched to V2, then it is removed.
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const signatureV2 = crypto
+    .createHmac("sha256", site.revalidateSecret)
+    .update(`content-tree:${timestamp}`)
+    .digest("hex");
+
   const fetchFn = opts?.fetchImpl ?? fetch;
   const res = await fetchFn(url, {
     method: "GET",
     headers: {
       "X-CMS-Signature": `sha256=${signature}`,
+      "X-CMS-Timestamp": timestamp,
+      "X-CMS-Signature-V2": `sha256=${signatureV2}`,
       "X-CMS-Event": "content.tree",
     },
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),

@@ -119,6 +119,38 @@ describe("fetchLiveContentTree", () => {
     expect(result.total).toBe(1);
   });
 
+  // F205.4 — the old signature covered an EMPTY body, so it was the same on every
+  // call and replayable forever (found by sanne, F148). V2 signs a timestamp.
+  it("signs a timestamp (V2) so a captured request cannot be replayed forever", async () => {
+    const seen: Headers[] = [];
+    const fetchImpl = vi.fn(async (_url: any, init: any) => {
+      seen.push(new Headers(init.headers));
+      return new Response(JSON.stringify({ tree: [], total: 0, generatedAt: "x" }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const { createHmac } = await import("node:crypto");
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-10-02T17:00:00Z"));
+      await fetchLiveContentTree({ fetchImpl });
+      vi.setSystemTime(new Date("2026-10-02T17:01:00Z"));
+      await fetchLiveContentTree({ fetchImpl });
+    } finally {
+      vi.useRealTimers();
+    }
+
+    for (const h of seen) {
+      const ts = h.get("x-cms-timestamp")!;
+      expect(ts).toMatch(/^\d+$/);
+      const expected = createHmac("sha256", "deadbeef").update(`content-tree:${ts}`).digest("hex");
+      expect(h.get("x-cms-signature-v2")).toBe(`sha256=${expected}`);
+    }
+    expect(seen[0].get("x-cms-timestamp")).toBe(String(Date.parse("2026-10-02T17:00:00Z") / 1000));
+    expect(seen[0].get("x-cms-signature-v2")).not.toBe(seen[1].get("x-cms-signature-v2"));
+    // Transition: the old header is still sent until the site has switched.
+    expect(seen[0].get("x-cms-signature")).toMatch(/^sha256=[0-9a-f]{64}$/);
+  });
+
   it("throws when live returns non-2xx", async () => {
     const fetchImpl = vi.fn(async () => new Response("forbidden", { status: 401 })) as unknown as typeof fetch;
     await expect(fetchLiveContentTree({ fetchImpl })).rejects.toThrow(/HTTP 401/);
