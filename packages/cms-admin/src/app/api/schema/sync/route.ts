@@ -1,8 +1,8 @@
 import { getAdminConfig } from "@/lib/cms";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { writeConfigCollections, writeConfigForms } from "@/lib/config-writer";
-import type { CollectionDef, FormDef } from "@/lib/config-writer";
+import { writeConfigBlocks, writeConfigCollections, writeConfigForms } from "@/lib/config-writer";
+import type { BlockDef, CollectionDef, FormDef } from "@/lib/config-writer";
 import { readSiteConfig } from "@/lib/site-config";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { denyViewers, getSiteRole } from "@/lib/require-role";
@@ -13,6 +13,8 @@ import { mergeCollectionsForSync, type SyncMode } from "@/lib/schema-sync";
 /**
  * F159 — beam-site config auto-sync.
  *   POST /api/schema/sync?site=<id>  { collections: CollectionDef[], mode?: "upsert"|"replace" }
+ *   F206.4: also `blocks: BlockDef[]` (alone or alongside) — the section types
+ *   a site defines in its repo, upserted by name and never deleted.
  *
  * A beam-site boot-pushes its full `config.collections` here so webhouse.app's
  * beamed copy mirrors the deployed repo config (the single source of truth) —
@@ -42,6 +44,7 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as {
     collections?: unknown;
     forms?: unknown;
+    blocks?: unknown;
     mode?: unknown;
   };
   const mode: SyncMode = body.mode === "replace" ? "replace" : "upsert";
@@ -61,8 +64,28 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // F206.4 — blocks first: collections reference block names, and a site that
+  // adds a section type sends both in one push.
+  let blocksBody: Record<string, unknown> | undefined;
+  if (body.blocks !== undefined) {
+    if (!Array.isArray(body.blocks) || body.blocks.length === 0) {
+      return NextResponse.json({ ok: false, error: "blocks must be a non-empty array" }, { status: 400 });
+    }
+    if (!body.blocks.every((b) => b && typeof (b as { name?: unknown }).name === "string" && (b as { name: string }).name.trim() !== "")) {
+      return NextResponse.json({ ok: false, error: "every block needs a string name" }, { status: 400 });
+    }
+    blocksBody = await syncBlocks(body.blocks as BlockDef[]);
+    if (body.collections === undefined && !wantsForms) {
+      return NextResponse.json({ ok: true, blocks: blocksBody });
+    }
+  }
+
   if (wantsForms && body.collections === undefined) {
-    return syncFormsOnly(body.forms as FormDef[]);
+    const formsResult = await syncFormsOnly(body.forms as FormDef[]);
+    if (!blocksBody) return formsResult;
+    const formsBody = (await formsResult.json()) as Record<string, unknown>;
+    if (formsResult.status !== 200) return NextResponse.json(formsBody, { status: formsResult.status });
+    return NextResponse.json({ ok: true, forms: formsBody, blocks: blocksBody });
   }
 
   if (!Array.isArray(body.collections) || body.collections.length === 0) {
@@ -99,10 +122,29 @@ export async function POST(req: NextRequest) {
     const formsResult = await syncFormsOnly(body.forms as FormDef[]);
     const formsBody = (await formsResult.json()) as Record<string, unknown>;
     if (formsResult.status !== 200) return NextResponse.json(formsBody, { status: formsResult.status });
-    return NextResponse.json({ ok: true, mode, changed, added, updated, unchanged, adminOnly, forms: formsBody });
+    return NextResponse.json({ ok: true, mode, changed, added, updated, unchanged, adminOnly, forms: formsBody, ...(blocksBody ? { blocks: blocksBody } : {}) });
   }
 
-  return NextResponse.json({ ok: true, mode, changed, added, updated, unchanged, adminOnly });
+  return NextResponse.json({ ok: true, mode, changed, added, updated, unchanged, adminOnly, ...(blocksBody ? { blocks: blocksBody } : {}) });
+}
+
+/**
+ * F206.4 — upsert the top-level `blocks` by name, never delete. Same merge as
+ * collections (mergeCollectionsForSync is generic on `name`), so a block the
+ * payload does not mention stays exactly as it was and an identical re-push
+ * rewrites nothing.
+ */
+async function syncBlocks(payload: BlockDef[]): Promise<Record<string, unknown>> {
+  const config = await getAdminConfig();
+  const { configPath } = await getActiveSitePaths();
+  const existing = ((config as { blocks?: unknown[] }).blocks ?? []) as unknown as BlockDef[];
+  const { merged, added, updated, unchanged, changed } = mergeCollectionsForSync(existing, payload, "upsert");
+  if (changed) {
+    await writeConfigBlocks(configPath, config, merged);
+    await invalidateActiveSite();
+    await invalidateQuickCacheOnWrite();
+  }
+  return { changed, added, updated, unchanged };
 }
 
 /**

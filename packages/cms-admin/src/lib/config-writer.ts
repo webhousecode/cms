@@ -22,6 +22,14 @@ export interface FormDef {
   [key: string]: unknown;
 }
 
+export interface BlockDef {
+  name: string;
+  label?: string;
+  fields: FieldConfig[] | Array<Record<string, unknown>>;
+  /** Permissive: any other block-level prop is preserved. */
+  [key: string]: unknown;
+}
+
 /**
  * config-writer rewrites the `collections` array of a cms.config.ts when the
  * schema editor changes it. The hard part is NOT losing anything else.
@@ -108,6 +116,13 @@ function buildFormsArray(forms: FormDef[]): string {
   return `[\n${forms.map(serializeForm).join(',\n')}\n  ]`;
 }
 
+function buildBlocksArray(blocks: BlockDef[]): string {
+  if (blocks.length === 0) return '[]';
+  // Plain object literals, not defineBlock(...): the config may not import
+  // defineBlock, and defineConfig accepts the plain shape.
+  return `[\n${blocks.map((b) => serializeForm(b as unknown as FormDef)).join(',\n')}\n  ]`;
+}
+
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -161,6 +176,34 @@ export function replaceFormsArray(source: string, forms: FormDef[]): string {
   const indent = anchor[2];
   const at = anchor.index + anchor[1].length;
   return source.slice(0, at) + `${indent}forms: ${literal},\n` + source.slice(at);
+}
+
+/**
+ * Replace only the TOP-LEVEL `blocks: [ … ]` array, or ADD one before
+ * `storage:` when the config has none (F206.4).
+ *
+ * `blocks:` is also a FIELD key (`{ type: "blocks", blocks: ["hero"] }`), and a
+ * multi-line field puts it at the start of a line. So the top-level key is the
+ * one at the same indent as `collections:` — never simply the first match.
+ */
+export function replaceBlocksArray(source: string, blocks: BlockDef[]): string {
+  const col = /(^|\n)([ \t]*)collections[ \t]*:/.exec(source);
+  if (!col) throw new Error('config-writer: could not locate top-level `collections:` in cms.config.ts');
+  const indent = col[2];
+  const literal = buildBlocksArray(blocks);
+  const m = new RegExp(`(^|\\n)${escapeRegExp(indent)}blocks[ \\t]*:[ \\t]*\\[`).exec(source);
+  if (m) {
+    const bracketIdx = m.index + m[0].length - 1;
+    const closeIdx = findMatchingBracket(source, bracketIdx);
+    if (closeIdx < 0) throw new Error('config-writer: unbalanced `blocks` array in cms.config.ts');
+    return source.slice(0, bracketIdx) + literal + source.slice(closeIdx + 1);
+  }
+  const anchor = new RegExp(`(^|\\n)${escapeRegExp(indent)}storage[ \\t]*:`).exec(source);
+  if (!anchor) {
+    throw new Error('config-writer: config has no `blocks:` and no `storage:` to anchor a new one to');
+  }
+  const at = anchor.index + anchor[1].length;
+  return source.slice(0, at) + `${indent}blocks: ${literal},\n` + source.slice(at);
 }
 
 /** Guardrail: never persist a result that lost defineConfig or a collection. */
@@ -277,6 +320,52 @@ export async function writeConfigForms(
   } else {
     const original = readFileSync(configPath, 'utf-8');
     const updated = replaceFormsArray(original, forms);
+    guard(original, updated);
+    writeFileSync(configPath + '.bak', original, 'utf-8');
+    writeFileSync(configPath, updated, 'utf-8');
+  }
+}
+
+/**
+ * Write the top-level `blocks` array of a cms.config.ts (F206.4), preserving
+ * every other byte. Same shape and same guards as writeConfigForms.
+ */
+export async function writeConfigBlocks(
+  configPath: string,
+  _config: CmsConfig,
+  blocks: BlockDef[],
+): Promise<void> {
+  for (const b of blocks) {
+    if (typeof b.name !== 'string' || b.name.trim() === '') {
+      throw new Error('config-writer: refusing to write — every block needs a name');
+    }
+  }
+  const guard = (original: string, updated: string) => {
+    if (!updated.includes('defineConfig')) {
+      throw new Error('config-writer: refusing to write — result no longer contains defineConfig');
+    }
+    for (const m of original.matchAll(/defineCollection\(\{\s*\n\s*name:\s*["']([^"']+)["']/g)) {
+      if (!new RegExp(`name:\\s*["']${escapeRegExp(m[1])}["']`).test(updated)) {
+        throw new Error(`config-writer: refusing to write — collection "${m[1]}" missing from result`);
+      }
+    }
+    for (const b of blocks) {
+      if (!updated.includes(`name: ${JSON.stringify(b.name)}`)) {
+        throw new Error(`config-writer: refusing to write — block "${b.name}" missing from result`);
+      }
+    }
+  };
+
+  const gh = parseGitHubPath(configPath);
+  if (gh) {
+    const token = await getGitHubToken();
+    const { content: original, sha } = await readGitHubFile(gh.owner, gh.repo, gh.path, token);
+    const updated = replaceBlocksArray(original, blocks);
+    guard(original, updated);
+    await writeGitHubFile(gh.owner, gh.repo, gh.path, updated, sha, token);
+  } else {
+    const original = readFileSync(configPath, 'utf-8');
+    const updated = replaceBlocksArray(original, blocks);
     guard(original, updated);
     writeFileSync(configPath + '.bak', original, 'utf-8');
     writeFileSync(configPath, updated, 'utf-8');

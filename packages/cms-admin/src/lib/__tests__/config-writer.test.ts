@@ -13,7 +13,7 @@
  */
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import type { CmsConfig } from "@webhouse/cms";
-import type { CollectionDef, FormDef } from "../config-writer";
+import type { BlockDef, CollectionDef, FormDef } from "../config-writer";
 
 // buildConfigContent isn't exported; round-trip via writeConfigCollections
 // against an in-memory mock of node:fs.
@@ -33,12 +33,14 @@ let writeConfigCollections: (
 ) => Promise<void>;
 let replaceCollectionsArray: (source: string, collections: CollectionDef[]) => string;
 let writeConfigForms: (configPath: string, config: CmsConfig, forms: FormDef[]) => Promise<void>;
+let writeConfigBlocks: (configPath: string, config: CmsConfig, blocks: BlockDef[]) => Promise<void>;
 
 beforeAll(async () => {
   const mod = await import("../config-writer");
   writeConfigCollections = mod.writeConfigCollections;
   replaceCollectionsArray = mod.replaceCollectionsArray;
   writeConfigForms = mod.writeConfigForms;
+  writeConfigBlocks = mod.writeConfigBlocks;
 });
 
 const minimalConfig: CmsConfig = {
@@ -423,5 +425,115 @@ export default defineConfig({
     await writeConfigForms(path, minimalConfig, [broken]);
     expect(read(path)).toContain('name: "pages"');
     expect(original).toContain('name: "pages"');
+  });
+});
+
+// F206.4 — a site that builds in its own repo sends its section types here.
+// Before this, `blocks` existed only as preserved text: a new section type
+// added in trail's repo could never reach the admin, so the owner could not
+// edit it.
+describe("writeConfigBlocks", () => {
+  const SOURCE = `import { defineConfig, defineCollection, defineBlock } from '@webhouse/cms';
+
+export default defineConfig({
+  locales: ['da', 'en'],
+  defaultLocale: 'da',
+  blocks: [
+    defineBlock({
+      name: "hero",
+      label: "Hero",
+      fields: [{ name: "title", type: "text" }],
+    }),
+  ],
+  autolinks: { enabled: true },
+  collections: [
+    defineCollection({
+      name: "pages",
+      label: "Pages",
+      fields: [
+        { name: "sections", type: "blocks", blocks: ["hero"] },
+      ],
+    }),
+  ],
+  forms: [
+    { name: "contact", fields: [{ name: "email", type: "email" }] },
+  ],
+  storage: {
+    adapter: "filesystem",
+    filesystem: { contentDir: "/data/cms-admin/beam-sites/x/content" },
+  },
+});
+`;
+
+  const hero: BlockDef = { name: "hero", label: "Hero", fields: [{ name: "title", type: "text" }] };
+  const stats: BlockDef = {
+    name: "stats",
+    label: "Stats",
+    fields: [
+      { name: "items", type: "array", fields: [{ name: "value", type: "text" }, { name: "label", type: "text" }] },
+    ],
+  };
+
+  it("writes a new block with its nested fields", async () => {
+    const path = "/tmp/blocks-1.ts";
+    seed(path, SOURCE);
+    await writeConfigBlocks(path, minimalConfig, [hero, stats]);
+    const out = read(path);
+    expect(out).toContain('name: "stats"');
+    expect(out).toContain('{ name: "items", type: "array", fields: [{ name: "value", type: "text" }, { name: "label", type: "text" }] }');
+    expect(out).toContain('name: "hero"');
+  });
+
+  it("touches nothing outside the blocks array", async () => {
+    const path = "/tmp/blocks-2.ts";
+    seed(path, SOURCE);
+    await writeConfigBlocks(path, minimalConfig, [hero, stats]);
+    const out = read(path);
+    const before = (src: string) => src.slice(0, src.indexOf("  blocks: ["));
+    const after = (src: string) => src.slice(src.indexOf("  autolinks:"));
+    expect(before(out)).toBe(before(SOURCE));
+    expect(after(out)).toBe(after(SOURCE));
+  });
+
+  it("adds a blocks array to a config that has none", async () => {
+    const path = "/tmp/blocks-3.ts";
+    seed(path, SOURCE.replace(/  blocks: \[[\s\S]*?\n  \],\n/, ""));
+    expect(read(path)).not.toContain("blocks: [\n");
+    await writeConfigBlocks(path, minimalConfig, [stats]);
+    const out = read(path);
+    expect(out).toContain('name: "stats"');
+    expect(out).toContain('contentDir: "/data/cms-admin/beam-sites/x/content"');
+    expect(out).toContain('name: "pages"');
+  });
+
+  it("does not mistake a field's `blocks:` for the top-level array", async () => {
+    // pages.sections carries `blocks: ["hero"]` — a nested key, not ours.
+    const path = "/tmp/blocks-4.ts";
+    seed(path, SOURCE);
+    await writeConfigBlocks(path, minimalConfig, [hero, stats]);
+    expect(read(path)).toContain('{ name: "sections", type: "blocks", blocks: ["hero"] }');
+  });
+
+  it("adds a top-level array even when a field carries `blocks:` at line start", async () => {
+    // A multi-line field definition puts the nested key at the start of a
+    // line. Without a top-level array, that line must NOT be taken for one.
+    const path = "/tmp/blocks-5.ts";
+    const src = SOURCE.replace(/  blocks: \[[\s\S]*?\n  \],\n/, "").replace(
+      '        { name: "sections", type: "blocks", blocks: ["hero"] },',
+      '        {\n          name: "sections",\n          type: "blocks",\n          blocks: ["hero"],\n        },',
+    );
+    seed(path, src);
+    await writeConfigBlocks(path, minimalConfig, [stats]);
+    const out = read(path);
+    expect(out).toContain('          blocks: ["hero"],');
+    expect(out).toMatch(/\n  blocks: \[\n/);
+    expect(out).toContain('name: "stats"');
+  });
+
+  it("refuses a block without a name and leaves the file untouched", async () => {
+    const path = "/tmp/blocks-6.ts";
+    seed(path, SOURCE);
+    await expect(writeConfigBlocks(path, minimalConfig, [{ name: "", fields: [] }])).rejects.toThrow();
+    expect(read(path)).toBe(SOURCE);
   });
 });
