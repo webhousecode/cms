@@ -23,6 +23,11 @@
       "import": "./dist/next/index.js",
       "require": "./dist/next/index.cjs"
     },
+    "./enrich": {
+      "types": "./dist/enrich/index.d.ts",
+      "import": "./dist/enrich/index.js",
+      "require": "./dist/enrich/index.cjs"
+    },
     "./static/*": "./static/*"
   },
   "files": [

@@ -876,7 +876,7 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
 
   // F89 enrichment
   try {
-    const { enrichDist } = await import("./post-build-enrich");
+    const { enrichDist } = await import("@webhouse/cms/enrich");
     const siteEntry = await getActiveSiteEntry();
     const contentDir = path.join(sitePaths.projectDir, "content");
     let siteGlobals: Record<string, unknown> = {};
@@ -1178,7 +1178,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
 
   // F89: Post-build enrichment — inject SEO, OG, JSON-LD, generate sitemap etc.
   try {
-    const { enrichDist } = await import("./post-build-enrich");
+    const { enrichDist } = await import("@webhouse/cms/enrich");
     const siteEntry = await getActiveSiteEntry();
     // Read site globals for metadata
     const contentDir = path.join(sitePaths.projectDir, "content");

@@ -247,8 +247,8 @@ function extractPageInfo(relativePath: string, html: string, config: EnrichmentC
   let contentEntry: ContentEntry | undefined;
   const segments = urlPath.replace(/^\/|\/$/g, "").split("/");
   if (segments.length >= 2) {
-    const slug = segments[segments.length - 1];
-    const collection = segments[segments.length - 2];
+    const slug = segments[segments.length - 1]!;
+    const collection = segments[segments.length - 2]!;
     contentEntry = contentIndex.get(`${collection}/${slug}`)
       ?? contentIndex.get(`posts/${slug}`)
       ?? contentIndex.get(`pages/${slug}`)

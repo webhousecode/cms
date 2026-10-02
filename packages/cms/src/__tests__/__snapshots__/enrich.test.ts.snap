@@ -1,0 +1,150 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`enrichDist > produces the same enriched output as before the move to @webhouse/cms 1`] = `
+{
+  ".well-known/ai-plugin.json": "{
+  "schema_version": "v1",
+  "name_for_human": "Fixture Site",
+  "name_for_model": "fixture_site",
+  "description_for_human": "A fixture for enrichDist",
+  "description_for_model": "A fixture for enrichDist",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://fixture.example/openapi.yaml"
+  },
+  "logo_url": "https://fixture.example/favicon.ico",
+  "contact_email": "",
+  "legal_info_url": "https://fixture.example/"
+}",
+  "_config.yml": "include: [".well-known"]
+",
+  "about/index.html": "<!DOCTYPE html>
+<html lang="en"><head><title>About</title><link rel="canonical" href="https://keep.example/about/">
+  <!-- webhouse.app enrichment -->
+  <meta name="generator" content="webhouse.app" />
+  <meta property="og:title" content="About" />
+  <meta property="og:description" content="Who we are." />
+  <meta property="og:url" content="https://fixture.example/about/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Fixture Site" />
+  <meta property="og:image" content="/images/default-og.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="About" />
+  <meta name="twitter:description" content="Who we are." />
+  <meta name="twitter:image" content="/images/default-og.jpg" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#F7BB2E" />
+</head>
+<body><p>About us.</p>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"About","url":"https://fixture.example/about/","description":"Who we are.","inLanguage":"en","isPartOf":{"@type":"WebSite","name":"Fixture Site","url":"https://fixture.example/"}}</script>
+</body></html>
+",
+  "blog/hello/index.html": "<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Hello World</title><meta name="description" content="Existing description">
+  <!-- webhouse.app enrichment -->
+  <meta name="generator" content="webhouse.app" />
+  <link rel="canonical" href="https://fixture.example/blog/hello/" />
+  <meta property="og:title" content="Hello SEO Title" />
+  <meta property="og:description" content="An excerpt about hello." />
+  <meta property="og:url" content="https://fixture.example/blog/hello/" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Fixture Site" />
+  <meta property="og:image" content="https://fixture.example/images/og-hello.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Hello SEO Title" />
+  <meta name="twitter:description" content="An excerpt about hello." />
+  <meta name="twitter:image" content="https://fixture.example/images/og-hello.jpg" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#F7BB2E" />
+</head>
+<body><article><h1>Hello World</h1><p>Body text.</p></article>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Hello"}</script>
+</body></html>
+",
+  "favicon.ico": "fav
+",
+  "index.html": "<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Home — Fixture</title>
+  <!-- webhouse.app enrichment -->
+  <meta name="generator" content="webhouse.app" />
+  <link rel="canonical" href="https://fixture.example/" />
+  <meta property="og:title" content="Home — Fixture" />
+  <meta property="og:description" content="A fixture for enrichDist" />
+  <meta property="og:url" content="https://fixture.example/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Fixture Site" />
+  <meta property="og:image" content="https://fixture.example/images/hero.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Home — Fixture" />
+  <meta name="twitter:description" content="A fixture for enrichDist" />
+  <meta name="twitter:image" content="https://fixture.example/images/hero.jpg" />
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#F7BB2E" />
+</head>
+<body><h1>Welcome</h1><img src="/images/hero.jpg"><p>Front page.</p>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Fixture Site","url":"https://fixture.example/","description":"A fixture for enrichDist","inLanguage":"en"}</script>
+</body></html>
+",
+  "llms.txt": "# Fixture Site
+
+> A fixture for enrichDist
+
+## Pages
+
+- [About](https://fixture.example/about/): Who we are.
+- [Hello SEO Title](https://fixture.example/blog/hello/): An excerpt about hello.
+- [Home — Fixture](https://fixture.example/): A fixture for enrichDist
+
+Built with [webhouse.app](https://webhouse.app)
+",
+  "manifest.json": "{
+  "name": "Fixture Site",
+  "short_name": "Fixture Site",
+  "description": "A fixture for enrichDist",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F7BB2E",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}",
+  "robots.txt": "User-agent: *
+Allow: /
+
+Sitemap: https://fixture.example/sitemap.xml
+",
+  "sitemap.xml": "<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://fixture.example/about/</loc>
+    <lastmod>2026-10-02</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://fixture.example/blog/hello/</loc>
+    <lastmod>2026-10-02</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fixture.example/</loc>
+    <lastmod>2026-10-02</lastmod>
+    <priority>1.0</priority>
+  </url>
+</urlset>
+",
+}
+`;
