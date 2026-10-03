@@ -4,6 +4,7 @@
  */
 import type { MediaAdapter, MediaFileInfo, MediaType, MediaMeta, InteractiveMeta } from "./types";
 import { GitHubMediaClient } from "../github-media";
+import { assertSafeMediaPath } from "./safe-path";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "avif"]);
 const SVG_EXTS = new Set(["svg"]);
@@ -102,6 +103,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
   /* ─── Upload / write ────────────────────────────────────── */
 
   async uploadFile(filename: string, content: Buffer, folder?: string): Promise<{ url: string }> {
+    assertSafeMediaPath(folder ?? "", filename);
     const repoDir = folder ? `public/uploads/${folder}` : "public/uploads";
     const repoPath = `${repoDir}/${filename}`;
     await this.client.putFile(repoPath, content, `cms: upload ${filename}`);
@@ -110,6 +112,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
   }
 
   async deleteFile(folder: string, name: string): Promise<void> {
+    assertSafeMediaPath(folder, name);
     // Reconstruct repo path from folder/name
     const repoPath = `public/${folder}/${name}`;
     const file = await this.client.getFile(repoPath);
@@ -134,6 +137,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
   }
 
   async trashFile(folder: string, name: string): Promise<void> {
+    assertSafeMediaPath(folder, name);
     const { meta, sha } = await this.loadMediaMeta();
     const key = this.mediaKey(folder, name);
     const existing = meta.find((m) => m.key === key);
@@ -164,6 +168,8 @@ export class GitHubMediaAdapter implements MediaAdapter {
   /* ─── Rename ───────────────────────────────────────────── */
 
   async renameFile(folder: string, oldName: string, newName: string, opts?: { replace?: boolean }): Promise<{ url: string }> {
+    assertSafeMediaPath(folder, oldName);
+    assertSafeMediaPath(folder, newName);
     // GitHub API has no rename — read old file, create new, delete old
     // Find the repo path for the old file
     const allFiles = await Promise.all(MEDIA_DIRS.map((d) => this.client.listDirRecursive(d)));

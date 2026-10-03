@@ -39,7 +39,8 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code === "ENOENT") return NextResponse.json({ error: "File not found" }, { status: 404 });
-    if (code === "EEXIST") return NextResponse.json({ error: "A file with that name already exists — pass replace: true to replace it" }, { status: 409 });
+    if (code === "EBADPATH") return NextResponse.json({ error: "Invalid media path" }, { status: 400 });
+    if (code === "EEXIST") return NextResponse.json({ error: "A file with that name already exists" }, { status: 409 });
     console.error("[media/rename] error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

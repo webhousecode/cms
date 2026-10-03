@@ -4,6 +4,7 @@
 import { readdir, stat, readFile, writeFile, mkdir, unlink, rename } from "fs/promises";
 import path from "path";
 import type { MediaAdapter, MediaFileInfo, MediaType, MediaMeta, InteractiveMeta } from "./types";
+import { assertSafeMediaPath } from "./safe-path";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "avif"]);
 const SVG_EXTS = new Set(["svg"]);
@@ -95,6 +96,7 @@ export class FilesystemMediaAdapter implements MediaAdapter {
   /* ─── Upload / write ────────────────────────────────────── */
 
   async uploadFile(filename: string, content: Buffer, folder?: string): Promise<{ url: string }> {
+    assertSafeMediaPath(folder ?? "", filename);
     const destDir = folder ? path.join(this.uploadDir, folder) : this.uploadDir;
     await mkdir(destDir, { recursive: true });
     await writeFile(path.join(destDir, filename), content);
@@ -103,6 +105,7 @@ export class FilesystemMediaAdapter implements MediaAdapter {
   }
 
   async trashFile(folder: string, name: string): Promise<void> {
+    assertSafeMediaPath(folder, name);
     const meta = await this.loadMediaMeta();
     const key = this.mediaKey(folder, name);
     const existing = meta.find((m) => m.key === key);
@@ -131,6 +134,7 @@ export class FilesystemMediaAdapter implements MediaAdapter {
   }
 
   async deleteFile(folder: string, name: string): Promise<void> {
+    assertSafeMediaPath(folder, name);
     const filePath = folder
       ? path.join(this.uploadDir, folder, name)
       : path.join(this.uploadDir, name);
@@ -148,6 +152,8 @@ export class FilesystemMediaAdapter implements MediaAdapter {
   /* ─── Rename ───────────────────────────────────────────── */
 
   async renameFile(folder: string, oldName: string, newName: string, opts?: { replace?: boolean }): Promise<{ url: string }> {
+    assertSafeMediaPath(folder, oldName);
+    assertSafeMediaPath(folder, newName);
     const dir = folder ? path.join(this.uploadDir, folder) : this.uploadDir;
     const oldPath = path.join(dir, oldName);
     const newPath = path.join(dir, newName);
