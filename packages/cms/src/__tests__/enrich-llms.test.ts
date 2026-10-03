@@ -169,3 +169,42 @@ describe("sitemap.xml (F206.5)", () => {
     expect(entry(`${BASE}/demo/`)).not.toBeNull();
   });
 });
+
+describe("a tag page named like an article (F206.8)", () => {
+  // trail, 3 Oct 2026: post slug `research-lab` + tag `research-lab`. The tag
+  // page inherited the post's title+description, won the dedup (/tags/ sorts
+  // before /trails/), was then dropped as taxonomy — and the article vanished
+  // from sitemap.xml and llms.txt with no error.
+  let r: string;
+  let out: { llms: string; full: string; sitemap: string };
+
+  beforeAll(async () => {
+    r = mkdtempSync(path.join(tmpdir(), "enrich-shadow-"));
+    const d = path.join(r, "dist");
+    const c = path.join(r, "project", "content");
+    page(d, "index.html", "Home");
+    page(d, "tags/research-lab/index.html", "Tag: research-lab");
+    page(d, "trails/research/research-lab/index.html", "Research lab");
+    doc(c, "posts", "research-lab", { title: "Research lab", excerpt: "Inside the lab.", content: "The lab body, long enough to be exported in full as real content." }, { updatedAt: "2026-09-30T00:00:00.000Z" });
+    await enrichDist(d, c, { baseUrl: BASE, basePath: "", siteName: "S", siteDescription: "d" });
+    out = {
+      llms: readFileSync(path.join(d, "llms.txt"), "utf-8"),
+      full: readFileSync(path.join(d, "llms-full.txt"), "utf-8"),
+      sitemap: readFileSync(path.join(d, "sitemap.xml"), "utf-8"),
+    };
+  });
+  afterAll(() => rmSync(r, { recursive: true, force: true }));
+
+  it("keeps the article in sitemap.xml", () => {
+    expect(out.sitemap).toContain(`<loc>${BASE}/trails/research/research-lab/</loc>`);
+  });
+
+  it("keeps the article in llms.txt and llms-full.txt", () => {
+    expect(out.llms).toContain(`(${BASE}/trails/research/research-lab/)`);
+    expect(out.full).toContain(`URL: ${BASE}/trails/research/research-lab/`);
+  });
+
+  it("does not give the tag page the article's title", () => {
+    expect(out.llms).not.toContain(`[Research lab](${BASE}/tags/research-lab/)`);
+  });
+});

@@ -267,7 +267,11 @@ function extractPageInfo(relativePath: string, html: string, config: EnrichmentC
   // Look up content entry by URL path for _seo fields + fallback descriptions
   let contentEntry: ContentEntry | undefined;
   const segments = urlPath.replace(/^\/|\/$/g, "").split("/");
-  if (segments.length >= 2) {
+  // F206.8: a tag/category page is never a CMS document. Looking it up by its
+  // last segment let /tags/research-lab/ inherit the post `research-lab`.
+  if (TAXONOMY_SEGMENTS.has(segments[0] ?? "")) {
+    // no content entry
+  } else if (segments.length >= 2) {
     const slug = segments[segments.length - 1]!;
     const collection = segments[segments.length - 2]!;
     contentEntry = contentIndex.get(`${collection}/${slug}`)
@@ -535,6 +539,12 @@ function listablePages(pages: PageInfo[], config: EnrichmentConfig): PageInfo[] 
   for (const p of pages) {
     const self = config.baseUrl + config.basePath + p.urlPath;
     if (p.declaredCanonical && normUrl(p.declaredCanonical) !== normUrl(self)) continue;
+    // F206.8: taxonomy pages never claim a title+description — they are folded
+    // away later, so letting one win the dedup made the real page vanish.
+    if (isTaxonomy(p)) {
+      out.push(p);
+      continue;
+    }
     const key = `${p.title}\u0000${p.description}`;
     if (seen.has(key)) continue;
     seen.add(key);
