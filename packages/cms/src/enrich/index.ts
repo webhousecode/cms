@@ -335,7 +335,7 @@ function injectHeadTags(html: string, info: PageInfo, config: EnrichmentConfig, 
   }
 
   // Canonical
-  if (!html.includes('rel="canonical"') && !html.includes("rel='canonical'")) {
+  if (!hasLinkRel(html, "canonical")) {
     tags.push(`<link rel="canonical" href="${canonicalUrl}" />`);
   }
 
@@ -379,15 +379,15 @@ function injectHeadTags(html: string, info: PageInfo, config: EnrichmentConfig, 
   }
 
   // Favicon
-  if (!html.includes('rel="icon"') && !html.includes("rel='icon'")) {
+  if (!hasLinkRel(html, "icon")) {
     tags.push(`<link rel="icon" href="${config.basePath}/favicon.ico" />`);
   }
-  if (!html.includes('rel="apple-touch-icon"') && !html.includes("rel='apple-touch-icon'")) {
+  if (!hasLinkRel(html, "apple-touch-icon")) {
     tags.push(`<link rel="apple-touch-icon" href="${config.basePath}/apple-touch-icon.png" />`);
   }
 
   // Manifest
-  if (!html.includes('rel="manifest"') && !html.includes("rel='manifest'")) {
+  if (!hasLinkRel(html, "manifest")) {
     tags.push(`<link rel="manifest" href="${config.basePath}/manifest.json" />`);
   }
 
@@ -397,7 +397,7 @@ function injectHeadTags(html: string, info: PageInfo, config: EnrichmentConfig, 
   }
 
   // Language on html tag
-  if (!html.includes('lang="') && !html.includes("lang='")) {
+  if (!/<html\b[^>]*\slang=/i.test(html)) {
     html = html.replace(/<html/i, `<html lang="${lang}"`);
   }
 
@@ -412,7 +412,7 @@ function injectHeadTags(html: string, info: PageInfo, config: EnrichmentConfig, 
 
 function injectJsonLd(html: string, info: PageInfo, config: EnrichmentConfig): string {
   // Skip if JSON-LD already exists in HTML
-  if (html.includes("application/ld+json")) return html;
+  if (/<script\b[^>]*\btype=["']application\/ld\+json["']/i.test(html)) return html;
 
   const canonicalUrl = info.seo.canonical ?? (config.baseUrl + config.basePath + info.urlPath);
   let schema: Record<string, unknown>;
@@ -732,6 +732,15 @@ function hasTag(html: string, name: string): boolean {
   // Check for <meta name="X" or <meta property="X"
   const re = new RegExp(`<meta\\s+(?:name|property)=["']${name}["']`, "i");
   return re.test(html);
+}
+
+/**
+ * F206.9 — a real <link rel="..."> tag, not the string. A client-side router
+ * that carries the selector 'link[rel="canonical"]' in an inline script made a
+ * substring check believe every page already had a canonical.
+ */
+function hasLinkRel(html: string, rel: string): boolean {
+  return new RegExp(`<link\\b[^>]*\\brel=["']${rel}["']`, "i").test(html);
 }
 
 function hasOgTag(html: string, property: string): boolean {

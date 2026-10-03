@@ -208,3 +208,34 @@ describe("a tag page named like an article (F206.8)", () => {
     expect(out.llms).not.toContain(`[Research lab](${BASE}/tags/research-lab/)`);
   });
 });
+
+describe("tag detection reads tags, not strings (F206.9)", () => {
+  // trailmem.com, 3 Oct 2026: 0 of 26 pages had a canonical. The client-side
+  // router has an inline script with the selector 'link[rel="canonical"]', and
+  // enrich checked html.includes('rel="canonical"') — so it believed the tag
+  // was already there and injected nothing.
+  const ROUTER = `<script>['link[rel="canonical"]','link[rel="icon"]','link[rel="manifest"]'].forEach(function(s){});var t="application/ld+json";var l='lang="x"';</script>`;
+  let html: string;
+
+  beforeAll(async () => {
+    const r = mkdtempSync(path.join(tmpdir(), "enrich-tags-"));
+    const d = path.join(r, "dist");
+    mkdirSync(d, { recursive: true });
+    writeFileSync(path.join(d, "index.html"), `<!DOCTYPE html><html><head><title>Home</title>${ROUTER}</head><body><p>x</p></body></html>`);
+    await enrichDist(d, path.join(r, "content"), { baseUrl: BASE, basePath: "", siteName: "S", siteDescription: "d" });
+    html = readFileSync(path.join(d, "index.html"), "utf-8");
+    rmSync(r, { recursive: true, force: true });
+  });
+
+  it("injects a canonical despite the selector string in a script", () => {
+    expect(html).toMatch(/<link rel="canonical" href="https:\/\/site\.example\/" \/>/);
+  });
+
+  it("injects JSON-LD despite the string in a script", () => {
+    expect(html).toMatch(/<script type="application\/ld\+json">/);
+  });
+
+  it("sets <html lang> despite lang=\" in a script", () => {
+    expect(html).toMatch(/<html lang="en"/);
+  });
+});
