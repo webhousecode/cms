@@ -8,7 +8,7 @@
  * Operates on deploy/ directory (NOT dist/).
  * Never overwrites existing tags — only injects if missing.
  */
-import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import { extractContent } from "../build/llms";
 
@@ -488,7 +488,6 @@ function copyFavicon(distDir: string, contentDir: string, _config: EnrichmentCon
   ];
   for (const src of candidates) {
     if (existsSync(src)) {
-      const { copyFileSync } = require("node:fs") as typeof import("node:fs");
       copyFileSync(src, faviconDest);
       console.log(`  -> favicon.ico (copied from ${path.relative(projectDir, src)})`);
       return;
