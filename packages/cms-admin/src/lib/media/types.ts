@@ -81,8 +81,15 @@ export interface MediaAdapter {
   /** Permanently delete a media file */
   deleteFile(folder: string, name: string): Promise<void>;
 
-  /** Rename a media file. Returns the new browser-renderable URL. */
-  renameFile(folder: string, oldName: string, newName: string): Promise<{ url: string }>;
+  /**
+   * Rename a media file. Returns the new browser-renderable URL.
+   *
+   * F206.7: refuses (error with code "EEXIST") when `newName` already exists in
+   * the folder — as a file OR as a media-meta entry (a trashed file stays on
+   * disk). With `replace: true` the existing target is permanently deleted
+   * first, so the renamed file takes its name and is listed.
+   */
+  renameFile(folder: string, oldName: string, newName: string, opts?: { replace?: boolean }): Promise<{ url: string }>;
 
   /* ─── File serving (for adapters that need proxying) ───── */
 

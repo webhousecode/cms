@@ -163,7 +163,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
 
   /* ─── Rename ───────────────────────────────────────────── */
 
-  async renameFile(folder: string, oldName: string, newName: string): Promise<{ url: string }> {
+  async renameFile(folder: string, oldName: string, newName: string, opts?: { replace?: boolean }): Promise<{ url: string }> {
     // GitHub API has no rename — read old file, create new, delete old
     // Find the repo path for the old file
     const allFiles = await Promise.all(MEDIA_DIRS.map((d) => this.client.listDirRecursive(d)));
@@ -175,6 +175,18 @@ export class GitHubMediaAdapter implements MediaAdapter {
     });
 
     if (!match) throw new Error(`File not found: ${oldKey}`);
+
+    // F206.7: never land on an existing name (file or meta entry) unless asked to replace it.
+    const newKey = folder ? `${folder}/${newName}` : newName;
+    const targetMetaKey = this.mediaKey(folder, newName);
+    const targetExists = flat.some((f) => f.path.replace(/^public\//, "") === newKey)
+      || (await this.loadMediaMeta()).meta.some((m) => m.key === targetMetaKey);
+    if (targetExists) {
+      if (!opts?.replace) {
+        throw Object.assign(new Error(`${targetMetaKey} already exists`), { code: "EEXIST" });
+      }
+      await this.deleteFile(folder, newName);
+    }
 
     // Read raw content
     const raw = await this.client.getFileRaw(match.path);

@@ -4,16 +4,19 @@ import { denyViewers } from "@/lib/require-role";
 
 /**
  * POST /api/media/rename
- * Body: { folder: string, oldName: string, newName: string }
+ * Body: { folder: string, oldName: string, newName: string, replace?: boolean }
+ * 409 when newName already exists (also in the trash); replace: true deletes
+ * the existing target permanently first (F206.7).
  * Returns: { url: string } — the new browser-renderable URL
  */
 export async function POST(req: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
   try {
-    const { folder, oldName, newName } = (await req.json()) as {
+    const { folder, oldName, newName, replace } = (await req.json()) as {
       folder: string;
       oldName: string;
       newName: string;
+      replace?: boolean;
     };
 
     if (!oldName || !newName) {
@@ -31,11 +34,12 @@ export async function POST(req: NextRequest) {
     }
 
     const adapter = await getMediaAdapter();
-    const result = await adapter.renameFile(folder ?? "", oldName, sanitized);
+    const result = await adapter.renameFile(folder ?? "", oldName, sanitized, { replace: replace === true });
     return NextResponse.json(result);
   } catch (err: unknown) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code === "ENOENT") return NextResponse.json({ error: "File not found" }, { status: 404 });
+    if (code === "EEXIST") return NextResponse.json({ error: "A file with that name already exists — pass replace: true to replace it" }, { status: 409 });
     console.error("[media/rename] error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

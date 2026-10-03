@@ -147,10 +147,25 @@ export class FilesystemMediaAdapter implements MediaAdapter {
 
   /* ─── Rename ───────────────────────────────────────────── */
 
-  async renameFile(folder: string, oldName: string, newName: string): Promise<{ url: string }> {
+  async renameFile(folder: string, oldName: string, newName: string, opts?: { replace?: boolean }): Promise<{ url: string }> {
     const dir = folder ? path.join(this.uploadDir, folder) : this.uploadDir;
     const oldPath = path.join(dir, oldName);
     const newPath = path.join(dir, newName);
+    await stat(oldPath); // ENOENT before anything is touched
+
+    // F206.7: fs.rename overwrites silently, and a trashed file still sits on
+    // disk under a meta entry keyed by its path — renaming onto it both
+    // destroyed the old file and hid the new one.
+    const targetKey = this.mediaKey(folder, newName);
+    const targetExists = (await stat(newPath).catch(() => null)) !== null
+      || (await this.loadMediaMeta()).some((m) => m.key === targetKey);
+    if (targetExists) {
+      if (!opts?.replace) {
+        throw Object.assign(new Error(`${targetKey} already exists`), { code: "EEXIST" });
+      }
+      await this.deleteFile(folder, newName);
+    }
+
     await rename(oldPath, newPath);
 
     // Update media-meta if entry exists

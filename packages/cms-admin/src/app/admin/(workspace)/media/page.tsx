@@ -325,6 +325,10 @@ export default function MediaPage() {
         f.url === file.url ? { ...f, name: newName, url } : f
       ));
       loadUsage();
+    } else {
+      // F206.7: a 409 (name taken, also by a file in the trash) used to vanish here.
+      const { error } = (await res.json().catch(() => ({}))) as { error?: string };
+      toast.error("Rename failed", { description: error ?? `HTTP ${res.status}` });
     }
     setRenaming(null);
   }
