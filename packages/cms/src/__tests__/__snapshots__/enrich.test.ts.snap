@@ -100,9 +100,11 @@ exports[`enrichDist > produces the same enriched output as before the move to @w
 
 ## Pages
 
-- [About](https://fixture.example/about/): Who we are.
-- [Hello SEO Title](https://fixture.example/blog/hello/): An excerpt about hello.
 - [Home — Fixture](https://fixture.example/): A fixture for enrichDist
+
+## Posts
+
+- [Hello SEO Title](https://fixture.example/blog/hello/): An excerpt about hello.
 
 Built with [webhouse.app](https://webhouse.app)
 ",
@@ -130,18 +132,11 @@ Sitemap: https://fixture.example/sitemap.xml
   "sitemap.xml": "<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://fixture.example/about/</loc>
-    <lastmod>2026-10-02</lastmod>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://fixture.example/blog/hello/</loc>
-    <lastmod>2026-10-02</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fixture.example/</loc>
-    <lastmod>2026-10-02</lastmod>
     <priority>1.0</priority>
   </url>
 </urlset>

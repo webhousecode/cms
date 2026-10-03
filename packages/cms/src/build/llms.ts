@@ -84,8 +84,8 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-/** Extract clean text from a document's content fields */
-function extractContent(data: Record<string, unknown>): string {
+/** Extract clean text from a document's content fields. Also used by enrich (F206.5) so the two llms-full exports cannot drift. */
+export function extractContent(data: Record<string, unknown>): string {
   const parts: string[] = [];
   for (const [key, val] of Object.entries(data)) {
     if (key.startsWith('_')) continue;

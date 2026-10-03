@@ -10,6 +10,7 @@
  */
 import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
+import { extractContent } from "../build/llms";
 
 // ── Config ──────────────────────────────────────────────────
 
@@ -28,6 +29,12 @@ export interface EnrichmentConfig {
   themeColor?: string;
   /** Language code, default "en" */
   lang?: string;
+  /**
+   * F206.5 — pages the site builds itself that are not CMS documents (e.g.
+   * /demo/), listed in llms.txt under `section` (default "Pages") and added
+   * to sitemap.xml when the dist does not already contain them.
+   */
+  extraPages?: Array<{ path: string; title: string; description: string; section?: string }>;
 }
 
 /** F97 _seo fields — optional per-document SEO overrides */
@@ -59,6 +66,10 @@ interface PageInfo {
   pageType: "homepage" | "article" | "page";
   /** F97 _seo overrides from content JSON (when available) */
   seo: SeoOverrides;
+  /** Canonical the page itself declared BEFORE enrichment, if any */
+  declaredCanonical?: string | undefined;
+  /** The CMS document behind this page, when one was found */
+  entry?: ContentEntry | undefined;
 }
 
 // ── Main entry ──────────────────────────────────────────────
@@ -105,8 +116,10 @@ export async function enrichDist(distDir: string, contentDir: string, config: En
 
   // Generate auxiliary files
   generateRobotsTxt(distDir, config);
-  generateSitemapXml(distDir, pages, config);
-  generateLlmsTxt(distDir, pages, config);
+  const listed = listablePages(pages, config);
+  generateSitemapXml(distDir, listed, config);
+  const hasFull = generateLlmsFullTxt(distDir, listed, config);
+  generateLlmsTxt(distDir, listed, config, hasFull);
   generateManifestJson(distDir, config);
   generateAiPluginJson(distDir, config);
   generateJekyllConfig(distDir);
@@ -141,6 +154,11 @@ interface ContentEntry {
   image?: string;
   /** F97 _seo overrides — first-class SEO input when available */
   seo: SeoOverrides;
+  /** Document's own last-modified time (sitemap lastmod) */
+  updatedAt?: string | undefined;
+  category?: string | undefined;
+  /** Body text for llms-full.txt */
+  body: string;
 }
 
 /**
@@ -202,6 +220,9 @@ function buildContentIndex(contentDir: string): Map<string, ContentEntry> {
           collection,
           image,
           seo,
+          updatedAt: raw?.updatedAt,
+          category: typeof data.category === "string" ? data.category : undefined,
+          body: extractContent(data),
         };
 
         index.set(`${collection}/${slug}`, entry);
@@ -260,6 +281,8 @@ function extractPageInfo(relativePath: string, html: string, config: EnrichmentC
   }
 
   const seo = contentEntry?.seo ?? {};
+  const canonMatch = html.match(/<link[^>]+rel=["']canonical["'][^>]*>/i)?.[0].match(/href=["']([^"']+)["']/i);
+  const declaredCanonical = canonMatch?.[1];
 
   // ── Priority chains (F97 coordination) ──
   //
@@ -283,6 +306,8 @@ function extractPageInfo(relativePath: string, html: string, config: EnrichmentC
     firstImage,
     pageType,
     seo,
+    declaredCanonical,
+    entry: contentEntry,
   };
 }
 
@@ -481,46 +506,160 @@ function generateRobotsTxt(distDir: string, config: EnrichmentConfig): void {
   console.log("  -> robots.txt");
 }
 
+// ── F206.5: which pages to list, and how ──────────────────
+
+const TAXONOMY_SEGMENTS = new Set(["tags", "tag", "categories", "category"]);
+
+function isTaxonomy(p: PageInfo): boolean {
+  return TAXONOMY_SEGMENTS.has(p.urlPath.split("/").filter(Boolean)[0] ?? "");
+}
+
+/** Canonical URL normalised so www/apex and trailing slashes compare equal. */
+function normUrl(u: string): string {
+  try {
+    const url = new URL(u);
+    return url.host.replace(/^www\./, "") + url.pathname.replace(/\/?$/, "/");
+  } catch {
+    return u;
+  }
+}
+
+/**
+ * Drop pages that should not be listed as their own entry: a page whose own
+ * canonical points at another URL, and a second URL with the same title AND
+ * description as one already kept (the same document reachable twice).
+ */
+function listablePages(pages: PageInfo[], config: EnrichmentConfig): PageInfo[] {
+  const seen = new Set<string>();
+  const out: PageInfo[] = [];
+  for (const p of pages) {
+    const self = config.baseUrl + config.basePath + p.urlPath;
+    if (p.declaredCanonical && normUrl(p.declaredCanonical) !== normUrl(self)) continue;
+    const key = `${p.title}\u0000${p.description}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(p);
+  }
+  return out;
+}
+
+function lastmodOf(p: PageInfo): string | undefined {
+  const raw = p.entry?.updatedAt ?? p.entry?.date;
+  if (!raw) return undefined;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? undefined : d.toISOString().slice(0, 10);
+}
+
+function titleCase(s: string): string {
+  return s.replace(/[-_]+/g, " ").replace(/^./, (c) => c.toUpperCase());
+}
+
 function generateSitemapXml(distDir: string, pages: PageInfo[], config: EnrichmentConfig): void {
   const sitemapPath = path.join(distDir, "sitemap.xml");
 
-  const today = new Date().toISOString().split("T")[0];
-  const urls = pages
-    .map((p) => {
-      const loc = config.baseUrl + config.basePath + p.urlPath;
-      const priority = p.pageType === "homepage" ? "1.0" : p.pageType === "article" ? "0.7" : "0.5";
-      return `  <url>\n    <loc>${escXml(loc)}</loc>\n    <lastmod>${today}</lastmod>\n    <priority>${priority}</priority>\n  </url>`;
-    })
-    .join("\n");
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
-  writeFileSync(sitemapPath, xml);
-  console.log(`  -> sitemap.xml (${pages.length} URLs)`);
-}
-
-function generateLlmsTxt(distDir: string, pages: PageInfo[], config: EnrichmentConfig): void {
-  const llmsPath = path.join(distDir, "llms.txt");
-
-  const lines = [
-    `# ${config.siteName}`,
-    "",
-    `> ${config.siteDescription}`,
-    "",
-    "## Pages",
-    "",
-  ];
-
-  for (const p of pages) {
-    const url = config.baseUrl + config.basePath + p.urlPath;
-    lines.push(`- [${p.title}](${url}): ${p.description}`);
+  const entries = pages.map((p) => {
+    const loc = config.baseUrl + config.basePath + p.urlPath;
+    const priority = p.pageType === "homepage" ? "1.0" : p.pageType === "article" ? "0.7" : "0.5";
+    const lastmod = lastmodOf(p);
+    return `  <url>\n    <loc>${escXml(loc)}</loc>\n${lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : ""}    <priority>${priority}</priority>\n  </url>`;
+  });
+  const known = new Set(pages.map((p) => p.urlPath));
+  for (const x of config.extraPages ?? []) {
+    if (known.has(x.path)) continue;
+    entries.push(`  <url>\n    <loc>${escXml(config.baseUrl + config.basePath + x.path)}</loc>\n    <priority>0.5</priority>\n  </url>`);
   }
 
-  lines.push("");
-  lines.push(`Built with [webhouse.app](https://webhouse.app)`);
-  lines.push("");
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join("\n")}\n</urlset>\n`;
+  writeFileSync(sitemapPath, xml);
+  console.log(`  -> sitemap.xml (${entries.length} URLs)`);
+}
 
-  writeFileSync(llmsPath, lines.join("\n"));
+function generateLlmsTxt(distDir: string, pages: PageInfo[], config: EnrichmentConfig, hasFull: boolean): void {
+  const llmsPath = path.join(distDir, "llms.txt");
+  const url = (p: string) => config.baseUrl + config.basePath + p;
+  const line = (title: string, href: string, desc: string) => `- [${title}](${href})${desc ? `: ${desc}` : ""}`;
+
+  // Section name → lines. "Pages" (home + collection "pages" + pages without a
+  // document) always comes first; other sections follow in first-seen order.
+  const sections = new Map<string, string[]>([["Pages", []]]);
+  const grouped = new Map<string, Map<string, string[]>>(); // section → category → lines
+  const push = (section: string, l: string) => {
+    if (!sections.has(section)) sections.set(section, []);
+    sections.get(section)!.push(l);
+  };
+
+  let taxonomyCount = 0;
+  const taxonomyRoots = new Set<string>();
+  for (const p of pages) {
+    if (isTaxonomy(p)) {
+      taxonomyCount++;
+      taxonomyRoots.add("/" + p.urlPath.split("/").filter(Boolean)[0] + "/");
+      continue;
+    }
+    const l = line(p.title, url(p.urlPath), p.description);
+    const collection = p.entry?.collection;
+    if (p.pageType === "homepage" || !collection || collection === "pages") {
+      const seg = p.urlPath.split("/").filter(Boolean);
+      // A page without a document that sits under a folder (e.g. /docs/x/) is
+      // grouped by that folder rather than mixed into the top-level pages.
+      push(!collection && seg.length > 1 ? titleCase(seg[0]!) : "Pages", l);
+      continue;
+    }
+    const section = titleCase(collection);
+    if (p.entry?.category) {
+      if (!sections.has(section)) sections.set(section, []);
+      if (!grouped.has(section)) grouped.set(section, new Map());
+      const cats = grouped.get(section)!;
+      if (!cats.has(p.entry.category)) cats.set(p.entry.category, []);
+      cats.get(p.entry.category)!.push(l);
+    } else {
+      push(section, l);
+    }
+  }
+  for (const x of config.extraPages ?? []) push(x.section ?? "Pages", line(x.title, url(x.path), x.description));
+
+  const out = [`# ${config.siteName}`, "", `> ${config.siteDescription}`, ""];
+  for (const [name, ls] of sections) {
+    const cats = grouped.get(name);
+    if (ls.length === 0 && !cats) continue;
+    out.push(`## ${name}`, "", ...ls);
+    if (ls.length > 0) out.push("");
+    for (const [cat, cl] of cats ?? []) out.push(`### ${cat}`, "", ...cl, "");
+  }
+  if (taxonomyCount > 0) {
+    out.push("## Topics", "", `- ${taxonomyCount} tag and category pages under ${[...taxonomyRoots].map((r) => url(r)).join(", ")}`, "");
+  }
+  if (hasFull) out.push(`Full content: ${url("/llms-full.txt")}`, "");
+  out.push(`Built with [webhouse.app](https://webhouse.app)`, "");
+
+  writeFileSync(llmsPath, out.join("\n"));
   console.log("  -> llms.txt");
+}
+
+/**
+ * F206.5 — body text of every CMS document that has a page on the site.
+ * Returns whether a llms-full.txt exists afterwards (the site's own counts);
+ * nothing is written when no document has a body, so llms.txt never links an
+ * empty export.
+ */
+function generateLlmsFullTxt(distDir: string, pages: PageInfo[], config: EnrichmentConfig): boolean {
+  const fullPath = path.join(distDir, "llms-full.txt");
+  if (existsSync(fullPath)) return true; // the site ships its own
+
+  const out = [`# ${config.siteName}`, "", `> ${config.siteDescription}`, "", `> Full content export. Index: ${config.baseUrl + config.basePath}/llms.txt`, ""];
+  let count = 0;
+  for (const p of pages) {
+    if (!p.entry || isTaxonomy(p) || !p.entry.body) continue;
+    count++;
+    out.push(`## ${p.title}`, "", `URL: ${config.baseUrl + config.basePath + p.urlPath}`);
+    const lm = lastmodOf(p);
+    if (lm) out.push(`Updated: ${lm}`);
+    out.push("", p.entry.body, "", "---", "");
+  }
+  if (count === 0) return false;
+  writeFileSync(fullPath, out.join("\n"));
+  console.log(`  -> llms-full.txt (${count} documents)`);
+  return true;
 }
 
 function generateManifestJson(distDir: string, config: EnrichmentConfig): void {
