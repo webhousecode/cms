@@ -112,7 +112,7 @@ jobs:
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "Bumping all packages to $NEW_VERSION"
 
-          PACKAGES=(cms cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms cms-admin-cli cms-shop cms-inline-edit cms-chat-client)
+          PACKAGES=(cms cms-ai cms-mcp-client cms-mcp-server create-cms cms-admin-cli cms-shop)
           for pkg in "${PACKAGES[@]}"; do
             node -e "
               const fs = require('fs');
@@ -136,7 +136,10 @@ jobs:
         run: |
           # Publish in dependency order with provenance.
           # cms-shop depends on @webhouse/cms (workspace:*) — must publish AFTER cms.
-          PACKAGES=(cms cms-ai cms-mcp-client cms-mcp-server cms-cli create-cms cms-shop cms-inline-edit cms-chat-client)
+          # F206.6: cms-cli, cms-inline-edit and cms-chat-client have their own
+          # tag-triggered tracks (see the header) — listing them here collided with
+          # those versions and failed every fleet publish halfway through.
+          PACKAGES=(cms cms-ai cms-mcp-client cms-mcp-server create-cms cms-shop)
           for pkg in "${PACKAGES[@]}"; do
             PKG_NAME=$(node -p "require('./packages/$pkg/package.json').name")
             echo "📦 Publishing $PKG_NAME@${{ env.NEW_VERSION }}..."
@@ -148,7 +151,7 @@ jobs:
 
       - name: Restore workspace deps and commit version bump
         run: |
-          PACKAGES=(cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms cms-shop)
+          PACKAGES=(cms-ai cms-mcp-client cms-mcp-server create-cms cms-shop)
           for pkg in "${PACKAGES[@]}"; do
             node -e "
               const fs = require('fs');
