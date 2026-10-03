@@ -260,8 +260,8 @@ importers:
         specifier: '>=0.6.3 <1'
         version: 0.6.3
       '@broberg/consent-cookie':
-        specifier: 0.5.0
-        version: 0.5.0
+        specifier: 0.6.0
+        version: 0.6.0
       '@broberg/deploy-core':
         specifier: 0.6.0
         version: 0.6.0
@@ -1143,8 +1143,8 @@ packages:
     resolution: {integrity: sha512-YAGWSsTMGbg/x7hZWeHdzjVjXrgNL4YuJ8dUhz6Ya2TW7NJQHqUsHerDnxVmGeC7M8/41ZkkYpr1TrBJS3t7+A==}
     engines: {node: '>=22'}
 
-  '@broberg/consent-cookie@0.5.0':
-    resolution: {integrity: sha512-cedUOCJCrqS94QF/XsoaaI6u9RnVuNQ9AIR05SjzSxxiOuUdbLEgCTukZRq4HGTCWmxVNXxkS6K11/aHsNPCDQ==}
+  '@broberg/consent-cookie@0.6.0':
+    resolution: {integrity: sha512-7CtR52hnhBW3uJ6yfNW5GzraYidIUjk9NhZRSGr9Kw6pTPYFOB/fnLCsgC7agdgc9+F/juc7q2bEDXTx+uUmfA==}
 
   '@broberg/deploy-core@0.6.0':
     resolution: {integrity: sha512-WFis0WP7xyK52vlc25DMPXFLJFadin2kZQRvaoOk/I/ex+8+jjdgr0EcVuHQvnNaVm03eSO17WuS73btAxEFnA==}
@@ -7361,7 +7361,7 @@ snapshots:
 
   '@broberg/cms-inline-edit@0.6.3': {}
 
-  '@broberg/consent-cookie@0.5.0': {}
+  '@broberg/consent-cookie@0.6.0': {}
 
   '@broberg/deploy-core@0.6.0': {}
 
