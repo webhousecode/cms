@@ -1316,6 +1316,9 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           // Strategy 1: custom build.ts
           const buildFile = path.join(projectDir, "build.ts");
           if (existsSync(buildFile)) {
+            // F206.3 — build.ts is the site's code; this server may not run it.
+            const { assertServerBuildAllowed } = await import("@/lib/build/server-build-policy");
+            assertServerBuildAllowed();
             const { execSync } = await import("node:child_process");
             execSync("npx tsx build.ts", {
               cwd: projectDir,

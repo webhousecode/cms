@@ -12,6 +12,7 @@ import type { CmsConfig } from "@webhouse/cms";
 import { executeBuild } from "./executor";
 import { resolveWorkingDir } from "./validate-paths";
 import { resolveProfile } from "./resolve-profile";
+import { assertServerBuildAllowed } from "./server-build-policy";
 
 export interface SiteBuildOptions {
   /** Absolute path to site project directory. */
@@ -46,6 +47,8 @@ export interface SiteBuildResult {
 export async function runSiteBuild(
   opts: SiteBuildOptions,
 ): Promise<SiteBuildResult> {
+  // F206.3 — build.ts and custom commands are the site's code, not ours.
+  assertServerBuildAllowed();
   const { projectDir, cmsConfig, deployOutDir, basePath, profileName } = opts;
 
   // Phase 3: resolve profile (handles both profiles[] and root command)

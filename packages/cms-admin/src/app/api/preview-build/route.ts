@@ -6,6 +6,7 @@ import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import path from "path";
 import { denyViewers } from "@/lib/require-role";
+import { serverBuildsAllowed, SERVER_BUILD_DISABLED_MESSAGE } from "@/lib/build/server-build-policy";
 
 const execAsync = promisify(exec);
 
@@ -25,6 +26,10 @@ export async function POST() {
   // Strategy 1: custom build.ts
   const buildFile = path.join(projectDir, "build.ts");
   if (existsSync(buildFile)) {
+    // F206.3 — build.ts is the site's code; this server may not run it.
+    if (!serverBuildsAllowed()) {
+      return NextResponse.json({ error: SERVER_BUILD_DISABLED_MESSAGE }, { status: 409 });
+    }
     try {
       const { stdout, stderr } = await execAsync("npx tsx build.ts", {
         cwd: projectDir,

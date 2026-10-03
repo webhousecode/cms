@@ -8,6 +8,7 @@
 import { spawn, type ChildProcess } from "child_process";
 import { randomUUID } from "crypto";
 import { parseCommand } from "./allowlist";
+import { assertServerBuildAllowed } from "./server-build-policy";
 import type { DockerConfig } from "@webhouse/cms";
 
 // ── Types ────────────────────────────────────────────────────
@@ -79,6 +80,7 @@ const SIGKILL_GRACE_MS = 5000;
 export async function executeBuild(
   opts: ExecuteOptions,
 ): Promise<ExecuteResult> {
+  assertServerBuildAllowed();
   const buildId = randomUUID();
   const start = Date.now();
 
