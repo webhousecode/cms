@@ -537,3 +537,39 @@ export default defineConfig({
     expect(read(path)).toBe(SOURCE);
   });
 });
+
+describe("assertBlocksRewriteSafe — the last check before a blocks write (F206.4)", () => {
+  const ORIGINAL = `export default defineConfig({
+  blocks: [],
+  collections: [
+    defineCollection({
+      name: "pages",
+      fields: [],
+    }),
+  ],
+});
+`;
+  const hero: BlockDef = { name: "hero", fields: [] };
+  let assertSafe: (o: string, u: string, b: BlockDef[]) => void;
+  beforeAll(async () => {
+    assertSafe = (await import("../config-writer")).assertBlocksRewriteSafe;
+  });
+
+  it("accepts a rewrite that keeps the collection and carries the block", () => {
+    const updated = ORIGINAL.replace("blocks: []", `blocks: [{ name: "hero", fields: [] }]`);
+    expect(() => assertSafe(ORIGINAL, updated, [hero])).not.toThrow();
+  });
+
+  it("refuses a rewrite that lost a collection", () => {
+    const updated = `export default defineConfig({ blocks: [{ name: "hero" }], collections: [] });`;
+    expect(() => assertSafe(ORIGINAL, updated, [hero])).toThrow(/collection "pages" missing/);
+  });
+
+  it("refuses a rewrite that lost a block it was meant to write", () => {
+    expect(() => assertSafe(ORIGINAL, ORIGINAL, [hero])).toThrow(/block "hero" missing/);
+  });
+
+  it("refuses a rewrite that is no longer a config", () => {
+    expect(() => assertSafe(ORIGINAL, "garbage", [])).toThrow(/defineConfig/);
+  });
+});

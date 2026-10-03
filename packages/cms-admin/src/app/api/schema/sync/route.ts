@@ -64,6 +64,13 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // F206.4 — validate everything before writing anything: blocks are written
+  // first, so a bad `collections` found afterwards would leave a half-applied push.
+  if (body.collections !== undefined) {
+    const bad = collectionsError(body.collections);
+    if (bad) return NextResponse.json({ ok: false, error: bad }, { status: 400 });
+  }
+
   // F206.4 — blocks first: collections reference block names, and a site that
   // adds a section type sends both in one push.
   let blocksBody: Record<string, unknown> | undefined;
@@ -88,18 +95,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, forms: formsBody, blocks: blocksBody });
   }
 
-  if (!Array.isArray(body.collections) || body.collections.length === 0) {
-    return NextResponse.json(
-      { ok: false, error: "collections must be a non-empty array" },
-      { status: 400 },
-    );
-  }
-  if (!body.collections.every((c) => c && typeof (c as { name?: unknown }).name === "string")) {
-    return NextResponse.json(
-      { ok: false, error: "every collection needs a string name" },
-      { status: 400 },
-    );
-  }
+  const collectionsBad = collectionsError(body.collections);
+  if (collectionsBad) return NextResponse.json({ ok: false, error: collectionsBad }, { status: 400 });
   const payload = body.collections as unknown as CollectionDef[];
 
   const config = await getAdminConfig();
@@ -134,6 +131,12 @@ export async function POST(req: NextRequest) {
  * payload does not mention stays exactly as it was and an identical re-push
  * rewrites nothing.
  */
+function collectionsError(c: unknown): string | null {
+  if (!Array.isArray(c) || c.length === 0) return "collections must be a non-empty array";
+  if (!c.every((x) => x && typeof (x as { name?: unknown }).name === "string")) return "every collection needs a string name";
+  return null;
+}
+
 async function syncBlocks(payload: BlockDef[]): Promise<Record<string, unknown>> {
   const config = await getAdminConfig();
   const { configPath } = await getActiveSitePaths();

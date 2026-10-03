@@ -79,4 +79,16 @@ describe("POST /api/schema/sync — blocks (F206.4)", () => {
     expect(body.blocks.added).toEqual(["stats"]);
     expect(state.writes.map((w) => w.kind)).toEqual(["blocks", "collections"]);
   });
+
+  it("validates collections BEFORE writing blocks — a bad push changes nothing", async () => {
+    const res = await POST(req({ blocks: [stats], collections: [] }));
+    expect(res.status).toBe(400);
+    expect(state.writes).toEqual([]);
+  });
+
+  it("a collection without a name also stops the blocks write", async () => {
+    const res = await POST(req({ blocks: [stats], collections: [{ label: "x" }] }));
+    expect(res.status).toBe(400);
+    expect(state.writes).toEqual([]);
+  });
 });

@@ -327,6 +327,27 @@ export async function writeConfigForms(
 }
 
 /**
+ * F206.4 — the last check before a blocks rewrite reaches disk: the result
+ * must still be a config, keep every collection the original had, and carry
+ * every block we meant to write. Exported so it can be tested directly.
+ */
+export function assertBlocksRewriteSafe(original: string, updated: string, blocks: BlockDef[]): void {
+  if (!updated.includes('defineConfig')) {
+    throw new Error('config-writer: refusing to write — result no longer contains defineConfig');
+  }
+  for (const m of original.matchAll(/defineCollection\(\{\s*\n\s*name:\s*["']([^"']+)["']/g)) {
+    if (!new RegExp(`name:\\s*["']${escapeRegExp(m[1])}["']`).test(updated)) {
+      throw new Error(`config-writer: refusing to write — collection "${m[1]}" missing from result`);
+    }
+  }
+  for (const b of blocks) {
+    if (!updated.includes(`name: ${JSON.stringify(b.name)}`)) {
+      throw new Error(`config-writer: refusing to write — block "${b.name}" missing from result`);
+    }
+  }
+}
+
+/**
  * Write the top-level `blocks` array of a cms.config.ts (F206.4), preserving
  * every other byte. Same shape and same guards as writeConfigForms.
  */
@@ -340,21 +361,7 @@ export async function writeConfigBlocks(
       throw new Error('config-writer: refusing to write — every block needs a name');
     }
   }
-  const guard = (original: string, updated: string) => {
-    if (!updated.includes('defineConfig')) {
-      throw new Error('config-writer: refusing to write — result no longer contains defineConfig');
-    }
-    for (const m of original.matchAll(/defineCollection\(\{\s*\n\s*name:\s*["']([^"']+)["']/g)) {
-      if (!new RegExp(`name:\\s*["']${escapeRegExp(m[1])}["']`).test(updated)) {
-        throw new Error(`config-writer: refusing to write — collection "${m[1]}" missing from result`);
-      }
-    }
-    for (const b of blocks) {
-      if (!updated.includes(`name: ${JSON.stringify(b.name)}`)) {
-        throw new Error(`config-writer: refusing to write — block "${b.name}" missing from result`);
-      }
-    }
-  };
+  const guard = (original: string, updated: string) => assertBlocksRewriteSafe(original, updated, blocks);
 
   const gh = parseGitHubPath(configPath);
   if (gh) {
