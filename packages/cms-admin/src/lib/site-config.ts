@@ -104,13 +104,6 @@ export interface SiteConfig {
   deployProductionUrl: string;  // Live site URL after deploy
   /** Custom domain for deploy (e.g. boutique.webhouse.app) */
   deployCustomDomain: string;
-  /** F205.3 — build code comes from this GitHub repo (owner/name) instead of
-   *  the copy on the volume. Empty = not linked (build from the volume copy). */
-  buildSourceRepo: string;
-  /** F205.3 — folder inside the repo that holds build.ts (e.g. apps/landing). */
-  buildSourcePath: string;
-  /** F205.3 — branch or tag to build from (default main). */
-  buildSourceRef: string;
   /** Auto-deploy when content is saved */
   deployOnSave: boolean;
 
@@ -306,9 +299,6 @@ async function defaults(): Promise<SiteConfig> {
     deployFlyOrg: "",
     deployProductionUrl: "",
     deployCustomDomain: "",
-    buildSourceRepo: "",
-    buildSourcePath: "",
-    buildSourceRef: "",
     deployOnSave: false,
     deployFlyLiveRegion: "arn",
     deployFlyLiveVolumeName: "site_data",

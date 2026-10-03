@@ -40,8 +40,6 @@ export interface DeployEntry {
   duration?: number;
   /** true when the actual deploy runs async (e.g. GitHub Actions) — UI switches to polling mode */
   async?: boolean;
-  /** F205.3 — the commit the build code came from, when the site is linked to a repo */
-  sourceSha?: string;
 }
 
 interface DeployLog {
@@ -476,8 +474,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         if (!useToken || !useRepo) {
           throw new Error("GitHub Pages requires a GitHub token. Connect GitHub via OAuth or add a token in Settings → Automation.");
         }
-        const { url: pagesUrlRaw, sourceSha } = await githubPagesBuildAndDeploy(useToken, useRepo);
-        if (sourceSha) entry.sourceSha = sourceSha;
+        const { url: pagesUrlRaw } = await githubPagesBuildAndDeploy(useToken, useRepo);
         // GH returns http:// until https_enforced is set; once Let's Encrypt
         // cert is approved we always want https in the UI/log.
         const pagesUrl = pagesUrlRaw?.replace(/^http:\/\//, "https://");
@@ -1109,7 +1106,7 @@ function slugifyForCloudflare(name: string): string {
  * 3. Enable GitHub Pages if not already enabled
  * 4. Return the Pages URL
  */
-async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{ url: string | undefined; sourceSha?: string }> {
+async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{ url: string | undefined }> {
   const headers = {
     Authorization: `Bearer ${token}`,
     Accept: "application/vnd.github+json",
@@ -1118,17 +1115,6 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
 
   // 1. Run build
   const sitePaths = await getActiveSitePaths();
-
-  // F205.3 — a site linked to a repo builds from the repo's code, laid over the
-  // project folder now. Unlinked sites build from the volume copy, as before.
-  const { buildSourceFrom, syncBuildSource } = await import("./build-source");
-  const buildSource = buildSourceFrom(await readSiteConfig());
-  let sourceSha: string | undefined;
-  if (buildSource) {
-    const synced = await syncBuildSource(sitePaths.projectDir, buildSource, token);
-    sourceSha = synced.sha;
-    console.log(`[deploy] Build code from ${buildSource.repo}/${buildSource.path} @ ${synced.sha.slice(0, 8)} (${synced.written} files, ${synced.skipped} skipped)`);
-  }
 
   const buildFile = path.join(sitePaths.projectDir, "build.ts");
 
@@ -1468,7 +1454,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
   }
 
   console.log(`[deploy] GitHub Pages URL: ${pagesUrl}`);
-  return { url: pagesUrl, sourceSha };
+  return { url: pagesUrl };
 }
 
 /** Recursively collect all files in a directory (skips dotfile directories like .well-known) */
