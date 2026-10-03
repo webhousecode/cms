@@ -248,17 +248,17 @@ importers:
         specifier: ^1.2.0
         version: 1.2.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@broberg/ai-sdk':
-        specifier: 0.49.2
-        version: 0.49.2
+        specifier: 0.50.1
+        version: 0.50.1
       '@broberg/chat':
-        specifier: '>=0.5.0 <1'
-        version: 0.6.0
-      '@broberg/cms-chat-client':
-        specifier: ^0.4.14
-        version: 0.4.14
-      '@broberg/cms-inline-edit':
         specifier: '>=0.6.3 <1'
         version: 0.6.3
+      '@broberg/cms-chat-client':
+        specifier: ^0.4.20
+        version: 0.4.20
+      '@broberg/cms-inline-edit':
+        specifier: '>=0.12.0 <1'
+        version: 0.12.0
       '@broberg/consent-cookie':
         specifier: 0.6.0
         version: 0.6.0
@@ -266,17 +266,17 @@ importers:
         specifier: 0.6.0
         version: 0.6.0
       '@broberg/mail':
-        specifier: 0.7.1
-        version: 0.7.1
+        specifier: 0.16.0
+        version: 0.16.0
       '@broberg/mail-core':
-        specifier: '>=0.8.0 <1'
-        version: 0.8.0
+        specifier: '>=0.9.0 <1'
+        version: 0.9.0
       '@broberg/sso':
-        specifier: 0.7.0
-        version: 0.7.0(hono@4.12.5)
+        specifier: 0.8.0
+        version: 0.8.0(hono@4.12.5)
       '@broberg/ui-controls-core':
-        specifier: 0.2.2
-        version: 0.2.2
+        specifier: 0.2.3
+        version: 0.2.3
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -525,8 +525,8 @@ importers:
   packages/cms-ai:
     dependencies:
       '@broberg/ai-sdk':
-        specifier: ^0.41.1
-        version: 0.41.1
+        specifier: ^0.50.1
+        version: 0.50.1
       '@webhouse/cms':
         specifier: workspace:*
         version: link:../cms
@@ -565,8 +565,8 @@ importers:
   packages/cms-cli:
     dependencies:
       '@broberg/lens-engine':
-        specifier: '>=0.4.0'
-        version: 0.4.0
+        specifier: '>=0.10.0'
+        version: 0.10.0
       '@hono/node-server':
         specifier: ^1.13.7
         version: 1.19.11(hono@4.12.5)
@@ -1121,26 +1121,18 @@ packages:
       '@types/react':
         optional: true
 
-  '@broberg/ai-sdk@0.21.1':
-    resolution: {integrity: sha512-Tgsy7MZ0w2vd6Y2HU5ERizAc38it2p3HUkzmyPkQQ5H8TuO1GeIbaNbHHhbxIHFAtV1s4NIbhNpowEz1/NIvsA==}
+  '@broberg/ai-sdk@0.50.1':
+    resolution: {integrity: sha512-VYZyk7s99sjP5bnNPQSnxcKPMN5fCk42OWCbyUvbaGl+3YogcS1BaH03MExgsgSm7i5uV6SR+pm4J/F+V17x4Q==}
     engines: {bun: '>=1.3.0'}
 
-  '@broberg/ai-sdk@0.41.1':
-    resolution: {integrity: sha512-7b5K5p+zgiyMAtSbjBhFemIWkgfoVYWhYbxCB9H35TAJSrVa/EG+WxF2ljBDEr0IEH0T2r2IPp84U5fclrycEQ==}
-    engines: {bun: '>=1.3.0'}
+  '@broberg/chat@0.6.3':
+    resolution: {integrity: sha512-EYEahcMU+RaoVk75JfjZsrYC5M7DuYOyGKV7Xhp1vxUe4hkjWVn0kCL9VwYqWeK1kxxau1itaUUJIDJlRJXexw==}
 
-  '@broberg/ai-sdk@0.49.2':
-    resolution: {integrity: sha512-8aUvp1TbrpNCnuTsC57OLXX4GfL0lE6dKjsySysI5doI+D25AWLaqgRhc5JGomowK7iGmUsIepwXStXHkvl3Sg==}
-    engines: {bun: '>=1.3.0'}
+  '@broberg/cms-chat-client@0.4.20':
+    resolution: {integrity: sha512-YeurxfJ8fsHbea1/tT1OKB+ULCZ0utPJ4yxvqD/xuZ/AH4XVR9Iyt9Ma7N7A/2EQ1zHgwbCkJIEkPTpswoCr+A==}
 
-  '@broberg/chat@0.6.0':
-    resolution: {integrity: sha512-zTzPeGwZTpWOT/vNaCgwe0FsYtN6gNRabRu5PtwIUjY5VfGl/EUMPSUAR4MmxgqWXolvccHr0dzl1b6yicwUHA==}
-
-  '@broberg/cms-chat-client@0.4.14':
-    resolution: {integrity: sha512-SPFV9DoFhkGtrQdUN+MV6LUT5eYCEaUiUx3vnp/pM1SqQyONwFeZtmQYF9KCq2ob4i+YhDp4dxPeJYMuUP154A==}
-
-  '@broberg/cms-inline-edit@0.6.3':
-    resolution: {integrity: sha512-YAGWSsTMGbg/x7hZWeHdzjVjXrgNL4YuJ8dUhz6Ya2TW7NJQHqUsHerDnxVmGeC7M8/41ZkkYpr1TrBJS3t7+A==}
+  '@broberg/cms-inline-edit@0.12.0':
+    resolution: {integrity: sha512-4cnFUQvLODl3q7QSbqKQCKNxpopzn2zSJ6C4dp5UuLjaj8QaIsU8PG370mmmGTPFPaf/gB87Cx+avVg/1RZ+Dg==}
     engines: {node: '>=22'}
 
   '@broberg/consent-cookie@0.6.0':
@@ -1149,25 +1141,25 @@ packages:
   '@broberg/deploy-core@0.6.0':
     resolution: {integrity: sha512-WFis0WP7xyK52vlc25DMPXFLJFadin2kZQRvaoOk/I/ex+8+jjdgr0EcVuHQvnNaVm03eSO17WuS73btAxEFnA==}
 
-  '@broberg/lens-engine@0.4.0':
-    resolution: {integrity: sha512-/blOeHkjo6kxxQE7d9y9BFSqaoyFE3k8+Gbu6UcGLXAf9HmEJ0T0zhdbbbWQX4mejtpRKr0CzpwhiiwAoSLoaw==}
+  '@broberg/lens-engine@0.10.0':
+    resolution: {integrity: sha512-vmWyR44unlWUSb/V6aamCNLYmN0YB8AViAV2uLpuqbGZwFfY2LLBrXGU1NvpmnKXmBzDNGJwWwzJs6JsScKl4g==}
 
-  '@broberg/mail-core@0.8.0':
-    resolution: {integrity: sha512-n0Ne8XBY7rLXEuNEesoa/dmBktJ0RDTzpQ8t9Kisk8EqW1qHOjK4sAElDywDOuwVf0gitWzxo4jMWEJoeGMhxQ==}
+  '@broberg/mail-core@0.9.0':
+    resolution: {integrity: sha512-bkUmQOMSHfFd5AYqXUqzvlTO/XTdKz7GUvpgS9bgekS6fYiOfwxLVfpbR9hfWx3/N0iScARG0fqeiL8vsG+l3A==}
 
-  '@broberg/mail@0.7.1':
-    resolution: {integrity: sha512-UjOFan+y2vBbIbH4iSYaHu74ngkiatu7QtZ2THoTcokF0Pt3PtIsKSP7RePL9PMx6efXojHEsz/vsDkPEozu9Q==}
+  '@broberg/mail@0.16.0':
+    resolution: {integrity: sha512-LBfcwEL8IQOEdTgXWvW6ZobR1jsBjiMB99VjBVz1klljshOdBB7nZ59d3RtOlpse0FDAAjt5OWHmSCYoUzsc8g==}
 
-  '@broberg/sso@0.7.0':
-    resolution: {integrity: sha512-l1Jkg0Vw/nK+hkvatkjrZMHjRtYPCZgox15o4uh7wJRK3Q4vw+5n74XxedKCvYdZZ8uUTMFN7g7+Ao4jVZigaw==}
+  '@broberg/sso@0.8.0':
+    resolution: {integrity: sha512-czNxsa7ny+DZ4ZJ5ycpeogDYMkUUIpJR5hTDN28TQccc3eOcafzHZlsU0R25jEbUVRZ3KZmvAVi6/ypKER522Q==}
     peerDependencies:
       hono: ^4
     peerDependenciesMeta:
       hono:
         optional: true
 
-  '@broberg/ui-controls-core@0.2.2':
-    resolution: {integrity: sha512-zyi1I4fukYgN8LlwFFYIfKUNJNoAl8H+W3xePg32SqW4nbmEHpeAfBoIxjeput76S37nnMWFau4rWi0CSnFYRw==}
+  '@broberg/ui-controls-core@0.2.3':
+    resolution: {integrity: sha512-EBPFtl3/pGqzpSOa/kopW9exJIcmPpFUqPXNDzco6MK5bxTqK1nJF6kAd3mDmiSEegqxDRD2F9PNy+cLS1il1w==}
 
   '@capacitor/android@8.3.0':
     resolution: {integrity: sha512-EQy6ByUuKayQBJmMm/e0byJiHavqsQHrvW23BuT2GNVQvenAvipqwaePiJHzrv2PZr7A0T0+se4kgDCeROj0mQ==}
@@ -7343,31 +7335,23 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  '@broberg/ai-sdk@0.21.1':
+  '@broberg/ai-sdk@0.50.1':
     dependencies:
       zod: 3.25.76
 
-  '@broberg/ai-sdk@0.41.1':
-    dependencies:
-      zod: 3.25.76
+  '@broberg/chat@0.6.3': {}
 
-  '@broberg/ai-sdk@0.49.2':
-    dependencies:
-      zod: 3.25.76
+  '@broberg/cms-chat-client@0.4.20': {}
 
-  '@broberg/chat@0.6.0': {}
-
-  '@broberg/cms-chat-client@0.4.14': {}
-
-  '@broberg/cms-inline-edit@0.6.3': {}
+  '@broberg/cms-inline-edit@0.12.0': {}
 
   '@broberg/consent-cookie@0.6.0': {}
 
   '@broberg/deploy-core@0.6.0': {}
 
-  '@broberg/lens-engine@0.4.0':
+  '@broberg/lens-engine@0.10.0':
     dependencies:
-      '@broberg/ai-sdk': 0.21.1
+      '@broberg/ai-sdk': 0.50.1
       '@mozilla/readability': 0.6.0
       jsdom: 25.0.1
       playwright: 1.61.1
@@ -7379,17 +7363,17 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@broberg/mail-core@0.8.0': {}
+  '@broberg/mail-core@0.9.0': {}
 
-  '@broberg/mail@0.7.1': {}
+  '@broberg/mail@0.16.0': {}
 
-  '@broberg/sso@0.7.0(hono@4.12.5)':
+  '@broberg/sso@0.8.0(hono@4.12.5)':
     dependencies:
       jose: 6.2.1
     optionalDependencies:
       hono: 4.12.5
 
-  '@broberg/ui-controls-core@0.2.2': {}
+  '@broberg/ui-controls-core@0.2.3': {}
 
   '@capacitor/android@8.3.0(@capacitor/core@8.3.0)':
     dependencies:

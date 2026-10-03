@@ -61,7 +61,7 @@
     "typescript": "^5.7.2"
   },
   "peerDependencies": {
-    "@broberg/lens-engine": ">=0.4.0"
+    "@broberg/lens-engine": ">=0.10.0"
   },
   "peerDependenciesMeta": {
     "@broberg/lens-engine": {

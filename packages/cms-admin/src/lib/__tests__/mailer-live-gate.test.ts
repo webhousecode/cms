@@ -57,7 +57,7 @@ describe("mailer live-gate", () => {
   it("does NOT deliver to a stranger outside production, key or no key", async () => {
     vi.stubEnv("NODE_ENV", "development");
     const res = await send(STRANGER);
-    expect(res).toEqual({ ok: true, skipped: true });
+    expect(res).toMatchObject({ ok: true, skipped: true, reason: "not-live" });
     expect(fetchSpy).not.toHaveBeenCalled(); // never even reached Resend
   });
 
@@ -104,7 +104,7 @@ describe("mailer live-gate", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("MAIL_DISABLED", "1");
     const res = await send(FLEET_ADMIN);
-    expect(res).toEqual({ ok: true, skipped: true });
+    expect(res).toMatchObject({ ok: true, skipped: true, reason: "disabled" });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
@@ -116,7 +116,7 @@ describe("mailer live-gate", () => {
       subject: "test",
       html: "<p>test</p>",
     });
-    expect(res).toEqual({ ok: true, skipped: true });
+    expect(res).toMatchObject({ ok: true, skipped: true, reason: "no-key" });
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });
