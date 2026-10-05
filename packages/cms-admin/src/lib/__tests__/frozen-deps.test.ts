@@ -29,6 +29,9 @@ import path from "node:path";
  */
 const LEDGER: Record<string, string> = {
   "@upmetrics/sdk":
+    "Bumped 0.5.0 → 0.8.1 on 2026-10-05 (F207.2): adds cookieless web " +
+    "analytics (pageviews, Web Vitals, track()), on by default in the browser, " +
+    "no cookies or PII. Error tracking unchanged. " +
     "Bumped 0.4.1 → 0.5.0 on 2026-09-08, the day upmetrics shipped it. The " +
     "caret is the whole point of this ledger entry: ^0.4.1 on a 0.x version " +
     "resolves >=0.4.1 <0.5.0, so we would NEVER have reached 0.5.0 without " +
