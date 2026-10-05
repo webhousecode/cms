@@ -4,10 +4,10 @@
   "description": "Admin UI for @webhouse/cms",
   "private": false,
   "scripts": {
-    "predev": "node scripts/copy-consent-element.mjs",
+    "predev": "node scripts/copy-consent-element.mjs && node scripts/copy-upmetrics-sdk.mjs",
     "dev": "next dev --port 3010",
     "dev:https": "next dev --port 3010 --experimental-https --experimental-https-key .certs/localhost-key.pem --experimental-https-cert .certs/localhost.pem --hostname 0.0.0.0",
-    "prebuild": "node scripts/copy-consent-element.mjs",
+    "prebuild": "node scripts/copy-consent-element.mjs && node scripts/copy-upmetrics-sdk.mjs",
     "build": "next build",
     "start": "next start --port 3010",
     "start:prod": "next start --port 4010",

@@ -12,3 +12,4 @@ node_modules/
 
 # F203.3 — generated at build from @broberg/consent-cookie (scripts/copy-consent-element.mjs)
 public/vendor/consent-cookie/
+public/vendor/upmetrics/

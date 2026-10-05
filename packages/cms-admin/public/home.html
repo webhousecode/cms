@@ -917,6 +917,9 @@ mobileMenu.querySelectorAll('a').forEach(a => {
      sets no statistics or marketing cookies, so categories="" and the text says
      so. Colours map this page's tokens onto the names the banner reads. -->
 <script type="module" src="/vendor/consent-cookie/element.js"></script>
+<!-- F207.3 — cookieless visitor statistics (@upmetrics/sdk), served from our own
+     domain; copied in at build by scripts/copy-upmetrics-sdk.mjs. -->
+<script type="module" src="/vendor/upmetrics/boot.js"></script>
 <broberg-consent policy-version="2026-09" categories="" lang="en" privacy-href="https://www.webhouse.dk/en/privacy" data-testid="consent-root"
   style="--card:var(--dark-card);--card-foreground:var(--white);--primary:var(--gold);--primary-foreground:var(--dark);--muted-foreground:var(--grey-400);--border:var(--dark-border);--secondary:var(--dark-surface)"></broberg-consent>
 </body>
