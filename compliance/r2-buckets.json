@@ -1,0 +1,116 @@
+{
+  "measured_at": "2026-10-05",
+  "measured_by": "buddy via Cloudflare API (read-only, account WebHouse), intercom #36315",
+  "method": "GET /accounts/:id/r2/buckets per jurisdiction header: default → 0 buckets; eu → 18; fedramp → 403 (not enabled on the account)",
+  "note": "app_guess is derived from the bucket name, not measured",
+  "buckets": [
+    {
+      "name": "bid-avatarer",
+      "jurisdiction": "eu",
+      "created": "2026-09-22",
+      "app_guess": "broberg-id"
+    },
+    {
+      "name": "bid-backup",
+      "jurisdiction": "eu",
+      "created": "2026-09-30",
+      "app_guess": "broberg-id"
+    },
+    {
+      "name": "buddy-transcripts",
+      "jurisdiction": "eu",
+      "created": "2026-06-22",
+      "app_guess": "buddy"
+    },
+    {
+      "name": "cardmem",
+      "jurisdiction": "eu",
+      "created": "2026-06-05",
+      "app_guess": "cardmem"
+    },
+    {
+      "name": "cms-backups-eu",
+      "jurisdiction": "eu",
+      "created": "2026-09-27",
+      "app_guess": "cms"
+    },
+    {
+      "name": "code-backups",
+      "jurisdiction": "eu",
+      "created": "2026-05-02",
+      "app_guess": null
+    },
+    {
+      "name": "contentpush-media",
+      "jurisdiction": "eu",
+      "created": "2026-07-03",
+      "app_guess": "contentpush"
+    },
+    {
+      "name": "contract-manager-attachments",
+      "jurisdiction": "eu",
+      "created": "2026-09-23",
+      "app_guess": "contract-manager"
+    },
+    {
+      "name": "coverletter-assets",
+      "jurisdiction": "eu",
+      "created": "2026-08-25",
+      "app_guess": "coverletter-generator"
+    },
+    {
+      "name": "coverletter-backups",
+      "jurisdiction": "eu",
+      "created": "2026-08-25",
+      "app_guess": "coverletter-generator"
+    },
+    {
+      "name": "fd-sundhed-media",
+      "jurisdiction": "eu",
+      "created": "2026-07-12",
+      "app_guess": "fd-sundhed"
+    },
+    {
+      "name": "helpdesk",
+      "jurisdiction": "eu",
+      "created": "2026-10-02",
+      "app_guess": "helpdesk"
+    },
+    {
+      "name": "misc-backup",
+      "jurisdiction": "eu",
+      "created": "2026-05-20",
+      "app_guess": null
+    },
+    {
+      "name": "notesmem",
+      "jurisdiction": "eu",
+      "created": "2026-06-05",
+      "app_guess": "notesmem"
+    },
+    {
+      "name": "sanne-andersen",
+      "jurisdiction": "eu",
+      "created": "2026-09-27",
+      "app_guess": "sanneandersen"
+    },
+    {
+      "name": "trail-backups-eu",
+      "jurisdiction": "eu",
+      "created": "2026-09-27",
+      "app_guess": "trail"
+    },
+    {
+      "name": "vnleker",
+      "jurisdiction": "eu",
+      "created": "2026-06-15",
+      "app_guess": "vnleker"
+    },
+    {
+      "name": "x-rt-81",
+      "jurisdiction": "eu",
+      "created": "2026-05-31",
+      "app_guess": "xrt81"
+    }
+  ]
+}
