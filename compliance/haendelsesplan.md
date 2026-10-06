@@ -38,7 +38,7 @@ Alle henvendelser til security@broberg.ai skal besvares inden for én arbejdsdag
 |---|---|---|
 | **Hændelsesansvarlig** | Christian Broberg | Beslutter alvorlighed, godkender al udadgående kommunikation, anmelder til Datatilsynet |
 | **Teknisk håndtering** | cc-sessionen, der ejer det ramte system (se cardmem) | Inddæmmer, undersøger, retter, dokumenterer |
-| **Stedfortræder** | Mikkel Broberg · mb@broberg.ai | Overtager hvis Christian ikke kan nås inden for 4 timer |
+| **Stedfortræder** | Ingen endnu (Christian 6/10-2026: «indtil videre er det kun mig») | Christian er eneste ansvarlige. Kan han ikke nås, inddæmmer agenterne teknisk, men ingen kommunikerer udad, før han er nået |
 
 En agent (cc-session) må altid **inddæmme** med det samme — rotere en nøgle, spærre en konto, slå en funktion fra — uden at vente. En agent må **aldrig** selv kontakte kunder, Datatilsynet eller offentligheden. Den kommunikation går altid gennem Christian.
 
@@ -101,7 +101,7 @@ Vores rolle afgør, hvem vi skal underrette.
 | Hvem | Hvordan |
 |---|---|
 | Hændelsesansvarlig | Christian Broberg · cb@webhouse.dk |
-| Stedfortræder | Mikkel Broberg · mb@broberg.ai |
+| Stedfortræder | Ingen endnu — Christian arbejder på at finde én |
 | Sikkerhedshenvendelser udefra | security@broberg.ai |
 | Datatilsynet | datatilsynet.dk → Anmeld brud på persondatasikkerheden |
 | Leverandører | Se listen over underdatabehandlere, broberg.ai/trust |
