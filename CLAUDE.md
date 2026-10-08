@@ -822,9 +822,11 @@ const { text, usage } = await ai.chat({ prompt: "Hej", tier: "smart" });
 
 **Route by tier, not by model-string.** Tiers → current model (overridable per call):
 **Every text tier is Mistral EU** (F030, v0.21+) — Claude is override-only:
-`fast`=mistral-small-latest · `smart`=mistral-large-latest · `powerful`=mistral-large-latest · `cheap`=mistral-small-latest · `vision`=mistral-medium-latest · `video`=gemini-2.5-flash-lite (US) · `embedding`=text-embedding-3-small (US).
+`fast`=mistral-small-2603 · `smart`=mistral-large-2512 · `powerful`=mistral-large-2512 · `cheap`=mistral-small-2603 · `vision`=mistral-medium-2604 · `video`=gemini-2.5-flash-lite (US) · `embedding`=text-embedding-3-small (US).
 
-> This block named Claude for `smart`/`powerful`/`vision` for ~3 months after F030 moved them. Nobody was endangered — it UNDERSTATED how EU-safe the defaults are — but the same drift also lived in code (`resolveModel('smart')` answered claude-sonnet-4-6 while the call went to Mistral), and there it was dangerous: that lookup is what a reasonable person would use to show or decide where data goes. Fixed in v0.29 by deriving the registry's tier aliases from the router, and MEASURED on 0.47.1 (16 Sep 2026): `resolveModel('smart')` and the router now both answer `mistral-large-latest`. The lookup agrees with the route again. **The `video` and `embedding` DEFAULTS still leave the EU** — do not send personal data through them without an override. But read the next paragraph before concluding there is no EU route: in September 2026 that same sentence, correct as written, was cited by another session as proof the fleet had no EU path for video. A default is not a capability.
+**Tiers are pinned to DATED ids since 0.56.0 — no `-latest` as a default anywhere in the fleet (owner, 8 Oct 2026).** A `-latest` id in an override warns (`usage.floating`); `allowFloating: true` says you mean it; `strictPinning: true` refuses it. `describeTier(tier)` shows the version and the price.
+
+> This block named Claude for `smart`/`powerful`/`vision` for ~3 months after F030 moved them. Nobody was endangered — it UNDERSTATED how EU-safe the defaults are — but the same drift also lived in code (`resolveModel('smart')` answered claude-sonnet-4-6 while the call went to Mistral), and there it was dangerous: that lookup is what a reasonable person would use to show or decide where data goes. Fixed in v0.29 by deriving the registry's tier aliases from the router, and MEASURED on 0.56.0 (8 Oct 2026): `resolveModel('smart')` and the router both answer `mistral-large-2512`. The lookup agrees with the route again. **The `video` and `embedding` DEFAULTS still leave the EU** — do not send personal data through them without an override. But read the next paragraph before concluding there is no EU route: in September 2026 that same sentence, correct as written, was cited by another session as proof the fleet had no EU path for video. A default is not a capability.
 
 **Cost & provider policy.** Anthropic/Claude is what we **build and code with** (Claude Code) — it is *not* the reflexive API default. For cost-sensitive / high-volume cloud-API workloads, default to the **cheapest model that's good enough** (start cheap, only move up if a real test shows it's needed) — that's what the `cheap` tier is for. `claude -p` is retired as a route; don't reach for the Anthropic API just because it's familiar. The quality tiers (`smart`/`powerful`) resolve to **Mistral Large** (EU), not Claude — reach for Claude only via an explicit `override`, and never for personal data.
 
@@ -868,7 +870,7 @@ createAI({ promptCache: false })                         // opt out client-wide
 shared-prefix identity, so derive it from (tenant, conversation), never the conversation
 alone. Only Mistral takes a key; openai/deepseek/gemini cache automatically.
 
-**GDPR:** for any client/personal/health data, use the EU tier — `override:{ provider:"mistral", model:"mistral-large-latest" }` (Mistral, Paris-hosted, no Schrems II). Never route personal data through US/CN models.
+**GDPR:** for any client/personal/health data, use the EU tier — `override:{ provider:"mistral", model:"mistral-large-2512" }` (Mistral, Paris-hosted, no Schrems II). Never route personal data through US/CN models.
 
 **Jev (TypeSafe) — use `ai.judge`, never `api.typesafe.ai` directly (v0.50+, F066).**
 Not a chat model: typed yes/no, choice and score questions about a piece of content,
