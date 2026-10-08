@@ -790,8 +790,17 @@ Apply these in every reply:
 
 **If the shared package is MISSING something you need: EXTEND it, never work around it.** Tell `components` (intercom or PR) so the capability lands in the npm for *everyone* — a local workaround is the exact drift this rule exists to prevent. Precedent: `@broberg/webpush` gained `sendSilent()` because a consumer filed the gap instead of hand-rolling it; the package grew, the whole fleet benefits.
 
-**Discover it — `discovery.broberg.ai` is the source of truth, no auth on reads:**
-1. **Browse the whole map FIRST — one fetch:** `GET https://discovery.broberg.ai/ai` — the ENTIRE inventory as a single llms.txt: every `@broberg/*` package grouped by layer AND all 107 fleet tips **inline** (packages + every tip in one response, nothing behind a further link). Read it top-to-bottom BEFORE you wire anything, so you know what already exists. Human page: `https://discovery.broberg.ai/onboarding`.
+**Discover it — `discovery.broberg.ai` is the source of truth. EVERY call needs two headers (since 8 Oct 2026):**
+
+```bash
+curl -H "x-discovery-session: <this-session>" -H "x-enroll-key: $DISCOVERY_ENROLL_KEY" https://discovery.broberg.ai/ai
+```
+
+Discovery is closed on the owner's order until Broberg ID login (OIDC) is wired: everything except `/health` and `/robots.txt` answers **401** without them — a 401 is not "Discovery is down", it is a missing header. `<this-session>` is your registered session name; the key is the `DISCOVERY_ENROLL_KEY` already in your repo's gitignored `.env`. **No key, or a 401 with one? `ask_peer({ to: "components", … })`** — they register it. Do not generate a key yourself: a new key is no longer bound on first use. Every URL below takes the same two headers.
+
+1. **Browse the map FIRST:** `GET https://discovery.broberg.ai/ai` (identical to `/llms.txt`) — every `@broberg/*` package grouped by layer, and **every fleet tip inline, in full**. Read it top-to-bottom BEFORE you wire anything. Human page: `https://discovery.broberg.ai/onboarding`.
+   **But the PACKAGE descriptions there are one-liners — first sentence only.** The complete ones are at **`GET https://discovery.broberg.ai/llms-full.txt`**, and that second fetch is worth it before you decide a package cannot do what you need. Measured 11 Sep 2026: `/ai` 76 KB, `/llms-full.txt` 329 KB — 4.3× more, and the difference is entirely package detail.
+   *This bullet said "nothing behind a further link" for five days while the thing that holds the full descriptions sat behind exactly that link, in 32 repos. It also carried a TIP COUNT, which was 107 here and 128 on the live surface — a number that moves every time anyone files a tip, so a fresh one lies again within weeks. There is deliberately no count now: the surface states its own, and a sentence that cannot go stale is worth more than one that is briefly precise.*
 2. **Search (targeted):** `GET https://discovery.broberg.ai/api/search?q=<what-you-need>` — once you know roughly what you need, this spans components, packages, fleet + infra best-practices in one query.
 3. **Full roster (JSON):** `GET https://discovery.broberg.ai/api/packages` — every published `@broberg/*` package, machine-readable.
 4. **Self-describing:** `GET https://discovery.broberg.ai/api` — every endpoint + searchable vocabularies (layers, statuses, models, infra platforms, package names).
@@ -805,9 +814,9 @@ Found one? Consume it (exact-pin prod-auth deps). Missing? Build it (or ask `com
 **Enroll when you adopt (close the loop).** When this repo starts (or stops) using a `@broberg/*` package, tell Discovery so the shared roster updates itself — no intercom to components:
 
 - **Your status anytime:** `GET https://discovery.broberg.ai/api/sessions/<this-session>` → what you're enrolled in, the newest published versions, and your **gap** (shipped packages you haven't adopted yet — your reuse to-do list).
-- **Self-report an adoption.** Generate your OWN key once — `openssl rand -hex 32` → your repo's gitignored `.env` as `DISCOVERY_ENROLL_KEY`. Then `POST https://discovery.broberg.ai/api/enroll` with header `x-enroll-key: $DISCOVERY_ENROLL_KEY` and JSON `{ "session": "<this-session>", "pkg": "@broberg/mail", "version": "<the version you installed>", "role": "uses" }` — a **placeholder on purpose**: an example that pins a real version reports a version that no longer exists the moment the package ships again, and the enroll call succeeds anyway (F149.7). `role` = `"uses"` (consumer) or `"src"` (you originated the pattern); optional `commit`, `notes`. Your FIRST enroll binds the key to your session (trust-on-first-use); later enrolls must reuse the same key. No shared fleet key, no human in the loop.
+- **Self-report an adoption.** `POST https://discovery.broberg.ai/api/enroll` with the two headers above and JSON `{ "session": "<this-session>", "pkg": "@broberg/mail", "version": "<the version you installed>", "role": "uses" }` — a **placeholder on purpose**: an example that pins a real version reports a version that no longer exists the moment the package ships again, and the enroll call succeeds anyway (F149.7). `role` = `"uses"` (consumer) or `"src"` (you originated the pattern); optional `commit`, `notes`. Only registered sessions may enroll.
 
-Reads (the gap check) need no key; only `POST /api/enroll` uses your `DISCOVERY_ENROLL_KEY`.
+Reads AND writes both need the two headers. When Broberg ID login replaces the key, `components` sends a new instruction and this block changes with it.
 
 ## @broberg/ai-sdk — the AI/LLM gateway (MUST)
 
