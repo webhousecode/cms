@@ -1571,14 +1571,29 @@ as drawn.** His words: *«en mockup er en kontraktelig bindende aftale ellers si
 jo ikke off på en mockup hvis jeg vil have designet til at ligne noget andet.»*
 
 **The approved mockup is the specification, not inspiration.** The texts, their order,
-the components, the layout, the colours and the visual language are what he agreed to.
-Real data and real copy lengths will differ; that is not a licence to redesign.
+which controls exist, the layout, what each interaction does, and the colours and type
+(through the design tokens) are what he agreed to. Real data and real copy lengths will
+differ; that is not a licence to redesign.
+
+**Not pixels — our standard controls win over the drawing.** His words: *«pixel perfect
+er not at stramme den da vi jo ofte anvender nogle generiske controlls … så tvinger det
+måske koden til at ændre på en standard kontrol.»* A mockup sketches a button, a select
+or a date picker approximately. Use the repo's shared component as it is; never bend a
+shared control to match how a mockup happened to draw it. The contract is WHAT is there
+and what it does, not how a standard control renders.
+
+**A mockup is interactive — build every state, not the first screen.** Mockups hold
+tabs, pages, dialogs and expanded rows. Click through the approved mockup and build each
+state you reach; at pickup the card's `approved_mockups` block lists every heading,
+control and tab in document order, marks what sits behind an interaction as `hidden`,
+and names the `panels` that hold it.
 
 **A deviation is a question to the owner, never your choice.** If you think something in
 the mockup is wrong, cannot work, or would look better another way: STOP and ask him
 BEFORE you build it differently. Record his answer on the card, in his words. «It looked
-better», «it was simpler», «the component library did it differently» are not answers he
-gave — they are you overriding a signature.
+better» and «it was simpler» are not answers he gave — they are you overriding a
+signature. (Rendering a control with our shared component is not a deviation; leaving a
+control out, adding one, or changing what it does is.)
 
 **What the owner does: nothing more than he already did.** Approving IS the signature. He
 should never have to restate the mockup on the card, re-check the build against it, or
@@ -1586,8 +1601,16 @@ remind you of it.
 
 **Before handoff, compare your screen with the approved version yourself.** Open the
 mockup (`cardmem_get_mockup`), capture your built surface with Lens at the same width,
-and put them side by side. Anything that differs is either fixed or listed in the
+and put them side by side — state by state, not just the first screen. Anything that differs is either fixed or listed in the
 handoff as a deviation the owner approved in writing. Measured on 10 Oct 2026, in
 cardmem itself: a Pipeline check badge shipped visibly unlike mockup v4 with every gate
-green — only the owner's eyes caught it. A green gate is not proof of fidelity until the
-mockup is part of the gate (F389.2).
+green — only the owner's eyes caught it.
+
+**The mockup IS part of the gate now (F389), and every step has a door:**
+`cardmem_map_mockup_states` walks the approved mockup and records every state ·
+`cardmem_mockup_journey` drafts its journey for the owner to approve (with a Data page:
+what the system must remember, who may change it, what is shared) ·
+`cardmem_derive_mockup_ac` turns the approved journey into the card's AC · handoff to
+Review needs a side-by-side per state (`mockup_comparison`) · and Done needs
+`cardmem_check_mockup_fidelity` to have passed — content and order per state, compared by
+the server, never pixels. An agent cannot record that check itself.
