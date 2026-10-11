@@ -1560,3 +1560,34 @@ The board still decides what gets built (F180: no inventing scope, a card and it
 plan-doc before the code). This rule only removes the *second* permission — the
 one asked after the work was already authorised, already written, and already
 proven green. **The gate decides, not your confidence in the change.**
+
+## An approved mockup is a contract (HARD RULE, F389)
+
+> **Canonical section per F057 multi-project convention.** Copied verbatim into every
+> cardmem-compatible repo (owner rule, Christian 2026-10-11).
+
+**When the owner approves a mockup, he has signed off on how that screen looks. Build it
+as drawn.** His words: *«en mockup er en kontraktelig bindende aftale ellers signer jeg
+jo ikke off på en mockup hvis jeg vil have designet til at ligne noget andet.»*
+
+**The approved mockup is the specification, not inspiration.** The texts, their order,
+the components, the layout, the colours and the visual language are what he agreed to.
+Real data and real copy lengths will differ; that is not a licence to redesign.
+
+**A deviation is a question to the owner, never your choice.** If you think something in
+the mockup is wrong, cannot work, or would look better another way: STOP and ask him
+BEFORE you build it differently. Record his answer on the card, in his words. «It looked
+better», «it was simpler», «the component library did it differently» are not answers he
+gave — they are you overriding a signature.
+
+**What the owner does: nothing more than he already did.** Approving IS the signature. He
+should never have to restate the mockup on the card, re-check the build against it, or
+remind you of it.
+
+**Before handoff, compare your screen with the approved version yourself.** Open the
+mockup (`cardmem_get_mockup`), capture your built surface with Lens at the same width,
+and put them side by side. Anything that differs is either fixed or listed in the
+handoff as a deviation the owner approved in writing. Measured on 10 Oct 2026, in
+cardmem itself: a Pipeline check badge shipped visibly unlike mockup v4 with every gate
+green — only the owner's eyes caught it. A green gate is not proof of fidelity until the
+mockup is part of the gate (F389.2).
