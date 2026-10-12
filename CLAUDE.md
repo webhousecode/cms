@@ -1240,6 +1240,12 @@ tells you which. Two consequences for you:
 `cardmem_list_communications` exists for exactly that, and a follow-up that contradicts
 the last letter is worse than a slow one.
 
+**A mail to Christian HIMSELF** (test instructions, something he should read) goes through
+`cardmem_mail_owner({ project_id, session_id, subject, markdown })` — filed in this
+project's Comms and sent at once, no approval, because the recipient is fixed to him and
+cannot be anyone else. Never a raw provider key or a one-off script for this. Read `sent`,
+not `ok`: `skipped:true` means it did not leave.
+
 **Unchanged:** outgoing customer mail is still sent only on Christian's direct order,
 and he still gets a copy of everything that leaves the house (`cc: cb@webhouse.dk`).
 This rule changes WHERE the draft lives while he reads it — nothing else.
