@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { loadRegistry, findSite } from "@/lib/site-registry";
+import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import { readSiteConfigForSite } from "@/lib/site-config";
 
 /**
@@ -23,14 +23,13 @@ export async function GET(request: NextRequest) {
   const registry = await loadRegistry();
   if (!registry) return NextResponse.json({ enabled: false }, { headers: CORS_HEADERS });
 
-  for (const org of registry.orgs) {
-    if (findSite(registry, org.id, siteId)) {
-      const config = await readSiteConfigForSite(org.id, siteId);
-      return NextResponse.json(
-        { enabled: config?.inlineEditEnabled ?? false },
-        { headers: CORS_HEADERS },
-      );
-    }
+  const orgId = findSiteOrgId(registry, siteId); // F208: ambiguous → null
+  if (orgId) {
+    const config = await readSiteConfigForSite(orgId, siteId);
+    return NextResponse.json(
+      { enabled: config?.inlineEditEnabled ?? false },
+      { headers: CORS_HEADERS },
+    );
   }
   return NextResponse.json({ enabled: false }, { headers: CORS_HEADERS });
 }

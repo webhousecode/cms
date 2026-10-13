@@ -40,7 +40,12 @@ export async function GET() {
   // Admins see the full registry
   const users = await import("@/lib/auth").then((m) => m.getUsers());
   const user = users.find((u) => u.id === session.sub);
-  const role = (user?.role ?? "admin") as UserRole;
+  // F208 — a session outliving its user (deleted, still within the JWT's 7
+  // days) used to fall through to "admin" and receive every org and site.
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const role = (user.role ?? "admin") as UserRole;
   if (role === "admin") {
     return NextResponse.json({ mode: "multi-site", registry });
   }
@@ -134,6 +139,13 @@ export async function POST(request: NextRequest) {
   if (body.action === "add-site") {
     if (!body.orgId || !body.site) {
       return NextResponse.json({ error: "orgId and site required" }, { status: 400 });
+    }
+    // F208 — an existing id (in ANY org) is refused before anything is
+    // written: below, this handler replaces the site's team.json with the
+    // caller alone, which on an existing site would wipe its team.
+    const current = await loadRegistry();
+    if (current?.orgs.some((o) => o.sites.some((s) => s.id === body.site!.id))) {
+      return NextResponse.json({ error: `Site ID "${body.site.id}" already exists` }, { status: 409 });
     }
     await addSite(body.orgId, body.site);
 

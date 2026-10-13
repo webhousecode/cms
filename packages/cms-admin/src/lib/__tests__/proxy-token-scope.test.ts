@@ -12,6 +12,8 @@ vi.mock("../site-registry", () => ({
     (org === "broberg-ai" && (site === "trail" || site === "broberg-ai")) || (org === "webhouse" && site === "sanneandersen")
       ? { id: site }
       : null,
+  findSiteOrgId: (_r: unknown, site: string) =>
+    site === "trail" || site === "broberg-ai" ? "broberg-ai" : site === "sanneandersen" ? "webhouse" : null,
 }));
 
 vi.mock("../access-tokens", async (orig) => {

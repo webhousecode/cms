@@ -46,7 +46,7 @@ vi.mock("@/lib/require-role", () => ({
 }));
 vi.mock("@/lib/webhook-events", () => ({ fireContentEvent: async () => {} }));
 vi.mock("@/lib/site-context", () => ({ withSiteContext: async (_c: unknown, fn: () => unknown) => fn() }));
-vi.mock("@/lib/site-registry", () => ({ loadRegistry: async () => ({ orgs: [] }), findSite: () => null }));
+vi.mock("@/lib/site-registry", () => ({ loadRegistry: async () => ({ orgs: [] }), findSite: () => null, findSiteOrgId: () => null }));
 vi.mock("@/lib/cors-origin", () => ({ originAllowed: () => true, siteOrigins: () => [] }));
 vi.mock("@/lib/upmetrics-server", () => ({ serverError: (_e: unknown, _m: unknown, i: { headers?: HeadersInit }) => new Response("err", { status: 500, ...i }) }));
 vi.mock("@/lib/chat/quick-prewarm", () => ({ invalidateQuickCacheOnWrite: async () => {} }));

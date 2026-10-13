@@ -11,12 +11,12 @@
  * suitable for sharing between team members ("here, edit this on YOUR
  * account: https://webhouse.app/admin/switch/trail?next=/admin/content/posts").
  *
- * Slug = site.id (registry-wide unique by convention; first match wins
- * if not). Returns to /admin with ?error=site-not-found when unknown.
+ * Slug = site.id, unique across the whole registry (F208). An ambiguous
+ * or unknown slug returns to /admin with ?error=site-not-found.
  */
 import type { NextRequest } from "next/server";
 import { redirectTo } from "@/lib/redirect";
-import { loadRegistry, findSite } from "@/lib/site-registry";
+import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 
 export async function GET(
   req: NextRequest,
@@ -30,15 +30,9 @@ export async function GET(
     return redirectTo("/admin?error=no-registry");
   }
 
-  // Walk orgs to resolve (orgId, siteId). Site IDs are unique per org and
-  // — by current convention — globally unique too; pick the first match.
-  let resolved: { orgId: string; siteId: string } | null = null;
-  for (const org of registry.orgs) {
-    if (findSite(registry, org.id, slug)) {
-      resolved = { orgId: org.id, siteId: slug };
-      break;
-    }
-  }
+  // F208 — site ids are globally unique; an ambiguous one resolves to nothing.
+  const orgId = findSiteOrgId(registry, slug);
+  const resolved = orgId ? { orgId, siteId: slug } : null;
   if (!resolved) {
     return redirectTo(`/admin?error=site-not-found&slug=${encodeURIComponent(slug)}`);
   }

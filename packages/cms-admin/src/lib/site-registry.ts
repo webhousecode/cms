@@ -198,6 +198,16 @@ export function findSite(registry: Registry, orgId: string, siteId: string): Sit
   return org.sites.find((s) => s.id === siteId) ?? null;
 }
 
+/**
+ * F208 — the org that owns `siteId`, looked up across ALL orgs. Returns null
+ * when no org has it OR more than one does: an ambiguous id must never
+ * resolve to "whichever org happens to come first".
+ */
+export function findSiteOrgId(registry: Registry, siteId: string): string | null {
+  const owners = registry.orgs.filter((o) => o.sites.some((s) => s.id === siteId));
+  return owners.length === 1 ? owners[0]!.id : null;
+}
+
 export function findOrg(registry: Registry, orgId: string): OrgEntry | null {
   return registry.orgs.find((o) => o.id === orgId) ?? null;
 }
@@ -253,6 +263,11 @@ export async function addSite(orgId: string, site: SiteEntry): Promise<void> {
   const org = findOrg(next, orgId);
   if (!org) throw new Error(`Org "${orgId}" not found`);
   if (org.sites.some((s) => s.id === site.id)) return; // already exists
+  // F208 — ids are global: a GitHub site's data dir (team.json, token) is
+  // keyed on the id alone, so the same id in two orgs would share both.
+  if (next.orgs.some((o) => o.sites.some((s) => s.id === site.id))) {
+    throw new Error(`Site ID "${site.id}" already exists in another org`);
+  }
   org.sites.push(site);
   if (!next.defaultSiteId) next.defaultSiteId = site.id;
   await saveRegistry(next); // updates cache only on successful write

@@ -37,7 +37,7 @@ vi.mock("@/lib/webhook-events", () => ({
   },
 }));
 vi.mock("@/lib/site-context", () => ({ withSiteContext: async (_c: unknown, fn: () => unknown) => fn() }));
-vi.mock("@/lib/site-registry", () => ({ loadRegistry: async () => ({ orgs: [] }), findSite: () => null }));
+vi.mock("@/lib/site-registry", () => ({ loadRegistry: async () => ({ orgs: [] }), findSite: () => null, findSiteOrgId: () => null }));
 vi.mock("@/lib/site-config", () => ({ readSiteConfig: async () => ({ deployOnSave: false }) }));
 vi.mock("@/lib/event-log", () => ({ logDocumentCreated: async () => {} }));
 vi.mock("@/lib/chat/quick-prewarm", () => ({ invalidateQuickCacheOnWrite: async () => {} }));

@@ -13,7 +13,7 @@ import path from "node:path";
 
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { withSiteContext } from "@/lib/site-context";
-import { loadRegistry, findSite } from "@/lib/site-registry";
+import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import { requireToken, isTokenAuth } from "@/lib/require-token";
 import { denyViewers } from "@/lib/require-role";
 import type { Resource } from "@/lib/access-tokens";
@@ -33,9 +33,8 @@ interface BuildSummary {
 async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteId: string } | null> {
   const registry = await loadRegistry();
   if (!registry) return null;
-  for (const org of registry.orgs) {
-    if (findSite(registry, org.id, siteId)) return { orgId: org.id, siteId };
-  }
+  const orgId = findSiteOrgId(registry, siteId); // F208: ambiguous → null
+  if (orgId) return { orgId, siteId };
   return null;
 }
 

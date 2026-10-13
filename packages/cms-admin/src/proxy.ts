@@ -184,33 +184,30 @@ export async function proxy(request: NextRequest) {
   if (isAdminPath) {
     const parsed = parseSiteSlugPath(pathname);
     if (parsed) {
-      const { loadRegistry, findSite } = await import("./lib/site-registry");
+      const { loadRegistry, findSiteOrgId } = await import("./lib/site-registry");
       const registry = await loadRegistry();
-      if (registry) {
-        for (const org of registry.orgs) {
-          if (findSite(registry, org.id, parsed.slug)) {
-            // STRIP any existing cms-active-* before injecting — appending a
-            // second cms-active-site=… leaves two cookies of the same name and
-            // the cookie parser keeps the FIRST (the stale one), so the URL
-            // slug would lose to the cookie. The URL must always win.
-            const cleaned = stripActiveSiteCookies(requestHeaders.get("cookie") ?? "");
-            const injected = `cms-active-org=${org.id}; cms-active-site=${parsed.slug}`;
-            requestHeaders.set("cookie", cleaned ? `${cleaned}; ${injected}` : injected);
-            // Also persist to the browser's cookie jar on the RESPONSE (below).
-            // Injecting only on the forwarded request fixes server-rendered
-            // components, but every CLIENT-side /api/* call carries no slug and
-            // sends the STALE browser cookie → the picker + page data resolve a
-            // DIFFERENT tenant than the URL (cross-tenant desync: the 2026-07-16
-            // broberg-ai/sanneandersen leak). The URL is authoritative, so the
-            // browser cookie must follow it.
-            slugActive = { orgId: org.id, siteId: parsed.slug };
-            // Rewrite to the slug-stripped path so existing routes render.
-            slugRewriteUrl = new URL(parsed.rest, request.url);
-            slugRewriteUrl.search = request.nextUrl.search;
-            requestHeaders.set("x-pathname", parsed.rest);
-            break;
-          }
-        }
+      // F208 — one owning org or none: an ambiguous slug never resolves.
+      const slugOrgId = registry ? findSiteOrgId(registry, parsed.slug) : null;
+      if (slugOrgId) {
+        // STRIP any existing cms-active-* before injecting — appending a
+        // second cms-active-site=… leaves two cookies of the same name and
+        // the cookie parser keeps the FIRST (the stale one), so the URL
+        // slug would lose to the cookie. The URL must always win.
+        const cleaned = stripActiveSiteCookies(requestHeaders.get("cookie") ?? "");
+        const injected = `cms-active-org=${slugOrgId}; cms-active-site=${parsed.slug}`;
+        requestHeaders.set("cookie", cleaned ? `${cleaned}; ${injected}` : injected);
+        // Also persist to the browser's cookie jar on the RESPONSE (below).
+        // Injecting only on the forwarded request fixes server-rendered
+        // components, but every CLIENT-side /api/* call carries no slug and
+        // sends the STALE browser cookie → the picker + page data resolve a
+        // DIFFERENT tenant than the URL (cross-tenant desync: the 2026-07-16
+        // broberg-ai/sanneandersen leak). The URL is authoritative, so the
+        // browser cookie must follow it.
+        slugActive = { orgId: slugOrgId, siteId: parsed.slug };
+        // Rewrite to the slug-stripped path so existing routes render.
+        slugRewriteUrl = new URL(parsed.rest, request.url);
+        slugRewriteUrl.search = request.nextUrl.search;
+        requestHeaders.set("x-pathname", parsed.rest);
       }
     }
   }
@@ -264,17 +261,14 @@ export async function proxy(request: NextRequest) {
   if (isApi) {
     const overrideSite = request.nextUrl.searchParams.get("site");
     if (overrideSite) {
-      const { loadRegistry, findSite } = await import("./lib/site-registry");
+      const { loadRegistry, findSiteOrgId } = await import("./lib/site-registry");
       const registry = await loadRegistry();
       let fundet = false;
-      if (registry) {
-        for (const org of registry.orgs) {
-          if (findSite(registry, org.id, overrideSite)) {
-            siteOverrideCookies = [`cms-active-org=${org.id}`, `cms-active-site=${overrideSite}`];
-            fundet = true;
-            break;
-          }
-        }
+      // F208 — an id in two orgs is ambiguous and refused like an unknown one.
+      const overrideOrgId = registry ? findSiteOrgId(registry, overrideSite) : null;
+      if (overrideOrgId) {
+        siteOverrideCookies = [`cms-active-org=${overrideOrgId}`, `cms-active-site=${overrideSite}`];
+        fundet = true;
       }
       // F157.18 — REFUSE an unresolvable `?site=` instead of no-opping.
       //

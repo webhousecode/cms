@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { withSiteContext } from "@/lib/site-context";
-import { loadRegistry, findSite } from "@/lib/site-registry";
+import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 
 const MIME: Record<string, string> = {
   jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
@@ -22,9 +22,8 @@ async function resolveSiteCtx(siteId: string | null): Promise<{ orgId: string; s
   if (!siteId) return null;
   const registry = await loadRegistry();
   if (!registry) return null;
-  for (const org of registry.orgs) {
-    if (findSite(registry, org.id, siteId)) return { orgId: org.id, siteId };
-  }
+  const orgId = findSiteOrgId(registry, siteId); // F208: ambiguous → null
+  if (orgId) return { orgId, siteId };
   return null;
 }
 

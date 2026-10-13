@@ -11,7 +11,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
 import { withSiteContext } from "@/lib/site-context";
-import { loadRegistry, findSite } from "@/lib/site-registry";
+import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import { listDir, getStats, resolveDeployRoot } from "@/lib/deploy/output-browser";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -20,9 +20,8 @@ import { getActiveSiteEntry, getActiveSitePaths } from "@/lib/site-paths";
 async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteId: string } | null> {
   const registry = await loadRegistry();
   if (!registry) return null;
-  for (const org of registry.orgs) {
-    if (findSite(registry, org.id, siteId)) return { orgId: org.id, siteId };
-  }
+  const orgId = findSiteOrgId(registry, siteId); // F208: ambiguous → null
+  if (orgId) return { orgId, siteId };
   return null;
 }
 

@@ -3,7 +3,7 @@ import { triggerDeploy, listDeploys } from "@/lib/deploy-service";
 import { denyViewers } from "@/lib/require-role";
 import { requireToken, isTokenAuth } from "@/lib/require-token";
 import { withSiteContext } from "@/lib/site-context";
-import { loadRegistry, findSite } from "@/lib/site-registry";
+import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import type { Resource } from "@/lib/access-tokens";
 
 /**
@@ -15,9 +15,8 @@ import type { Resource } from "@/lib/access-tokens";
 async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteId: string } | null> {
   const registry = await loadRegistry();
   if (!registry) return null;
-  for (const org of registry.orgs) {
-    if (findSite(registry, org.id, siteId)) return { orgId: org.id, siteId };
-  }
+  const orgId = findSiteOrgId(registry, siteId); // F208: ambiguous → null
+  if (orgId) return { orgId, siteId };
   return null;
 }
 

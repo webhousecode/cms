@@ -6,7 +6,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 
-vi.mock("../site-registry", () => ({ loadRegistry: vi.fn(async () => null), findSite: () => null }));
+vi.mock("../site-registry", () => ({ loadRegistry: vi.fn(async () => null), findSite: () => null, findSiteOrgId: () => null }));
 
 const BID_ENV = { BID_ISSUER: "https://id.broberg.ai", SSO_CLIENT_ID: "cms", SSO_REDIRECT_URI: "https://webhouse.app/api/auth/bid/callback", SSO_COOKIE_SECRET: "s".repeat(64) };
 const setBid = (on: boolean) => { for (const [k, v] of Object.entries(BID_ENV)) { if (on) process.env[k] = v; else delete process.env[k]; } };

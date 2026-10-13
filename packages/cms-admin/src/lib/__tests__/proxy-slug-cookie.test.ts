@@ -31,6 +31,10 @@ vi.mock('../site-registry', () => {
     loadRegistry: vi.fn(async () => registry),
     findSite: (reg: typeof registry, orgId: string, siteId: string) =>
       reg.orgs.find((o) => o.id === orgId)?.sites.find((s) => s.id === siteId) ?? null,
+    findSiteOrgId: (reg: typeof registry, siteId: string) => {
+      const owners = reg.orgs.filter((o) => o.sites.some((s) => s.id === siteId));
+      return owners.length === 1 ? owners[0].id : null;
+    },
   };
 });
 

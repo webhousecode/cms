@@ -15,7 +15,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
-import { loadRegistry, findSite } from "@/lib/site-registry";
+import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import { subscribe, type DeployEvent } from "@/lib/deploy/deploy-events";
 
 export const dynamic = "force-dynamic";
@@ -24,9 +24,8 @@ export const runtime = "nodejs";
 async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteId: string } | null> {
   const registry = await loadRegistry();
   if (!registry) return null;
-  for (const org of registry.orgs) {
-    if (findSite(registry, org.id, siteId)) return { orgId: org.id, siteId };
-  }
+  const orgId = findSiteOrgId(registry, siteId); // F208: ambiguous → null
+  if (orgId) return { orgId, siteId };
   return null;
 }
 

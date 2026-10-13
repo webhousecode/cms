@@ -93,44 +93,10 @@ export async function resolveToken(token: string): Promise<string> {
       console.log(`[resolveToken] step 2 failed:`, e instanceof Error ? e.message : String(e));
     }
 
-    // 2.5 Also check the GLOBAL admin _data dir — token may have been
-    // saved there before site-context was active (F143-debug fallback).
-    try {
-      const { getAdminDataDir } = await import("./site-registry");
-      const fs = await import("fs/promises");
-      const path = await import("path");
-      const tokenPath = path.join(getAdminDataDir(), "github-service-token.json");
-      console.log(`[resolveToken] step 2.5: trying ${tokenPath}`);
-      const raw = await fs.readFile(tokenPath, "utf-8");
-      const stored = JSON.parse(raw) as { token?: string };
-      if (stored.token) {
-        console.log(`[resolveToken] step 2.5: returning token=${stored.token.slice(0,8)}…`);
-        return stored.token;
-      }
-    } catch (e) {
-      console.log(`[resolveToken] step 2.5 failed:`, e instanceof Error ? e.message : String(e));
-    }
-
-    // 3. Scan all site cache dirs for a service token (survives cookie clear)
-    try {
-      const fs = await import("fs/promises");
-      const pathMod = await import("path");
-      const configPath = process.env.CMS_CONFIG_PATH;
-      if (configPath) {
-        const cacheBase = pathMod.join(pathMod.dirname(pathMod.resolve(configPath)), ".cache", "sites");
-        const dirs = await fs.readdir(cacheBase, { withFileTypes: true }).catch(() => []);
-        for (const dir of dirs) {
-          if (!dir.isDirectory()) continue;
-          const tokenPath = pathMod.join(cacheBase, dir.name, "_data", "github-service-token.json");
-          try {
-            const raw = await fs.readFile(tokenPath, "utf-8");
-            const stored = JSON.parse(raw) as { token?: string };
-            if (stored.token) return stored.token;
-          } catch { continue; }
-        }
-      }
-    } catch { /* exhausted */ }
-
+    // F208 — no further fallback. Two used to follow: the installation-wide
+    // token and "the first token in ANY site's cache dir". Both handed one
+    // site's GitHub credential to another. A site without its own token must
+    // connect GitHub itself.
     throw new Error("GitHub not connected — please connect via Sites → New Site → Connect GitHub");
   }
   return token;
