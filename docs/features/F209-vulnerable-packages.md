@@ -29,8 +29,9 @@ Tre `@broberg/*`-intervaller som `pnpm update` snævrede (`>=x <1` → `^x`) er 
 ## Kendte rester
 | Pakke | Via | Hvorfor ikke rettet |
 |---|---|---|
-| `vite` 5.4 (high) | cms-mobile (byggeværktøj, sendes ikke med appen) | Fix kræver vite 6 — major-spring, egen beslutning |
 | `braces` 3.0.3 (high) | knip (udviklerværktøj) | Ingen rettet version udgivet |
+
+**F209.2 (13/10, Christians ordre):** cms-mobile opgraderet vite 5 → 6.4 (`@vitejs/plugin-react` 4.7 understøtter vite 6). Build + typecheck grønne. High: 2 → 1.
 
 `node-forge` forsvandt med opdateringen af firebase-admin's afhængigheder.
 
