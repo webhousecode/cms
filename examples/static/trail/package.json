@@ -9,10 +9,10 @@
   },
   "dependencies": {
     "@webhouse/cms": "workspace:*",
-    "marked": "^15.0.0"
+    "marked": "^15.0.12"
   },
   "devDependencies": {
-    "tsx": "^4.21.0",
-    "typescript": "^5.8.0"
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
   }
 }

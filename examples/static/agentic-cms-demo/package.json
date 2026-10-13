@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "sirv-cli": "^3.0.1",
-    "tsx": "^4.0.0"
+    "tsx": "^4.23.15"
   },
   "dependencies": {
     "@webhouse/cms": "workspace:*"

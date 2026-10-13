@@ -18,10 +18,21 @@ High: ~40 forskellige pakker, næsten alle transitive (MCP SDK, firebase-admin, 
 3. Ingen major-spring i denne runde — et major-spring er en arkitekturbeslutning (CLAUDE.md).
 4. Gate: tsc, cms + cms-admin vitest, `next build` for cms-admin, og pnpm audit uden critical.
 
-## Kendte rester uden fix (ingen udgivet rettelse pr. 13/10)
-- `node-forge` ≤1.4.0 (via firebase-admin) — seneste version er sårbar.
-- `braces` ≤3.0.3 (via knip, kun udviklerværktøj, sendes ikke ud).
-Disse dokumenteres; de får ikke en tavs undtagelse i gaten.
+## Resultat (F209.1, 13/10)
+Før: 3 critical · 80 high · 98 moderate · 16 low.
+Efter: **0 critical · 2 high** · 21 moderate · 6 low.
+
+Opnået med `pnpm update -r` inden for eksisterende versionsintervaller (opdaterer også transitive pakker), plus to bevidste 0.x-spring som tests dækker: `drizzle-orm` 0.38 → 0.45 (SQL-injection via identifikatorer; sqlite-adapterens tests grønne) og `sharp` 0.34 → 0.35 (Node ≥20.9, Docker kører 22). `@capacitor/*` 8.3.0 → 8.5.x lukkede de to critical i mobil-appen.
+
+Tre `@broberg/*`-intervaller som `pnpm update` snævrede (`>=x <1` → `^x`) er sat tilbage.
+
+## Kendte rester
+| Pakke | Via | Hvorfor ikke rettet |
+|---|---|---|
+| `vite` 5.4 (high) | cms-mobile (byggeværktøj, sendes ikke med appen) | Fix kræver vite 6 — major-spring, egen beslutning |
+| `braces` 3.0.3 (high) | knip (udviklerværktøj) | Ingen rettet version udgivet |
+
+`node-forge` forsvandt med opdateringen af firebase-admin's afhængigheder.
 
 ## Non-goals
 Moderate/low tages kun hvis de falder med de samme opgraderinger. Ingen major-opgraderinger.

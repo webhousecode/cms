@@ -30,24 +30,24 @@
     "weekly:trigger": "gh workflow run \"Release (weekly)\" --repo webhousecode/cms --ref main -f force=true && gh run watch --repo webhousecode/cms"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.12",
-    "@types/node": "^22.10.2",
-    "jose": "^6.2.1",
-    "knip": "^5.87.0",
-    "playwright": "^1.58.2",
-    "tsup": "^8.3.5",
-    "turbo": "^2.8.18",
-    "typescript": "^5.7.2",
-    "vite": "^7.3.5",
-    "vitest": "^4.1.8"
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.20.5",
+    "jose": "^6.2.12",
+    "knip": "^5.88.1",
+    "playwright": "^1.64.0",
+    "tsup": "^8.5.1",
+    "turbo": "^2.11.8",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.7",
+    "vitest": "^4.1.11"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.99.1",
+    "@supabase/supabase-js": "^2.117.3",
     "exif-reader": "^2.0.3",
-    "mammoth": "^1.12.0",
+    "mammoth": "^1.13.0",
     "marked": "^15.0.12",
     "pdf-parse": "1.1.1",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "sirv": "^3.0.2"
   },
   "pnpm": {
