@@ -796,7 +796,7 @@ Apply these in every reply:
 curl -H "x-discovery-session: <this-session>" -H "x-enroll-key: $DISCOVERY_ENROLL_KEY" https://discovery.broberg.ai/ai
 ```
 
-Discovery is closed on the owner's order until Broberg ID login (OIDC) is wired: everything except `/health` and `/robots.txt` answers **401** without them — a 401 is not "Discovery is down", it is a missing header. `<this-session>` is your registered session name; the key is the `DISCOVERY_ENROLL_KEY` already in your repo's gitignored `.env`. **No key, or a 401 with one? `ask_peer({ to: "components", … })`** — they register it. Do not generate a key yourself: a new key is no longer bound on first use. Every URL below takes the same two headers.
+Discovery is closed on the owner's order until BID login (OIDC) is wired: everything except `/health` and `/robots.txt` answers **401** without them — a 401 is not "Discovery is down", it is a missing header. `<this-session>` is your registered session name; the key is the `DISCOVERY_ENROLL_KEY` already in your repo's gitignored `.env`. **No key, or a 401 with one? `ask_peer({ to: "components", … })`** — they register it. Do not generate a key yourself: a new key is no longer bound on first use. Every URL below takes the same two headers.
 
 1. **Browse the map FIRST:** `GET https://discovery.broberg.ai/ai` (identical to `/llms.txt`) — every `@broberg/*` package grouped by layer, and **every fleet tip inline, in full**. Read it top-to-bottom BEFORE you wire anything. Human page: `https://discovery.broberg.ai/onboarding`.
    **But the PACKAGE descriptions there are one-liners — first sentence only.** The complete ones are at **`GET https://discovery.broberg.ai/llms-full.txt`**, and that second fetch is worth it before you decide a package cannot do what you need. Measured 11 Sep 2026: `/ai` 76 KB, `/llms-full.txt` 329 KB — 4.3× more, and the difference is entirely package detail.
@@ -816,7 +816,7 @@ Found one? Consume it (exact-pin prod-auth deps). Missing? Build it (or ask `com
 - **Your status anytime:** `GET https://discovery.broberg.ai/api/sessions/<this-session>` → what you're enrolled in, the newest published versions, and your **gap** (shipped packages you haven't adopted yet — your reuse to-do list).
 - **Self-report an adoption.** `POST https://discovery.broberg.ai/api/enroll` with the two headers above and JSON `{ "session": "<this-session>", "pkg": "@broberg/mail", "version": "<the version you installed>", "role": "uses" }` — a **placeholder on purpose**: an example that pins a real version reports a version that no longer exists the moment the package ships again, and the enroll call succeeds anyway (F149.7). `role` = `"uses"` (consumer) or `"src"` (you originated the pattern); optional `commit`, `notes`. Only registered sessions may enroll.
 
-Reads AND writes both need the two headers. When Broberg ID login replaces the key, `components` sends a new instruction and this block changes with it.
+Reads AND writes both need the two headers. When BID login replaces the key, `components` sends a new instruction and this block changes with it.
 
 ## @broberg/ai-sdk — the AI/LLM gateway (MUST)
 
