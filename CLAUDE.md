@@ -1611,6 +1611,8 @@ control out, adding one, or changing what it does is.)
 should never have to restate the mockup on the card, re-check the build against it, or
 remind you of it.
 
+**New prototypes are built inside the production app from day one (F389.22)** — see «Mockups — propose designs first». The rule below is for a prototype that already exists as a standalone file.
+
 **Port the prototype — never rewrite it (F389.20).** When the approved mockup is a
 working, clickable prototype, its own script IS the implementation of how the screen
 behaves: menus, drag, placement, sizes. Carry those functions into the repo and adapt
