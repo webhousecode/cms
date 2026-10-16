@@ -1609,6 +1609,18 @@ control out, adding one, or changing what it does is.)
 should never have to restate the mockup on the card, re-check the build against it, or
 remind you of it.
 
+**Port the prototype — never rewrite it (F389.20).** When the approved mockup is a
+working, clickable prototype, its own script IS the implementation of how the screen
+behaves: menus, drag, placement, sizes. Carry those functions into the repo and adapt
+them to real data and our components; never write a new version of something the
+prototype already does. The owner, 16 Oct 2026: *«tage noget der virker og gøre det
+færdigt i stedet for at bygge helt forfra.»* Measured the same day: a working prototype's
+menu and mind map were rewritten from scratch, each worse, each green at every gate.
+Pickup now lists the prototype's functions (`prototype_code`), and handoff is refused
+until `prototype_port` names each function you carried and the file it lives in — the
+server reads that file at your commit. A behaviour you cannot port is a question to the
+owner.
+
 **Before handoff, compare your screen with the approved version yourself.** Open the
 mockup (`cardmem_get_mockup`), capture your built surface with Lens at the same width,
 and put them side by side — state by state, not just the first screen. Anything that differs is either fixed or listed in the
