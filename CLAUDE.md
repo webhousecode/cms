@@ -967,7 +967,9 @@ Before building any non-trivial UI, **mock it up first.** cardmem has a Mockups 
 - Reach for it whenever you'd otherwise describe a layout in prose, or when Christian says "vis mig hvordan det ser ud" / "lav en mockup".
 - It looks like the real product, not a generic wireframe — that's the point.
 - **Never a claude.ai artifact, and never a loose one-off `.html` file.** If you are about to reach for the built-in Artifact tool to show Christian a design, that is the moment this rule is for — `cardmem_save_mockup` instead, every time. See the HARD RULE under **Working with cardmem**. The Mockups surface is the home.
+- **Draw every state, not only the filled one (F389.13).** `cardmem_save_mockup` refuses a screen mockup that does not draw **empty, loading, partial, error, denied and offline**, each as an element marked `data-mockup-state="<state>"`; a state that cannot occur is marked `data-mockup-na="<why>"`. The journey reads them from the drawing — the owner is not asked about them.
 - Too big to pass through your context? Commit the file and pass `html_url` — the server fetches it, including from a PRIVATE repo (F122.17). Images belong in **Assets**, referenced from the mockup, so the mockup itself stays small.
+- **A clickable PROTOTYPE is built inside the production app from day one (F389.22, house rule).** A mockup is the sketch the owner reacts to. The moment it becomes a working, clickable prototype, it lives in the production repo on the app's real components, with fake data behind one clearly named seam — never as a standalone HTML file. Then «make it production» means replacing the fake data, and there is nothing to translate or rewrite. The owner, 16 Oct 2026: *«JA det skal være husets nye regel at prototyper bygges i inde i selve produktionsappen fra starten.»*
 
 ## Mail → cardmem Inbox + the daily inbox sweep
 
