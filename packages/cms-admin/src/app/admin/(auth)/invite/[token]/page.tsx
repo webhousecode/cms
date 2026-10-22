@@ -1,4 +1,5 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
 
 import { useState, useEffect, FormEvent } from "react";
 import { useParams } from "next/navigation";
@@ -120,7 +121,7 @@ export default function InviteAcceptPage() {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
+      background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, var(--brand-tint-bg) 100%)",
       overflow: "hidden",
     }}>
       {/* Grid pattern */}
@@ -140,7 +141,7 @@ export default function InviteAcceptPage() {
         width: "600px",
         height: "600px",
         borderRadius: "50%",
-        background: "radial-gradient(circle, hsl(38 92% 50% / 0.06) 0%, transparent 70%)",
+        background: "radial-gradient(circle, color-mix(in srgb, var(--brand-strong) 6%, transparent) 0%, transparent 70%)",
         pointerEvents: "none",
       }} />
 
@@ -156,8 +157,8 @@ export default function InviteAcceptPage() {
           boxShadow: "0 16px 64px rgba(0,0,0,0.4), 0 0 0 1px hsl(0 0% 15%)",
         }}>
           <div style={{ marginBottom: "1.75rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-            <img src="/webhouse.app-dark-icon.svg" alt="" style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
-            <img src="/webhouse-wordmark-dark.svg" alt="webhouse.app" style={{ height: "28px", width: "auto" }} />
+            <BrandLogo variant="icon" light={false} style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
+            <BrandLogo variant="wordmark" light={false} style={{ height: "28px", width: "auto" }} />
           </div>
 
           {status === "loading" && (
@@ -174,7 +175,7 @@ export default function InviteAcceptPage() {
               <a
                 data-testid="invite-go-to-login"
                 href="/admin/login"
-                style={{ fontSize: "0.8rem", color: "hsl(38 80% 55%)", textDecoration: "none" }}
+                style={{ fontSize: "0.8rem", color: "var(--brand-on-dark)", textDecoration: "none" }}
               >
                 Go to login
               </a>
@@ -204,8 +205,8 @@ export default function InviteAcceptPage() {
                   letterSpacing: "0.05em",
                   padding: "0.2rem 0.6rem",
                   borderRadius: "9999px",
-                  background: "hsl(38 92% 50% / 0.15)",
-                  color: "hsl(38 80% 55%)",
+                  background: "color-mix(in srgb, var(--brand-strong) 15%, transparent)",
+                  color: "var(--brand-on-dark)",
                 }}>
                   {inviteRole}
                 </span>
@@ -252,8 +253,8 @@ export default function InviteAcceptPage() {
                       padding: "0.6rem",
                       borderRadius: "7px",
                       border: "none",
-                      background: submitting ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
-                      color: submitting ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
+                      background: submitting ? "hsl(0 0% 25%)" : "var(--brand-strong)",
+                      color: submitting ? "hsl(0 0% 50%)" : "var(--brand-strong-foreground)",
                       fontSize: "0.875rem",
                       fontWeight: 600,
                       cursor: submitting ? "wait" : "pointer",
@@ -277,7 +278,7 @@ export default function InviteAcceptPage() {
                       autoFocus
                       placeholder="Jane Smith"
                       style={inputStyle}
-                      onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
+                      onFocus={(e) => { e.target.style.borderColor = "var(--brand-strong)"; }}
                       onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
                     />
                   </div>
@@ -293,7 +294,7 @@ export default function InviteAcceptPage() {
                       minLength={8}
                       placeholder="Min. 8 characters"
                       style={inputStyle}
-                      onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
+                      onFocus={(e) => { e.target.style.borderColor = "var(--brand-strong)"; }}
                       onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
                     />
                   </div>
@@ -317,8 +318,8 @@ export default function InviteAcceptPage() {
                       padding: "0.6rem",
                       borderRadius: "7px",
                       border: "none",
-                      background: submitting ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
-                      color: submitting ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
+                      background: submitting ? "hsl(0 0% 25%)" : "var(--brand-strong)",
+                      color: submitting ? "hsl(0 0% 50%)" : "var(--brand-strong-foreground)",
                       fontSize: "0.875rem",
                       fontWeight: 600,
                       cursor: submitting ? "wait" : "pointer",
@@ -335,7 +336,7 @@ export default function InviteAcceptPage() {
         </div>
 
         <p style={{ marginTop: "1.5rem", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
-          Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>
+          Powered by <span style={{ color: "var(--brand-on-dark)", fontWeight: 500 }}>@webhouse/cms</span>
         </p>
       </div>
     </div>

@@ -1,4 +1,5 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
 
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -222,7 +223,7 @@ function LoginForm() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
+        background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, var(--brand-tint-bg) 100%)",
         overflow: "hidden",
       }}>
       {/* Subtle grid pattern */}
@@ -242,7 +243,7 @@ function LoginForm() {
         width: "600px",
         height: "600px",
         borderRadius: "50%",
-        background: "radial-gradient(circle, hsl(38 92% 50% / 0.06) 0%, transparent 70%)",
+        background: "radial-gradient(circle, color-mix(in srgb, var(--brand-strong) 6%, transparent) 0%, transparent 70%)",
         pointerEvents: "none",
       }} />
 
@@ -259,8 +260,8 @@ function LoginForm() {
           boxShadow: "0 16px 64px rgba(0,0,0,0.4), 0 0 0 1px hsl(0 0% 15%)",
         }}>
           <div style={{ marginBottom: "1.75rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-            <img src="/webhouse.app-dark-icon.svg" alt="" style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
-            <img src="/webhouse-wordmark-dark.svg" alt="webhouse.app" style={{ height: "28px", width: "auto" }} />
+            <BrandLogo variant="icon" light={false} style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
+            <BrandLogo variant="wordmark" light={false} style={{ height: "28px", width: "auto" }} />
             <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>{hasBid ? "Broberg ID sign-in did not complete" : "Sign in to continue"}</p>
           </div>
 
@@ -297,8 +298,8 @@ function LoginForm() {
                 disabled={loading}
                 style={{
                   padding: "0.6rem", borderRadius: "7px", border: "none",
-                  background: loading ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
-                  color: loading ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
+                  background: loading ? "hsl(0 0% 25%)" : "var(--brand-strong)",
+                  color: loading ? "hsl(0 0% 50%)" : "var(--brand-strong-foreground)",
                   fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "wait" : "pointer",
                 }}
               >
@@ -342,7 +343,7 @@ function LoginForm() {
                   width: "100%",
                   boxSizing: "border-box",
                 }}
-                onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--brand-strong)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
               />
             </div>
@@ -367,7 +368,7 @@ function LoginForm() {
                   width: "100%",
                   boxSizing: "border-box",
                 }}
-                onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--brand-strong)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
               />
             </div>
@@ -391,8 +392,8 @@ function LoginForm() {
                 padding: "0.6rem",
                 borderRadius: "7px",
                 border: "none",
-                background: loading ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
-                color: loading ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
+                background: loading ? "hsl(0 0% 25%)" : "var(--brand-strong)",
+                color: loading ? "hsl(0 0% 50%)" : "var(--brand-strong-foreground)",
                 fontSize: "0.875rem",
                 fontWeight: 600,
                 cursor: loading ? "wait" : "pointer",
@@ -444,8 +445,8 @@ function LoginForm() {
                 display: "flex", alignItems: "center", justifyContent: "center",
                 width: "100%", padding: "0.6rem", boxSizing: "border-box",
                 borderRadius: "7px", border: "none",
-                background: loading ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
-                color: loading ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
+                background: loading ? "hsl(0 0% 25%)" : "var(--brand-strong)",
+                color: loading ? "hsl(0 0% 50%)" : "var(--brand-strong-foreground)",
                 fontSize: "0.875rem", fontWeight: 600, textDecoration: "none",
                 cursor: loading ? "wait" : "pointer", transition: "opacity 150ms",
               }}
@@ -533,8 +534,8 @@ function LoginForm() {
                   onClick={() => window.location.reload()}
                   style={{
                     fontSize: "0.7rem", padding: "0.3rem 0.7rem", borderRadius: "4px",
-                    border: "1px solid hsl(38 92% 50%)", background: "transparent",
-                    color: "hsl(38 92% 50%)", cursor: "pointer",
+                    border: "1px solid var(--brand-strong)", background: "transparent",
+                    color: "var(--brand-strong)", cursor: "pointer",
                   }}
                 >
                   Refresh
@@ -556,14 +557,14 @@ function LoginForm() {
         </div>}
         </div>
         <p style={{ marginTop: "0", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
-          Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>
+          Powered by <span style={{ color: "var(--brand-on-dark)", fontWeight: 500 }}>@webhouse/cms</span>
           {" · "}
           <a
             data-testid="login-docs-link"
             href="https://docs.webhouse.app"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: "hsl(38 80% 55%)", textDecoration: "none" }}
+            style={{ color: "var(--brand-on-dark)", textDecoration: "none" }}
           >
             Docs
           </a>

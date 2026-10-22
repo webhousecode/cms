@@ -101,7 +101,7 @@ function EmptyState({ onChange, locked }: { onChange: (html: string) => void; lo
           color: "var(--muted-foreground)",
           fontSize: "0.85rem",
           transition: "border-color 150ms, color 150ms",
-          background: dragging ? "hsl(38 92% 50% / 0.05)" : "transparent",
+          background: dragging ? "color-mix(in srgb, var(--brand-strong) 5%, transparent)" : "transparent",
         }}
       >
         <Upload style={{ width: "24px", height: "24px", opacity: 0.5 }} />

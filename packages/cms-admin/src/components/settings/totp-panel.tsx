@@ -135,8 +135,8 @@ export function TotpPanel() {
 
       {/* Backup codes display (post-enrollment) */}
       {backupCodes && (
-        <div style={{ padding: "0.75rem", border: "1px solid hsl(38 92% 50% / 0.3)", borderRadius: "6px", background: "hsl(38 92% 50% / 0.05)" }}>
-          <p style={{ fontSize: "0.75rem", fontWeight: 600, margin: "0 0 0.5rem", color: "hsl(38 92% 50%)" }}>
+        <div style={{ padding: "0.75rem", border: "1px solid color-mix(in srgb, var(--status-warning) 30%, transparent)", borderRadius: "6px", background: "color-mix(in srgb, var(--status-warning) 5%, transparent)" }}>
+          <p style={{ fontSize: "0.75rem", fontWeight: 600, margin: "0 0 0.5rem", color: "var(--status-warning)" }}>
             Save these backup codes
           </p>
           <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: "0 0 0.75rem" }}>
@@ -199,7 +199,7 @@ export function TotpPanel() {
               disabled={busy || enrollCode.length < 6}
               style={{
                 fontSize: "0.75rem", padding: "0.4rem 0.9rem", borderRadius: "5px",
-                border: "none", background: "hsl(38 92% 50%)", color: "hsl(38 30% 10%)",
+                border: "none", background: "var(--brand-strong)", color: "var(--brand-strong-foreground)",
                 fontWeight: 600, cursor: busy ? "wait" : "pointer",
               }}
             >

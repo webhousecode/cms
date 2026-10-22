@@ -20,6 +20,15 @@
   /* The amber of a traffic-light score (green/amber/red). NOT the brand: it
      stays amber under any white-label skin. */
   --status-warning:      #F7BB2E;
+  /* F210 — the stronger amber the sign-in / gate screens use (#F59E0B), the
+     dark text on it, the accent text on those always-dark screens, and the
+     warm tint in their background. Same values as before; a brand pack
+     overrides them. */
+  --brand-strong:            hsl(38 92% 50%);
+  --brand-strong-foreground: hsl(38 30% 10%);
+  --brand-on-dark:           hsl(38 80% 55%);
+  --brand-on-dark-soft:      hsl(38 92% 80%);
+  --brand-tint-bg:           hsl(35 20% 10%);
   --primary-foreground:  oklch(0.1 0 0);
   --secondary:           oklch(0.301 0 0);    /* #2E2E2E */
   --secondary-foreground:oklch(0.985 0 0);

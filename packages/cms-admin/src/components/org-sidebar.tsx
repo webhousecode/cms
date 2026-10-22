@@ -1,4 +1,7 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
+import { useBrand } from "@/lib/brand-context";
+import { DEFAULT_BRAND } from "@/lib/brand";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +28,7 @@ export function OrgSidebar() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const isLight = mounted && (resolvedTheme?.startsWith("light") ?? false);
+  const brand = useBrand();
 
   const [showLogoIcon, setShowLogoIcon] = useState(false); // default: wordmark
 
@@ -53,18 +57,14 @@ export function OrgSidebar() {
     <Sidebar collapsible="offcanvas">
       <SidebarHeader className="p-0">
         <Link href="/admin/sites" className={`flex flex-col gap-2 px-3 ${showLogoIcon ? "items-center" : "items-start"}`} style={{ marginRight: "auto", marginLeft: "0.5rem", paddingTop: showLogoIcon ? "1.25rem" : "0.75rem", paddingBottom: showLogoIcon ? "1.25rem" : "0.75rem", textDecoration: "none" }}>
-          {showLogoIcon ? (
-            <img
-              src={isLight ? "/webhouse.app-light-icon.svg" : "/webhouse.app-dark-icon.svg"}
-              alt="webhouse.app"
-              className="w-14 h-14"
-            />
+          {showLogoIcon && brand.id === DEFAULT_BRAND.id ? (
+            <BrandLogo variant="icon" light={isLight} className="w-14 h-14" />
           ) : (
-            <img
-              src={isLight ? "/webhouse-wordmark-light.svg" : "/webhouse-wordmark-dark.svg"}
-              alt="webhouse.app"
+            <BrandLogo
+              variant="wordmark"
+              light={isLight}
               className="h-11 w-auto"
-              style={{ maxWidth: "100%", marginLeft: "-0.9rem" }}
+              style={{ maxWidth: "100%", marginLeft: brand.id === DEFAULT_BRAND.id ? "-0.9rem" : 0 }}
             />
           )}
           <span style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "0.75rem", marginTop: "-0.25rem", letterSpacing: "0.08em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }} className="text-muted-foreground">

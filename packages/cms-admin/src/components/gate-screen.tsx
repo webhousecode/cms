@@ -1,4 +1,5 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
 
 import { useEffect } from "react";
 import { Github, AlertTriangle } from "lucide-react";
@@ -16,7 +17,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
+      background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, var(--brand-tint-bg) 100%)",
       overflow: "hidden",
     }}>
       {/* Grid pattern */}
@@ -35,7 +36,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         width: "600px",
         height: "600px",
         borderRadius: "50%",
-        background: "radial-gradient(circle, hsl(38 92% 50% / 0.06) 0%, transparent 70%)",
+        background: "radial-gradient(circle, color-mix(in srgb, var(--brand-strong) 6%, transparent) 0%, transparent 70%)",
         pointerEvents: "none",
       }} />
 
@@ -51,13 +52,13 @@ function Shell({ children }: { children: React.ReactNode }) {
           boxShadow: "0 16px 64px rgba(0,0,0,0.4), 0 0 0 1px hsl(0 0% 15%)",
         }}>
           <div style={{ marginBottom: "1.75rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-            <img src="/webhouse.app-dark-icon.svg" alt="" style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
-            <img src="/webhouse-wordmark-dark.svg" alt="webhouse.app" style={{ height: "28px", width: "auto" }} />
+            <BrandLogo variant="icon" light={false} style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
+            <BrandLogo variant="wordmark" light={false} style={{ height: "28px", width: "auto" }} />
           </div>
           {children}
         </div>
         <p style={{ marginTop: "1.5rem", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
-          Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>
+          Powered by <span style={{ color: "var(--brand-on-dark)", fontWeight: 500 }}>@webhouse/cms</span>
         </p>
       </div>
     </div>
@@ -81,7 +82,7 @@ export function NoAccessGate() {
           href="/api/auth/logout"
           style={{
             fontSize: "0.8rem",
-            color: "hsl(38 80% 55%)",
+            color: "var(--brand-on-dark)",
             textDecoration: "none",
           }}
         >
@@ -113,8 +114,8 @@ export function ConnectGitHubGate({ message, showButton = true }: { message?: st
               gap: "0.5rem",
               padding: "0.6rem 1.5rem",
               borderRadius: "8px",
-              background: "hsl(38 92% 50%)",
-              color: "hsl(38 30% 10%)",
+              background: "var(--brand-strong)",
+              color: "var(--brand-strong-foreground)",
               fontSize: "0.875rem",
               fontWeight: 600,
               textDecoration: "none",
@@ -224,7 +225,7 @@ export function SiteConfigErrorGate({ siteName, errors }: { siteName: string; er
           onClick={switchSite}
           style={{
             padding: "0.55rem 1.25rem", borderRadius: "8px",
-            background: "hsl(38 92% 50%)", color: "hsl(38 30% 10%)",
+            background: "var(--brand-strong)", color: "var(--brand-strong-foreground)",
             border: "none", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer",
           }}
         >

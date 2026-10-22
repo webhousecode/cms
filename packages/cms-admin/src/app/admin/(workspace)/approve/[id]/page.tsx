@@ -69,7 +69,7 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
             disabled={busy}
             style={{
               padding: "0.6rem 1.5rem", borderRadius: "8px", border: "none",
-              background: "hsl(38 92% 50%)", color: "hsl(38 30% 10%)",
+              background: "var(--brand-strong)", color: "var(--brand-strong-foreground)",
               fontSize: "0.9rem", fontWeight: 600, cursor: busy ? "wait" : "pointer",
             }}
           >

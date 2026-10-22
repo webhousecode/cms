@@ -1,4 +1,5 @@
 "use client";
+import { BrandLogo } from "@/components/brand-logo";
 
 import { useState, FormEvent } from "react";
 import { Suspense } from "react";
@@ -44,7 +45,7 @@ const experienceLevels = [
 ];
 
 function focusGold(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
-  e.target.style.borderColor = "hsl(38 92% 50%)";
+  e.target.style.borderColor = "var(--brand-strong)";
 }
 function blurReset(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
   e.target.style.borderColor = "hsl(0 0% 20%)";
@@ -80,7 +81,7 @@ function SignupForm() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
+        background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, var(--brand-tint-bg) 100%)",
         overflow: "auto",
       }}>
       {/* Grid pattern */}
@@ -99,7 +100,7 @@ function SignupForm() {
         width: "600px",
         height: "600px",
         borderRadius: "50%",
-        background: "radial-gradient(circle, hsl(38 92% 50% / 0.06) 0%, transparent 70%)",
+        background: "radial-gradient(circle, color-mix(in srgb, var(--brand-strong) 6%, transparent) 0%, transparent 70%)",
         pointerEvents: "none",
       }} />
 
@@ -124,8 +125,8 @@ function SignupForm() {
         }}>
           {/* Header */}
           <div style={{ marginBottom: "1.75rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-            <img src="/webhouse.app-dark-icon.svg" alt="" style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
-            <img src="/webhouse-wordmark-dark.svg" alt="webhouse.app" style={{ height: "28px", width: "auto" }} />
+            <BrandLogo variant="icon" light={false} style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
+            <BrandLogo variant="wordmark" light={false} style={{ height: "28px", width: "auto" }} />
             {step !== "done" && (
               <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>
                 {step === 1 ? "Create your account" : "Personalize your AI"}
@@ -138,11 +139,11 @@ function SignupForm() {
             <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginBottom: "1.25rem" }}>
               <div style={{
                 width: "32px", height: "3px", borderRadius: "2px",
-                background: "hsl(38 92% 50%)",
+                background: "var(--brand-strong)",
               }} />
               <div style={{
                 width: "32px", height: "3px", borderRadius: "2px",
-                background: step === 2 ? "hsl(38 92% 50%)" : "hsl(0 0% 20%)",
+                background: step === 2 ? "var(--brand-strong)" : "hsl(0 0% 20%)",
                 transition: "background 0.3s",
               }} />
             </div>
@@ -202,8 +203,8 @@ function SignupForm() {
                 padding: "0.6rem",
                 borderRadius: "7px",
                 border: "none",
-                background: "hsl(38 92% 50%)",
-                color: "hsl(38 30% 10%)",
+                background: "var(--brand-strong)",
+                color: "var(--brand-strong-foreground)",
                 fontSize: "0.875rem",
                 fontWeight: 600,
                 cursor: "pointer",
@@ -214,7 +215,7 @@ function SignupForm() {
 
               <p style={{ textAlign: "center", fontSize: "0.8rem", color: "hsl(0 0% 45%)", margin: 0 }}>
                 Already have an account?{" "}
-                <a data-testid="signup-login-link" href="/login" style={{ color: "hsl(38 80% 55%)", textDecoration: "none" }}>Sign in</a>
+                <a data-testid="signup-login-link" href="/login" style={{ color: "var(--brand-on-dark)", textDecoration: "none" }}>Sign in</a>
               </p>
             </form>
           )}
@@ -236,12 +237,12 @@ function SignupForm() {
                         padding: "0.5rem 0.6rem",
                         borderRadius: "8px",
                         border: siteType === t.value
-                          ? "1px solid hsl(38 92% 50%)"
+                          ? "1px solid var(--brand-strong)"
                           : "1px solid hsl(0 0% 20%)",
                         background: siteType === t.value
-                          ? "hsl(38 92% 50% / 0.08)"
+                          ? "color-mix(in srgb, var(--brand-strong) 8%, transparent)"
                           : "hsl(0 0% 10%)",
-                        color: siteType === t.value ? "hsl(38 92% 80%)" : "hsl(0 0% 70%)",
+                        color: siteType === t.value ? "var(--brand-on-dark-soft)" : "hsl(0 0% 70%)",
                         fontSize: "0.8rem",
                         cursor: "pointer",
                         display: "flex",
@@ -272,12 +273,12 @@ function SignupForm() {
                         padding: "0.45rem 0.5rem",
                         borderRadius: "7px",
                         border: experience === l.value
-                          ? "1px solid hsl(38 92% 50%)"
+                          ? "1px solid var(--brand-strong)"
                           : "1px solid hsl(0 0% 20%)",
                         background: experience === l.value
-                          ? "hsl(38 92% 50% / 0.08)"
+                          ? "color-mix(in srgb, var(--brand-strong) 8%, transparent)"
                           : "hsl(0 0% 10%)",
-                        color: experience === l.value ? "hsl(38 92% 80%)" : "hsl(0 0% 60%)",
+                        color: experience === l.value ? "var(--brand-on-dark-soft)" : "hsl(0 0% 60%)",
                         fontSize: "0.75rem",
                         cursor: "pointer",
                         transition: "all 0.15s",
@@ -337,8 +338,8 @@ function SignupForm() {
                   padding: "0.6rem",
                   borderRadius: "7px",
                   border: "none",
-                  background: "hsl(38 92% 50%)",
-                  color: "hsl(38 30% 10%)",
+                  background: "var(--brand-strong)",
+                  color: "var(--brand-strong-foreground)",
                   fontSize: "0.875rem",
                   fontWeight: 600,
                   cursor: "pointer",
@@ -356,7 +357,7 @@ function SignupForm() {
                 width: "48px",
                 height: "48px",
                 borderRadius: "50%",
-                background: "hsl(38 92% 50% / 0.1)",
+                background: "color-mix(in srgb, var(--brand-strong) 10%, transparent)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -370,7 +371,7 @@ function SignupForm() {
               </h2>
               <p style={{ fontSize: "0.85rem", color: "hsl(0 0% 50%)", lineHeight: 1.6, marginBottom: "1.25rem" }}>
                 webhouse.app is in active development. We&apos;ll notify you at{" "}
-                <span style={{ color: "hsl(38 80% 55%)" }}>{email}</span>{" "}
+                <span style={{ color: "var(--brand-on-dark)" }}>{email}</span>{" "}
                 when your account is ready.
               </p>
               <a
@@ -393,7 +394,7 @@ function SignupForm() {
         </div>
 
         <p style={{ marginTop: "1.5rem", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
-          Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>
+          Powered by <span style={{ color: "var(--brand-on-dark)", fontWeight: 500 }}>@webhouse/cms</span>
         </p>
       </div>
     </div>

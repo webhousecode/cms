@@ -15,7 +15,12 @@ import { execFileSync } from "node:child_process";
  */
 
 const SRC = join(process.cwd(), "src");
-const GOLD = [/#f7bb2e/i, /rgba\(\s*247\s*,\s*187\s*,\s*46/i];
+const GOLD = [
+  /#f7bb2e/i,
+  /rgba\(\s*247\s*,\s*187\s*,\s*46/i,
+  // The sign-in screens' amber (#F59E0B) and its family, written as hsl.
+  /hsl\(3[5-9] \d+% \d+%/,
+];
 
 /** Files that render standalone HTML outside the admin document, where the
  *  admin's CSS variables do not exist. Each moves to the brand pack in F210.4. */
@@ -60,7 +65,7 @@ describe("F210.2 — brand colour is a token, not a literal", () => {
 
   it("globals.css defines the tokens once, in :root", () => {
     const css = readFileSync(join(SRC, "app/globals.css"), "utf8");
-    for (const token of ["--brand:", "--brand-foreground:", "--status-warning:"]) {
+    for (const token of ["--brand:", "--brand-foreground:", "--status-warning:", "--brand-strong:", "--brand-strong-foreground:", "--brand-on-dark:", "--brand-on-dark-soft:", "--brand-tint-bg:"]) {
       expect(css.split(token).length - 1, token).toBe(1);
     }
   });
