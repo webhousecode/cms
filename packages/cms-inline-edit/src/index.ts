@@ -81,11 +81,29 @@ export interface InlineEditLabels {
   linkCurrent?: string;
 }
 
+/**
+ * F157.20 — save somewhere other than the CMS.
+ *
+ * Given an adapter, the package edits plain text and hands each changed value
+ * to `save` — no token, no CMS address, no request to a CMS. Built for
+ * cardmem's mockup view, which runs in a sandboxed iframe and saves by
+ * postMessage. Rich fields are edited as plain text in this mode.
+ */
+export interface InlineEditAdapter {
+  /** Persist `value` (plain text, line breaks as "\n") for field element `el`.
+   *  Resolve when stored; reject to show the error pill. */
+  save(el: HTMLElement, value: string): Promise<void>;
+}
+
 export interface InlineEditOptions {
-  /** Base URL of the CMS API, e.g. "https://webhouse.app". */
-  cmsBaseUrl: string;
-  /** Site id passed as ?site= on every CMS API call, e.g. "broberg-ai". */
-  siteId: string;
+  /** Base URL of the CMS API, e.g. "https://webhouse.app". Required unless `adapter` is given. */
+  cmsBaseUrl?: string;
+  /** Site id passed as ?site= on every CMS API call, e.g. "broberg-ai". Required unless `adapter` is given. */
+  siteId?: string;
+  /** F157.20 — save through this instead of the CMS API (plain text only, no login). */
+  adapter?: InlineEditAdapter;
+  /** F157.20 — which elements are editable. Default "[data-cms-field]". */
+  selector?: string;
   /** URL query param carrying a freshly-minted token from the connect redirect. Default "cms_edit". */
   tokenParam?: string;
   /** localStorage key the token is persisted under — survives across sessions/tabs. Default "wh-inline-edit-token". */
@@ -106,8 +124,9 @@ export interface InlineEditOptions {
   labels?: InlineEditLabels;
 }
 
-interface ResolvedOptions extends Required<Omit<InlineEditOptions, "labels">> {
+interface ResolvedOptions extends Required<Omit<InlineEditOptions, "labels" | "adapter">> {
   labels: Required<InlineEditLabels>;
+  adapter?: InlineEditAdapter;
 }
 
 const DEFAULT_LABELS: Required<InlineEditLabels> = {
@@ -163,6 +182,9 @@ let uiLabels: Required<InlineEditLabels> = DEFAULT_LABELS;
 
 function resolveOptions(options: InlineEditOptions): ResolvedOptions {
   return {
+    cmsBaseUrl: "",
+    siteId: "",
+    selector: "[data-cms-field]",
     tokenParam: "cms_edit",
     storageKey: "wh-inline-edit-token",
     // No emoji in defaults — the square-pen SVG is the icon; some sites ban emoji.
@@ -179,6 +201,19 @@ export async function initInlineEdit(options: InlineEditOptions): Promise<void> 
   if (typeof window === "undefined") return;
   const resolved = resolveOptions(options);
   uiLabels = resolved.labels;
+
+  // F157.20 — adapter mode: no login, no CMS. Fields are editable at once and
+  // the host draws its own UI, so no idle pill or badge is shown.
+  if (resolved.adapter) {
+    setupFields("", resolved);
+    editingActive = true;
+    document.body.setAttribute("data-cms-editing", "true");
+    return;
+  }
+  if (!resolved.cmsBaseUrl || !resolved.siteId) {
+    console.error("[cms-inline-edit] cmsBaseUrl and siteId are required unless an adapter is given");
+    return;
+  }
 
   // Capture BEFORE checkEnabled so we know whether the token JUST arrived from
   // the connect redirect (→ drop straight into edit mode) vs. a normal load
@@ -439,7 +474,7 @@ function setupFields(token: string, options: ResolvedOptions): void {
   stateToken = token;
   if (fieldsWired) return;
   injectStyles();
-  document.querySelectorAll<HTMLElement>("[data-cms-field]").forEach((el) => wireField(el, token, options));
+  document.querySelectorAll<HTMLElement>(options.selector).forEach((el) => wireField(el, token, options));
   observeNewFields();
   fieldsWired = true;
 }
@@ -500,9 +535,14 @@ function observeNewFields(): void {
  */
 export function rescanFields(): void {
   if (typeof window === "undefined" || !stateOptions) return;
-  const token = localStorage.getItem(stateOptions.storageKey);
+  const options = stateOptions;
+  if (options.adapter) {
+    document.querySelectorAll<HTMLElement>(options.selector).forEach((el) => wireField(el, "", options));
+    return;
+  }
+  const token = localStorage.getItem(options.storageKey);
   if (!token || isExpired(token)) return;
-  document.querySelectorAll<HTMLElement>("[data-cms-field]").forEach((el) => wireField(el, token, stateOptions!));
+  document.querySelectorAll<HTMLElement>(options.selector).forEach((el) => wireField(el, token, options));
 }
 
 function enterEditMode(): void {
@@ -593,11 +633,12 @@ function wireField(el: HTMLElement, token: string, options: ResolvedOptions): vo
   //    fields: headings/bios/hero with a branded <em class="o"> accent that
   //    has no Markdown equivalent — converting would strip it).
   // Everything else stays a plain single-line contenteditable saving textContent.
-  if (el.dataset.cmsRichtext === "true") {
+  // F157.20: an adapter edits plain text only — rich markers are ignored there.
+  if (!options.adapter && el.dataset.cmsRichtext === "true") {
     wireRichField(el, token, options, "markdown");
     return;
   }
-  if (el.dataset.cmsHtml === "true") {
+  if (!options.adapter && el.dataset.cmsHtml === "true") {
     wireRichField(el, token, options, "html");
     return;
   }
@@ -2249,6 +2290,16 @@ function serializeInlineNode(child: Node): string {
 }
 
 async function saveField(el: HTMLElement, value: string, token: string, options: ResolvedOptions): Promise<void> {
+  if (options.adapter) {
+    showPill(el, "saving");
+    try {
+      await options.adapter.save(el, value);
+      showPill(el, "saved");
+    } catch {
+      showPill(el, "error");
+    }
+    return;
+  }
   const collection = el.dataset.cmsCollection;
   const slug = el.dataset.cmsSlug;
   const field = el.dataset.cmsField;
