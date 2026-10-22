@@ -1,5 +1,7 @@
 "use client";
 import { BrandLogo } from "@/components/brand-logo";
+import { PoweredBy } from "@/components/powered-by";
+import { useBrand } from "@/lib/brand-context";
 
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,6 +11,7 @@ import { startAuthentication } from "@simplewebauthn/browser";
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
+  const brand = useBrand();
   const from = params.get("from") ?? "/admin";
   // F199.4 — BID's login rule: with Broberg ID on there is ONE login element,
   // the button to BID. No password, passkey, GitHub or QR — for anyone.
@@ -90,13 +93,13 @@ function LoginForm() {
     else if (ghError === "github_api_failed") setError("Could not reach GitHub — try again");
     else if (ghError === "github_token_failed") setError("GitHub token exchange failed — try again");
     // F199 — Broberg ID callback errors (/api/auth/bid/callback)
-    else if (ghError === "bid_unknown_account") setError("This Broberg ID account has no access to webhouse.app. Sign in with your password and connect Broberg ID under Account, or ask your administrator for an invitation.");
+    else if (ghError === "bid_unknown_account") setError(`This Broberg ID account has no access to ${brand.name}. Sign in with your password and connect Broberg ID under Account, or ask your administrator for an invitation.`);
     else if (ghError === "bid_login_expired") setError("The Broberg ID sign-in took too long — try again");
-    else if (ghError === "bid_sub_taken") setError("This Broberg ID account is already connected to another webhouse.app user");
+    else if (ghError === "bid_sub_taken") setError(`This Broberg ID account is already connected to another ${brand.name} user`);
     else if (ghError === "bid_already_linked") setError("Your user is already connected to a different Broberg ID account");
     else if (ghError === "bid_required") setError("Sign in with Broberg ID");
     else if (ghError?.startsWith("bid_")) setError("Broberg ID sign-in could not complete — try again");
-  }, [params]);
+  }, [params, brand.name]);
 
   if (checking) {
     return (
@@ -556,19 +559,7 @@ function LoginForm() {
           </p>
         </div>}
         </div>
-        <p style={{ marginTop: "0", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
-          Powered by <span style={{ color: "var(--brand-on-dark)", fontWeight: 500 }}>@webhouse/cms</span>
-          {" · "}
-          <a
-            data-testid="login-docs-link"
-            href="https://docs.webhouse.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "var(--brand-on-dark)", textDecoration: "none" }}
-          >
-            Docs
-          </a>
-        </p>
+        <PoweredBy docs style={{ marginTop: "0" }} />
       </div>
     </div>
   );

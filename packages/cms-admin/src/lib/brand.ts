@@ -56,6 +56,11 @@ export const BRAND_PACKS: BrandPack[] = [
  *  the server through Fly's edge. */
 const LOCALHOST_ALIAS = ".localhost";
 
+/** webhouse's own brand — the only one that says "Powered by @webhouse/cms". */
+export function isDefaultBrand(brand: BrandPack): boolean {
+  return brand.id === DEFAULT_BRAND.id;
+}
+
 export function resolveBrand(host: string | null | undefined, packs: BrandPack[] = BRAND_PACKS): BrandPack {
   if (!host) return DEFAULT_BRAND;
   let name = host.trim().toLowerCase().replace(/:\d+$/, "");
@@ -63,7 +68,12 @@ export function resolveBrand(host: string | null | undefined, packs: BrandPack[]
   return packs.find((p) => p.hosts.includes(name)) ?? DEFAULT_BRAND;
 }
 
-const HEX = /^#[0-9a-fA-F]{6}$/;
+/** The brand for an incoming request — the address it was opened on. */
+export function brandForRequest(headers: { get(name: string): string | null }): BrandPack {
+  return resolveBrand(headers.get("x-forwarded-host") ?? headers.get("host"));
+}
+
+const HEX =/^#[0-9a-fA-F]{6}$/;
 
 function hex(value: string, field: string): string {
   if (!HEX.test(value)) throw new Error(`brand ${field} must be a 6-digit hex colour, got ${JSON.stringify(value)}`);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useBrand } from "@/lib/brand-context";
 import { Check, Eye, EyeOff, AlertTriangle, Copy, RefreshCw, Zap, Send } from "lucide-react";
 import { switchSite } from "@/lib/switch-context";
 import { toast } from "sonner";
@@ -1020,6 +1021,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 
 /* ─── Revalidation section ─────────────────────────────────────── */
 function RevalidationSection() {
+	const brand = useBrand();
 	const [adapter, setAdapter] = useState<string | null>(null); // null = loading
 	const [url, setUrl] = useState("");
 	const [secret, setSecret] = useState("");
@@ -1148,7 +1150,7 @@ function RevalidationSection() {
 					<div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
 						<Zap style={{ width: "1rem", height: "1rem", color: "var(--primary)", flexShrink: 0, marginTop: "0.15rem" }} />
 						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0, lineHeight: 1.5 }}>
-							When content changes, <span style={{ color: "var(--foreground)", fontWeight: 600 }}>webhouse</span><span style={{ color: "var(--brand)", fontWeight: 600 }}>.app</span> sends a signed webhook to your site&apos;s revalidation endpoint,
+							When content changes, <span style={{ color: "var(--foreground)", fontWeight: 600 }}>{brand.name}</span> sends a signed webhook to your site&apos;s revalidation endpoint,
 							triggering on-demand path revalidation. Only needed for production deployments.
 						</p>
 					</div>

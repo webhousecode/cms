@@ -8,15 +8,14 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/pwa-register";
 import { UpmetricsProvider } from "@/components/upmetrics-provider";
-import { resolveBrand, brandCss } from "@/lib/brand";
+import { brandForRequest, brandCss } from "@/lib/brand";
 import { BrandProvider } from "@/lib/brand-context";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 /** F210 — the brand follows the address the CMS is opened on. */
 async function currentBrand() {
-  const h = await headers();
-  return resolveBrand(h.get("x-forwarded-host") ?? h.get("host"));
+  return brandForRequest(await headers());
 }
 
 export async function generateMetadata(): Promise<Metadata> {

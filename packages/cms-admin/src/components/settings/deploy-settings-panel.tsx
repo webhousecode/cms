@@ -1052,7 +1052,7 @@ export function DeploySettingsPanel() {
                     {dnsStatus.state === "ok" && <span style={{ color: "#16a34a" }}>● CNAME record live</span>}
                     {dnsStatus.state === "missing" && <span style={{ color: "#d97706" }}>● CNAME record not yet created</span>}
                     {dnsStatus.state === "mismatch" && <span style={{ color: "#d97706" }}>● CNAME points elsewhere</span>}
-                    {dnsStatus.state === "no-zone" && <span style={{ color: "var(--muted-foreground)" }}>● Zone not managed by webhouse DNS — set this CNAME manually at your registrar</span>}
+                    {dnsStatus.state === "no-zone" && <span style={{ color: "var(--muted-foreground)" }}>● Zone not managed by our DNS — set this CNAME manually at your registrar</span>}
                     {dnsStatus.state === "no-target" && <span style={{ color: "var(--muted-foreground)" }}>● Configure the deploy provider before creating the CNAME</span>}
                   </div>
                   {dnsStatus.currentTarget && dnsStatus.state === "mismatch" && (

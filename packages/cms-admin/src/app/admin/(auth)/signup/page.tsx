@@ -1,4 +1,6 @@
 "use client";
+import { PoweredBy } from "@/components/powered-by";
+import { useBrand } from "@/lib/brand-context";
 import { BrandLogo } from "@/components/brand-logo";
 
 import { useState, FormEvent } from "react";
@@ -52,6 +54,7 @@ function blurReset(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) 
 }
 
 function SignupForm() {
+  const brand = useBrand();
   const [step, setStep] = useState<1 | 2 | "done">(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -370,7 +373,7 @@ function SignupForm() {
                 You&apos;re on the list
               </h2>
               <p style={{ fontSize: "0.85rem", color: "hsl(0 0% 50%)", lineHeight: 1.6, marginBottom: "1.25rem" }}>
-                webhouse.app is in active development. We&apos;ll notify you at{" "}
+                {brand.name} is in active development. We&apos;ll notify you at{" "}
                 <span style={{ color: "var(--brand-on-dark)" }}>{email}</span>{" "}
                 when your account is ready.
               </p>
@@ -393,9 +396,7 @@ function SignupForm() {
           )}
         </div>
 
-        <p style={{ marginTop: "1.5rem", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
-          Powered by <span style={{ color: "var(--brand-on-dark)", fontWeight: 500 }}>@webhouse/cms</span>
-        </p>
+        <PoweredBy />
       </div>
     </div>
   );

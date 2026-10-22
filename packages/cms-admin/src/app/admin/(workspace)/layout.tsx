@@ -21,18 +21,21 @@ import { loadRegistry, findSite, findOrg } from "@/lib/site-registry";
 import { readUserState } from "@/lib/user-state";
 import type { Metadata } from "next";
 import { resolveMembershipRole } from "@/lib/require-role";
+import { brandForRequest } from "@/lib/brand";
 
 export async function generateMetadata(): Promise<Metadata> {
+  // F210.3 — with no site to name the tab after, it carries the brand's name.
+  const fallback = { title: brandForRequest(await headers()).name };
   try {
     const registry = await loadRegistry();
-    if (!registry) return { title: "webhouse.app" };
+    if (!registry) return fallback;
     const cookieStore = await cookies();
     const orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
     const siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
     const site = findSite(registry, orgId, siteId);
     if (site?.name) return { title: site.name };
   } catch { /* fall through */ }
-  return { title: "webhouse.app" };
+  return fallback;
 }
 
 /**

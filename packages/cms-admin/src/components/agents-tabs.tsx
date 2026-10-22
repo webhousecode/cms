@@ -412,7 +412,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
             Marketplace ({marketplace.length})
           </p>
           <p className="text-xs text-muted-foreground ml-auto">
-            Curated by the people behind webhouse.app — updated automatically.
+            Curated templates — updated automatically.
           </p>
         </div>
         {marketplace.length === 0 ? (

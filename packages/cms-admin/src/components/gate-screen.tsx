@@ -1,4 +1,5 @@
 "use client";
+import { PoweredBy } from "@/components/powered-by";
 import { BrandLogo } from "@/components/brand-logo";
 
 import { useEffect } from "react";
@@ -57,9 +58,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           </div>
           {children}
         </div>
-        <p style={{ marginTop: "1.5rem", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
-          Powered by <span style={{ color: "var(--brand-on-dark)", fontWeight: 500 }}>@webhouse/cms</span>
-        </p>
+        <PoweredBy />
       </div>
     </div>
   );

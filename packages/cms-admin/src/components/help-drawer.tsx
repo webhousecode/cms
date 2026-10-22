@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useBrand } from "@/lib/brand-context";
 import {
   HelpCircle, X, BookOpen, Wrench, Activity, Mail,
   MessageCircle, Keyboard, ExternalLink, Bot,
@@ -75,6 +76,8 @@ type DrawerPage = "help" | "shortcuts" | "ai-tools";
 
 export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: boolean; onClose: () => void; initialPage?: DrawerPage }) {
   const [page, setPage] = useState<DrawerPage>(initialPage);
+  const brand = useBrand();
+  const dot = brand.name.lastIndexOf(".");
 
   // Reset page when opened
   useEffect(() => { if (open) setPage(initialPage); }, [open, initialPage]);
@@ -156,7 +159,11 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
           color: "var(--muted-foreground)",
           fontFamily: "monospace",
         }}>
-          <span style={{ color: "#fff", fontWeight: 600 }}>webhouse</span><span style={{ color: "var(--primary)" }}>.app</span> · v0.2.10
+          {dot > 0 ? (
+            <><span style={{ color: "#fff", fontWeight: 600 }}>{brand.name.slice(0, dot)}</span><span style={{ color: "var(--primary)" }}>{brand.name.slice(dot)}</span></>
+          ) : (
+            <span style={{ color: "#fff", fontWeight: 600 }}>{brand.name}</span>
+          )} · v0.2.10
         </div>
     </div>,
     document.body

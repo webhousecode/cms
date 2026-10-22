@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, FormEvent } from "react";
 import { Check, Send, AlertCircle, ExternalLink, Mail } from "lucide-react";
 import { SettingsCard } from "./settings-card";
 import { toast } from "sonner";
+import { useBrand } from "@/lib/brand-context";
 
 interface EmailConfig {
   resendApiKey: string;
@@ -17,10 +18,11 @@ function maskKey(key: string): string {
 }
 
 export function EmailSettingsPanel() {
+  const brand = useBrand();
   const [config, setConfig] = useState<EmailConfig>({
     resendApiKey: "",
     emailFrom: "",
-    emailFromName: "webhouse.app",
+    emailFromName: brand.name,
   });
   const [editing, setEditing] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -41,13 +43,13 @@ export function EmailSettingsPanel() {
           setConfig({
             resendApiKey: data.resendApiKey || "",
             emailFrom: data.emailFrom || "",
-            emailFromName: data.emailFromName || "webhouse.app",
+            emailFromName: data.emailFromName || brand.name,
           });
         }
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [brand.name]);
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
@@ -77,7 +79,7 @@ export function EmailSettingsPanel() {
       setConfig({
         resendApiKey: data.resendApiKey || "",
         emailFrom: data.emailFrom || "",
-        emailFromName: data.emailFromName || "webhouse.app",
+        emailFromName: data.emailFromName || brand.name,
       });
       setEditing({});
       setSaved(true);
@@ -160,7 +162,7 @@ export function EmailSettingsPanel() {
     {
       id: "emailFromName",
       label: "Sender name",
-      placeholder: "webhouse.app",
+      placeholder: brand.name,
       type: "text",
     },
   ] as const;

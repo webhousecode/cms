@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useBrand } from "@/lib/brand-context";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { CapabilitiesSettingsPanel } from "@/components/settings/capabilities-settings-panel";
@@ -109,6 +110,7 @@ const CREDS_DEFAULTS: OrgCreds = {
 };
 
 export default function OrgSettingsPage() {
+  const brand = useBrand();
   const router = useRouter();
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState("");
@@ -519,7 +521,7 @@ export default function OrgSettingsPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Sender display name</label>
             <input data-testid="email-from-name" type="text" value={creds.emailFromName} onChange={(e) => setCreds((c) => ({ ...c, emailFromName: e.target.value }))}
-              placeholder="webhouse.app" style={{ ...credInputStyle, fontFamily: "inherit" }} />
+              placeholder={brand.name} style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", gap: "1rem" }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -536,7 +538,7 @@ export default function OrgSettingsPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Footer name ("Sent by …")</label>
             <input data-testid="email-footer-name" type="text" value={creds.emailFooterName} onChange={(e) => setCreds((c) => ({ ...c, emailFooterName: e.target.value }))}
-              placeholder="webhouse.app" style={{ ...credInputStyle, fontFamily: "inherit" }} />
+              placeholder={brand.name} style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
         </div>
       )}
