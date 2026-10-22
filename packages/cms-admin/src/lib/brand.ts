@@ -60,6 +60,9 @@ export const BRAND_PACKS: BrandPack[] = [
     colorDark: "#5FB3B3",
     // Manrope is fysio.work's heading/button/menu face (their CSS, 22/10-2026).
     font: { family: "Manrope", stylesheet: "/brands/fysio-work/fonts.css" },
+    // F211.3 — Danish clinics: the admin opens in Danish unless the user picked
+    // another language under Account → Language.
+    defaultLocale: "da",
     // BID client «cms-fysio-work» (made by the bid session 22/10-2026), whose
     // dialog carries fysio.work's logo, icon and colours.
     bidClient: { idEnv: "BID_CLIENT_ID_FYSIO_WORK", secretEnv: "BID_CLIENT_SECRET_FYSIO_WORK" },

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { resolveBrand, brandCss, DEFAULT_BRAND, type BrandPack } from "../brand";
+import { resolveBrand, brandCss, DEFAULT_BRAND, BRAND_PACKS, type BrandPack } from "../brand";
+import { resolveUiLocale } from "../../i18n/locale";
 
 /**
  * F210.1 — the brand is chosen by the ADDRESS the CMS is opened on.
@@ -115,5 +116,28 @@ describe("F210.1 brandCss", () => {
   it("refuses a colour that is not a plain hex value (it lands inside a <style> tag)", () => {
     expect(() => brandCss({ ...FYSIO, color: "red;}</style><script>" })).toThrow(/hex/);
     expect(() => brandCss({ ...FYSIO, colorForeground: "url(x)" })).toThrow(/hex/);
+  });
+});
+
+describe("F211.3 cms.fysio.work opens in Danish", () => {
+  const fysio = resolveBrand("cms.fysio.work", BRAND_PACKS);
+
+  it("the real fysio.work pack defaults to Danish", () => {
+    expect(fysio.id).toBe("fysio-work");
+    expect(fysio.defaultLocale).toBe("da");
+  });
+
+  it("a fysio user with no choice and an English browser still gets Danish", () => {
+    expect(resolveUiLocale({ user: null, brand: fysio.defaultLocale, acceptLanguage: "en-US,en;q=0.9" })).toBe("da");
+  });
+
+  it("the user's own choice still wins on fysio", () => {
+    expect(resolveUiLocale({ user: "en", brand: fysio.defaultLocale, acceptLanguage: "da" })).toBe("en");
+  });
+
+  it("CONTROL: webhouse.app is not pulled into Danish", () => {
+    const webhouse = resolveBrand("webhouse.app", BRAND_PACKS);
+    expect(webhouse.defaultLocale).toBeUndefined();
+    expect(resolveUiLocale({ user: null, brand: webhouse.defaultLocale, acceptLanguage: "en-US" })).toBe("en");
   });
 });
