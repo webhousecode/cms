@@ -48,6 +48,12 @@ const LEDGER: Record<string, string> = {
     "the whole span is 0.3.0 flipping `live`'s default to false, which we were " +
     "already immune to — we pass it explicitly. The gate tests ran UNCHANGED " +
     "and green on 0.7.1, which is what proves the behaviour is the same.",
+  "@broberg/i18n":
+    "Exact-pinned 0.3.1 on 2026-10-22 (F211.1) — the admin's own language. Exact " +
+    "on purpose: we use only its pure translate() + missingKeys(), and 0.3.0 → " +
+    "0.3.1 was itself a crash fix (an Intl-rejected locale threw RangeError on a " +
+    "plural lookup). A newer release is taken deliberately, with ui-locale.test.ts " +
+    "run against it.",
   "@broberg/deploy-core":
     "Exact-pinned 0.4.1 on 2026-09-24 (F200) — FlyClient replaces our two " +
     "hand-rolled Fly clients. Exact on purpose: 0.4.0 shipped without a " +
