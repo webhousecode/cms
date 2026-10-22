@@ -8,6 +8,7 @@ import fs from "fs/promises";
 import path from "path";
 import { cookies } from "next/headers";
 import { ORG_SETTINGS_SECRET_FIELDS, clearRedactedSecrets } from "./beam/types";
+import { isSafeId } from "./active-site-cookie";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -210,6 +211,8 @@ export async function getActiveOrgId(): Promise<string | null> {
 /** Path to org settings file */
 async function orgSettingsPath(orgId: string): Promise<string> {
   const { getAdminDataDir } = await import("./site-registry");
+  // Security W41 C1 — the org id becomes a file name; never a dot or slash.
+  if (!isSafeId(orgId)) throw new Error(`invalid org id: ${JSON.stringify(orgId)}`);
   const adminDir = getAdminDataDir();
   return path.join(adminDir, "_data", "org-settings", `${orgId}.json`);
 }

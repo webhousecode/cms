@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveOrgId, readOrgSettings, writeOrgSettings, type OrgSettings } from "@/lib/org-settings";
 import { getSiteRole } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 export async function GET() {
+  // Security W41 C1 — org settings hold the org's keys; same bar as writing them.
+  const denied = await requirePermission("settings.edit"); if (denied) return denied;
   const orgId = await getActiveOrgId();
   if (!orgId) return NextResponse.json({});
   const settings = await readOrgSettings();

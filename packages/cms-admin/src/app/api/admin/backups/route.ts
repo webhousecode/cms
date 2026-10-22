@@ -5,6 +5,8 @@ import { requireCapability } from "@/lib/capabilities";
 
 /** GET /api/admin/backups — list all snapshots */
 export async function GET() {
+  // Security W41 NY-K1 — listing was open to any session for any ?site=.
+  const denied = await requirePermission("backup.manage"); if (denied) return denied;
   const snapshots = await listBackups();
   return NextResponse.json({ snapshots });
 }

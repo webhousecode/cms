@@ -216,7 +216,14 @@ export async function proxy(request: NextRequest) {
   // resolved above we rewrite to the slug-stripped path; otherwise pass
   // through unchanged. Both carry the augmented requestHeaders (cookies +
   // x-pathname). All success-paths below go through this.
-  const forwardOk = () => {
+  const forwardOk = async () => {
+    // Security W41 C1 — forward only a cms-active-org/site pair that exists
+    // in the registry. Libraries build file paths from these browser-chosen
+    // values (org-settings: cms-active-org=../users read _data/users.json).
+    const { loadRegistry } = await import("./lib/site-registry");
+    const { sanitizeActiveSiteCookies } = await import("./lib/active-site-cookie");
+    const rawCookie = requestHeaders.get("cookie");
+    if (rawCookie) requestHeaders.set("cookie", sanitizeActiveSiteCookies(rawCookie, await loadRegistry()));
     const res = slugRewriteUrl
       ? NextResponse.rewrite(slugRewriteUrl, { request: { headers: requestHeaders } })
       : NextResponse.next({ request: { headers: requestHeaders } });

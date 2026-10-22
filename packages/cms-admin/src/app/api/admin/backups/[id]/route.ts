@@ -8,6 +8,9 @@ type Ctx = { params: Promise<{ id: string }> };
 
 /** GET /api/admin/backups/[id] — download backup zip */
 export async function GET(_req: NextRequest, ctx: Ctx) {
+  // Security W41 NY-K1 — the zip holds the site's whole _data/ (keys, team,
+  // form submissions); download was open to any session for any ?site=.
+  const denied = await requirePermission("backup.manage"); if (denied) return denied;
   const { id } = await ctx.params;
   const filePath = await getBackupFilePath(id);
   if (!filePath) {

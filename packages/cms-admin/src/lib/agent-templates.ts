@@ -18,6 +18,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
+import { isSafeId } from "./active-site-cookie";
 import type { AgentConfig } from "./agents";
 
 /** Fields stripped from an agent config when saving as a template. */
@@ -58,6 +59,8 @@ export interface AgentTemplate {
 
 async function getTemplatesDir(orgId: string): Promise<string> {
   const { getAdminDataDir } = await import("./site-registry");
+  // Security W41 C1 — the org id becomes a directory name; never a dot or slash.
+  if (!isSafeId(orgId)) throw new Error(`invalid org id: ${JSON.stringify(orgId)}`);
   const adminDir = getAdminDataDir();
   return path.join(adminDir, "_data", "agent-templates", orgId);
 }

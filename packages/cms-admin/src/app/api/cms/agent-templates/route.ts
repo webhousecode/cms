@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { listLocalTemplates, saveLocalTemplate, type AgentTemplate } from "@/lib/agent-templates";
 import { fetchMarketplaceTemplates } from "@/lib/marketplace-templates";
 import { denyViewers } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 import { cookies } from "next/headers";
 
 async function getActiveOrgId(): Promise<string | null> {
@@ -23,6 +24,8 @@ async function getActiveOrgId(): Promise<string | null> {
 }
 
 export async function GET(request: NextRequest) {
+  // Security W41 C1 — was readable by any session for any org.
+  const denied = await requirePermission("agents.run"); if (denied) return denied;
   const source = request.nextUrl.searchParams.get("source") ?? "all";
   const orgId = await getActiveOrgId();
 
