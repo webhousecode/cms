@@ -553,7 +553,7 @@ export default function InteractiveDetailPage() {
             <span className={`flex items-center gap-1 text-xs font-mono px-2.5 py-1 rounded-full ${
               detail.status === "published"
                 ? "bg-green-500/10 text-green-400"
-                : "bg-yellow-500/10 text-yellow-400"
+                : "bg-status-warning/10 text-status-warning"
             }`}>
               <Globe className="w-3 h-3" />
               {detail.status ?? "draft"}

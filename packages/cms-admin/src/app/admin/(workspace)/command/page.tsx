@@ -94,7 +94,7 @@ export default function CommandPage() {
       ? (params.currentMonthSpentUsd / params.monthlyBudgetUsd) * 100
       : 0;
   const budgetColor =
-    budgetPct > 90 ? "bg-red-500" : budgetPct > 70 ? "bg-yellow-500" : "bg-green-500";
+    budgetPct > 90 ? "bg-red-500" : budgetPct > 70 ? "bg-status-warning" : "bg-green-500";
 
   return (
     <div data-testid="command-root">

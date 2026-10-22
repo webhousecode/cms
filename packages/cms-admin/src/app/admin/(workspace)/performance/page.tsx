@@ -205,7 +205,7 @@ export default function PerformancePage() {
                 </div>
                 <div className="rounded-lg border border-border p-3">
                   <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">AI accepted as-is</p>
-                  <p className={`text-xl font-semibold ${ratio.aiAcceptanceRate >= 80 ? "text-green-500" : ratio.aiAcceptanceRate >= 50 ? "text-yellow-500" : "text-red-500"}`}>
+                  <p className={`text-xl font-semibold ${ratio.aiAcceptanceRate >= 80 ? "text-green-500" : ratio.aiAcceptanceRate >= 50 ? "text-status-warning" : "text-red-500"}`}>
                     {ratio.aiAcceptanceRate.toFixed(0)}%
                   </p>
                 </div>
@@ -309,7 +309,7 @@ export default function PerformancePage() {
                               a.successRate >= 0.9
                                 ? "text-green-500"
                                 : a.successRate >= 0.7
-                                  ? "text-yellow-500"
+                                  ? "text-status-warning"
                                   : "text-red-500"
                             }
                           >

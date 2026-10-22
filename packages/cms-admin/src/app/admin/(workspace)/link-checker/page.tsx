@@ -22,11 +22,11 @@ function timeAgo(iso: string): string {
 
 function statusIcon(status: LinkResult["status"]) {
   if (status === "ok") return <CheckCircle style={{ width: "0.875rem", height: "0.875rem", color: "#4ade80", flexShrink: 0 }} />;
-  if (status === "redirect") return <ArrowRight style={{ width: "0.875rem", height: "0.875rem", color: "#facc15", flexShrink: 0 }} />;
+  if (status === "redirect") return <ArrowRight style={{ width: "0.875rem", height: "0.875rem", color: "var(--status-warning)", flexShrink: 0 }} />;
   // Amber, not red: a doubtful address and an unchecked one are questions, not
   // verdicts. Painting them red is how a tool teaches people to ignore red.
   if (status === "schemeless" || status === "unverified")
-    return <AlertTriangle style={{ width: "0.875rem", height: "0.875rem", color: "#fbbf24", flexShrink: 0 }} />;
+    return <AlertTriangle style={{ width: "0.875rem", height: "0.875rem", color: "var(--status-warning)", flexShrink: 0 }} />;
   if (status === "dangerous")
     return <XCircle style={{ width: "0.875rem", height: "0.875rem", color: "#f87171", flexShrink: 0 }} />;
   if (status === "skipped")
@@ -401,8 +401,8 @@ export default function LinkCheckerPage() {
             {[
               { key: "broken" as const, label: "Broken Links", count: broken.length, icon: <XCircle style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
               { key: "broken-images" as const, label: "Broken Images", count: brokenImages.length, icon: <ImageOff style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
-              { key: "attention" as const, label: "Se efter", count: attention.length, icon: <AlertTriangle style={{ width: "1rem", height: "1rem", color: "#fbbf24" }} /> },
-              { key: "redirect" as const, label: "Redirects", count: redirects.length, icon: <ArrowRight style={{ width: "1rem", height: "1rem", color: "#facc15" }} /> },
+              { key: "attention" as const, label: "Se efter", count: attention.length, icon: <AlertTriangle style={{ width: "1rem", height: "1rem", color: "var(--status-warning)" }} /> },
+              { key: "redirect" as const, label: "Redirects", count: redirects.length, icon: <ArrowRight style={{ width: "1rem", height: "1rem", color: "var(--status-warning)" }} /> },
               { key: "ok" as const, label: "OK", count: ok.length, icon: <CheckCircle style={{ width: "1rem", height: "1rem", color: "#4ade80" }} /> },
               { key: "all" as const, label: "All", count: results.length, icon: <Link2 style={{ width: "1rem", height: "1rem", color: "var(--muted-foreground)" }} /> },
             ].map(({ key, label, count, icon }) => (
@@ -493,9 +493,9 @@ export default function LinkCheckerPage() {
                         className={cn(
                           "text-xs font-mono px-2 py-0.5 rounded-full",
                           r.status === "ok" && "bg-green-500/10 text-green-400",
-                          r.status === "redirect" && "bg-yellow-500/10 text-yellow-400",
+                          r.status === "redirect" && "bg-status-warning/10 text-status-warning",
                           (r.status === "broken" || r.status === "error") && "bg-red-500/10 text-red-400",
-                          (r.status === "schemeless" || r.status === "unverified") && "bg-amber-500/10 text-amber-400",
+                          (r.status === "schemeless" || r.status === "unverified") && "bg-status-warning/10 text-status-warning",
                           r.status === "skipped" && "bg-muted text-muted-foreground",
                         )}
                       >

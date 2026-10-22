@@ -425,7 +425,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             <CheckCircle style={{ width: 14, height: 14, display: "inline", verticalAlign: "text-bottom", marginRight: 4, color: "#22c55e" }} />
             Site beamed successfully!
             {pushProgress.checksumErrors && pushProgress.checksumErrors > 0 && (
-              <span style={{ color: "#f59e0b" }}> ({pushProgress.checksumErrors} checksum warnings)</span>
+              <span style={{ color: "var(--status-warning)" }}> ({pushProgress.checksumErrors} checksum warnings)</span>
             )}
           </div>
         )}
@@ -611,11 +611,11 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             <div style={{ color: "var(--muted-foreground)" }}>
               {importResult.stats.contentFiles} documents · {importResult.stats.mediaFiles} media · {importResult.stats.dataFiles} config files
               {importResult.checksumErrors > 0 && (
-                <span style={{ color: "#f59e0b" }}> · {importResult.checksumErrors} checksum warnings</span>
+                <span style={{ color: "var(--status-warning)" }}> · {importResult.checksumErrors} checksum warnings</span>
               )}
             </div>
             {importResult.secretsRequired.length > 0 && (
-              <div style={{ marginTop: "0.5rem", color: "#f59e0b" }}>
+              <div style={{ marginTop: "0.5rem", color: "var(--status-warning)" }}>
                 <AlertTriangle style={{ width: 13, height: 13, display: "inline", verticalAlign: "text-bottom", marginRight: 4 }} />
                 Secrets needed: {importResult.secretsRequired.join(", ")}
               </div>

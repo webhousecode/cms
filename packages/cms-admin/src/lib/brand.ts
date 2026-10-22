@@ -109,8 +109,20 @@ export function readableOn(bg: string): string {
   return contrast(bg, LIGHT_TEXT) >= contrast(bg, DARK_TEXT) ? LIGHT_TEXT : DARK_TEXT;
 }
 
-function vars(color: string, fg: string): string {
-  return `--brand:${color};--brand-foreground:${fg};--primary:${color};--primary-foreground:${fg};--brand-strong:${color};--brand-strong-foreground:${fg}`;
+/** F210.6 — a customer brand's "warning" (e.g. an SEO score of 50–79). Still an
+ *  orange between green and red, but never webhouse gold (#F7BB2E). */
+export const CUSTOMER_WARNING = "#EA580C";
+
+/** `tint` = the menu's active-item background strength (globals.css: 15% dark, 12% light). */
+function vars(color: string, fg: string, tint: number): string {
+  return (
+    `--brand:${color};--brand-foreground:${fg};--primary:${color};--primary-foreground:${fg};` +
+    `--brand-strong:${color};--brand-strong-foreground:${fg};` +
+    // F210.6 — the focus ring and the menu's active item. globals.css writes
+    // them as oklch(… 85), which the F210.2 hex sweep never saw.
+    `--ring:${color};--sidebar-accent:color-mix(in srgb, ${color} ${tint}%, transparent);` +
+    `--sidebar-accent-foreground:${color};--status-warning:${CUSTOMER_WARNING}`
+  );
 }
 
 /** The sign-in / gate screens are dark whatever the theme, so their accent
@@ -121,8 +133,8 @@ function onDarkVars(onDark: string): string {
 
 /**
  * The CSS that re-skins the admin for `brand`. Empty for the default brand, so
- * webhouse.app is untouched. `--status-warning` (the amber of a score) is
- * deliberately left alone: it is a signal, not the brand.
+ * webhouse.app is untouched. `--status-warning` keeps its meaning (an orange
+ * between green and red) but on a customer brand is not webhouse gold (F210.6).
  *
  * Selectors: dark is the default (:root) and every data-theme starting with
  * "dark"; the light rule comes after with the same specificity, so it wins on
@@ -136,5 +148,5 @@ export function brandCss(brand: BrandPack): string {
   const darkFg = brand.colorDarkForeground
     ? hex(brand.colorDarkForeground, "colorDarkForeground")
     : brand.colorDark ? readableOn(dark) : lightFg;
-  return `html:root,html[data-theme^="dark"]{${vars(dark, darkFg)};${onDarkVars(dark)}}html[data-theme^="light"]{${vars(light, lightFg)};${onDarkVars(dark)}}`;
+  return `html:root,html[data-theme^="dark"]{${vars(dark, darkFg, 15)};${onDarkVars(dark)}}html[data-theme^="light"]{${vars(light, lightFg, 12)};${onDarkVars(dark)}}`;
 }

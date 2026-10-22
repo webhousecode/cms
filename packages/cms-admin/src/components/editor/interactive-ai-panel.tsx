@@ -191,7 +191,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
 
       {/* Token size warning for large interactives */}
       {content.length > 12000 && messages.length === 0 && (
-        <div style={{ padding: "0.5rem 0.75rem", display: "flex", alignItems: "center", gap: "0.375rem", background: "rgba(234,179,8,0.08)", borderBottom: "1px solid rgba(234,179,8,0.2)", fontSize: "0.7rem", color: "#eab308" }}>
+        <div style={{ padding: "0.5rem 0.75rem", display: "flex", alignItems: "center", gap: "0.375rem", background: "color-mix(in srgb, var(--status-warning) 8%, transparent)", borderBottom: "1px solid color-mix(in srgb, var(--status-warning) 20%, transparent)", fontSize: "0.7rem", color: "var(--status-warning)" }}>
           <AlertTriangle style={{ width: "0.75rem", height: "0.75rem", flexShrink: 0 }} />
           <span>This interactive is large ({Math.round(content.length / 1024)} KB). If AI output gets truncated, increase Max Tokens in Settings → AI.</span>
         </div>
@@ -250,7 +250,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
               return (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", marginTop: "0.5rem" }}>
                   {isTruncated && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 0.625rem", borderRadius: "6px", background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.3)", fontSize: "0.7rem", color: "#eab308" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 0.625rem", borderRadius: "6px", background: "color-mix(in srgb, var(--status-warning) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--status-warning) 30%, transparent)", fontSize: "0.7rem", color: "var(--status-warning)" }}>
                       <AlertTriangle style={{ width: "0.75rem", height: "0.75rem", flexShrink: 0 }} />
                       Output was truncated — the HTML is incomplete. Try asking AI to make only the specific change instead of rewriting everything.
                     </div>

@@ -362,7 +362,7 @@ export function ImportWizard({
               <p style={{ fontSize: "0.82rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
                 <strong>{validRows}</strong> of {previewRows.length} rows valid.
                 {previewRows.length - validRows > 0 && (
-                  <span style={{ color: "#f59e0b" }}> {previewRows.length - validRows} will be skipped.</span>
+                  <span style={{ color: "var(--status-warning)" }}> {previewRows.length - validRows} will be skipped.</span>
                 )}
               </p>
 
@@ -396,7 +396,7 @@ export function ImportWizard({
                             <Check style={{ width: 12, height: 12, color: "#22c55e" }} />
                           ) : (
                             <span title={row.errors.map((e) => `${e.field}: ${e.message}`).join(", ")}>
-                              <AlertTriangle style={{ width: 12, height: 12, color: "#f59e0b" }} />
+                              <AlertTriangle style={{ width: 12, height: 12, color: "var(--status-warning)" }} />
                             </span>
                           )}
                         </td>
@@ -441,7 +441,7 @@ export function ImportWizard({
               </div>
 
               {result.errors.length > 0 && (
-                <div style={{ fontSize: "0.72rem", color: "#f59e0b", marginBottom: "1rem" }}>
+                <div style={{ fontSize: "0.72rem", color: "var(--status-warning)", marginBottom: "1rem" }}>
                   {result.errors.slice(0, 10).map((e, i) => (
                     <div key={i}>Row {e.row + 1}: {e.field} — {e.message}</div>
                   ))}

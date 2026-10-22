@@ -944,7 +944,7 @@ function PreviewButton() {
         <DropdownMenuItem data-testid="preview-dropdown-preview" onClick={openPreview}>
           <ExternalLink className="mr-2 h-4 w-4" />
           Preview
-          {previewDown && <span className="ml-auto text-xs text-yellow-500">sirv</span>}
+          {previewDown && <span className="ml-auto text-xs text-status-warning">sirv</span>}
           {!previewDown && <span className="ml-auto text-xs text-muted-foreground">p</span>}
         </DropdownMenuItem>
         <DropdownMenuItem

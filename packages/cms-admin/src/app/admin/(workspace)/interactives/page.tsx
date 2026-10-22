@@ -636,8 +636,8 @@ function StatusBadge({ status }: { status?: string }) {
       fontWeight: 600,
       padding: "0.1rem 0.35rem",
       borderRadius: "3px",
-      background: status === "published" ? "rgba(34,197,94,0.15)" : "rgba(234,179,8,0.15)",
-      color: status === "published" ? "#22c55e" : "#eab308",
+      background: status === "published" ? "rgba(34,197,94,0.15)" : "color-mix(in srgb, var(--status-warning) 15%, transparent)",
+      color: status === "published" ? "#22c55e" : "var(--status-warning)",
       textTransform: "uppercase",
       letterSpacing: "0.03em",
     }}>

@@ -1169,7 +1169,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   correction: "#ef4444",
   preference: "#8b5cf6",
   decision: "#3b82f6",
-  pattern: "#f59e0b",
+  pattern: "var(--status-warning)",
   fact: "#6b7280",
 };
 

@@ -1527,7 +1527,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 ? "bg-green-500/10 text-green-400"
                 : isExpired
                 ? "bg-red-500/10 text-red-400"
-                : "bg-yellow-500/10 text-yellow-400"
+                : "bg-status-warning/10 text-status-warning"
             )}
           >
             {isPublished ? <Globe className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
@@ -1827,7 +1827,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           </span>
         )}
         {dirty && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 font-mono">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-status-warning/10 text-status-warning font-mono">
             unsaved
           </span>
         )}

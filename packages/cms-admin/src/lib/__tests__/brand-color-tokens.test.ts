@@ -20,6 +20,15 @@ const GOLD = [
   /rgba\(\s*247\s*,\s*187\s*,\s*46/i,
   // The sign-in screens' amber (#F59E0B) and its family, written as hsl.
   /hsl\(3[5-9] \d+% \d+%/,
+  // F210.6 — the same gold written as oklch (hue 80–89, real chroma). This is
+  // how the focus ring and the menu's active item escaped the hex sweep.
+  /oklch\(\s*[\d.]+\s+0\.[1-3]\d*\s+8\d/,
+  // F210.6 — Tailwind's own yellow/amber classes and their hex codes: a "draft"
+  // dot in yellow-500 looked like webhouse gold on cms.fysio.work. Status
+  // yellow goes through var(--status-warning) / the status-warning utility.
+  /\b(amber|yellow)-\d{3}\b/,
+  /#(f59e0b|eab308|fbbf24|facc15)\b/i,
+  /rgba\(\s*(234\s*,\s*179\s*,\s*8|245\s*,\s*158\s*,\s*11)\b/,
 ];
 
 /** Files that render standalone HTML outside the admin document, where the
@@ -33,7 +42,7 @@ const ALLOWED_FILES: Record<string, string> = {
 
 /** A line may name the gold as text (an input placeholder) or as the fallback
  *  of the variable, for HTML injected into an iframe where --brand is absent. */
-const ALLOWED_LINE = [/placeholder="#F7BB2E"/i, /var\(--brand(-foreground)?, #[0-9a-f]{6}\)/i];
+const ALLOWED_LINE = [/placeholder="#(F7BB2E|f59e0b)"/i, /var\(--brand(-foreground)?, #[0-9a-f]{6}\)/i];
 
 function sourceFiles(): string[] {
   const out = execFileSync("find", [join(SRC, "components"), join(SRC, "app"), "-type", "f", "(", "-name", "*.tsx", "-o", "-name", "*.ts", ")"], {

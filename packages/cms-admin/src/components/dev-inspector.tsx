@@ -110,7 +110,7 @@ export function DevInspector() {
     style.id = "dev-inspector-style";
     style.textContent = `
       body * { cursor: crosshair !important; }
-      body *:hover { outline: 1.5px solid #f59e0b !important; outline-offset: 1px !important; }
+      body *:hover { outline: 1.5px solid var(--status-warning) !important; outline-offset: 1px !important; }
     `;
     document.head.appendChild(style);
     return () => document.getElementById("dev-inspector-style")?.remove();
@@ -127,7 +127,7 @@ export function DevInspector() {
         style={{
           position: "fixed", bottom: "12px", right: "12px", zIndex: 9999,
           padding: "3px 8px", borderRadius: "6px", border: "none",
-          background: active ? "#f59e0b" : "rgba(255,255,255,0.07)",
+          background: active ? "var(--status-warning)" : "rgba(255,255,255,0.07)",
           color: active ? "#000" : "rgba(255,255,255,0.3)",
           fontSize: "10px", fontFamily: "monospace", fontWeight: active ? 700 : 400,
           letterSpacing: "0.06em", cursor: "pointer",
@@ -148,8 +148,8 @@ export function DevInspector() {
           padding: "5px 10px",
           borderRadius: "6px",
           background: "rgba(0,0,0,0.9)",
-          border: "1px solid #f59e0b",
-          color: "#f59e0b",
+          border: "1px solid var(--status-warning)",
+          color: "var(--status-warning)",
           fontSize: "11px",
           fontFamily: "monospace",
           fontWeight: 500,

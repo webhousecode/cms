@@ -1874,7 +1874,7 @@ type CalloutVariant = "info" | "warning" | "tip";
 
 const CALLOUT_STYLES: Record<CalloutVariant, { border: string; bg: string; icon: string }> = {
   info:    { border: "#3b82f6", bg: "rgba(59,130,246,0.08)", icon: "ℹ️" },
-  warning: { border: "#f59e0b", bg: "rgba(245,158,11,0.08)", icon: "⚠️" },
+  warning: { border: "var(--status-warning)", bg: "color-mix(in srgb, var(--status-warning) 8%, transparent)", icon: "⚠️" },
   tip:     { border: "#22c55e", bg: "rgba(34,197,94,0.08)",  icon: "💡" },
 };
 
@@ -1914,7 +1914,7 @@ function CalloutNodeView({ node, updateAttributes, deleteNode, selected }: NodeV
         transition: "outline 150ms",
       }}>
         {/* Variant selector bar */}
-        <div contentEditable={false} style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.35rem 0.75rem", borderBottom: `1px solid ${style.border}22`, userSelect: "none" }}>
+        <div contentEditable={false} style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.35rem 0.75rem", borderBottom: `1px solid color-mix(in srgb, ${style.border} 13%, transparent)`, userSelect: "none" }}>
           <span style={{ fontSize: "0.8rem", lineHeight: 1 }}>{style.icon}</span>
           <span style={{ fontSize: "0.65rem", color: style.border, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: "auto" }}>{variant}</span>
           {btnVariant("info", "Info")}

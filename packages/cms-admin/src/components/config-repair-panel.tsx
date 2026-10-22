@@ -112,7 +112,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
     }}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
-        <AlertTriangle style={{ width: "1.5rem", height: "1.5rem", color: "#f59e0b", flexShrink: 0, marginTop: "2px" }} />
+        <AlertTriangle style={{ width: "1.5rem", height: "1.5rem", color: "var(--status-warning)", flexShrink: 0, marginTop: "2px" }} />
         <div>
           <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 0.25rem" }}>
             Configuration problem in &ldquo;{siteName}&rdquo;
@@ -182,7 +182,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                 <div key={i} style={{
                   ...card,
                   padding: "0.75rem 1rem",
-                  borderLeft: `3px solid ${issue.autoFixable ? "#f59e0b" : "var(--destructive)"}`,
+                  borderLeft: `3px solid ${issue.autoFixable ? "var(--status-warning)" : "var(--destructive)"}`,
                 }}>
                   <div style={{
                     display: "flex", alignItems: "flex-start",
@@ -199,7 +199,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                     {issue.autoFixable && (
                       <span style={{
                         fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "4px",
-                        background: "color-mix(in srgb, #f59e0b 15%, transparent)",
+                        background: "color-mix(in srgb, var(--status-warning) 15%, transparent)",
                         color: "#d97706", fontWeight: 600, flexShrink: 0,
                       }}>
                         Auto-fixable

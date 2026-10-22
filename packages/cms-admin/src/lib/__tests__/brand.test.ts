@@ -75,8 +75,27 @@ describe("F210.1 brandCss", () => {
     expect(css).toContain("--brand-tint-bg:color-mix(in srgb, #5FB3B3 14%, #0a0a0a)");
   });
 
-  it("leaves the traffic-light amber alone — a score is not the brand", () => {
-    expect(brandCss(FYSIO)).not.toContain("--status-warning");
+  // F210.6 — Christian 22/10, screenshot from cms.fysio.work: the SEO score's
+  // "warning" yellow was #F7BB2E, webhouse gold's own code. A warning keeps its
+  // meaning (still orange, between green and red) but is not webhouse's colour.
+  it("a customer brand's warning is an orange, never webhouse gold", () => {
+    const css = brandCss(FYSIO);
+    expect(css).toContain("--status-warning:#EA580C");
+    expect(css.toLowerCase()).not.toContain("#f7bb2e");
+  });
+
+  // F210.6 — the menu's active item and the focus ring were still gold: they
+  // are written as oklch(… 85) in globals.css, which the hex sweep never saw.
+  it("the menu's active item and the focus ring follow the brand in both themes", () => {
+    const css = brandCss(FYSIO);
+    const dark = css.slice(0, css.indexOf('[data-theme^="light"]'));
+    const light = css.slice(css.indexOf('[data-theme^="light"]'));
+    expect(dark).toContain("--ring:#5FB3B3");
+    expect(dark).toContain("--sidebar-accent:color-mix(in srgb, #5FB3B3 15%, transparent)");
+    expect(dark).toContain("--sidebar-accent-foreground:#5FB3B3");
+    expect(light).toContain("--ring:#0E4F5C");
+    expect(light).toContain("--sidebar-accent:color-mix(in srgb, #0E4F5C 12%, transparent)");
+    expect(light).toContain("--sidebar-accent-foreground:#0E4F5C");
   });
 
   it("refuses a colour that is not a plain hex value (it lands inside a <style> tag)", () => {

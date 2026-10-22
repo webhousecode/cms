@@ -268,8 +268,8 @@ export function AIDefaultsPanel() {
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", borderRadius: "8px", background: "rgba(234,179,8,0.08)", border: "1px solid rgba(234,179,8,0.2)", marginBottom: "1.25rem", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-        <AlertTriangle style={{ width: "0.875rem", height: "0.875rem", color: "#eab308", flexShrink: 0 }} />
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", borderRadius: "8px", background: "color-mix(in srgb, var(--status-warning) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--status-warning) 20%, transparent)", marginBottom: "1.25rem", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
+        <AlertTriangle style={{ width: "0.875rem", height: "0.875rem", color: "var(--status-warning)", flexShrink: 0 }} />
         <span>Changing models affects AI quality and cost. Higher-tier models produce better results but cost more per request. The built-in defaults are recommended for most use cases.</span>
       </div>
       </SettingsCard>

@@ -651,7 +651,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                                 ? "bg-red-500/10 text-red-400 border-red-500/20"
                                 : doc.status === "trashed"
                                 ? "bg-red-500/10 text-red-400 border-red-500/20"
-                                : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 hover:bg-yellow-500/20"
+                                : "bg-status-warning/10 text-status-warning border-status-warning/20 hover:bg-status-warning/20"
                             }>
                               {doc.status}
                             </Badge>

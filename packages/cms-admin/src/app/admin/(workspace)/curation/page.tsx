@@ -369,13 +369,13 @@ export default function CurationPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-status-warning shrink-0 animate-pulse" />
                     <p className="font-semibold text-foreground truncate">
                       {item.title}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 text-xs">draft</Badge>
+                    <Badge variant="outline" className="bg-status-warning/10 text-status-warning border-status-warning/20 text-xs">draft</Badge>
                     <span className="text-xs text-muted-foreground">
                       {item.agentName}
                     </span>

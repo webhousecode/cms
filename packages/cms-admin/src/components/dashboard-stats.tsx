@@ -126,7 +126,7 @@ export function DashboardStats() {
                 {col.published} published
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 inline-block" />
+                <span className="w-1.5 h-1.5 rounded-full bg-status-warning inline-block" />
                 {col.draft} draft
               </span>
             </div>
@@ -136,13 +136,13 @@ export function DashboardStats() {
         {/* Scheduled content card */}
         <Link
           href="/admin/scheduled"
-          className="group block p-5 rounded-xl border border-border bg-card hover:border-amber-500/40 hover:bg-secondary transition-all duration-200"
+          className="group block p-5 rounded-xl border border-border bg-card hover:border-status-warning/40 hover:bg-secondary transition-all duration-200"
         >
           <div className="flex items-start justify-between mb-4">
             <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">scheduled</p>
-            <span className="text-2xl font-bold text-amber-400">{scheduledCount}</span>
+            <span className="text-2xl font-bold text-status-warning">{scheduledCount}</span>
           </div>
-          <p className="font-semibold text-foreground mb-3 group-hover:text-amber-400 transition-colors flex items-center gap-2">
+          <p className="font-semibold text-foreground mb-3 group-hover:text-status-warning transition-colors flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             Scheduled Content
           </p>

@@ -68,6 +68,8 @@
   --color-border:             var(--border);
   --color-input:              var(--input);
   --color-ring:               var(--ring);
+  /* F210.6 — "warning"/"draft" yellow as a utility (bg-status-warning/10 …), so it follows the brand. */
+  --color-status-warning:     var(--status-warning);
   --color-sidebar:            var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-border:     var(--sidebar-border);
