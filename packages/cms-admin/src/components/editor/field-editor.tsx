@@ -1143,7 +1143,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                   {!intLoading && intItems.filter((i) => !intSearch || i.title.toLowerCase().includes(intSearch.toLowerCase()) || i.id.toLowerCase().includes(intSearch.toLowerCase())).map((item) => (
                     <button data-testid="int-browser-item-button" key={item.id} type="button" onClick={() => { onChange(item.id); setIntBrowserOpen(false); }}
                       style={{ width: "100%", textAlign: "left", padding: "0.5rem 0.75rem", fontSize: "0.8rem", background: item.id === strVal ? "var(--accent)" : "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", borderRadius: "4px", marginBottom: "2px" }} className="hover:bg-accent">
-                      <span style={{ fontSize: "1rem", color: "#F7BB2E" }}>⚡</span>
+                      <span style={{ fontSize: "1rem", color: "var(--brand)" }}>⚡</span>
                       <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
                       <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>{item.id}</span>
                     </button>

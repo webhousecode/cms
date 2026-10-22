@@ -695,7 +695,7 @@ export default function MediaPage() {
                   className="hover:bg-secondary/50"
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                    {t.value === "analyzed" && <Sparkles style={{ width: 10, height: 10, color: "#F7BB2E" }} />}
+                    {t.value === "analyzed" && <Sparkles style={{ width: 10, height: 10, color: "var(--brand)" }} />}
                     {t.value === "ai-generated" && <Zap style={{ width: 10, height: 10, color: "#a855f7" }} />}
                     {t.label}
                   </span>
@@ -1084,7 +1084,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
               <span title="AI analyzed" style={{
                 position: "absolute", bottom: "calc(28% + 0.375rem)", right: "0.375rem",
                 background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)",
-                color: "#F7BB2E", display: "flex", alignItems: "center", justifyContent: "center",
+                color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center",
                 width: "1.25rem", height: "1.25rem", borderRadius: "9999px", pointerEvents: "none",
               }}>
                 <Sparkles style={{ width: "0.6rem", height: "0.6rem" }} />
@@ -1260,7 +1260,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                 <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatDate(file.createdAt)}</td>
                 <td style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>
                   {isAiAnalyzed && (file.isImage || file.mediaType === "video") ? (
-                    <span title="AI analyzed"><Sparkles style={{ width: "0.75rem", height: "0.75rem", color: "#F7BB2E" }} /></span>
+                    <span title="AI analyzed"><Sparkles style={{ width: "0.75rem", height: "0.75rem", color: "var(--brand)" }} /></span>
                   ) : (
                     <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", opacity: 0.4 }}>—</span>
                   )}
@@ -1625,7 +1625,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", paddingTop: "2rem" }}>
           <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>No AI analysis yet.</p>
           <button data-testid="media-ai-analyze-btn" type="button" onClick={runAnalysis}
-            style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--brand)", color: "var(--brand-foreground)", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>
             <Sparkles style={{ width: 14, height: 14 }} /> Analyze
           </button>
         </div>
@@ -1664,9 +1664,9 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
                   style={{
                     fontSize: "0.6rem", fontWeight: 600, padding: "2px 8px",
                     borderRadius: "9999px", cursor: "pointer",
-                    border: (viewLocale === l) ? "1px solid #F7BB2E" : "1px solid rgba(255,255,255,0.12)",
-                    background: (viewLocale === l) ? "rgba(247,187,46,0.15)" : "transparent",
-                    color: (viewLocale === l) ? "#F7BB2E" : "rgba(255,255,255,0.5)",
+                    border: (viewLocale === l) ? "1px solid var(--brand)" : "1px solid rgba(255,255,255,0.12)",
+                    background: (viewLocale === l) ? "color-mix(in srgb, var(--brand) 15%, transparent)" : "transparent",
+                    color: (viewLocale === l) ? "var(--brand)" : "rgba(255,255,255,0.5)",
                   }}
                 >
                   {l.toUpperCase()}
@@ -1775,7 +1775,7 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
         <>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: tags.length > 0 ? "0.625rem" : 0 }}>
             {tags.map((tag) => (
-              <span key={tag} style={{ fontSize: "0.7rem", padding: "2px 6px", borderRadius: "9999px", background: "rgba(247,187,46,0.12)", border: "1px solid rgba(247,187,46,0.25)", color: "rgba(255,255,255,0.85)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <span key={tag} style={{ fontSize: "0.7rem", padding: "2px 6px", borderRadius: "9999px", background: "color-mix(in srgb, var(--brand) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)", color: "rgba(255,255,255,0.85)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                 {tag}
                 {confirmRemove === tag ? (
                   <>
@@ -1816,7 +1816,7 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
             />
             {input.trim() && (
               <button data-testid="media-tag-add" onClick={() => addTag()}
-                style={{ padding: "0.25rem 0.5rem", borderRadius: "5px", border: "none", background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
+                style={{ padding: "0.25rem 0.5rem", borderRadius: "5px", border: "none", background: "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
                 +
               </button>
             )}
@@ -2201,7 +2201,7 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
       >
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <Sparkles style={{ width: "1.25rem", height: "1.25rem", color: "#F7BB2E", flexShrink: 0 }} />
+          <Sparkles style={{ width: "1.25rem", height: "1.25rem", color: "var(--brand)", flexShrink: 0 }} />
           <p style={{ fontWeight: 600, fontSize: "0.9rem", flex: 1 }}>
             {selectedFiles && selectedFiles.length > 0
               ? `AI Analyze ${selectedFiles.length} Selected`
@@ -2226,7 +2226,7 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
                   type="checkbox"
                   checked={overwriteChoice}
                   onChange={(e) => setOverwriteChoice(e.target.checked)}
-                  style={{ accentColor: "#F7BB2E" }}
+                  style={{ accentColor: "var(--brand)" }}
                 />
                 Re-analyze images that already have AI data
               </label>
@@ -2263,7 +2263,7 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
               </span>
             </div>
             <div style={{ height: "4px", background: "var(--muted)", borderRadius: "2px", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${progress}%`, background: "#F7BB2E", transition: "width 200ms" }} />
+              <div style={{ height: "100%", width: `${progress}%`, background: "var(--brand)", transition: "width 200ms" }} />
             </div>
           </div>
         )}
@@ -2307,7 +2307,7 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
               <button data-testid="media-batch-analyze-cancel" type="button" onClick={onClose} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
                 Cancel
               </button>
-              <button data-testid="media-batch-analyze-start" type="button" onClick={runBatch} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
+              <button data-testid="media-batch-analyze-start" type="button" onClick={runBatch} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--brand)", color: "var(--brand-foreground)", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
                 <Sparkles style={{ width: 14, height: 14 }} /> Start Analysis
               </button>
             </>

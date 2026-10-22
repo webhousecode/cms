@@ -66,8 +66,8 @@ export function SpotlightOverlay({ targetEl, padding = 8, onClick }: SpotlightOv
           borderRadius: 8,
           boxShadow: [
             "0 0 0 9999px rgba(0, 0, 0, 0.55)",
-            "0 0 0 4px rgba(247, 187, 46, 0.15)",
-            "0 0 20px rgba(247, 187, 46, 0.08)",
+            "0 0 0 4px color-mix(in srgb, var(--brand) 15%, transparent)",
+            "0 0 20px color-mix(in srgb, var(--brand) 8%, transparent)",
           ].join(", "),
           pointerEvents: "none",
           transition: "all 0.3s ease-out",

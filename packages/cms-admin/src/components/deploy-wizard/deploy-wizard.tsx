@@ -117,7 +117,7 @@ export function DeployWizard() {
               padding: "0.5rem 1.5rem",
               borderRadius: 8,
               border: "none",
-              background: canNext ? "#F7BB2E" : "var(--muted)",
+              background: canNext ? "var(--brand)" : "var(--muted)",
               color: canNext ? "#0D0D0D" : "var(--muted-foreground)",
               fontSize: "0.85rem",
               fontWeight: 600,

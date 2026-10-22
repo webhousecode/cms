@@ -357,7 +357,7 @@ export default function EventLogPage() {
                   height: 28,
                   padding: "0 0.75rem", borderRadius: 999,
                   border: "1px solid var(--border)",
-                  background: active ? "#F7BB2E" : "transparent",
+                  background: active ? "var(--brand)" : "transparent",
                   color: active ? "#0D0D0D" : "var(--muted-foreground)",
                   fontSize: "0.72rem", fontWeight: 500, cursor: "pointer",
                   textTransform: "capitalize",

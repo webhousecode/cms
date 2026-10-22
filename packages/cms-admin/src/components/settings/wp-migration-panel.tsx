@@ -118,7 +118,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
           border: "1px solid var(--border)", background: "var(--card)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-            <Globe style={{ width: 18, height: 18, color: "#F7BB2E" }} />
+            <Globe style={{ width: 18, height: 18, color: "var(--brand)" }} />
             <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>WordPress URL</h3>
           </div>
           <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
@@ -147,7 +147,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
               style={{
                 display: "inline-flex", alignItems: "center", gap: "0.35rem",
                 padding: "0.45rem 1rem", borderRadius: 6, border: "none",
-                background: "#F7BB2E", color: "#0D0D0D",
+                background: "var(--brand)", color: "var(--brand-foreground)",
                 fontSize: "0.8rem", fontWeight: 600,
                 cursor: probing ? "wait" : "pointer",
                 opacity: probing ? 0.7 : 1,
@@ -278,7 +278,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
           padding: "2rem", borderRadius: 8, textAlign: "center",
           border: "1px solid var(--border)", background: "var(--card)",
         }}>
-          <Loader2 style={{ width: 32, height: 32, margin: "0 auto 1rem", color: "#F7BB2E", animation: "spin 1s linear infinite" }} />
+          <Loader2 style={{ width: 32, height: 32, margin: "0 auto 1rem", color: "var(--brand)", animation: "spin 1s linear infinite" }} />
           <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>Migrating {probe?.siteTitle ?? "site"}...</div>
           <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
             Extracting content, downloading media, creating collections...
@@ -350,7 +350,7 @@ const codeStyle: React.CSSProperties = {
 const btnPrimary: React.CSSProperties = {
   display: "inline-flex", alignItems: "center", gap: "0.35rem",
   padding: "0.45rem 1rem", borderRadius: 6, border: "none",
-  background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.8rem",
+  background: "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.8rem",
   fontWeight: 600, cursor: "pointer",
 };
 

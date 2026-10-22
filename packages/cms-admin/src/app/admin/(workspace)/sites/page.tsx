@@ -661,7 +661,7 @@ export default function SitesDashboard() {
           onClick={(e) => e.stopPropagation()}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-            <FileStack style={{ width: 18, height: 18, color: "#F7BB2E" }} />
+            <FileStack style={{ width: 18, height: 18, color: "var(--brand)" }} />
             <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: 0 }}>Clone Site</h3>
           </div>
           <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
@@ -715,7 +715,7 @@ export default function SitesDashboard() {
               disabled={cloneInProgress || !cloneName.trim()}
               style={{
                 padding: "0.4rem 0.875rem", borderRadius: "6px", fontSize: "0.8rem",
-                border: "none", background: "#F7BB2E", color: "#0D0D0D",
+                border: "none", background: "var(--brand)", color: "var(--brand-foreground)",
                 cursor: cloneInProgress || !cloneName.trim() ? "not-allowed" : "pointer",
                 fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.35rem",
                 opacity: cloneInProgress || !cloneName.trim() ? 0.5 : 1,

@@ -136,7 +136,7 @@ export default function LighthousePage() {
                 opacity: optimizing ? 0.7 : 1,
               }}
             >
-              <Sparkles style={{ width: 13, height: 13, color: "#F7BB2E" }} />
+              <Sparkles style={{ width: 13, height: 13, color: "var(--brand)" }} />
               {optimizing ? "Optimizing..." : "Optimize"}
             </button>
           )}
@@ -147,7 +147,7 @@ export default function LighthousePage() {
             style={{
               height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
               padding: "0 0.75rem", borderRadius: 6, border: "none",
-              background: "#F7BB2E", color: "#0D0D0D",
+              background: "var(--brand)", color: "var(--brand-foreground)",
               fontSize: "0.75rem", fontWeight: 600,
               cursor: scanning ? "wait" : "pointer",
               opacity: scanning ? 0.7 : 1,
@@ -186,7 +186,7 @@ export default function LighthousePage() {
             {optimizeResult && (
               <div style={{ marginBottom: "2rem", padding: "1rem", borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)" }}>
                 <div style={{ fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                  <Sparkles style={{ width: 15, height: 15, color: "#F7BB2E" }} />
+                  <Sparkles style={{ width: 15, height: 15, color: "var(--brand)" }} />
                   Optimization Report — {optimizeResult.fixedCount} fixed, {optimizeResult.manualCount} need manual attention
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
@@ -245,7 +245,7 @@ export default function LighthousePage() {
             </div>
             <button data-testid="lighthouse-first-scan-button" onClick={handleScan} disabled={scanning} style={{
               padding: "0.5rem 1.25rem", borderRadius: 6, border: "none",
-              background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.82rem",
+              background: "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.82rem",
               fontWeight: 600, cursor: "pointer",
             }}>
               Run first scan
@@ -654,13 +654,13 @@ function PsiKeySetup() {
         Get a free key (25,000 scans/day):
       </div>
       <ol style={{ margin: "0 0 0.5rem 1.25rem", padding: 0, color: "var(--muted-foreground)", lineHeight: 1.7 }}>
-        <li><a data-testid="lighthouse-setup-psi-api-link" href="https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com" target="_blank" rel="noopener" style={{ color: "#F7BB2E" }}>Enable PageSpeed Insights API</a></li>
-        <li><a data-testid="lighthouse-setup-api-credentials-link" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style={{ color: "#F7BB2E" }}>Create API Key</a></li>
+        <li><a data-testid="lighthouse-setup-psi-api-link" href="https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com" target="_blank" rel="noopener" style={{ color: "var(--brand)" }}>Enable PageSpeed Insights API</a></li>
+        <li><a data-testid="lighthouse-setup-api-credentials-link" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style={{ color: "var(--brand)" }}>Create API Key</a></li>
         <li>Paste below</li>
       </ol>
       <div style={{ display: "flex", gap: "0.4rem" }}>
         <input data-testid="lighthouse-api-key-input" type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="AIzaSy..." style={{ flex: 1, padding: "0.35rem 0.6rem", borderRadius: 5, border: "1px solid var(--border)", background: "var(--background)", fontSize: "0.78rem", color: "var(--foreground)", outline: "none" }} />
-        <button data-testid="lighthouse-api-key-save-button" onClick={handleSave} disabled={saving || !key.trim() || saved} style={{ padding: "0.35rem 0.75rem", borderRadius: 5, border: "none", background: saved ? "#0cce6b" : "#F7BB2E", color: "#0D0D0D", fontSize: "0.75rem", fontWeight: 600, cursor: saving ? "wait" : "pointer", opacity: saving || !key.trim() ? 0.6 : 1 }}>
+        <button data-testid="lighthouse-api-key-save-button" onClick={handleSave} disabled={saving || !key.trim() || saved} style={{ padding: "0.35rem 0.75rem", borderRadius: 5, border: "none", background: saved ? "#0cce6b" : "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: saving ? "wait" : "pointer", opacity: saving || !key.trim() ? 0.6 : 1 }}>
           {saved ? "Saved ✓" : "Save key"}
         </button>
       </div>

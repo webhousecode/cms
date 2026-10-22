@@ -186,8 +186,8 @@ Rules:
   const plainText = content.replace(/<[^>]+>/g, " ").replace(/[#*_~`>]/g, "").trim();
   const readabilityScore = plainText.split(/\s+/).length >= 100 ? calculateReadability(plainText) : null;
 
-  const scoreColor = (score?.score ?? 0) >= 80 ? "#4ade80" : (score?.score ?? 0) >= 50 ? "#F7BB2E" : "#f87171";
-  const geoColor = (geoScore?.score ?? 0) >= 80 ? "#4ade80" : (geoScore?.score ?? 0) >= 50 ? "#F7BB2E" : "#f87171";
+  const scoreColor = (score?.score ?? 0) >= 80 ? "#4ade80" : (score?.score ?? 0) >= 50 ? "var(--status-warning)" : "#f87171";
+  const geoColor = (geoScore?.score ?? 0) >= 80 ? "#4ade80" : (geoScore?.score ?? 0) >= 50 ? "var(--status-warning)" : "#f87171";
   const combinedScore = Math.round(((score?.score ?? 0) * 0.5) + ((geoScore?.score ?? 0) * 0.5));
   const title = String(doc.data.title ?? "");
   const siteUrl = "example.com";
@@ -226,7 +226,7 @@ Rules:
             }}
             style={{
               padding: "0.25rem 0.5rem", borderRadius: "5px", border: "none",
-              background: saved ? "#4ade80" : "#F7BB2E", color: "#0D0D0D",
+              background: saved ? "#4ade80" : "var(--brand)", color: "var(--brand-foreground)",
               cursor: saving ? "wait" : "pointer",
               fontSize: "0.7rem", fontWeight: 600,
               transition: "background 0.2s",
@@ -281,7 +281,7 @@ Rules:
           <p style={lbl}>Keywords</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: keywords.length > 0 ? "0.375rem" : 0 }}>
             {keywords.map((kw) => (
-              <span key={kw} style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "9999px", background: "rgba(247,187,46,0.12)", border: "1px solid rgba(247,187,46,0.25)", color: "var(--foreground)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <span key={kw} style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "9999px", background: "color-mix(in srgb, var(--brand) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)", color: "var(--foreground)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                 {kw}
                 <button data-testid={`seo-keyword-remove-${kw}`} type="button" onClick={() => setKeywords(keywords.filter((k) => k !== kw))}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: 0, fontSize: "0.8rem", lineHeight: 1 }}>&times;</button>
@@ -326,7 +326,7 @@ Rules:
           </div>
         ) : confirmReoptimize ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-            <p style={{ fontSize: "0.72rem", color: "#F7BB2E", margin: 0, fontWeight: 500 }}>
+            <p style={{ fontSize: "0.72rem", color: "var(--brand)", margin: 0, fontWeight: 500 }}>
               This will overwrite existing SEO fields.
             </p>
             <div style={{ display: "flex", gap: "0.375rem" }}>
@@ -334,7 +334,7 @@ Rules:
                 style={{
                   display: "flex", alignItems: "center", gap: "0.25rem",
                   padding: "0.3rem 0.6rem", borderRadius: "5px", border: "none",
-                  background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer",
+                  background: "var(--brand)", color: "var(--brand-foreground)", cursor: "pointer",
                   fontSize: "0.7rem", fontWeight: 600,
                 }}>
                 {optimizing ? <Loader2 style={{ width: 10, height: 10, animation: "spin 1s linear infinite" }} /> : null}
@@ -355,7 +355,7 @@ Rules:
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem",
               padding: "0.5rem 1rem", borderRadius: "6px", border: "none",
-              background: "#F7BB2E", color: "#0D0D0D", cursor: optimizing ? "wait" : "pointer",
+              background: "var(--brand)", color: "var(--brand-foreground)", cursor: optimizing ? "wait" : "pointer",
               fontSize: "0.8rem", fontWeight: 600,
             }}>
             {optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
@@ -401,7 +401,7 @@ Rules:
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span style={{
                 fontSize: "1.1rem", fontWeight: 700, fontFamily: "monospace",
-                color: readabilityScore >= 60 ? "#4ade80" : readabilityScore >= 30 ? "#F7BB2E" : "#f87171",
+                color: readabilityScore >= 60 ? "#4ade80" : readabilityScore >= 30 ? "var(--status-warning)" : "#f87171",
               }}>
                 {readabilityScore}
               </span>
@@ -409,7 +409,7 @@ Rules:
                 <div style={{ height: 4, borderRadius: 2, background: "var(--border)" }}>
                   <div style={{
                     height: "100%", width: `${readabilityScore}%`, borderRadius: 2,
-                    background: readabilityScore >= 60 ? "#4ade80" : readabilityScore >= 30 ? "#F7BB2E" : "#f87171",
+                    background: readabilityScore >= 60 ? "#4ade80" : readabilityScore >= 30 ? "var(--status-warning)" : "#f87171",
                   }} />
                 </div>
               </div>

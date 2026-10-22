@@ -209,7 +209,7 @@ export function DashboardStats() {
         >
           <div className="flex items-start justify-between mb-4">
             <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">seo</p>
-            <span className="text-2xl font-bold" style={{ color: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "#F7BB2E" : "#f87171" }}>
+            <span className="text-2xl font-bold" style={{ color: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "var(--status-warning)" : "#f87171" }}>
               {seoAvgScore}
             </span>
           </div>
@@ -229,11 +229,11 @@ export function DashboardStats() {
               </span>
             </div>
             <div className="h-1 rounded-full mt-2" style={{ background: "var(--border)" }}>
-              <div className="h-full rounded-full" style={{ width: `${seoAvgScore}%`, background: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "#F7BB2E" : "#f87171" }} />
+              <div className="h-full rounded-full" style={{ width: `${seoAvgScore}%`, background: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "var(--status-warning)" : "#f87171" }} />
             </div>
             {keywordCount > 0 && (
               <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
-                <span className="font-mono" style={{ fontWeight: 600, color: keywordCoverage >= 50 ? "#4ade80" : keywordCoverage >= 20 ? "#F7BB2E" : "#f87171" }}>
+                <span className="font-mono" style={{ fontWeight: 600, color: keywordCoverage >= 50 ? "#4ade80" : keywordCoverage >= 20 ? "var(--status-warning)" : "#f87171" }}>
                   {keywordCoverage}%
                 </span>
                 <span>keyword coverage ({keywordCount} tracked)</span>
@@ -249,7 +249,7 @@ export function DashboardStats() {
         >
           <div className="flex items-start justify-between mb-4">
             <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">visibility</p>
-            <span className="text-2xl font-bold" style={{ color: visibilityScore >= 80 ? "#4ade80" : visibilityScore >= 50 ? "#F7BB2E" : "#f87171" }}>
+            <span className="text-2xl font-bold" style={{ color: visibilityScore >= 80 ? "#4ade80" : visibilityScore >= 50 ? "var(--status-warning)" : "#f87171" }}>
               {visibilityScore}
             </span>
           </div>
@@ -260,20 +260,20 @@ export function DashboardStats() {
           <div className="space-y-1 text-xs text-muted-foreground">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5">
-                <span className="font-mono" style={{ fontWeight: 600, color: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "#F7BB2E" : "#f87171" }}>
+                <span className="font-mono" style={{ fontWeight: 600, color: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "var(--status-warning)" : "#f87171" }}>
                   {seoAvgScore}
                 </span>
                 SEO
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="font-mono" style={{ fontWeight: 600, color: geoAvgScore >= 80 ? "#4ade80" : geoAvgScore >= 50 ? "#F7BB2E" : "#f87171" }}>
+                <span className="font-mono" style={{ fontWeight: 600, color: geoAvgScore >= 80 ? "#4ade80" : geoAvgScore >= 50 ? "var(--status-warning)" : "#f87171" }}>
                   {geoAvgScore}
                 </span>
                 GEO
               </span>
             </div>
             <div className="h-1 rounded-full mt-2" style={{ background: "var(--border)" }}>
-              <div className="h-full rounded-full" style={{ width: `${visibilityScore}%`, background: visibilityScore >= 80 ? "#4ade80" : visibilityScore >= 50 ? "#F7BB2E" : "#f87171" }} />
+              <div className="h-full rounded-full" style={{ width: `${visibilityScore}%`, background: visibilityScore >= 80 ? "#4ade80" : visibilityScore >= 50 ? "var(--status-warning)" : "#f87171" }} />
             </div>
             <p className="mt-1">Search engines + AI platforms</p>
           </div>

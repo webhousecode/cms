@@ -253,9 +253,9 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
     <div ref={wrapperRef} data-blocks-editor="" style={{
       display: "flex", flexDirection: "column", gap: "0.5rem",
       borderRadius: "6px",
-      outline: isFocused ? "1px dashed rgba(247, 187, 46, 0.5)" : "none",
+      outline: isFocused ? "1px dashed color-mix(in srgb, var(--brand) 50%, transparent)" : "none",
       outlineOffset: "3px",
-      boxShadow: isFocused ? "0 0 8px rgba(247, 187, 46, 0.15)" : "none",
+      boxShadow: isFocused ? "0 0 8px color-mix(in srgb, var(--brand) 15%, transparent)" : "none",
       transition: "outline 150ms, box-shadow 150ms",
     }}>
       {blocks.length >= 2 && (
@@ -314,7 +314,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
               borderRadius: "8px",
               background: "var(--card)",
               transition: "border-color 600ms, box-shadow 600ms",
-              boxShadow: flashIdx === i ? "0 0 20px rgba(247, 187, 46, 0.5), inset 0 0 30px rgba(247, 187, 46, 0.06)" : "none",
+              boxShadow: flashIdx === i ? "0 0 20px color-mix(in srgb, var(--brand) 50%, transparent), inset 0 0 30px color-mix(in srgb, var(--brand) 6%, transparent)" : "none",
               animation: flashIdx === i ? "cloneFlash 2s ease-out" : undefined,
             }}
           >
@@ -621,8 +621,8 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
       {/* Clone flash animation */}
       <style>{`
         @keyframes cloneFlash {
-          0% { box-shadow: 0 0 30px rgba(247, 187, 46, 0.7), inset 0 0 40px rgba(247, 187, 46, 0.12); }
-          50% { box-shadow: 0 0 20px rgba(247, 187, 46, 0.4), inset 0 0 20px rgba(247, 187, 46, 0.05); }
+          0% { box-shadow: 0 0 30px color-mix(in srgb, var(--brand) 70%, transparent), inset 0 0 40px color-mix(in srgb, var(--brand) 12%, transparent); }
+          50% { box-shadow: 0 0 20px color-mix(in srgb, var(--brand) 40%, transparent), inset 0 0 20px color-mix(in srgb, var(--brand) 5%, transparent); }
           100% { box-shadow: none; }
         }
       `}</style>

@@ -129,7 +129,7 @@ export function StepDeploy({ state }: Props) {
         <div style={{
           height: "100%",
           borderRadius: 3,
-          background: isError ? "var(--destructive)" : isDone ? "rgb(74 222 128)" : "#F7BB2E",
+          background: isError ? "var(--destructive)" : isDone ? "rgb(74 222 128)" : "var(--brand)",
           width: `${progress}%`,
           transition: "width 0.5s ease, background 0.3s",
         }} />
@@ -155,7 +155,7 @@ export function StepDeploy({ state }: Props) {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
-                background: isCompleted ? "rgb(74 222 128)" : isCurrent ? "#F7BB2E" : "var(--muted)",
+                background: isCompleted ? "rgb(74 222 128)" : isCurrent ? "var(--brand)" : "var(--muted)",
               }}>
                 {isCompleted ? (
                   <Check style={{ width: 12, height: 12, color: "#fff" }} />

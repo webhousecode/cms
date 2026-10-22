@@ -25,7 +25,7 @@ export function WizardProgress({ steps, current }: Props) {
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              background: isCompleted ? "#F7BB2E" : isActive ? "#F7BB2E" : "var(--muted)",
+              background: isCompleted ? "var(--brand)" : isActive ? "var(--brand)" : "var(--muted)",
               color: isCompleted || isActive ? "#0D0D0D" : "var(--muted-foreground)",
               fontSize: "0.75rem",
               fontWeight: 600,
@@ -48,7 +48,7 @@ export function WizardProgress({ steps, current }: Props) {
               <div style={{
                 flex: 1,
                 height: 2,
-                background: isCompleted ? "#F7BB2E" : "var(--border)",
+                background: isCompleted ? "var(--brand)" : "var(--border)",
                 marginLeft: "0.5rem",
                 borderRadius: 1,
               }} />

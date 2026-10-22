@@ -627,8 +627,8 @@ function BeamPill() {
       title="Beam in progress — click to view"
       style={{
         display: "flex", alignItems: "center", gap: "0.35rem",
-        fontSize: "0.65rem", color: "#F7BB2E",
-        border: "1px solid #F7BB2E", borderRadius: "999px",
+        fontSize: "0.65rem", color: "var(--brand)",
+        border: "1px solid var(--brand)", borderRadius: "999px",
         padding: "0.2rem 0.6rem", whiteSpace: "nowrap",
         fontFamily: "monospace", background: "transparent",
         cursor: "pointer",

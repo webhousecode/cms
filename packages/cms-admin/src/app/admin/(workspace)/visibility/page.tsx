@@ -44,7 +44,7 @@ interface BuildHealth {
 
 function scoreColor(score: number): string {
   if (score >= 80) return "#4ade80";
-  if (score >= 50) return "#F7BB2E";
+  if (score >= 50) return "var(--status-warning)";
   return "#f87171";
 }
 
@@ -201,7 +201,7 @@ export default function VisibilityPage() {
                     padding: "0.5rem 1rem", border: "none", background: "none", cursor: "pointer",
                     fontSize: "0.8rem", fontWeight: activeTab === tab ? 600 : 400,
                     color: activeTab === tab ? "var(--foreground)" : "var(--muted-foreground)",
-                    borderBottom: activeTab === tab ? "2px solid #F7BB2E" : "2px solid transparent",
+                    borderBottom: activeTab === tab ? "2px solid var(--brand)" : "2px solid transparent",
                     marginBottom: "-1px",
                   }}
                 >
@@ -241,7 +241,7 @@ export default function VisibilityPage() {
                         <div key={bucket.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem" }}>
                           <div style={{
                             width: "100%", height: Math.max(4, pct * 0.8), borderRadius: 3,
-                            background: bucket.label === "0-29" ? "#f87171" : bucket.label === "30-49" ? "#F7BB2E" : bucket.label === "50-69" ? "#F7BB2E" : "#4ade80",
+                            background: bucket.label === "0-29" ? "#f87171" : bucket.label === "30-49" ? "var(--brand)" : bucket.label === "50-69" ? "var(--brand)" : "#4ade80",
                             transition: "height 0.3s",
                           }} />
                           <span style={{ fontSize: "0.55rem", color: "var(--muted-foreground)" }}>{bucket.label}</span>
@@ -344,7 +344,7 @@ function IssueRow({ icon, label, count, total }: { icon: string; label: string; 
       <span style={{ fontSize: "0.75rem", flex: 1 }}>{label}</span>
       <span style={{ fontSize: "0.72rem", fontFamily: "monospace", fontWeight: 600, color: "var(--foreground)" }}>{count}</span>
       <div style={{ width: 60, height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, borderRadius: 3, background: icon === "🟢" ? "#4ade80" : icon === "🟡" ? "#F7BB2E" : "#f87171" }} />
+        <div style={{ height: "100%", width: `${pct}%`, borderRadius: 3, background: icon === "🟢" ? "#4ade80" : icon === "🟡" ? "var(--status-warning)" : "#f87171" }} />
       </div>
       <span style={{ fontSize: "0.6rem", fontFamily: "monospace", color: "var(--muted-foreground)", width: "2rem", textAlign: "right" }}>{pct}%</span>
     </div>

@@ -280,8 +280,8 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                           fontSize: "0.6rem", fontWeight: 600, padding: "2px 8px",
                           borderRadius: "9999px", cursor: "pointer",
                           border: (viewLocale === l) ? "1px solid var(--primary)" : "1px solid var(--border)",
-                          background: (viewLocale === l) ? "rgba(247,187,46,0.15)" : "transparent",
-                          color: (viewLocale === l) ? "#F7BB2E" : "var(--muted-foreground)",
+                          background: (viewLocale === l) ? "color-mix(in srgb, var(--brand) 15%, transparent)" : "transparent",
+                          color: (viewLocale === l) ? "var(--brand)" : "var(--muted-foreground)",
                         }}
                       >
                         {l.toUpperCase()}
@@ -326,7 +326,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                               display: "inline-flex", alignItems: "center", gap: "3px",
                               padding: "1px 6px", borderRadius: "4px", fontSize: "0.6rem", fontWeight: 500,
                               border: "none", cursor: "pointer",
-                              background: "rgba(247,187,46,0.15)", color: "#F7BB2E",
+                              background: "color-mix(in srgb, var(--brand) 15%, transparent)", color: "var(--brand)",
                             }}
                           >
                             <ArrowDownToLine style={{ width: 10, height: 10 }} /> Apply

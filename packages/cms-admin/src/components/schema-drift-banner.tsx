@@ -110,14 +110,14 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
     <div style={{
       margin: "0 1.25rem 0.75rem",
       padding: "0.75rem 1rem",
-      background: "rgba(247, 187, 46, 0.08)",
-      border: "1px solid rgba(247, 187, 46, 0.25)",
+      background: "color-mix(in srgb, var(--brand) 8%, transparent)",
+      border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)",
       borderRadius: "8px",
       display: "flex",
       gap: "0.75rem",
       alignItems: "flex-start",
     }}>
-      <AlertTriangle style={{ width: 18, height: 18, color: "#F7BB2E", flexShrink: 0, marginTop: 2 }} />
+      <AlertTriangle style={{ width: 18, height: 18, color: "var(--brand)", flexShrink: 0, marginTop: 2 }} />
       <div style={{ flex: 1, fontSize: "0.8rem", lineHeight: 1.5 }}>
         <p style={{ margin: 0, fontWeight: 600, color: "var(--foreground)" }}>
           Schema drift detected in &ldquo;{collection}&rdquo;
@@ -145,7 +145,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
               style={{
                 display: "inline-flex", alignItems: "center", gap: "0.375rem",
                 padding: "0.3rem 0.75rem", borderRadius: "6px", border: "none",
-                background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer",
+                background: "var(--brand)", color: "var(--brand-foreground)", cursor: "pointer",
                 fontSize: "0.75rem", fontWeight: 600,
               }}
             >

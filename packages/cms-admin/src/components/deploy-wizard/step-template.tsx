@@ -95,14 +95,14 @@ export function StepTemplate({ selected, onSelect }: Props) {
                   gap: "0.6rem",
                   padding: "0.75rem 1rem",
                   borderRadius: 8,
-                  border: selected === `site:${site.id}` ? "2px solid #F7BB2E" : "1px solid var(--border)",
+                  border: selected === `site:${site.id}` ? "2px solid var(--brand)" : "1px solid var(--border)",
                   background: "var(--card)",
                   cursor: "pointer",
                   textAlign: "left",
-                  boxShadow: selected === `site:${site.id}` ? "0 0 0 3px rgba(247, 187, 46, 0.15)" : "none",
+                  boxShadow: selected === `site:${site.id}` ? "0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent)" : "none",
                 }}
               >
-                <Globe style={{ width: 18, height: 18, color: selected === `site:${site.id}` ? "#F7BB2E" : "var(--muted-foreground)", flexShrink: 0 }} />
+                <Globe style={{ width: 18, height: 18, color: selected === `site:${site.id}` ? "var(--brand)" : "var(--muted-foreground)", flexShrink: 0 }} />
                 <div>
                   <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--foreground)" }}>{site.name}</div>
                   <div style={{ fontSize: "0.68rem", color: "var(--muted-foreground)" }}>

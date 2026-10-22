@@ -1057,7 +1057,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
       className="hover:bg-muted transition-colors"
     >
       {starred && (
-        <Star style={{ width: "10px", height: "10px", color: "#F7BB2E", fill: "#F7BB2E", flexShrink: 0, marginLeft: "10px" }} />
+        <Star style={{ width: "10px", height: "10px", color: "var(--brand)", fill: "var(--brand)", flexShrink: 0, marginLeft: "10px" }} />
       )}
       <button
         data-testid="chat-history-item-load"
@@ -1110,7 +1110,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
             onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           >
-            <Star style={{ width: "13px", height: "13px", ...(starred ? { color: "#F7BB2E", fill: "#F7BB2E" } : {}) }} />
+            <Star style={{ width: "13px", height: "13px", ...(starred ? { color: "var(--brand)", fill: "var(--brand)" } : {}) }} />
             {starred ? "Unstar" : "Star"}
           </button>
           <button

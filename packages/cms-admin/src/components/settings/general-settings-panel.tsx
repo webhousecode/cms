@@ -164,7 +164,7 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 					style={{
 						display: "inline-flex", alignItems: "center", gap: "0.3rem",
 						padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none",
-						background: configPath ? "#F7BB2E" : "var(--border)",
+						background: configPath ? "var(--brand)" : "var(--border)",
 						color: configPath ? "#0D0D0D" : "var(--muted-foreground)",
 						cursor: configPath ? "pointer" : "default",
 						fontSize: "0.75rem", fontWeight: 600,
@@ -175,7 +175,7 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 					<span style={{
 						fontSize: "0.72rem", fontWeight: 600,
 						color: result.valid && result.warnings.length === 0 ? "#4ade80"
-							: result.valid ? "#F7BB2E" : "#f87171",
+							: result.valid ? "var(--brand)" : "#f87171",
 					}}>
 						{result.valid && result.warnings.length === 0 ? "✓ All good"
 							: result.valid ? `✓ Valid (${result.warnings.length} warning${result.warnings.length === 1 ? "" : "s"})`
@@ -192,7 +192,7 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 						</div>
 					))}
 					{result.warnings.map((w, i) => (
-						<div key={`w-${i}`} style={{ fontSize: "0.72rem", color: "#F7BB2E", padding: "0.375rem 0.5rem", background: "rgba(247,187,46,0.08)", borderRadius: "4px" }}>
+						<div key={`w-${i}`} style={{ fontSize: "0.72rem", color: "var(--brand)", padding: "0.375rem 0.5rem", background: "color-mix(in srgb, var(--brand) 8%, transparent)", borderRadius: "4px" }}>
 							<span style={{ fontWeight: 600 }}>Warning:</span> {w.message}
 							{w.suggestion && <span style={{ color: "var(--muted-foreground)", display: "block", marginTop: "0.15rem" }}>💡 {w.suggestion}</span>}
 						</div>
@@ -281,7 +281,7 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 					style={{
 						display: "inline-flex", alignItems: "center", gap: "0.3rem",
 						padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none",
-						background: enabled ? "#F7BB2E" : "var(--border)",
+						background: enabled ? "var(--brand)" : "var(--border)",
 						color: enabled ? "#0D0D0D" : "var(--muted-foreground)",
 						cursor: enabled ? "pointer" : "default",
 						fontSize: "0.75rem", fontWeight: 600,
@@ -999,7 +999,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 								onClick={() => setCfg((c: any) => ({ ...c, autoRetranslateOnUpdate: !c.autoRetranslateOnUpdate }))}
 								style={{
 									width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
-									background: cfg.autoRetranslateOnUpdate ? "#F7BB2E" : "var(--muted)",
+									background: cfg.autoRetranslateOnUpdate ? "var(--brand)" : "var(--muted)",
 									position: "relative", transition: "background 0.2s", flexShrink: 0,
 								}}
 							>
@@ -1148,7 +1148,7 @@ function RevalidationSection() {
 					<div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
 						<Zap style={{ width: "1rem", height: "1rem", color: "var(--primary)", flexShrink: 0, marginTop: "0.15rem" }} />
 						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0, lineHeight: 1.5 }}>
-							When content changes, <span style={{ color: "var(--foreground)", fontWeight: 600 }}>webhouse</span><span style={{ color: "#F7BB2E", fontWeight: 600 }}>.app</span> sends a signed webhook to your site&apos;s revalidation endpoint,
+							When content changes, <span style={{ color: "var(--foreground)", fontWeight: 600 }}>webhouse</span><span style={{ color: "var(--brand)", fontWeight: 600 }}>.app</span> sends a signed webhook to your site&apos;s revalidation endpoint,
 							triggering on-demand path revalidation. Only needed for production deployments.
 						</p>
 					</div>

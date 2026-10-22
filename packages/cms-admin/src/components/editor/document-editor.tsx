@@ -1817,8 +1817,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               display: "inline-flex", alignItems: "center", gap: "0.25rem",
               fontSize: "0.65rem", fontWeight: 600, padding: "0.1rem 0.45rem",
               borderRadius: "9999px",
-              background: "color-mix(in srgb, #F7BB2E 14%, transparent)",
-              color: "#F7BB2E",
+              background: "color-mix(in srgb, var(--brand) 14%, transparent)",
+              color: "var(--brand)",
               letterSpacing: "0.02em",
             }}
           >
@@ -1916,10 +1916,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               style={{
                 display: "inline-flex", alignItems: "center", gap: "0.3rem",
                 padding: "0.15rem 0.5rem", borderRadius: "4px",
-                border: sideBySide ? "1px solid #F7BB2E" : "1px solid var(--border)",
+                border: sideBySide ? "1px solid var(--brand)" : "1px solid var(--border)",
                 fontSize: "0.7rem", fontFamily: "monospace",
                 color: sideBySide ? "#0D0D0D" : "var(--foreground)",
-                background: sideBySide ? "#F7BB2E" : "var(--card)",
+                background: sideBySide ? "var(--brand)" : "var(--card)",
                 cursor: "pointer", textDecoration: "none",
               }}
             >

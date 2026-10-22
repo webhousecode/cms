@@ -152,7 +152,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
               onClick={() => setTranslatable(!translatable)}
               style={{
                 width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
-                background: translatable ? "#F7BB2E" : "var(--muted)",
+                background: translatable ? "var(--brand)" : "var(--muted)",
                 position: "relative", transition: "background 0.2s", flexShrink: 0,
               }}
             >
@@ -174,7 +174,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
               onClick={() => setPreviewable(!previewable)}
               style={{
                 width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
-                background: previewable ? "#F7BB2E" : "var(--muted)",
+                background: previewable ? "var(--brand)" : "var(--muted)",
                 position: "relative", transition: "background 0.2s", flexShrink: 0,
               }}
             >

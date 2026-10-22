@@ -104,7 +104,7 @@ export function TourTooltip({
           background: "#0D0D0D",
           borderRadius: 12,
           border: "1px solid rgba(255, 255, 255, 0.08)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(247, 187, 46, 0.3)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 color-mix(in srgb, var(--brand) 30%, transparent)",
           padding: "1rem 1.25rem",
           position: "relative",
         }}
@@ -165,7 +165,7 @@ export function TourTooltip({
         >
           <span
             style={{
-              color: "rgba(247, 187, 46, 0.5)",
+              color: "color-mix(in srgb, var(--brand) 50%, transparent)",
               fontSize: "0.7rem",
               fontWeight: 500,
             }}
@@ -177,7 +177,7 @@ export function TourTooltip({
             data-testid="tour-tooltip-action-button"
             onClick={onNext}
             style={{
-              background: "#F7BB2E",
+              background: "var(--brand)",
               color: "#0D0D0D",
               border: "none",
               borderRadius: 6,

@@ -155,7 +155,7 @@ const WYSIWYG_SCRIPT = `
     var doneBtn = document.createElement('button');
     doneBtn.textContent = 'Done';
     doneBtn.setAttribute('data-cc-skip','1');
-    doneBtn.style.cssText = 'background:#F7BB2E;border:none;color:#0D0D0D;padding:0 12px;height:28px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;';
+    doneBtn.style.cssText = 'background:var(--brand, #F7BB2E);border:none;color:var(--brand-foreground, #0D0D0D);padding:0 12px;height:28px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;';
     doneBtn.addEventListener('mousedown', function(e){ e.preventDefault(); e.stopPropagation(); deactivate(); });
     t.appendChild(doneBtn);
 
@@ -170,7 +170,7 @@ const WYSIWYG_SCRIPT = `
     activeEl = el;
     el.contentEditable = 'true';
     el.setAttribute('data-cc-editing','1');
-    el.style.outline = '2px solid #F7BB2E';
+    el.style.outline = '2px solid var(--brand, #F7BB2E)';
     el.style.outlineOffset = '2px';
     el.style.cursor = 'text';
     el.focus();
@@ -235,7 +235,7 @@ const WYSIWYG_SCRIPT = `
     }
     hoveredEl = el;
     if (el) {
-      el.style.outline = '1px dashed rgba(247,187,46,.5)';
+      el.style.outline = '1px dashed color-mix(in srgb, var(--brand, #F7BB2E) 50%, transparent)';
       el.style.cursor  = 'text';
     }
   });
@@ -801,10 +801,10 @@ export default function InteractiveDetailPage() {
               style={{
                 display: "inline-flex", alignItems: "center", gap: "0.3rem",
                 padding: "0.15rem 0.5rem", borderRadius: "4px",
-                border: sideBySide ? "1px solid #F7BB2E" : "1px solid var(--border)",
+                border: sideBySide ? "1px solid var(--brand)" : "1px solid var(--border)",
                 fontSize: "0.7rem", fontFamily: "monospace",
                 color: sideBySide ? "#0D0D0D" : "var(--foreground)",
-                background: sideBySide ? "#F7BB2E" : "var(--card)",
+                background: sideBySide ? "var(--brand)" : "var(--card)",
                 cursor: "pointer", textDecoration: "none",
               }}
             >

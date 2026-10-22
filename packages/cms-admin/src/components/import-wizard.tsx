@@ -204,7 +204,7 @@ export function ImportWizard({
           padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <FileSpreadsheet style={{ width: 18, height: 18, color: "#F7BB2E" }} />
+            <FileSpreadsheet style={{ width: 18, height: 18, color: "var(--brand)" }} />
             <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
               Import into {collectionLabel}
             </span>
@@ -255,15 +255,15 @@ export function ImportWizard({
                 style={{
                   padding: "2rem 1.5rem",
                   borderRadius: 8,
-                  border: dragOver ? "2px dashed #F7BB2E" : "2px dashed var(--border)",
-                  background: dragOver ? "rgba(247, 187, 46, 0.05)" : "transparent",
+                  border: dragOver ? "2px dashed var(--brand)" : "2px dashed var(--border)",
+                  background: dragOver ? "color-mix(in srgb, var(--brand) 5%, transparent)" : "transparent",
                   cursor: "pointer",
                   textAlign: "center",
                   transition: "all 0.15s",
                   marginBottom: "1rem",
                 }}
               >
-                <FileUp style={{ width: 28, height: 28, color: dragOver ? "#F7BB2E" : "var(--muted-foreground)", margin: "0 auto 0.5rem" }} />
+                <FileUp style={{ width: 28, height: 28, color: dragOver ? "var(--brand)" : "var(--muted-foreground)", margin: "0 auto 0.5rem" }} />
                 <div style={{ fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
                   {hasFile
                     ? `${fileRef.current?.files?.[0]?.name ?? "File selected"}`
@@ -467,7 +467,7 @@ function btnPrimary(disabled: boolean): React.CSSProperties {
   return {
     display: "inline-flex", alignItems: "center", gap: "0.35rem",
     padding: "0.45rem 0.85rem", borderRadius: 6, border: "none",
-    background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.8rem", fontWeight: 600,
+    background: "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.8rem", fontWeight: 600,
     cursor: disabled ? "wait" : "pointer", opacity: disabled ? 0.7 : 1,
   };
 }

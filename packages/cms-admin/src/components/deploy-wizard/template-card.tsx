@@ -24,12 +24,12 @@ export function TemplateCard({ name, description, tags, screenshotUrl, selected,
         textAlign: "left",
         padding: 0,
         borderRadius: 10,
-        border: selected ? "2px solid #F7BB2E" : "1px solid var(--border)",
+        border: selected ? "2px solid var(--brand)" : "1px solid var(--border)",
         background: "var(--card)",
         cursor: "pointer",
         overflow: "hidden",
         transition: "border-color 0.15s, box-shadow 0.15s",
-        boxShadow: selected ? "0 0 0 3px rgba(247, 187, 46, 0.15)" : "none",
+        boxShadow: selected ? "0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent)" : "none",
       }}
     >
       {/* Screenshot */}
@@ -66,8 +66,8 @@ export function TemplateCard({ name, description, tags, screenshotUrl, selected,
               fontSize: "0.62rem",
               padding: "0.15rem 0.4rem",
               borderRadius: 4,
-              background: selected ? "rgba(247, 187, 46, 0.12)" : "var(--muted)",
-              color: selected ? "#F7BB2E" : "var(--muted-foreground)",
+              background: selected ? "color-mix(in srgb, var(--brand) 12%, transparent)" : "var(--muted)",
+              color: selected ? "var(--brand)" : "var(--muted-foreground)",
               fontWeight: 500,
             }}>
               {tag}

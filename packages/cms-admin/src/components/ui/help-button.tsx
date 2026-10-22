@@ -117,12 +117,12 @@ export function HelpButton({ articleId }: HelpButtonProps) {
         title={article.title}
         style={{
           background: "none", border: "none", cursor: "pointer",
-          color: open ? "#F7BB2E" : "var(--muted-foreground)",
+          color: open ? "var(--brand)" : "var(--muted-foreground)",
           padding: "0.2rem", display: "flex", alignItems: "center",
           borderRadius: "4px", transition: "color 0.15s",
         }}
-        onMouseEnter={(e) => { if (!open) e.currentTarget.style.color = "#F7BB2E"; }}
-        onMouseLeave={(e) => { if (!open) e.currentTarget.style.color = open ? "#F7BB2E" : "var(--muted-foreground)"; }}
+        onMouseEnter={(e) => { if (!open) e.currentTarget.style.color = "var(--brand)"; }}
+        onMouseLeave={(e) => { if (!open) e.currentTarget.style.color = open ? "var(--brand)" : "var(--muted-foreground)"; }}
       >
         <Lightbulb style={{ width: "0.85rem", height: "0.85rem" }} />
       </button>
@@ -137,7 +137,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-              <Lightbulb style={{ width: "0.8rem", height: "0.8rem", color: "#F7BB2E" }} />
+              <Lightbulb style={{ width: "0.8rem", height: "0.8rem", color: "var(--brand)" }} />
               <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>{article.title}</span>
             </div>
             <button
@@ -167,10 +167,10 @@ export function HelpButton({ articleId }: HelpButtonProps) {
                         style={{
                           display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.72rem",
                           background: "none", border: "none", cursor: "pointer", padding: 0,
-                          color: activeISU === action.isu ? "#F7BB2E" : "var(--foreground)",
+                          color: activeISU === action.isu ? "var(--brand)" : "var(--foreground)",
                         }}
                       >
-                        <Settings2 style={{ width: "0.7rem", height: "0.7rem", color: "#F7BB2E" }} />
+                        <Settings2 style={{ width: "0.7rem", height: "0.7rem", color: "var(--brand)" }} />
                         {action.label}
                       </button>
                       {activeISU === action.isu && ISUComp && (
@@ -188,7 +188,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
                 // Regular action
                 return (
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.72rem" }}>
-                    <span style={{ color: "#F7BB2E" }}>→</span>
+                    <span style={{ color: "var(--brand)" }}>→</span>
                     {action.href ? (
                       <a
                         data-testid={`help-button-action-${i}`}
@@ -213,7 +213,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
                 data-testid="help-button-learn-more"
                 href={`https://docs.webhouse.app${article.learnMorePath}`}
                 target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: "0.7rem", color: "#F7BB2E", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                style={{ fontSize: "0.7rem", color: "var(--brand)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
               >
                 Learn more at docs <ExternalLink style={{ width: 10, height: 10 }} />
               </a>

@@ -101,7 +101,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {done ? <CheckCircle style={{ width: 18, height: 18, color: "rgb(74 222 128)" }} />
               : error ? <AlertTriangle style={{ width: 18, height: 18, color: "var(--destructive)" }} />
-              : <Zap style={{ width: 18, height: 18, color: "#F7BB2E" }} className="animate-pulse" />}
+              : <Zap style={{ width: 18, height: 18, color: "var(--brand)" }} className="animate-pulse" />}
             <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>
               {done ? "Beam complete" : error ? "Beam failed" : "Beaming…"}
             </h2>
@@ -160,7 +160,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
           <div style={{
             height: "100%",
             width: `${filePct}%`,
-            background: error ? "var(--destructive)" : done ? "rgb(74 222 128)" : "#F7BB2E",
+            background: error ? "var(--destructive)" : done ? "rgb(74 222 128)" : "var(--brand)",
             borderRadius: 4,
             transition: "width 0.3s ease",
           }} />

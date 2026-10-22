@@ -1062,7 +1062,7 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
       <DragHandle />
       <div ref={containerRef} style={{
         width: (currentAlign === "left" || currentAlign === "right") ? "100%" : effectiveWidth, maxWidth: "700px", borderRadius: "8px",
-        border: selected ? "2px solid #F7BB2E" : "1px solid #F7BB2E55",
+        border: selected ? "2px solid var(--brand)" : "1px solid color-mix(in srgb, var(--brand) 33%, transparent)",
         backgroundColor: "var(--card)", overflow: "hidden", position: "relative",
         transition: "border-color 150ms",
       }}>
@@ -1075,7 +1075,7 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
         </div>
         {/* Footer bar — title + inline delete */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
-          <span style={{ fontSize: "0.65rem", color: "#F7BB2E", fontWeight: 600, padding: "0 4px", flexShrink: 0 }}>⚡</span>
+          <span style={{ fontSize: "0.65rem", color: "var(--brand)", fontWeight: 600, padding: "0 4px", flexShrink: 0 }}>⚡</span>
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {title || "Interactive"}
           </span>
@@ -1367,7 +1367,7 @@ function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: Node
               />
               <button data-testid="map-show-button" type="submit" style={{
                 padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none",
-                background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.75rem",
+                background: "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.75rem",
                 fontWeight: 600, cursor: "pointer",
               }}>
                 Show
@@ -2063,12 +2063,12 @@ function SnippetNodeView({ node, selected, deleteNode }: NodeViewProps) {
             fontSize: "0.78rem",
           }}
         >
-          <Code2 style={{ width: 14, height: 14, color: "#F7BB2E", flexShrink: 0 }} />
+          <Code2 style={{ width: 14, height: 14, color: "var(--brand)", flexShrink: 0 }} />
           <span style={{ fontWeight: 500, color: "var(--foreground)" }}>{title || slug}</span>
           {lang && (
             <span style={{
               fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: 3,
-              background: "rgba(247, 187, 46, 0.12)", color: "#F7BB2E", fontWeight: 600,
+              background: "color-mix(in srgb, var(--brand) 12%, transparent)", color: "var(--brand)", fontWeight: 600,
             }}>{lang}</span>
           )}
           <span style={{ flex: 1 }} />
@@ -3529,7 +3529,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       />
                       <button data-testid="media-submenu-map-submit" type="submit" style={{
                         padding: "0.3rem 0.5rem", borderRadius: "4px", border: "none",
-                        background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.7rem",
+                        background: "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.7rem",
                         fontWeight: 600, cursor: "pointer",
                       }}>
                         Insert
@@ -3857,7 +3857,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             backgroundColor: "var(--background)",
             position: "sticky", top: stickyOffset + 49, zIndex: 19,
           }}>
-            <span style={{ fontSize: "0.7rem", color: "#F7BB2E", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Interactive</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--brand)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Interactive</span>
             <CtxSep />
             <CtxBtn title="Float left" active={toolbarState.interactiveAlign === "left"}
               onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { align: "left" }).run()}>
@@ -4114,10 +4114,10 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       borderRadius: "0.625rem", border: "1px solid var(--border)", backgroundColor: "transparent",
                       cursor: "pointer", textAlign: "left", transition: "border-color 120ms, background 120ms",
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#F7BB2E"; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--brand)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
                   >
-                    <span style={{ fontSize: "1.25rem", flexShrink: 0, color: "#F7BB2E" }}>⚡</span>
+                    <span style={{ fontSize: "1.25rem", flexShrink: 0, color: "var(--brand)" }}>⚡</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--foreground)", margin: 0 }}>{item.title}</p>
                     </div>
@@ -4148,7 +4148,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               {/* Header */}
               <div style={{ padding: "1rem 1.25rem 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <Braces style={{ width: 16, height: 16, color: "#F7BB2E" }} />
+                  <Braces style={{ width: 16, height: 16, color: "var(--brand)" }} />
                   <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert Snippet</span>
                 </div>
                 <button data-testid="snippet-picker-close-button" type="button" onClick={() => setShowSnippetPicker(false)}
@@ -4191,10 +4191,10 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "transparent",
                       cursor: "pointer", textAlign: "left", transition: "border-color 120ms, background 120ms",
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#F7BB2E"; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--brand)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
                   >
-                    <Code2 style={{ width: 16, height: 16, color: "#F7BB2E", flexShrink: 0 }} />
+                    <Code2 style={{ width: 16, height: 16, color: "var(--brand)", flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: "0.82rem", fontWeight: 500, color: "var(--foreground)", margin: 0 }}>{item.title || item.slug}</p>
                       <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: 0, fontFamily: "monospace" }}>
@@ -4227,7 +4227,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             }}>
               <div style={{ padding: "1rem 1.25rem 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <Shapes style={{ width: 16, height: 16, color: "#F7BB2E" }} />
+                  <Shapes style={{ width: 16, height: 16, color: "var(--brand)" }} />
                   <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert SVG figure</span>
                 </div>
                 <button data-testid="svg-picker-close-button" type="button" onClick={() => setShowSvgPicker(false)}
@@ -4269,7 +4269,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       backgroundColor: "transparent", cursor: "pointer", textAlign: "center",
                       transition: "border-color 120ms, background 120ms",
                     }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#F7BB2E"; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--brand)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
                   >
                     <div style={{ width: "100%", aspectRatio: "1", background: "var(--background)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", padding: "0.25rem" }}>

@@ -239,7 +239,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
         background: "var(--card)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-          <Zap style={{ width: 18, height: 18, color: "#F7BB2E" }} />
+          <Zap style={{ width: 18, height: 18, color: "var(--brand)" }} />
           <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>Beam Export</h3>
         </div>
         <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
@@ -257,7 +257,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             padding: "0.45rem 1rem",
             borderRadius: 6,
             border: "none",
-            background: "#F7BB2E",
+            background: "var(--brand)",
             color: "#0D0D0D",
             fontSize: "0.8rem",
             fontWeight: 600,
@@ -292,7 +292,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
         background: "var(--card)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-          <Send style={{ width: 18, height: 18, color: "#F7BB2E" }} />
+          <Send style={{ width: 18, height: 18, color: "var(--brand)" }} />
           <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>Live Beam</h3>
         </div>
         <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
@@ -358,7 +358,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             padding: "0.45rem 1rem",
             borderRadius: 6,
             border: "none",
-            background: "#F7BB2E",
+            background: "var(--brand)",
             color: "#0D0D0D",
             fontSize: "0.8rem",
             fontWeight: 600,
@@ -396,7 +396,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               <div style={{
                 height: "100%",
                 width: `${progressPct}%`,
-                background: "#F7BB2E",
+                background: "var(--brand)",
                 borderRadius: 3,
                 transition: "width 0.3s ease",
               }} />
@@ -583,7 +583,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               padding: "0.45rem 1rem",
               borderRadius: 6,
               border: "none",
-              background: "#F7BB2E",
+              background: "var(--brand)",
               color: "#0D0D0D",
               fontSize: "0.8rem",
               fontWeight: 600,

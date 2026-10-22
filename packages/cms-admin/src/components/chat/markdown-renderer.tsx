@@ -382,7 +382,7 @@ function renderBlock(block: Block, key: number): React.ReactNode {
             margin: "8px 0",
             padding: "8px 14px",
             borderLeft: "3px solid var(--primary)",
-            backgroundColor: "rgba(247, 187, 46, 0.05)",
+            backgroundColor: "color-mix(in srgb, var(--brand) 5%, transparent)",
             borderRadius: "0 6px 6px 0",
             color: "var(--foreground)",
           }}

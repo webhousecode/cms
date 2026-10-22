@@ -94,7 +94,7 @@ export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
           color: "var(--foreground)", textAlign: "left",
         }}
       >
-        <Lightbulb style={{ width: 14, height: 14, color: "#F7BB2E", flexShrink: 0 }} />
+        <Lightbulb style={{ width: 14, height: 14, color: "var(--brand)", flexShrink: 0 }} />
         <span style={{ flex: 1, fontWeight: expanded ? 600 : 500, fontSize: expanded ? "0.8rem" : "0.72rem" }}>
           {article.title}
         </span>
@@ -114,7 +114,7 @@ export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
             <div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
               {article.actions.map((action, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.72rem" }}>
-                  <span style={{ color: "#F7BB2E" }}>→</span>
+                  <span style={{ color: "var(--brand)" }}>→</span>
                   {action.href ? (
                     <a data-testid={`help-action-${i}`} href={action.href} style={{ color: "var(--foreground)", textDecoration: "none" }}>{action.label}</a>
                   ) : (
@@ -133,7 +133,7 @@ export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
                 href={`https://docs.webhouse.app${article.learnMorePath}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ fontSize: "0.7rem", color: "#F7BB2E", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
+                style={{ fontSize: "0.7rem", color: "var(--brand)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
               >
                 Learn more at docs <ExternalLink style={{ width: 10, height: 10 }} />
               </a>

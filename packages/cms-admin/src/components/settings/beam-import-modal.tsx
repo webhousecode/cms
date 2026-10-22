@@ -201,8 +201,8 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {phase === "done" ? <CheckCircle style={{ width: 18, height: 18, color: "rgb(74 222 128)" }} />
               : phase === "error" ? <AlertTriangle style={{ width: 18, height: 18, color: "var(--destructive)" }} />
-              : phase === "uploading" ? <Upload style={{ width: 18, height: 18, color: "#F7BB2E" }} />
-              : <Loader2 style={{ width: 18, height: 18, color: "#F7BB2E" }} className="animate-spin" />}
+              : phase === "uploading" ? <Upload style={{ width: 18, height: 18, color: "var(--brand)" }} />
+              : <Loader2 style={{ width: 18, height: 18, color: "var(--brand)" }} className="animate-spin" />}
             <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>
               {phase === "done" ? "Import complete"
                 : phase === "error" ? "Import failed"
@@ -247,7 +247,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
               <div style={{
                 height: "100%",
                 width: `${uploadPct}%`,
-                background: "#F7BB2E",
+                background: "var(--brand)",
                 borderRadius: 4,
                 transition: "width 0.2s ease",
               }} />

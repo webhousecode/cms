@@ -513,7 +513,7 @@ export function DeploySettingsPanel() {
         padding: "0.75rem 1rem",
         borderRadius: 8,
         border: "1px solid var(--border)",
-        background: "color-mix(in srgb, #F7BB2E 5%, var(--card))",
+        background: "color-mix(in srgb, var(--brand) 5%, var(--card))",
         marginBottom: "1.5rem",
         display: "flex",
         alignItems: "center",
@@ -531,7 +531,7 @@ export function DeploySettingsPanel() {
           style={{
             padding: "0.35rem 0.8rem",
             borderRadius: 6,
-            background: "#F7BB2E",
+            background: "var(--brand)",
             color: "#0D0D0D",
             fontSize: "0.75rem",
             fontWeight: 600,

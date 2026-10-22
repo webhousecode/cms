@@ -19,14 +19,14 @@ interface SeoOverview {
 
 function scoreColor(score: number): string {
   if (score >= 80) return "#4ade80";
-  if (score >= 50) return "#F7BB2E";
+  if (score >= 50) return "var(--status-warning)";
   return "#f87171";
 }
 
 function densityColor(density: number): string {
   if (density >= 1 && density <= 3) return "#4ade80";
   if (density > 3) return "#f87171";
-  return "#F7BB2E";
+  return "var(--status-warning)";
 }
 
 export default function SeoPage() {
@@ -265,7 +265,7 @@ export default function SeoPage() {
                   </p>
                 )}
                 {data.issues.missingOg > 0 && (
-                  <p style={{ fontSize: "0.75rem", color: "#F7BB2E", margin: 0 }}>
+                  <p style={{ fontSize: "0.75rem", color: "var(--brand)", margin: 0 }}>
                     {data.issues.missingOg} missing OG image
                   </p>
                 )}
@@ -290,7 +290,7 @@ export default function SeoPage() {
                   padding: "0.5rem 1rem", border: "none", background: "none", cursor: "pointer",
                   fontSize: "0.8rem", fontWeight: activeTab === tab ? 600 : 400,
                   color: activeTab === tab ? "var(--foreground)" : "var(--muted-foreground)",
-                  borderBottom: activeTab === tab ? "2px solid #F7BB2E" : "2px solid transparent",
+                  borderBottom: activeTab === tab ? "2px solid var(--brand)" : "2px solid transparent",
                   marginBottom: "-1px",
                 }}
               >
@@ -327,7 +327,7 @@ export default function SeoPage() {
                     style={{
                       display: "inline-flex", alignItems: "center", gap: "0.2rem",
                       padding: "0.25rem 0.5rem", borderRadius: "4px", border: "none",
-                      background: newKeyword.trim() ? "#F7BB2E" : "var(--border)",
+                      background: newKeyword.trim() ? "var(--brand)" : "var(--border)",
                       color: newKeyword.trim() ? "#0D0D0D" : "var(--muted-foreground)",
                       cursor: newKeyword.trim() ? "pointer" : "default",
                       fontSize: "0.7rem", fontWeight: 600,
@@ -368,8 +368,8 @@ export default function SeoPage() {
                           <td style={{ textAlign: "center", padding: "0.5rem" }}>
                             <span style={{
                               fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px",
-                              background: kw.target === "primary" ? "rgba(247,187,46,0.2)" : kw.target === "secondary" ? "rgba(74,222,128,0.15)" : "rgba(168,139,250,0.15)",
-                              color: kw.target === "primary" ? "#F7BB2E" : kw.target === "secondary" ? "#4ade80" : "#a78bfa",
+                              background: kw.target === "primary" ? "color-mix(in srgb, var(--brand) 20%, transparent)" : kw.target === "secondary" ? "rgba(74,222,128,0.15)" : "rgba(168,139,250,0.15)",
+                              color: kw.target === "primary" ? "var(--brand)" : kw.target === "secondary" ? "#4ade80" : "#a78bfa",
                               fontWeight: 600, textTransform: "uppercase",
                             }}>
                               {kw.target}
@@ -383,7 +383,7 @@ export default function SeoPage() {
                               <div style={{ width: 60, height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
                                 <div style={{
                                   height: "100%", width: `${kw.coverage}%`, borderRadius: 3,
-                                  background: kw.coverage >= 50 ? "#4ade80" : kw.coverage >= 20 ? "#F7BB2E" : "#f87171",
+                                  background: kw.coverage >= 50 ? "#4ade80" : kw.coverage >= 20 ? "var(--status-warning)" : "#f87171",
                                 }} />
                               </div>
                               <span style={{ fontSize: "0.72rem", fontFamily: "monospace", fontWeight: 600, color: "var(--foreground)" }}>
@@ -524,7 +524,7 @@ export default function SeoPage() {
                         width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
                         background: (doc.publishAt && new Date(doc.publishAt) > new Date()) ? "#a78bfa"
                           : doc.status === "published" ? "#4ade80"
-                          : doc.status === "draft" ? "#F7BB2E"
+                          : doc.status === "draft" ? "var(--brand)"
                           : "#a78bfa",
                       }} />
                       {doc.title}
@@ -551,7 +551,7 @@ export default function SeoPage() {
                         style={{
                           display: "inline-flex", alignItems: "center", gap: "0.25rem",
                           padding: "0.25rem 0.5rem", borderRadius: "4px", border: "none",
-                          background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer",
+                          background: "var(--brand)", color: "var(--brand-foreground)", cursor: "pointer",
                           fontSize: "0.65rem", fontWeight: 600,
                         }}
                       >

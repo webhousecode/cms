@@ -13,6 +13,13 @@
   --popover:             oklch(0.239 0 0);
   --popover-foreground:  oklch(0.985 0 0);
   --primary:             oklch(0.82 0.17 85); /* keep CMS yellow/gold */
+  /* F210 white-label: the brand colour. Defined ONCE here, never per theme, so it
+     looks identical in every theme until a brand pack overrides it. */
+  --brand:               #F7BB2E;
+  --brand-foreground:    #0D0D0D;
+  /* The amber of a traffic-light score (green/amber/red). NOT the brand: it
+     stays amber under any white-label skin. */
+  --status-warning:      #F7BB2E;
   --primary-foreground:  oklch(0.1 0 0);
   --secondary:           oklch(0.301 0 0);    /* #2E2E2E */
   --secondary-foreground:oklch(0.985 0 0);

@@ -27,7 +27,7 @@ export function SettingsAnchorScroll() {
 
       // Apply glow animation
       target.style.transition = "box-shadow 0.3s ease";
-      target.style.boxShadow = "0 0 0 2px #F7BB2E, 0 0 20px rgba(247, 187, 46, 0.3)";
+      target.style.boxShadow = "0 0 0 2px var(--brand), 0 0 20px color-mix(in srgb, var(--brand) 30%, transparent)";
       target.style.borderRadius = "12px";
 
       // Fade out glow after 2 seconds

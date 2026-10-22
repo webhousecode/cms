@@ -134,7 +134,7 @@ export function MapEditor({ value, onChange, defaultCenter, defaultZoom, locked 
           style={{
             display: "flex", alignItems: "center", gap: "0.2rem",
             padding: "0.35rem 0.6rem", borderRadius: "6px", border: "none",
-            background: address.trim() ? "#F7BB2E" : "var(--border)",
+            background: address.trim() ? "var(--brand)" : "var(--border)",
             color: address.trim() ? "#0D0D0D" : "var(--muted-foreground)",
             cursor: address.trim() && !locked ? "pointer" : "default",
             fontSize: "0.75rem", fontWeight: 600, flexShrink: 0,

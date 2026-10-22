@@ -451,7 +451,7 @@ export default function InteractivesPage() {
                   <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}>
                     {formatSize(item.size)} &middot; {formatDate(item.updatedAt)}
                     <StatusBadge status={item.status} />
-                    {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "rgba(247,187,46,0.12)", color: "#F7BB2E" }}>{item.locale.toUpperCase()}</span>}
+                    {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "color-mix(in srgb, var(--brand) 12%, transparent)", color: "var(--brand)" }}>{item.locale.toUpperCase()}</span>}
                   </p>
                 </div>
                 <div data-testid={`interactives-item-menu-${item.id}`} onClick={(e) => e.stopPropagation()}>
@@ -503,7 +503,7 @@ export default function InteractivesPage() {
                           {item.id}
                         </p>
                       </div>
-                      {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "rgba(247,187,46,0.12)", color: "#F7BB2E", flexShrink: 0 }}>{item.locale.toUpperCase()}</span>}
+                      {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "color-mix(in srgb, var(--brand) 12%, transparent)", color: "var(--brand)", flexShrink: 0 }}>{item.locale.toUpperCase()}</span>}
                     </div>
                   </td>
                   <td style={{ padding: "0.625rem 0.75rem", whiteSpace: "nowrap" }}>
