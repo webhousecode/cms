@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { execSync, spawn } from "node:child_process";
 import { homedir } from "node:os";
+import { randomBytes } from "node:crypto";
 
 const VERSION = "0.2.4";
 const REPO = "https://github.com/webhousecode/cms.git";
@@ -131,6 +132,21 @@ if (configPath) {
 }
 log("");
 
+// Security W41 H9 — a production server never signs sessions with the public
+// development key. Generate a random secret once and keep it in the cache dir.
+function jwtSecret(): string {
+  if (process.env.CMS_JWT_SECRET) return process.env.CMS_JWT_SECRET;
+  const file = join(CACHE_DIR, "jwt-secret");
+  if (existsSync(file)) {
+    const saved = readFileSync(file, "utf-8").trim();
+    if (saved) return saved;
+  }
+  const fresh = randomBytes(32).toString("hex");
+  mkdirSync(CACHE_DIR, { recursive: true });
+  writeFileSync(file, fresh, { mode: 0o600 });
+  return fresh;
+}
+
 const child = spawn("npx", ["next", "start", "-p", String(port)], {
   cwd: adminDir,
   stdio: "inherit",
@@ -138,7 +154,9 @@ const child = spawn("npx", ["next", "start", "-p", String(port)], {
     ...process.env,
     NODE_ENV: "production",
     PORT: String(port),
-    HOSTNAME: "0.0.0.0",
+    // Local launcher: listen on this machine only unless told otherwise.
+    HOSTNAME: process.env.HOSTNAME_BIND ?? "127.0.0.1",
+    CMS_JWT_SECRET: jwtSecret(),
     ...(configPath ? { CMS_CONFIG_PATH: configPath } : {}),
   },
 });

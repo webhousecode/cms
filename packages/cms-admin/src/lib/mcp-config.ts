@@ -106,7 +106,7 @@ export interface ResolvedMcpKey {
  *
  * Uses timing-safe comparison to prevent timing attacks.
  */
-export async function resolveApiKeyToSite(bearerHeader: string | null): Promise<ResolvedMcpKey | null> {
+export async function resolveApiKeyToSite(bearerHeader: string | null, clientIp = ""): Promise<ResolvedMcpKey | null> {
   if (!bearerHeader?.startsWith("Bearer ")) return null;
   const token = bearerHeader.slice(7).trim();
   if (!token) return null;
@@ -123,6 +123,18 @@ export async function resolveApiKeyToSite(bearerHeader: string | null): Promise<
     if (stored) {
       const scopes = permissionsToMcpScopes(stored.permissions ?? []);
       const { orgId, siteId } = await resolveBoundSite(stored.resources ?? []);
+      // Security W41 NY-H2 — /api/mcp is a public prefix, so the proxy's token
+      // checks never ran here: no expiry/IP/site evaluation, and a token with
+      // no site list bound to the registry's DEFAULT site whoever owned it.
+      // Same rules as every other door: the token's own window/IP/sites, and
+      // its owner must be able to act on the bound site.
+      const { evaluateToken } = await import("./access-tokens");
+      const check = evaluateToken({ ...stored, permissions: ["*"] }, "content:read", `site:${siteId}` as never, clientIp);
+      if (!check.allow) return null;
+      const { getUsers } = await import("./auth");
+      const { getTeamMembersForSite } = await import("./team");
+      const { tokenOwnerMayAct } = await import("./token-owner");
+      if (!tokenOwnerMayAct(stored.userId, await getUsers(), await getTeamMembersForSite(orgId, siteId))) return null;
       return { orgId, siteId, label: stored.name, scopes };
     }
     // Looked like wh_ but didn't verify — fall through (caller returns 401)

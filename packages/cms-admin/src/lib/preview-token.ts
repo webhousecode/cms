@@ -1,4 +1,5 @@
 import { createHmac } from "crypto";
+import { resolveJwtSecret } from "./dev-jwt-secret";
 
 /**
  * Short-lived HMAC tokens for preview proxy URLs.
@@ -15,7 +16,8 @@ import { createHmac } from "crypto";
 const TOKEN_TTL_SECONDS = 3600; // 1 hour
 
 function getSecret(): string {
-  return process.env.CMS_JWT_SECRET ?? "insecure-dev-fallback-preview";
+  // Security W41 H9 — the same secret (and the same refusal) as sessions.
+  return resolveJwtSecret();
 }
 
 /** Create a signed token for a preview proxy URL parameter. */

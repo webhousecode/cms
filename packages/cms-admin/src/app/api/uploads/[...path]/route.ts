@@ -13,6 +13,9 @@ const MIME: Record<string, string> = {
   html: "text/html",
 };
 
+/** Types a browser runs as a document (scripts, same-origin access). */
+const ACTIVE_CONTENT = new Set(["html", "htm", "svg", "xhtml", "xml"]);
+
 /**
  * Resolve `?site=<id>` to (orgId, siteId) so callers without cms-admin
  * cookies (i.e. consumer sites doing /uploads/* rewrites) can fetch
@@ -41,6 +44,13 @@ async function serveFile(segments: string[]): Promise<NextResponse> {
         // Permissive CORS — these are public static assets and sites consume
         // them cross-origin (e.g. sanneandersen.dk's <img src="https://webhouse.app/...">).
         "Access-Control-Allow-Origin": "*",
+        "X-Content-Type-Options": "nosniff",
+        // Security W41 H4 — an uploaded HTML or SVG file is served from the
+        // ADMIN's origin; a script in it ran with the admin's cookies (and the
+        // media/htmldoc iframes add allow-same-origin). A sandbox CSP gives the
+        // document an opaque origin: it still renders, its scripts can no
+        // longer reach the admin.
+        ...(ACTIVE_CONTENT.has(ext) ? { "Content-Security-Policy": "sandbox allow-scripts allow-popups allow-forms" } : {}),
       },
     });
   } catch (err: unknown) {

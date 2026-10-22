@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authAttemptLimited, clientIp, TOO_MANY_ATTEMPTS } from "@/lib/auth-rate-limit";
 import { cookies } from "next/headers";
 import { createUser, getUsers, createToken, getSessionUser, COOKIE_NAME } from "@/lib/auth";
 import { isBidConfigured } from "@/lib/bid-config";
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Token and name are required" }, { status: 400 });
   }
 
+  if (authAttemptLimited("invite-accept", clientIp(request.headers))) return NextResponse.json(TOO_MANY_ATTEMPTS, { status: 429 });
   const invitation = await validateToken(body.token);
   if (!invitation) {
     return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 });

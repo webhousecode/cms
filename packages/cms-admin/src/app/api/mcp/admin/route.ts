@@ -11,7 +11,10 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   // Resolve API key → specific org+site (no cookie dependency)
-  const resolved = await resolveApiKeyToSite(request.headers.get("authorization"));
+  const resolved = await resolveApiKeyToSite(
+    request.headers.get("authorization"),
+    request.headers.get("fly-client-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "",
+  );
   if (!resolved) {
     console.warn(`[MCP] Rejected: invalid API key (prefix: ${request.headers.get("authorization")?.slice(7, 15) ?? "none"})`);
     return NextResponse.json({ error: "Invalid API key" }, { status: 401 });

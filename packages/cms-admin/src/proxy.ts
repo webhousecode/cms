@@ -69,6 +69,16 @@ export function isCorsPreflight(pathname: string, method: string): boolean {
   );
 }
 
+/**
+ * Every directory under app/api/cms that is NOT the [collection] route. A test
+ * reads the real directory listing, so a new one cannot be forgotten here.
+ */
+export const NON_COLLECTION_API_CMS = new Set([
+  "agent-templates", "agents", "ai", "brand-voice", "build", "chat", "collections", "command",
+  "curation", "folder-picker", "heartbeat", "mcp-servers", "media", "registry", "revalidation",
+  "scheduled", "schema-drift", "snippets", "workflows",
+]);
+
 export function isAllowedForEditSession(
   pathname: string,
   method: string,
@@ -82,6 +92,9 @@ export function isAllowedForEditSession(
   if (pathname === "/api/inline-edit/pages") return method === "GET" && requestSite === tokenSite;
   const match = pathname.match(/^\/api\/cms\/([^/]+)\/([^/]+)\/?$/);
   if (!match) return false;
+  // Security W41 H6 — the pattern also matched /api/cms/registry/export-schema,
+  // /api/cms/curation/<id>, /api/cms/chat/export … — not documents at all.
+  if (NON_COLLECTION_API_CMS.has(match[1]!)) return false;
   if (method !== "GET" && method !== "PATCH") return false;
   return requestSite === tokenSite;
 }
@@ -546,6 +559,16 @@ export async function proxy(request: NextRequest) {
     // a green run that never wrote anything proves nothing about saving. The
     // two keys stay separate so an ordinary visual run still cannot write, and
     // a leaked look-only secret still costs only looking.
+    // Security W41 H6 — the 30-day inline-edit token lives on the customer's
+    // site. As a Bearer it is held to the allowlist below; as a COOKIE it used
+    // to pass as a full session. Same allowlist on both doors.
+    if (payload.editSession === true) {
+      const tokenSite = typeof payload.site === "string" ? payload.site : "";
+      const requestSite = request.nextUrl.searchParams.get("site") ?? "";
+      if (!isApi || !isAllowedForEditSession(pathname, request.method, requestSite, tokenSite)) {
+        return NextResponse.json({ error: "Inline-edit session is scoped to GET/PATCH on its own site" }, { status: 403 });
+      }
+    }
     const lensReadOnly = payload.lens === true && payload.lensWrite !== true;
     if (lensReadOnly && ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
       return NextResponse.json({ error: "Lens session is read-only" }, { status: 403 });

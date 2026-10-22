@@ -1,3 +1,4 @@
+import { authAttemptLimited, clientIp, TOO_MANY_ATTEMPTS } from "@/lib/auth-rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { verifyPassword, createToken, getUsers, COOKIE_NAME } from "@/lib/auth";
@@ -21,6 +22,12 @@ export async function POST(request: NextRequest) {
     const { email, password } = (await request.json()) as { email?: string; password?: string };
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password required" }, { status: 400 });
+    }
+    if (authAttemptLimited("login", clientIp(request.headers))) return NextResponse.json(TOO_MANY_ATTEMPTS, { status: 429 });
+    // Security W41 H7 — with BID on, refuse BEFORE checking the password: the
+    // old order answered 403 for a right password and 401 for a wrong one.
+    if (!legacyLoginAllowed({})) {
+      return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
     }
 
     const user = await verifyPassword(email, password);

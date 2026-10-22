@@ -18,11 +18,24 @@
  */
 export const DEV_JWT_SECRET = "cms-dev-secret-change-me-in-production";
 
-/** The signing secret for this process. Never empty. */
+/**
+ * The signing secret for this process. Never empty.
+ *
+ * Security W41 H9 — a PRODUCTION server without a secret used to sign with the
+ * public DEV_JWT_SECRET above, so anyone could mint an admin session for it.
+ * It now refuses instead. The Docker entrypoint and the cms-admin launcher
+ * generate and persist a random secret, so a self-hosted install never meets
+ * this error unless it removed theirs on purpose.
+ */
 export function resolveJwtSecret(
   env: Record<string, string | undefined> = process.env,
 ): string {
-  return env.CMS_JWT_SECRET || env.JWT_SECRET || DEV_JWT_SECRET;
+  const secret = env.CMS_JWT_SECRET || env.JWT_SECRET;
+  if (secret) return secret;
+  if (env.NODE_ENV === "production") {
+    throw new Error("CMS_JWT_SECRET is not set. Set it to a random value (openssl rand -hex 32) — a production server will not sign sessions with the public development key.");
+  }
+  return DEV_JWT_SECRET;
 }
 
 /**

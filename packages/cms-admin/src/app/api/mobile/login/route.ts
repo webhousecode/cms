@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createToken, verifyPassword } from "@/lib/auth";
+import { legacyLoginAllowed, LEGACY_LOGIN_REFUSED } from "@/lib/bid";
+import { authAttemptLimited, clientIp, TOO_MANY_ATTEMPTS } from "@/lib/auth-rate-limit";
 
 function resolveAvatarUrl(user: { email: string; githubUsername?: string }): string {
   if (user.githubUsername) return `https://github.com/${user.githubUsername}.png?size=128`;
@@ -29,19 +31,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email and password required" }, { status: 400 });
   }
 
-  const user = await verifyPassword(body.email, body.password);
-  if (!user) {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+  if (authAttemptLimited("mobile-login", clientIp(req.headers))) return NextResponse.json(TOO_MANY_ATTEMPTS, { status: 429 });
+  // Security W41 H7 — the mobile door ignored "Broberg ID only" and handed out
+  // a 7-day JWT for a password. Refused before the password is even checked.
+  if (!legacyLoginAllowed({})) {
+    return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
   }
 
-  if (user.totp) {
-    return NextResponse.json(
-      {
-        error:
-          "This account has 2FA enabled. Please use the QR pairing flow from desktop instead.",
-      },
-      { status: 401 },
-    );
+  const user = await verifyPassword(body.email, body.password);
+  // One answer for a wrong password and for a 2FA account: a different message
+  // for the latter told a guesser the password was right.
+  if (!user || user.totp) {
+    return NextResponse.json({ error: "Invalid credentials, or 2FA is on — use the QR pairing flow from desktop" }, { status: 401 });
   }
 
   const jwt = await createToken(user);

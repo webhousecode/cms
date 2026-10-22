@@ -12,6 +12,19 @@ if [ -n "${WEBHOUSE_DATA_DIR}" ]; then
   mkdir -p "${WEBHOUSE_DATA_DIR}/_data"
 fi
 
+# Security W41 H9 — never run with the public development signing key. If no
+# CMS_JWT_SECRET is given, generate one once and keep it on the data volume so
+# sessions survive restarts.
+if [ -z "${CMS_JWT_SECRET}" ]; then
+  SECRET_FILE="${WEBHOUSE_DATA_DIR:-/data/cms-admin}/_data/.jwt-secret"
+  mkdir -p "$(dirname "$SECRET_FILE")"
+  if [ ! -s "$SECRET_FILE" ]; then
+    (umask 077; head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$SECRET_FILE")
+  fi
+  CMS_JWT_SECRET="$(cat "$SECRET_FILE")"
+  export CMS_JWT_SECRET
+fi
+
 # Seed demo site if /site has no config
 if [ ! -f /site/cms.config.ts ] && [ -d /app/seed/content ]; then
   echo ""

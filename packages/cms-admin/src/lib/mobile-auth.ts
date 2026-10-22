@@ -27,5 +27,8 @@ export async function getMobileSession(req: NextRequest): Promise<MobileSession 
   if (!token) return null;
   const payload = await verifyToken(token);
   if (!payload) return null;
+  // Security W41 H6 — an inline-edit token (handed to a customer's site) is
+  // not a mobile login.
+  if ((payload as { editSession?: unknown }).editSession === true) return null;
   return { ...payload, id: payload.sub };
 }

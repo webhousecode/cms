@@ -120,9 +120,23 @@ async function fetchGitHubFile(owner: string, repo: string, path: string, branch
 }
 
 /** Fetch cms.config.ts from a GitHub repo and evaluate it with jiti */
-async function loadGitHubConfig(site: SiteEntry): Promise<CmsConfig> {
+export async function loadGitHubConfig(site: SiteEntry): Promise<CmsConfig> {
   const gh = site.github;
   if (!gh) throw new Error(`Site "${site.id}" is github adapter but has no github config`);
+
+  // Security W41 NY-H3 — cms.config.ts from the site's GitHub repo is the
+  // site's own CODE; jiti runs it inside cms-admin with the whole server
+  // environment, so anyone who can push to that repo could run code on the
+  // server. A server that runs no site code (CMS_SERVER_BUILDS=off, i.e.
+  // webhouse.app) refuses it — the same line F206.3 drew for build.ts.
+  // Measured 22/10-2026: no site on webhouse.app uses a github:// config.
+  const { serverBuildsAllowed } = await import("./build/server-build-policy");
+  if (!serverBuildsAllowed()) {
+    throw new Error(
+      "This CMS server does not run a site's cms.config.ts from GitHub (CMS_SERVER_BUILDS=off). " +
+      "Keep the config on the server (filesystem) and let GitHub hold only the content.",
+    );
+  }
 
   const token = await resolveToken(gh.token);
   const branch = gh.branch ?? "main";

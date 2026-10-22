@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authAttemptLimited, clientIp, TOO_MANY_ATTEMPTS } from "@/lib/auth-rate-limit";
 import { jwtVerify } from "jose";
 import { COOKIE_NAME, createToken, getUserById } from "@/lib/auth";
 import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
@@ -22,6 +23,7 @@ export async function POST(req: NextRequest) {
 
   const body = (await req.json().catch(() => ({}))) as { code?: string };
   if (!body.code) return NextResponse.json({ error: "Missing code" }, { status: 400 });
+  if (authAttemptLimited("totp", clientIp(req.headers))) return NextResponse.json(TOO_MANY_ATTEMPTS, { status: 429 });
 
   let userId: string;
   try {

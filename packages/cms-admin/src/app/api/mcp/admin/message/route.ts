@@ -6,7 +6,10 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   // Validate API key (site-scoped — same key that opened the SSE session)
-  const resolved = await resolveApiKeyToSite(request.headers.get("authorization"));
+  const resolved = await resolveApiKeyToSite(
+    request.headers.get("authorization"),
+    request.headers.get("fly-client-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "",
+  );
   if (!resolved) {
     return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
   }

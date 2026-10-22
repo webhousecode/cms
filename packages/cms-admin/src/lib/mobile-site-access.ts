@@ -37,6 +37,7 @@ export async function checkMobileSiteAccess(input: {
   const { verifyToken } = await import("./auth");
   const payload = await verifyToken(bearer);
   if (!payload) return null; // the route itself answers 401
+  if ((payload as { editSession?: unknown }).editSession === true) return { status: 403, error: "Inline-edit session is not a mobile login" };
 
   const { loadRegistry, findSite } = await import("./site-registry");
   const registry = await loadRegistry();

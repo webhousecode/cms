@@ -17,6 +17,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing or invalid url param" }, { status: 400 });
   }
 
+  // Security W41 H5 — the url was reflected unescaped: `"` was the only
+  // character handled in the attribute, and JSON.stringify does not stop
+  // `</script>` closing the script block. Measured live with a marker.
+  const attr = url.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  const js = JSON.stringify(url).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,16 +42,16 @@ export async function GET(req: NextRequest) {
 </head>
 <body>
   <img src="/webhouse.app-dark-icon.svg" width="72" height="72" alt="webhouse.app">
-  <a href="${url.replace(/"/g, '&quot;')}">Open in webhouse.app</a>
+  <a href="${attr}">Open in webhouse.app</a>
   <p>Tap the button to sign in to the mobile app.</p>
   <script>
     // Auto-attempt the redirect after 500ms
-    setTimeout(() => { window.location.href = ${JSON.stringify(url)}; }, 500);
+    setTimeout(() => { window.location.href = ${js}; }, 500);
   </script>
 </body>
 </html>`;
 
   return new NextResponse(html, {
-    headers: { "Content-Type": "text/html; charset=utf-8" },
+    headers: { "Content-Type": "text/html; charset=utf-8", "X-Content-Type-Options": "nosniff" },
   });
 }
