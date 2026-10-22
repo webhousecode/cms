@@ -27,6 +27,10 @@ export async function POST(req: NextRequest) {
     }
   }
   const body = await req.json() as CollectionDef;
+  // Security W41 H2 — the name becomes content/<name>/: one plain segment only.
+  if (typeof body?.name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(body.name)) {
+    return NextResponse.json({ error: "Collection name may only use letters, digits, - and _" }, { status: 400 });
+  }
   const config = await getAdminConfig();
   const { configPath } = await getActiveSitePaths();
 

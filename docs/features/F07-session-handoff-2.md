@@ -118,7 +118,7 @@ This session delivered native PTR, swipe-back navigation, preview for all sites,
 - **Service account**: `firebase-adminsdk-fbsvc@webhouse-app.iam.gserviceaccount.com`
 - **Service account key**: `/tmp/firebase-adminsdk-key.json` (also update .env.local if regenerated)
 - **VAPID keys**: in `packages/cms-admin/.env.local`
-- **Access token** (Claude Code): `wh_f82208282421f03af5bb4a0b4b53d988b80a261035671c8f3bd73c9d8d9cf523` — scope: admin
+- **Access token** (Claude Code): `wh_…(redacted — revoked; never put a token in a doc)` — scope: admin
 
 ## What to build next (prioritized)
 

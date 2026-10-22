@@ -19,11 +19,11 @@ export class FilesystemStorageAdapter implements StorageAdapter {
   }
 
   private collectionDir(collection: string): string {
-    return join(this.contentDir, collection);
+    return join(this.contentDir, assertPathSegment(collection, 'collection'));
   }
 
   private documentPath(collection: string, slug: string): string {
-    return join(this.collectionDir(collection), `${slug}.json`);
+    return join(this.collectionDir(collection), `${assertPathSegment(slug, 'slug')}.json`);
   }
 
   private readDocument(collection: string, slug: string): Document | null {
@@ -216,4 +216,17 @@ export class FilesystemStorageAdapter implements StorageAdapter {
   async close(): Promise<void> {
     // No-op for filesystem adapter
   }
+}
+
+/**
+ * Security W41 H2 — collection and slug come from the request and become file
+ * names. `../../../../_data/users` as a slug read and wrote the admin's
+ * users.json. Each must be ONE path segment: no separator, no NUL, not "." or
+ * "..". Unicode slugs (æøå) and dots inside a name stay valid.
+ */
+export function assertPathSegment(value: string, what: string): string {
+  if (typeof value !== 'string' || value === '' || value === '.' || value === '..' || /[\\/\0]/.test(value)) {
+    throw new Error(`Invalid ${what}: ${JSON.stringify(value)}`);
+  }
+  return value;
 }

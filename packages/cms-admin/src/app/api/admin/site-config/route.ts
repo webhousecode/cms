@@ -2,13 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { readSiteConfig, writeSiteConfig, type SiteConfig } from "@/lib/site-config";
 import { getSiteRole } from "@/lib/require-role";
 import { getActiveSitePaths } from "@/lib/site-paths";
+import { stripSecretsForNonAdmin } from "@/lib/site-config-redact";
 
-/** Fields that contain secrets — strip for non-admin users */
-const SECRET_FIELDS = [
-  "resendApiKey", "deployApiToken", "backupS3AccessKeyId", "backupS3SecretAccessKey",
-  "backupPcloudPassword", "backupPcloudUsername", "calendarSecret",
-  "webhookDiscordUrl", "webhookSlackUrl", "webhookCustomUrl", "webhookCustomSecret",
-];
 
 export async function GET() {
   const role = await getSiteRole();
@@ -16,9 +11,7 @@ export async function GET() {
   const [config, paths] = await Promise.all([readSiteConfig(), getActiveSitePaths()]);
   const result: Record<string, unknown> = { ...config, resolvedContentDir: paths.contentDir };
   // Strip secrets for non-admin users
-  if (role !== "admin") {
-    for (const key of SECRET_FIELDS) delete result[key];
-  }
+  if (role !== "admin") stripSecretsForNonAdmin(result);
   return NextResponse.json(result);
 }
 
