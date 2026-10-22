@@ -4,26 +4,28 @@ import { BubbleMenu } from "@tiptap/react/menus";
 import type { Editor } from "@tiptap/core";
 import { useState } from "react";
 import { Sparkles, ChevronDown } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   editor: Editor;
 }
 
 type Action = {
-  label: string;
+  labelKey: string;
   instruction: string;
 };
 
 const QUICK_ACTIONS: Action[] = [
-  { label: "Shorter", instruction: "Rewrite this text to be more concise while keeping the meaning." },
-  { label: "Longer", instruction: "Expand this text with more detail and context." },
-  { label: "Formal", instruction: "Rewrite in a more formal, professional tone." },
-  { label: "Casual", instruction: "Rewrite in a casual, conversational tone." },
-  { label: "→ English", instruction: "Translate this text to English." },
-  { label: "→ Danish", instruction: "Translate this text to Danish." },
+  { labelKey: "editor.aiBubbleMenu.shorter", instruction: "Rewrite this text to be more concise while keeping the meaning." },
+  { labelKey: "editor.aiBubbleMenu.longer", instruction: "Expand this text with more detail and context." },
+  { labelKey: "editor.aiBubbleMenu.formal", instruction: "Rewrite in a more formal, professional tone." },
+  { labelKey: "editor.aiBubbleMenu.casual", instruction: "Rewrite in a casual, conversational tone." },
+  { labelKey: "editor.aiBubbleMenu.toEnglish", instruction: "Translate this text to English." },
+  { labelKey: "editor.aiBubbleMenu.toDanish", instruction: "Translate this text to Danish." },
 ];
 
 export function AIBubbleMenu({ editor }: Props) {
+  const t = useT();
   const [loading, setLoading] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [customInstruction, setCustomInstruction] = useState("");
@@ -44,7 +46,7 @@ export function AIBubbleMenu({ editor }: Props) {
       });
       const data = (await res.json()) as { result?: string; error?: string };
       if (!res.ok || !data.result) {
-        setError(data.error ?? "AI rewrite failed");
+        setError(data.error ?? t("editor.aiBubbleMenu.rewriteFailed"));
         setLoading(false);
         return;
       }
@@ -53,7 +55,7 @@ export function AIBubbleMenu({ editor }: Props) {
       setShowCustom(false);
       setCustomInstruction("");
     } catch {
-      setError("Network error");
+      setError(t("editor.aiBubbleMenu.networkError"));
     }
     setLoading(false);
   }
@@ -94,12 +96,12 @@ export function AIBubbleMenu({ editor }: Props) {
             fontSize: "0.7rem",
           }}>
             <Sparkles style={{ width: "0.8rem", height: "0.8rem" }} />
-            <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>AI</span>
+            <span style={{ fontWeight: 600, letterSpacing: "0.03em" }}>{t("editor.aiBubbleMenu.ai")}</span>
           </div>
           {QUICK_ACTIONS.map((action) => (
             <button
               data-testid="ai-bubble-action-button"
-              key={action.label}
+              key={action.labelKey}
               type="button"
               disabled={loading}
               onClick={() => rewrite(action.instruction)}
@@ -117,7 +119,7 @@ export function AIBubbleMenu({ editor }: Props) {
               onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLButtonElement).style.background = "var(--accent)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
             >
-              {loading ? "…" : action.label}
+              {loading ? "…" : t(action.labelKey)}
             </button>
           ))}
           <button
@@ -125,7 +127,7 @@ export function AIBubbleMenu({ editor }: Props) {
             type="button"
             disabled={loading}
             onClick={() => setShowCustom((o) => !o)}
-            title="Custom instruction"
+            title={t("editor.aiBubbleMenu.customInstruction")}
             style={{
               padding: "0.35rem 0.5rem",
               fontSize: "0.72rem",
@@ -138,7 +140,7 @@ export function AIBubbleMenu({ editor }: Props) {
               gap: "0.2rem",
             }}
           >
-            Custom <ChevronDown style={{ width: "0.65rem", height: "0.65rem" }} />
+            {t("editor.aiBubbleMenu.custom")} <ChevronDown style={{ width: "0.65rem", height: "0.65rem" }} />
           </button>
         </div>
 
@@ -157,7 +159,7 @@ export function AIBubbleMenu({ editor }: Props) {
                 if (e.key === "Escape") setShowCustom(false);
               }}
               autoFocus
-              placeholder="e.g. Make it a question"
+              placeholder={t("editor.aiBubbleMenu.customPlaceholder")}
               style={{
                 flex: 1,
                 padding: "0.3rem 0.5rem",
@@ -185,7 +187,7 @@ export function AIBubbleMenu({ editor }: Props) {
                 opacity: loading || !customInstruction.trim() ? 0.5 : 1,
               }}
             >
-              Go
+              {t("editor.aiBubbleMenu.go")}
             </button>
           </div>
         )}

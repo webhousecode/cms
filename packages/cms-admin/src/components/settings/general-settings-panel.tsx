@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, FormEvent } from "react";
+import { Fragment, useState, useEffect, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useBrand } from "@/lib/brand-context";
 import { Check, Eye, EyeOff, AlertTriangle, Copy, RefreshCw, Zap, Send } from "lucide-react";
@@ -10,10 +10,20 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { AdminLanguageSection } from "./admin-language-section";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Checkbox } from "@/components/ui/checkbox-styled";
+import { useT } from "@/lib/i18n-context";
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
+/** Renders a translated sentence whose {placeholders} are React nodes (code, strong, …). */
+function richT(text: string, parts: Record<string, React.ReactNode>) {
+	return text.split(/(\{\w+\})/).map((part, i) => {
+		const name = part.match(/^\{(\w+)\}$/)?.[1];
+		return name && name in parts ? <Fragment key={i}>{parts[name]}</Fragment> : part;
+	});
+}
+
 function SaveButton({ saving, saved }: { saving: boolean; saved: boolean }) {
+	const t = useT();
 	return (
 		<button
 			data-testid="general-settings-save-button"
@@ -28,7 +38,7 @@ function SaveButton({ saving, saved }: { saving: boolean; saved: boolean }) {
 				transition: "all 200ms",
 			}}
 		>
-			{saved ? <><Check style={{ width: "0.8rem", height: "0.8rem" }} /> Saved</> : saving ? "Saving…" : "Save changes"}
+			{saved ? <><Check style={{ width: "0.8rem", height: "0.8rem" }} /> {t("settings.general.saved")}</> : saving ? t("settings.common.saving") : t("settings.general.saveChanges")}
 		</button>
 	);
 }
@@ -75,6 +85,7 @@ function Toggle({ checked, onChange, label, description }: {
 function InputRow({ label, description, copiable, ...inputProps }: {
 	label: string; description?: string; copiable?: boolean;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
+	const t = useT();
 	const [copied, setCopied] = useState(false);
 	function handleCopy() {
 		const v = String(inputProps.value ?? "");
@@ -105,7 +116,7 @@ function InputRow({ label, description, copiable, ...inputProps }: {
 						data-testid="input-row-copy-button"
 						type="button"
 						onClick={handleCopy}
-						title="Copy to clipboard"
+						title={t("settings.settingsCard.copyToClipboard")}
 						style={{
 							width: "32px", height: "32px", borderRadius: "6px",
 							border: "1px solid var(--border)", background: "transparent",
@@ -135,6 +146,7 @@ function ErrorMsg({ msg }: { msg: string }) {
 
 /* ─── F79: Validate Site button ─────────────────────────────────── */
 function ValidateSiteButton({ configPath, contentDir }: { configPath: string; contentDir: string }) {
+	const t = useT();
 	const [validating, setValidating] = useState(false);
 	const [result, setResult] = useState<{ valid: boolean; errors: Array<{ level: string; path: string; message: string; suggestion?: string }>; warnings: Array<{ level: string; path: string; message: string; suggestion?: string }> } | null>(null);
 
@@ -150,7 +162,7 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 			});
 			setResult(await res.json());
 		} catch {
-			setResult({ valid: false, errors: [{ level: "error", path: "", message: "Validation request failed" }], warnings: [] });
+			setResult({ valid: false, errors: [{ level: "error", path: "", message: t("settings.general.validationRequestFailed") }], warnings: [] });
 		}
 		setValidating(false);
 	}
@@ -171,7 +183,7 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 						cursor: configPath ? "pointer" : "default",
 						fontSize: "0.75rem", fontWeight: 600,
 					}}>
-					{validating ? "Validating..." : "Validate site"}
+					{validating ? t("settings.general.validating") : t("settings.general.validateSite")}
 				</button>
 				{result && (
 					<span style={{
@@ -179,9 +191,9 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 						color: result.valid && result.warnings.length === 0 ? "#4ade80"
 							: result.valid ? "var(--brand)" : "#f87171",
 					}}>
-						{result.valid && result.warnings.length === 0 ? "✓ All good"
-							: result.valid ? `✓ Valid (${result.warnings.length} warning${result.warnings.length === 1 ? "" : "s"})`
-							: `✗ ${result.errors.length} error${result.errors.length === 1 ? "" : "s"}`}
+						{result.valid && result.warnings.length === 0 ? t("settings.general.allGood")
+							: result.valid ? t(result.warnings.length === 1 ? "settings.general.validWarningsOne" : "settings.general.validWarningsOther", { count: result.warnings.length })
+							: t(result.errors.length === 1 ? "settings.general.errorsOne" : "settings.general.errorsOther", { count: result.errors.length })}
 					</span>
 				)}
 			</div>
@@ -189,13 +201,13 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 				<div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
 					{result.errors.map((e, i) => (
 						<div key={`e-${i}`} style={{ fontSize: "0.72rem", color: "#f87171", padding: "0.375rem 0.5rem", background: "rgba(248,113,113,0.08)", borderRadius: "4px" }}>
-							<span style={{ fontWeight: 600 }}>Error:</span> {e.message}
+							<span style={{ fontWeight: 600 }}>{t("settings.general.errorLabel")}</span> {e.message}
 							{e.suggestion && <span style={{ color: "var(--muted-foreground)", display: "block", marginTop: "0.15rem" }}>💡 {e.suggestion}</span>}
 						</div>
 					))}
 					{result.warnings.map((w, i) => (
 						<div key={`w-${i}`} style={{ fontSize: "0.72rem", color: "var(--brand)", padding: "0.375rem 0.5rem", background: "color-mix(in srgb, var(--brand) 8%, transparent)", borderRadius: "4px" }}>
-							<span style={{ fontWeight: 600 }}>Warning:</span> {w.message}
+							<span style={{ fontWeight: 600 }}>{t("settings.general.warningLabel")}</span> {w.message}
 							{w.suggestion && <span style={{ color: "var(--muted-foreground)", display: "block", marginTop: "0.15rem" }}>💡 {w.suggestion}</span>}
 						</div>
 					))}
@@ -207,6 +219,7 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 
 /* ─── F125: Schema Export section ───────────────────────────────── */
 function ExportSchemaSection({ configPath }: { configPath: string }) {
+	const t = useT();
 	const [exporting, setExporting] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [result, setResult] = useState<{ ok: boolean; path?: string; bytes?: number; collections?: number; blocks?: number; generatedAt?: string; error?: string } | null>(null);
@@ -220,7 +233,7 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 			const res = await fetch(url);
 			if (!res.ok) {
 				const data = await res.json();
-				setResult({ ok: false, error: data.error ?? "Download failed" });
+				setResult({ ok: false, error: data.error ?? t("settings.general.downloadFailed") });
 				return;
 			}
 			const blob = await res.blob();
@@ -234,7 +247,7 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 			URL.revokeObjectURL(blobUrl);
 			setResult({ ok: true });
 		} catch (err) {
-			setResult({ ok: false, error: err instanceof Error ? err.message : "Download failed" });
+			setResult({ ok: false, error: err instanceof Error ? err.message : t("settings.general.downloadFailed") });
 		}
 		setExporting(false);
 	}
@@ -251,12 +264,12 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 			});
 			const data = await res.json();
 			if (!res.ok) {
-				setResult({ ok: false, error: data.error ?? "Save failed" });
+				setResult({ ok: false, error: data.error ?? t("settings.common.saveFailed") });
 			} else {
 				setResult(data);
 			}
 		} catch (err) {
-			setResult({ ok: false, error: err instanceof Error ? err.message : "Save failed" });
+			setResult({ ok: false, error: err instanceof Error ? err.message : t("settings.common.saveFailed") });
 		}
 		setSaving(false);
 	}
@@ -268,10 +281,13 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 		<div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", marginTop: "0.75rem" }}>
 			<div style={{ marginBottom: "0.5rem" }}>
 				<div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--foreground)", marginBottom: "0.2rem" }}>
-					Schema export
+					{t("settings.general.schemaExport")}
 				</div>
 				<div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
-					Generate <code style={{ fontSize: "0.95em", background: "var(--border)", padding: "0 0.25rem", borderRadius: "3px" }}>webhouse-schema.json</code> so PHP, Python, Ruby, Go, Java, and .NET reader libraries can introspect your content model. One file, all languages.
+					{(() => {
+						const [before, after] = t("settings.general.schemaExportHint").split("{file}");
+						return <>{before}<code style={{ fontSize: "0.95em", background: "var(--border)", padding: "0 0.25rem", borderRadius: "3px" }}>webhouse-schema.json</code>{after}</>;
+					})()}
 				</div>
 			</div>
 			<div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -288,7 +304,7 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 						cursor: enabled ? "pointer" : "default",
 						fontSize: "0.75rem", fontWeight: 600,
 					}}>
-					{exporting ? "Exporting..." : "⬇ Download schema"}
+					{exporting ? t("settings.general.exporting") : t("settings.general.downloadSchema")}
 				</button>
 				<button
 					data-testid="save-to-project-button"
@@ -304,29 +320,29 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 						cursor: enabled ? "pointer" : "default",
 						fontSize: "0.75rem", fontWeight: 600,
 					}}>
-					{saving ? "Saving..." : "💾 Save to project root"}
+					{saving ? t("settings.general.savingDots") : t("settings.general.saveToProjectRoot")}
 				</button>
 			</div>
 			{isGitHub && (
 				<div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.5rem", fontStyle: "italic" }}>
-					Schema export from GitHub-backed configs is not supported yet.
+					{t("settings.general.schemaExportGithub")}
 				</div>
 			)}
 			{result?.ok && result.path && (
 				<div style={{ marginTop: "0.5rem", fontSize: "0.72rem", padding: "0.5rem", background: "rgba(74,222,128,0.08)", borderRadius: "4px", color: "#4ade80" }}>
-					<div style={{ fontWeight: 600 }}>✓ Saved {(result.bytes! / 1024).toFixed(1)} KB</div>
+					<div style={{ fontWeight: 600 }}>{t("settings.general.savedKb", { kb: (result.bytes! / 1024).toFixed(1) })}</div>
 					<div style={{ color: "var(--muted-foreground)", marginTop: "0.2rem", fontFamily: "monospace", fontSize: "0.68rem", wordBreak: "break-all" }}>
 						{result.path}
 					</div>
 					<div style={{ color: "var(--muted-foreground)", marginTop: "0.2rem" }}>
-						{result.collections} collection{result.collections === 1 ? "" : "s"}
-						{result.blocks ? `, ${result.blocks} block${result.blocks === 1 ? "" : "s"}` : ""}
+						{t(result.collections === 1 ? "settings.general.collectionsOne" : "settings.general.collectionsOther", { count: result.collections ?? 0 })}
+						{result.blocks ? `, ${t(result.blocks === 1 ? "settings.general.blocksOne" : "settings.general.blocksOther", { count: result.blocks })}` : ""}
 					</div>
 				</div>
 			)}
 			{result?.ok && !result.path && (
 				<div style={{ marginTop: "0.5rem", fontSize: "0.72rem", color: "#4ade80", fontWeight: 600 }}>
-					✓ Downloaded webhouse-schema.json
+					{t("settings.general.downloadedSchema")}
 				</div>
 			)}
 			{result?.error && (
@@ -340,6 +356,7 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 
 /* ─── Profile section ─────────────────────────────────────────── */
 function ProfileSection() {
+	const t = useT();
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
 	const [saving, setSaving] = useState(false);
@@ -384,11 +401,11 @@ function ProfileSection() {
 				body: JSON.stringify({ name, email }),
 			});
 			const d = (await res.json()) as { error?: string };
-			if (!res.ok) { setError(d.error ?? "Save failed"); }
-			else { setSaved(true); toast.success("Profile saved"); setTimeout(() => setSaved(false), 2500); }
+			if (!res.ok) { setError(d.error ?? t("settings.common.saveFailed")); }
+			else { setSaved(true); toast.success(t("settings.general.profileSaved")); setTimeout(() => setSaved(false), 2500); }
 		} catch (err) {
 			console.error("[saveProfile] error:", err);
-			setError(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
+			setError(t("settings.general.saveFailedWithError", { error: err instanceof Error ? err.message : String(err) }));
 		} finally {
 			setSaving(false);
 		}
@@ -396,21 +413,21 @@ function ProfileSection() {
 
 	return (
 		<div>
-			<SectionHeading>Profile</SectionHeading>
+			<SectionHeading>{t("settings.general.profileHeading")}</SectionHeading>
 			<Card>
 				<form
 					data-testid="profile-form"
 					onSubmit={saveProfile}
 					style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-					<InputRow label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-					<InputRow label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required copiable />
+					<InputRow label={t("settings.general.name")} value={name} onChange={(e) => setName(e.target.value)} required />
+					<InputRow label={t("settings.general.email")} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required copiable />
 					<div>
-						<label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>Sidebar logo</label>
-						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Choose which logo to display in the sidebar.</p>
+						<label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>{t("settings.general.sidebarLogo")}</label>
+						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>{t("settings.general.sidebarLogoHint")}</p>
 						<div style={{ display: "flex", gap: "0.5rem" }}>
 							{([
-								{ value: true, label: "Icon (eye)" },
-								{ value: false, label: "Wordmark" },
+								{ value: true, label: "settings.general.logoIcon" },
+								{ value: false, label: "settings.general.logoWordmark" },
 							] as const).map(({ value, label }) => (
 								<button
 									data-testid={`logo-option-${value}`}
@@ -429,7 +446,7 @@ function ProfileSection() {
 										fontSize: "0.8rem", fontWeight: 500, textAlign: "center",
 									}}
 								>
-									{label}
+									{t(label)}
 								</button>
 							))}
 						</div>
@@ -445,6 +462,7 @@ function ProfileSection() {
 
 /* ─── Site section ────────────────────────────────────────────── */
 function SiteSection() {
+	const t = useT();
 	const router = useRouter();
 	const [siteName, setSiteName] = useState("");
 	const [siteNameOriginal, setSiteNameOriginal] = useState("");
@@ -559,7 +577,7 @@ function SiteSection() {
 				body: JSON.stringify(cfg),
 			});
 			const d = await res.json();
-			if (!res.ok) { setError((d as { error?: string }).error ?? "Save failed"); }
+			if (!res.ok) { setError((d as { error?: string }).error ?? t("settings.common.saveFailed")); }
 			else {
 				setCfg(d);
 				// Update site name in registry if changed
@@ -600,13 +618,13 @@ function SiteSection() {
 					}
 				}
 				setSaved(true);
-				toast.success("Site settings saved");
+				toast.success(t("settings.general.siteSaved"));
 				setTimeout(() => setSaved(false), 2500);
 				window.dispatchEvent(new CustomEvent("cms:site-config-updated", { detail: d }));
 				router.refresh();
 			}
 		} catch {
-			setError("Network error — could not save");
+			setError(t("settings.general.networkErrorSave"));
 		} finally {
 			setSaving(false);
 			window.dispatchEvent(new CustomEvent("cms:settings-saved"));
@@ -629,18 +647,18 @@ function SiteSection() {
 			onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}
 			style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 			<div>
-				<SectionHeading first>Site</SectionHeading>
+				<SectionHeading first>{t("settings.general.siteHeading")}</SectionHeading>
 				<Card>
 					<InputRow
-						label="Site name"
-						description="Display name shown in the site switcher and Sites Dashboard."
+						label={t("settings.general.siteName")}
+						description={t("settings.general.siteNameHint")}
 						value={siteName}
 						onChange={(e) => setSiteName(e.target.value)}
-						placeholder="My Site"
+						placeholder={t("settings.general.siteNamePlaceholder")}
 					/>
 					<InputRow
-						label="Config path"
-						description="Absolute path to cms.config.ts on the filesystem."
+						label={t("settings.general.configPath")}
+						description={t("settings.general.configPathHint")}
 						value={configPath}
 						onChange={(e) => setConfigPath(e.target.value)}
 						placeholder="/Users/.../cms.config.ts"
@@ -648,8 +666,8 @@ function SiteSection() {
 						copiable
 					/>
 					<InputRow
-						label="Content directory"
-						description="Absolute path to the content folder. Defaults to content/ next to config."
+						label={t("settings.general.contentDir")}
+						description={t("settings.general.contentDirHint")}
 						value={contentDir}
 						onChange={(e) => setContentDir(e.target.value)}
 						placeholder="/Users/.../content"
@@ -662,11 +680,11 @@ function SiteSection() {
 			</div>
 
 			<div>
-				<SectionHeading>Preview</SectionHeading>
+				<SectionHeading>{t("settings.general.previewHeading")}</SectionHeading>
 				<Card>
 					<InputRow
-						label="Preview site URL"
-						description="Base URL of the frontend — used for the Preview button on documents."
+						label={t("settings.general.previewUrl")}
+						description={t("settings.general.previewUrlHint")}
 						type="url"
 						value={cfg.previewSiteUrl}
 						onChange={(e) => setCfg((c) => ({ ...c, previewSiteUrl: e.target.value }))}
@@ -674,8 +692,8 @@ function SiteSection() {
 						copiable
 					/>
 					<Toggle
-						label="Preview in iframe"
-						description="Open preview inside the admin panel instead of a new browser tab."
+						label={t("settings.general.previewIframe")}
+						description={t("settings.general.previewIframeHint")}
 						checked={cfg.previewInIframe}
 						onChange={(v) => setCfg((c) => ({ ...c, previewInIframe: v }))}
 					/>
@@ -683,11 +701,11 @@ function SiteSection() {
 			</div>
 
 			<div>
-				<SectionHeading>Inline editing</SectionHeading>
+				<SectionHeading>{t("settings.general.inlineHeading")}</SectionHeading>
 				<Card>
 					<Toggle
-						label="Enable inline editing site-wide"
-						description="Lets editors click text directly on the live site and save changes there — once connected, it works on every page, no per-document step. Requires the site to consume @broberg/cms-inline-edit."
+						label={t("settings.general.inlineEnable")}
+						description={t("settings.general.inlineEnableHint")}
 						checked={cfg.inlineEditEnabled}
 						onChange={(v) => setCfg((c) => ({ ...c, inlineEditEnabled: v }))}
 					/>
@@ -696,41 +714,44 @@ function SiteSection() {
 
 			{/* F81 — Homepage designation */}
 			<div>
-				<SectionHeading>Homepage</SectionHeading>
+				<SectionHeading>{t("settings.general.homepageHeading")}</SectionHeading>
 				<Card>
 					<div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
 						<div>
-							<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Homepage page</p>
+							<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{t("settings.general.homepagePage")}</p>
 							<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0.625rem" }}>
-								Choose which document is served at <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>/</code>.
-								Leave empty to use the default convention (a page with slug <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>home</code> or <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>index</code>).
+								{t("settings.general.homepageHint").split(/(\{root\}|\{home\}|\{index\})/).map((part, i) =>
+									part === "{root}" ? <code key={i} style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>/</code>
+									: part === "{home}" ? <code key={i} style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>home</code>
+									: part === "{index}" ? <code key={i} style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>index</code>
+									: part)}
 							</p>
 						</div>
 						{rootCollections.length > 1 && (
 							<div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-								<label style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", minWidth: "5rem" }}>Collection</label>
+								<label style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", minWidth: "5rem" }}>{t("settings.general.collection")}</label>
 								<div style={{ flex: 1, maxWidth: "20rem" }}>
 									<CustomSelect
 										value={homepageCollection}
 										onChange={(v) => { setHomepageCollection(v); setHomepageSlug(""); }}
 										options={rootCollections.map((c) => ({ value: c.name, label: c.label }))}
-										placeholder="Select collection"
+										placeholder={t("settings.general.selectCollection")}
 									/>
 								</div>
 							</div>
 						)}
 						<div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-							<label style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", minWidth: "5rem" }}>Page</label>
+							<label style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", minWidth: "5rem" }}>{t("settings.general.page")}</label>
 							<div style={{ flex: 1, maxWidth: "20rem" }}>
 								<CustomSelect
 									value={homepageSlug}
 									onChange={(v) => setHomepageSlug(v)}
 									options={[
-										{ value: "", label: homepageLoading ? "Loading…" : "— Use convention (home / index) —" },
+										{ value: "", label: homepageLoading ? t("settings.common.loading") : t("settings.general.useConvention") },
 										...homepagePages.map((p) => ({ value: p.slug, label: `${p.title} (${p.slug})` })),
 									]}
 									disabled={homepageLoading || !homepageCollection}
-									placeholder="Select homepage"
+									placeholder={t("settings.general.selectHomepage")}
 								/>
 							</div>
 						</div>
@@ -739,12 +760,12 @@ function SiteSection() {
 			</div>
 
 			<div>
-				<SectionHeading>Content</SectionHeading>
+				<SectionHeading>{t("settings.general.contentHeading")}</SectionHeading>
 				<Card>
 					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
 						<div style={{ flex: 1 }}>
-							<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Trash retention</p>
-							<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>Days before trashed documents are permanently deleted.</p>
+							<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{t("settings.general.trashRetention")}</p>
+							<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>{t("settings.general.trashRetentionHint")}</p>
 						</div>
 						<div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
 							<input
@@ -758,14 +779,14 @@ function SiteSection() {
 								onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
 								onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
 							/>
-							<span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>days</span>
+							<span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("settings.general.days")}</span>
 						</div>
 					</div>
 					<div style={{ height: "1px", background: "var(--border)" }} />
 					<div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
 						<div style={{ flex: 1 }}>
-							<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Curation queue retention</p>
-							<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>Days before approved/published items are removed from the curation queue.</p>
+							<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{t("settings.general.curationRetention")}</p>
+							<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>{t("settings.general.curationRetentionHint")}</p>
 						</div>
 						<div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
 							<input
@@ -779,7 +800,7 @@ function SiteSection() {
 								onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
 								onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
 							/>
-							<span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>days</span>
+							<span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("settings.general.days")}</span>
 						</div>
 					</div>
 				</Card>
@@ -788,18 +809,18 @@ function SiteSection() {
 			<LanguageSection cfg={cfg} setCfg={setCfg} />
 
 			<div>
-				<SectionHeading>Developer</SectionHeading>
+				<SectionHeading>{t("settings.general.developerHeading")}</SectionHeading>
 				<Card>
 					<Toggle
-						label="Schema editing"
-						description="Allow editing collection schemas from the Settings → Schema tab."
+						label={t("settings.general.schemaEditing")}
+						description={t("settings.general.schemaEditingHint")}
 						checked={cfg.schemaEditEnabled}
 						onChange={(v) => setCfg((c) => ({ ...c, schemaEditEnabled: v }))}
 					/>
 					<div style={{ height: "1px", background: "var(--border)" }} />
 					<Toggle
-						label="Dev inspector"
-						description="Show the developer overlay with component and query info."
+						label={t("settings.general.devInspector")}
+						description={t("settings.general.devInspectorHint")}
 						checked={cfg.devInspector}
 						onChange={(v) => setCfg((c) => ({ ...c, devInspector: v }))}
 					/>
@@ -821,6 +842,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 	cfg: { defaultLocale: string; locales: string[]; localeStrategy: string; autoRetranslateOnUpdate: boolean };
 	setCfg: (fn: (c: any) => any) => void;
 }) {
+	const t = useT();
 	// Wrap setCfg to always dispatch dirty (buttons don't trigger form onChange)
 	const setCfg: typeof _setCfg = (fn) => { _setCfg(fn); window.dispatchEvent(new CustomEvent("cms:settings-dirty")); };
 	const [adding, setAdding] = useState(false);
@@ -850,13 +872,13 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 
 	return (
 		<div>
-			<SectionHeading>Language</SectionHeading>
+			<SectionHeading>{t("settings.general.languageHeading")}</SectionHeading>
 			<Card>
 				<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
 					<div>
-						<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Default language</p>
+						<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{t("settings.general.defaultLanguage")}</p>
 						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-							The primary language for content on this site.
+							{t("settings.general.defaultLanguageHint")}
 						</p>
 					</div>
 					<CustomSelect
@@ -873,7 +895,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 							value: l,
 							label: `${LOCALE_FLAGS[l] || ""} ${LOCALE_LABELS[l] || l} (${l})`,
 						}))}
-						placeholder="Select language"
+						placeholder={t("settings.general.selectLanguage")}
 					/>
 				</div>
 
@@ -881,9 +903,9 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 
 				<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
 					<div>
-						<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Supported languages</p>
+						<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{t("settings.general.supportedLanguages")}</p>
 						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-							Additional languages this site supports. Content can be translated to these languages.
+							{t("settings.general.supportedLanguagesHint")}
 						</p>
 					</div>
 
@@ -904,7 +926,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 								>
 									{LOCALE_FLAGS[l] || ""} {LOCALE_LABELS[l] || l}
 									{l === cfg.defaultLocale && (
-										<span style={{ fontSize: "0.65rem", opacity: 0.7 }}>default</span>
+										<span style={{ fontSize: "0.65rem", opacity: 0.7 }}>{t("settings.general.defaultBadge")}</span>
 									)}
 									{l !== cfg.defaultLocale && (
 										<button
@@ -916,7 +938,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 												color: "var(--muted-foreground)", fontSize: "0.75rem",
 												padding: "0 0.1rem", lineHeight: 1,
 											}}
-											title={`Remove ${LOCALE_LABELS[l] || l}`}
+											title={t("settings.general.removeNamed", { name: LOCALE_LABELS[l] || l })}
 										>
 											&times;
 										</button>
@@ -935,7 +957,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 									value: l,
 									label: `${LOCALE_FLAGS[l] || ""} ${LOCALE_LABELS[l] || l} (${l})`,
 								}))}
-								placeholder="Select language to add"
+								placeholder={t("settings.general.selectLanguageToAdd")}
 							/>
 							<button
 								data-testid="language-cancel-button"
@@ -947,7 +969,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 									color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer",
 								}}
 							>
-								Cancel
+								{t("settings.common.cancel")}
 							</button>
 						</div>
 					) : (
@@ -962,7 +984,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 								color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer",
 							}}
 						>
-							+ Add language
+							{t("settings.general.addLanguage")}
 						</button>
 					)}
 				</div>
@@ -972,27 +994,27 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 						<div style={{ height: "1px", background: "var(--border)" }} />
 						<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
 							<div>
-								<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>URL strategy</p>
+								<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{t("settings.general.urlStrategy")}</p>
 								<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-									How locale prefixes appear in URLs.
+									{t("settings.general.urlStrategyHint")}
 								</p>
 							</div>
 							<CustomSelect
 								value={cfg.localeStrategy || "prefix-other"}
 								onChange={(v) => setCfg((c: any) => ({ ...c, localeStrategy: v }))}
 								options={[
-									{ value: "prefix-other", label: "Prefix non-default — /posts/slug/ + /en/posts/slug/" },
-									{ value: "prefix-all", label: "Prefix all — /da/posts/slug/ + /en/posts/slug/" },
-									{ value: "none", label: "No prefix — /posts/slug/ (all locales)" },
+									{ value: "prefix-other", label: t("settings.general.prefixOther") },
+									{ value: "prefix-all", label: t("settings.general.prefixAll") },
+									{ value: "none", label: t("settings.general.prefixNone") },
 								]}
 							/>
 						</div>
 						{/* Auto-translate */}
 						<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 0", borderTop: "1px solid var(--border)" }}>
 							<div>
-								<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Auto-translate</p>
+								<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{t("settings.general.autoTranslate")}</p>
 								<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-									Automatically translate new and updated content to all configured languages.
+									{t("settings.general.autoTranslateHint")}
 								</p>
 							</div>
 							<button
@@ -1022,6 +1044,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 
 /* ─── Revalidation section ─────────────────────────────────────── */
 function RevalidationSection() {
+	const t = useT();
 	const brand = useBrand();
 	const [adapter, setAdapter] = useState<string | null>(null); // null = loading
 	const [url, setUrl] = useState("");
@@ -1093,13 +1116,13 @@ function RevalidationSection() {
 			});
 			if (!res.ok) {
 				const d = await res.json();
-				setError(d.error ?? "Save failed");
+				setError(d.error ?? t("settings.common.saveFailed"));
 			} else {
 				setSaved(true);
 				setTimeout(() => setSaved(false), 2500);
 			}
 		} catch {
-			setError("Network error — could not save");
+			setError(t("settings.general.networkErrorSave"));
 		} finally {
 			setSaving(false);
 			window.dispatchEvent(new CustomEvent("cms:settings-saved"));
@@ -1140,7 +1163,7 @@ function RevalidationSection() {
 
 	return (
 		<SectionWrapper><div>
-			<SectionHeading>Revalidation</SectionHeading>
+			<SectionHeading>{t("settings.general.revalidationHeading")}</SectionHeading>
 			<form
 				data-testid="revalidation-form"
 				ref={revalFormRef}
@@ -1151,20 +1174,19 @@ function RevalidationSection() {
 					<div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
 						<Zap style={{ width: "1rem", height: "1rem", color: "var(--primary)", flexShrink: 0, marginTop: "0.15rem" }} />
 						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0, lineHeight: 1.5 }}>
-							When content changes, <span style={{ color: "var(--foreground)", fontWeight: 600 }}>{brand.name}</span> sends a signed webhook to your site&apos;s revalidation endpoint,
-							triggering on-demand path revalidation. Only needed for production deployments.
+							{richT(t("settings.general.revalidationHint"), { brand: <span style={{ color: "var(--foreground)", fontWeight: 600 }}>{brand.name}</span> })}
 						</p>
 					</div>
 
 					<div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Revalidation URL</label>
+						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("settings.general.revalidationUrl")}</label>
 						<div style={{ display: "flex", gap: "0.375rem" }}>
 							<input
 								data-testid="revalidation-url-input"
 								type="url"
 								value={url}
 								onChange={(e) => setUrl(e.target.value)}
-								placeholder="https://example.com/api/revalidate"
+								placeholder={t("settings.general.revalidationUrlPlaceholder")}
 								style={{
 									flex: 1, padding: "0.45rem 0.75rem", borderRadius: "7px",
 									border: "1px solid var(--border)", background: "var(--background)",
@@ -1179,10 +1201,10 @@ function RevalidationSection() {
 									type="button"
 									onClick={autoGenerateUrl}
 									style={{ padding: "0.4rem 0.65rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.3rem" }}
-									title="Auto-generate from Preview Site URL"
+									title={t("settings.general.autoGenerateTitle")}
 								>
 									<Zap style={{ width: "0.75rem", height: "0.75rem" }} />
-									Auto
+									{t("settings.general.auto")}
 								</button>
 							)}
 							{url && (
@@ -1191,7 +1213,7 @@ function RevalidationSection() {
 									type="button"
 									onClick={() => copyToClipboard(url, "url")}
 									style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center" }}
-									title="Copy URL"
+									title={t("settings.general.copyUrl")}
 								>
 									{copied === "url" ? <Check style={{ width: "0.85rem", height: "0.85rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.85rem", height: "0.85rem" }} />}
 								</button>
@@ -1199,13 +1221,13 @@ function RevalidationSection() {
 						</div>
 						{!url && previewUrl && (
 							<p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: "0.1rem 0 0" }}>
-								Click Auto to generate from your Preview URL: <code style={{ fontSize: "0.65rem", padding: "0.1rem 0.3rem", borderRadius: "3px", background: "var(--muted)" }}>{previewUrl.replace(/\/+$/, "")}/api/revalidate</code>
+								{richT(t("settings.general.clickAutoHint"), { url: <code style={{ fontSize: "0.65rem", padding: "0.1rem 0.3rem", borderRadius: "3px", background: "var(--muted)" }}>{previewUrl.replace(/\/+$/, "")}/api/revalidate</code> })}
 							</p>
 						)}
 					</div>
 
 					<div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Webhook Secret</label>
+						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("settings.general.webhookSecret")}</label>
 						<div style={{ display: "flex", gap: "0.375rem" }}>
 							<div style={{ position: "relative", flex: 1 }}>
 								<input
@@ -1213,7 +1235,7 @@ function RevalidationSection() {
 									type={showSecret ? "text" : "password"}
 									value={secret}
 									onChange={(e) => setSecret(e.target.value)}
-									placeholder="HMAC-SHA256 signing secret"
+									placeholder={t("settings.general.webhookSecretPlaceholder")}
 									style={{
 										width: "100%", boxSizing: "border-box",
 										padding: "0.45rem 2.25rem 0.45rem 0.75rem", borderRadius: "7px",
@@ -1238,10 +1260,10 @@ function RevalidationSection() {
 								type="button"
 								onClick={generateSecret}
 								style={{ padding: "0.4rem 0.65rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.3rem" }}
-								title="Generate a random secret"
+								title={t("settings.general.generateSecretTitle")}
 							>
 								<RefreshCw style={{ width: "0.75rem", height: "0.75rem" }} />
-								Generate
+								{t("settings.general.generate")}
 							</button>
 							{secret && (
 								<button
@@ -1249,14 +1271,14 @@ function RevalidationSection() {
 									type="button"
 									onClick={() => copyToClipboard(secret, "secret")}
 									style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center" }}
-									title="Copy secret"
+									title={t("settings.general.copySecret")}
 								>
 									{copied === "secret" ? <Check style={{ width: "0.85rem", height: "0.85rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.85rem", height: "0.85rem" }} />}
 								</button>
 							)}
 						</div>
 						<p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-							Add this secret to your site&apos;s <code style={{ fontSize: "0.65rem", padding: "0.1rem 0.3rem", borderRadius: "3px", background: "var(--muted)" }}>.env</code> as <code style={{ fontSize: "0.65rem", padding: "0.1rem 0.3rem", borderRadius: "3px", background: "var(--muted)" }}>REVALIDATE_SECRET</code>
+							{richT(t("settings.general.addSecretHint"), { env: <code style={{ fontSize: "0.65rem", padding: "0.1rem 0.3rem", borderRadius: "3px", background: "var(--muted)" }}>.env</code>, name: <code style={{ fontSize: "0.65rem", padding: "0.1rem 0.3rem", borderRadius: "3px", background: "var(--muted)" }}>REVALIDATE_SECRET</code> })}
 						</p>
 					</div>
 
@@ -1278,7 +1300,7 @@ function RevalidationSection() {
 									}}
 								>
 									<Send style={{ width: "0.75rem", height: "0.75rem" }} />
-									{pinging ? "Pinging…" : "Send test ping"}
+									{pinging ? t("settings.general.pinging") : t("settings.general.sendTestPing")}
 								</button>
 							)}
 						</div>
@@ -1292,8 +1314,10 @@ function RevalidationSection() {
 							fontSize: "0.8rem",
 						}}>
 							{pingResult.ok
-								? `Ping successful (HTTP ${pingResult.status})`
-								: `Ping failed${pingResult.status ? ` (HTTP ${pingResult.status})` : ""}: ${pingResult.error ?? "Unknown error"}`
+								? t("settings.general.pingOk", { status: pingResult.status ?? "" })
+								: pingResult.status
+									? t("settings.general.pingFailedStatus", { status: pingResult.status, error: pingResult.error ?? t("settings.general.unknownError") })
+									: t("settings.general.pingFailed", { error: pingResult.error ?? t("settings.general.unknownError") })
 							}
 						</div>
 					)}
@@ -1315,7 +1339,12 @@ function RevalidationSection() {
 								border: "1px solid color-mix(in srgb, var(--destructive) 35%, transparent)",
 								fontSize: "0.7rem", color: "var(--destructive)",
 							}}>
-								<strong>File ownership drift detected.</strong> {eaccesEntries.length} write(s) failed with EACCES on these paths: <code style={{ fontFamily: "monospace" }}>{eaccesPaths.join(", ")}</code>. The files exist on the site volume but are owned by another user (typically <code>root</code> from a manual SFTP upload). Fix: <code style={{ fontFamily: "monospace" }}>flyctl ssh console --app &lt;site-app&gt; --command &apos;find /data/content -type f ! -uid 1001 -exec chown nextjs:nodejs {} +&apos;</code>
+								<strong>{t("settings.general.ownershipDriftTitle")}</strong>{" "}
+								{richT(t("settings.general.ownershipDriftBody", { count: eaccesEntries.length }), {
+									paths: <code style={{ fontFamily: "monospace" }}>{eaccesPaths.join(", ")}</code>,
+									user: <code>root</code>,
+									command: <code style={{ fontFamily: "monospace" }}>flyctl ssh console --app &lt;site-app&gt; --command &apos;find /data/content -type f ! -uid 1001 -exec chown nextjs:nodejs {} +&apos;</code>,
+								})}
 							</div>
 						)}
 						<button
@@ -1325,7 +1354,7 @@ function RevalidationSection() {
 							style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: logOpen ? "0.5rem" : 0, background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "0.35rem" }}
 						>
 							<span style={{ display: "inline-block", transform: logOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 150ms", fontSize: "0.6rem" }}>&#9654;</span>
-							Recent deliveries ({log.length})
+							{t("settings.general.recentDeliveries", { count: log.length })}
 						</button>
 						{logOpen && <div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden" }}>
 							{log.slice(0, 10).map((entry, i) => (
@@ -1349,7 +1378,7 @@ function RevalidationSection() {
 										{entry.paths.join(", ")}
 									</span>
 									<span style={{ color: "var(--muted-foreground)", fontSize: "0.65rem", flexShrink: 0 }}>
-										{entry.durationMs}ms
+										{t("settings.general.durationMs", { ms: entry.durationMs })}
 									</span>
 									<span style={{ color: "var(--muted-foreground)", fontSize: "0.65rem", flexShrink: 0 }}>
 										{new Date(entry.timestamp).toLocaleTimeString()}
@@ -1366,6 +1395,7 @@ function RevalidationSection() {
 
 /* ─── Danger zone ─────────────────────────────────────────────── */
 function DangerZone() {
+	const t = useT();
 	const [confirm, setConfirm] = useState(false);
 	const [purging, setPurging] = useState(false);
 	const [done, setDone] = useState(false);
@@ -1431,14 +1461,14 @@ function DangerZone() {
 
 	return (
 		<div>
-			<SectionHeading>Danger zone</SectionHeading>
+			<SectionHeading>{t("settings.general.dangerHeading")}</SectionHeading>
 			<div style={{ background: "color-mix(in srgb, var(--destructive) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--destructive) 25%, transparent)", borderRadius: "10px", padding: "1.25rem 1.5rem", display: "flex", flexDirection: "column", gap: "0.875rem" }}>
 				{/* Purge trash */}
 				<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
 					<div>
-						<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Purge trash</p>
+						<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{t("settings.general.purgeTrash")}</p>
 						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-							Permanently delete all trashed documents right now, regardless of retention period.
+							{t("settings.general.purgeTrashHint")}
 						</p>
 					</div>
 					{!confirm && !done && (
@@ -1448,12 +1478,12 @@ function DangerZone() {
 							onClick={() => setConfirm(true)}
 							style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid color-mix(in srgb, var(--destructive) 40%, transparent)", background: "transparent", color: "var(--destructive)", fontSize: "0.8rem", cursor: "pointer", whiteSpace: "nowrap" }}
 						>
-							Purge trash
+							{t("settings.general.purgeTrash")}
 						</button>
 					)}
 					{done && (
 						<span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", flexShrink: 0 }}>
-							{count === 0 ? "Trash was already empty" : `${count} document${count !== 1 ? "s" : ""} deleted`}
+							{count === 0 ? t("settings.general.trashAlreadyEmpty") : t(count === 1 ? "settings.general.documentsDeletedOne" : "settings.general.documentsDeletedOther", { count: count ?? 0 })}
 						</span>
 					)}
 				</div>
@@ -1461,19 +1491,19 @@ function DangerZone() {
 				{confirm && (
 					<div style={{ display: "flex", alignItems: "center", gap: "0.625rem", padding: "0.75rem", background: "var(--card)", borderRadius: "7px", border: "1px solid var(--border)" }}>
 						<AlertTriangle style={{ width: "0.9rem", height: "0.9rem", color: "var(--destructive)", flexShrink: 0 }} />
-						<span style={{ fontSize: "0.8rem", flex: 1 }}>This cannot be undone. Are you sure?</span>
+						<span style={{ fontSize: "0.8rem", flex: 1 }}>{t("settings.general.cannotBeUndone")}</span>
 						<button
 							data-testid="purge-trash-cancel"
 							type="button"
 							onClick={() => setConfirm(false)}
-							style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>Cancel</button>
+							style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>{t("settings.common.cancel")}</button>
 						<button
 							data-testid="purge-trash-confirm"
 							type="button"
 							onClick={purgeTrash}
 							disabled={purging}
 							style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.75rem", cursor: purging ? "wait" : "pointer" }}>
-							{purging ? "Purging…" : "Yes, purge"}
+							{purging ? t("settings.general.purging") : t("settings.general.yesPurge")}
 						</button>
 					</div>
 				)}
@@ -1484,9 +1514,9 @@ function DangerZone() {
 						<div style={{ borderTop: "1px solid color-mix(in srgb, var(--destructive) 15%, transparent)", paddingTop: "0.875rem" }}>
 							<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
 								<div>
-									<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Move site to another organization</p>
+									<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{t("settings.general.moveSiteTitle")}</p>
 									<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-										Transfer this site and all its settings to a different organization.
+										{t("settings.general.moveSiteHint")}
 									</p>
 								</div>
 								{!moveConfirm && !moveDone && (
@@ -1495,7 +1525,7 @@ function DangerZone() {
 											<CustomSelect
 												value={targetOrgId}
 												onChange={(v) => setTargetOrgId(v)}
-												options={[{ value: "", label: "Select org..." }, ...orgs.map((o) => ({ value: o.id, label: o.name }))]}
+												options={[{ value: "", label: t("settings.general.selectOrg") }, ...orgs.map((o) => ({ value: o.id, label: o.name }))]}
 											/>
 										</div>
 										<button
@@ -1505,13 +1535,13 @@ function DangerZone() {
 											onClick={() => setMoveConfirm(true)}
 											style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid color-mix(in srgb, var(--destructive) 40%, transparent)", background: "transparent", color: targetOrgId ? "var(--destructive)" : "var(--muted-foreground)", fontSize: "0.8rem", cursor: targetOrgId ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}
 										>
-											Move site
+											{t("settings.general.moveSite")}
 										</button>
 									</div>
 								)}
 								{moveDone && (
 									<span style={{ fontSize: "0.8rem", color: "rgb(74 222 128)", flexShrink: 0 }}>
-										Moved to {targetOrgName} — redirecting...
+										{t("settings.general.movedTo", { org: targetOrgName })}
 									</span>
 								)}
 							</div>
@@ -1521,20 +1551,20 @@ function DangerZone() {
 							<div style={{ display: "flex", alignItems: "center", gap: "0.625rem", padding: "0.75rem", background: "var(--card)", borderRadius: "7px", border: "1px solid var(--border)" }}>
 								<AlertTriangle style={{ width: "0.9rem", height: "0.9rem", color: "var(--destructive)", flexShrink: 0 }} />
 								<span style={{ fontSize: "0.8rem", flex: 1 }}>
-									Move <strong>{activeSiteName || activeSiteId}</strong> to <strong>{targetOrgName}</strong>? Settings and content will be preserved.
+									{richT(t("settings.general.moveConfirm"), { site: <strong>{activeSiteName || activeSiteId}</strong>, org: <strong>{targetOrgName}</strong> })}
 								</span>
 								<button
 									data-testid="move-site-cancel"
 									type="button"
 									onClick={() => setMoveConfirm(false)}
-									style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>No</button>
+									style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>{t("settings.common.no")}</button>
 								<button
 									data-testid="move-site-confirm"
 									type="button"
 									onClick={handleMove}
 									disabled={moving}
 									style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.75rem", cursor: moving ? "wait" : "pointer" }}>
-									{moving ? "Moving…" : "Yes"}
+									{moving ? t("settings.general.moving") : t("settings.common.yes")}
 								</button>
 							</div>
 						)}
@@ -1561,6 +1591,7 @@ export function GeneralSettingsPanel() {
 }
 
 function UserPreferencesSection() {
+	const t = useT();
 	const [calendarView, setCalendarView] = useState("week");
 	const [agentsView, setAgentsView] = useState("grid");
 	const [mediaView, setMediaView] = useState("grid");
@@ -1595,32 +1626,32 @@ function UserPreferencesSection() {
 	}
 
 	const fieldLabel: React.CSSProperties = { fontSize: "0.7rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" };
-	const gridList = [{ value: "grid", label: "Grid" }, { value: "list", label: "List" }];
+	const gridList = [{ value: "grid", label: t("settings.general.viewGrid") }, { value: "list", label: t("settings.general.viewList") }];
 
 	return (
 		<>
 			<div>
-				<SectionHeading>Default Views</SectionHeading>
+				<SectionHeading>{t("settings.general.defaultViews")}</SectionHeading>
 				<Card>
 					<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
 						<div>
-							<label style={fieldLabel}>Calendar</label>
+							<label style={fieldLabel}>{t("settings.general.calendar")}</label>
 							<CustomSelect
-								options={[{ value: "day", label: "Day" }, { value: "week", label: "Week" }, { value: "month", label: "Month" }, { value: "year", label: "Year" }]}
+								options={[{ value: "day", label: t("settings.general.viewDay") }, { value: "week", label: t("settings.general.viewWeek") }, { value: "month", label: t("settings.general.viewMonth") }, { value: "year", label: t("settings.general.viewYear") }]}
 								value={calendarView}
 								onChange={(v) => { setCalendarView(v); savePref({ calendarView: v }); }}
 							/>
 						</div>
 						<div>
-							<label style={fieldLabel}>Agents</label>
+							<label style={fieldLabel}>{t("settings.general.agents")}</label>
 							<CustomSelect options={gridList} value={agentsView} onChange={(v) => { setAgentsView(v); savePref({ agentsView: v }); }} />
 						</div>
 						<div>
-							<label style={fieldLabel}>Media</label>
+							<label style={fieldLabel}>{t("settings.general.media")}</label>
 							<CustomSelect options={gridList} value={mediaView} onChange={(v) => { setMediaView(v); savePref({ mediaView: v }); }} />
 						</div>
 						<div>
-							<label style={fieldLabel}>Interactives</label>
+							<label style={fieldLabel}>{t("settings.general.interactives")}</label>
 							<CustomSelect options={gridList} value={intsView} onChange={(v) => { setIntsView(v); savePref({ intsView: v }); }} />
 						</div>
 					</div>
@@ -1628,11 +1659,11 @@ function UserPreferencesSection() {
 			</div>
 
 			<div>
-				<SectionHeading>Interface</SectionHeading>
+				<SectionHeading>{t("settings.general.interfaceHeading")}</SectionHeading>
 				<Card>
 					<Toggle
-						label="Show Close All in tab bar"
-						description="Adds a 'Close all' pill next to the new-tab button."
+						label={t("settings.general.showCloseAll")}
+						description={t("settings.general.showCloseAllHint")}
 						checked={showCloseAll}
 						onChange={(v) => { setShowCloseAll(v); saveProfilePref({ showCloseAllTabs: v }); }}
 					/>
@@ -1644,6 +1675,7 @@ function UserPreferencesSection() {
 
 /** Account Preferences → Security tab — change password */
 export function PasswordChangePanel() {
+	const t = useT();
 	const [curPw, setCurPw] = useState("");
 	const [newPw, setNewPw] = useState("");
 	const [showCur, setShowCur] = useState(false);
@@ -1662,10 +1694,10 @@ export function PasswordChangePanel() {
 				body: JSON.stringify({ currentPassword: curPw, newPassword: newPw }),
 			});
 			const d = (await res.json()) as { error?: string };
-			if (!res.ok) { setPwError(d.error ?? "Failed"); toast.error("Failed to change password"); }
-			else { setPwSaved(true); setCurPw(""); setNewPw(""); toast.success("Password changed"); setTimeout(() => setPwSaved(false), 2500); }
+			if (!res.ok) { setPwError(d.error ?? t("settings.general.failed")); toast.error(t("settings.general.passwordChangeFailed")); }
+			else { setPwSaved(true); setCurPw(""); setNewPw(""); toast.success(t("settings.general.passwordChanged")); setTimeout(() => setPwSaved(false), 2500); }
 		} catch {
-			setPwError("Network error — could not save");
+			setPwError(t("settings.general.networkErrorSave"));
 		} finally {
 			setPwSaving(false);
 		}
@@ -1673,14 +1705,14 @@ export function PasswordChangePanel() {
 
 	return (
 		<div>
-			<SectionHeading>Change password</SectionHeading>
+			<SectionHeading>{t("settings.general.changePassword")}</SectionHeading>
 			<Card>
 				<form
 					data-testid="change-password-form"
 					onSubmit={savePassword}
 					style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
 					<div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Current password</label>
+						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("settings.general.currentPassword")}</label>
 						<div style={{ position: "relative" }}>
 							<input
 								data-testid="current-password-input"
@@ -1702,7 +1734,7 @@ export function PasswordChangePanel() {
 						</div>
 					</div>
 					<div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>New password</label>
+						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("settings.general.newPassword")}</label>
 						<div style={{ position: "relative" }}>
 							<input
 								data-testid="new-password-input"
@@ -1711,7 +1743,7 @@ export function PasswordChangePanel() {
 								onChange={(e) => setNewPw(e.target.value)}
 								required
 								minLength={8}
-								placeholder="Min 8 characters"
+								placeholder={t("settings.general.min8")}
 								style={{ padding: "0.45rem 2.25rem 0.45rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
 								onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
 								onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
@@ -1735,6 +1767,7 @@ export function PasswordChangePanel() {
 
 /** Site Settings → General tab — site-specific (preview, retention, dev) */
 function SchedulerNotificationsSection() {
+	const t = useT();
 	const [webhookUrl, setWebhookUrl] = useState("");
 	const [enabled, setEnabled] = useState(false);
 	const [saving, setSaving] = useState(false);
@@ -1761,7 +1794,7 @@ function SchedulerNotificationsSection() {
 		});
 		setSaving(false);
 		setSaved(true);
-		toast.success("Notification settings saved");
+		toast.success(t("settings.general.notificationsSaved"));
 		setTimeout(() => setSaved(false), 2000);
 	}
 
@@ -1785,14 +1818,14 @@ function SchedulerNotificationsSection() {
 			});
 			if (res.ok) {
 				setTestResult("sent");
-				toast.success("Test notification sent");
+				toast.success(t("settings.general.testNotificationSent"));
 			} else {
-				setTestResult(`failed (${res.status})`);
-				toast.error("Webhook test failed");
+				setTestResult(t("settings.general.testFailedStatus", { status: res.status }));
+				toast.error(t("settings.general.webhookTestFailed"));
 			}
 		} catch (err) {
-			setTestResult(`error: ${err}`);
-			toast.error("Webhook test failed");
+			setTestResult(t("settings.general.testError", { error: String(err) }));
+			toast.error(t("settings.general.webhookTestFailed"));
 		}
 		setTesting(false);
 	}
@@ -1811,34 +1844,34 @@ function SchedulerNotificationsSection() {
 
 	return (
 		<div>
-			<SectionHeading>Scheduler Notifications</SectionHeading>
+			<SectionHeading>{t("settings.general.schedulerHeading")}</SectionHeading>
 			<Card>
 				<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0 }}>
-					Get notified when the scheduler auto-publishes or unpublishes content. Works with Discord, Slack, or any webhook.
+					{t("settings.general.schedulerHint")}
 				</p>
 
 				<Checkbox
 					checked={enabled}
 					onChange={(v) => setEnabled(v)}
-					label="Enable scheduler notifications"
+					label={t("settings.general.enableScheduler")}
 				/>
 
 				{enabled && (
 					<>
 						<div>
 							<label style={{ fontSize: "0.7rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>
-								Webhook URL
+								{t("settings.general.webhookUrl")}
 							</label>
 							<input
 								data-testid="scheduler-webhook-url-input"
 								type="url"
 								value={webhookUrl}
 								onChange={(e) => setWebhookUrl(e.target.value)}
-								placeholder="https://discord.com/api/webhooks/..."
+								placeholder={t("settings.general.webhookUrlPlaceholder")}
 								style={inputStyle}
 							/>
 							<p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-								Discord, Slack, or any URL that accepts JSON POST
+								{t("settings.general.webhookUrlHint")}
 							</p>
 						</div>
 
@@ -1854,7 +1887,7 @@ function SchedulerNotificationsSection() {
 									border: "none", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
 								}}
 							>
-								{saving ? "Saving..." : saved ? "Saved" : "Save"}
+								{saving ? t("settings.general.savingDots") : saved ? t("settings.general.saved") : t("settings.general.save")}
 							</button>
 							{webhookUrl && (
 								<button
@@ -1868,12 +1901,12 @@ function SchedulerNotificationsSection() {
 										border: "1px solid var(--border)", fontSize: "0.8rem", cursor: "pointer",
 									}}
 								>
-									{testing ? "Sending..." : "Send test"}
+									{testing ? t("settings.general.sendingDots") : t("settings.general.sendTest")}
 								</button>
 							)}
 							{testResult && (
 								<span style={{ fontSize: "0.75rem", color: testResult === "sent" ? "rgb(74 222 128)" : "var(--destructive)", alignSelf: "center" }}>
-									{testResult === "sent" ? "Test sent" : testResult}
+									{testResult === "sent" ? t("settings.general.testSent") : testResult}
 								</span>
 							)}
 						</div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { MessageSquare, Search, FileText, BarChart3, Settings, Wrench, PenLine } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface WelcomeScreenProps {
   siteName: string;
@@ -9,50 +10,54 @@ interface WelcomeScreenProps {
 
 // `quickKey` matches a cached quick-action (see lib/chat/quick-actions.ts) so a
 // warm cache renders instantly (F158). Input-fillers (Search/Edit) have no key.
+// label/message hold catalog keys, translated at render time.
 const SUGGESTIONS = [
   {
     icon: BarChart3,
-    label: "Site overview",
+    label: "chat.welcomeScreen.siteOverviewLabel",
     quickKey: "overview",
     testid: "welcome-suggestion-overview",
-    message: "Give me an overview of my site — how many collections, documents, drafts.",
+    message: "chat.welcomeScreen.siteOverviewMessage",
   },
   {
     icon: FileText,
-    label: "Show drafts",
+    label: "chat.welcomeScreen.showDraftsLabel",
     quickKey: "drafts",
     testid: "welcome-suggestion-drafts",
-    message: "Show me all unpublished drafts across all collections.",
+    message: "chat.welcomeScreen.showDraftsMessage",
   },
   {
     icon: Search,
-    label: "Search content",
+    label: "chat.welcomeScreen.searchContentLabel",
     testid: "welcome-suggestion-search",
-    message: "Search my content for ",
+    message: "chat.welcomeScreen.searchContentMessage",
   },
   {
     icon: Settings,
-    label: "Site info",
+    label: "chat.welcomeScreen.siteInfoLabel",
     quickKey: "site-info",
     testid: "welcome-suggestion-site-info",
-    message: "Tell me everything about my site — collections, fields, settings, deploy config, and content stats.",
+    message: "chat.welcomeScreen.siteInfoMessage",
   },
   {
     icon: Wrench,
-    label: "What can you do?",
+    label: "chat.welcomeScreen.capabilitiesLabel",
     quickKey: "capabilities",
     testid: "welcome-suggestion-capabilities",
-    message: "List all the tools and capabilities you have — what can I ask you to do?",
+    message: "chat.welcomeScreen.capabilitiesMessage",
   },
   {
     icon: PenLine,
-    label: "Edit a page",
+    label: "chat.welcomeScreen.editPageLabel",
     testid: "welcome-suggestion-edit",
-    message: "I want to edit the ",
+    message: "chat.welcomeScreen.editPageMessage",
   },
 ];
 
 export function WelcomeScreen({ siteName, onSuggestionClick }: WelcomeScreenProps) {
+  const t = useT();
+  // One sentence in the catalog; split around the bold site name.
+  const [subtitleBefore, subtitleAfter = ""] = t("chat.welcomeScreen.subtitle", { site: "\u0001" }).split("\u0001");
   return (
     <div
       style={{
@@ -82,10 +87,10 @@ export function WelcomeScreen({ siteName, onSuggestionClick }: WelcomeScreenProp
           <MessageSquare style={{ width: "28px", height: "28px", color: "var(--primary-foreground)" }} />
         </div>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "var(--foreground)", margin: 0 }}>
-          Chat with your site
+          {t("chat.welcomeScreen.title")}
         </h1>
         <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginTop: "8px", maxWidth: "420px" }}>
-          Ask anything about <strong>{siteName}</strong>. I know your schema, content, and settings.
+          {subtitleBefore}<strong>{siteName}</strong>{subtitleAfter}
         </p>
       </div>
 
@@ -103,7 +108,7 @@ export function WelcomeScreen({ siteName, onSuggestionClick }: WelcomeScreenProp
           <button
             data-testid={testid}
             key={label}
-            onClick={() => onSuggestionClick(message, quickKey)}
+            onClick={() => onSuggestionClick(t(message), quickKey)}
             style={{
               display: "flex",
               alignItems: "center",
@@ -128,13 +133,13 @@ export function WelcomeScreen({ siteName, onSuggestionClick }: WelcomeScreenProp
             }}
           >
             <Icon style={{ width: "16px", height: "16px", color: "var(--primary)", flexShrink: 0 }} />
-            <span style={{ fontSize: "0.8rem", fontWeight: 500 }}>{label}</span>
+            <span style={{ fontSize: "0.8rem", fontWeight: 500 }}>{t(label)}</span>
           </button>
         ))}
       </div>
 
       <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", opacity: 0.5 }}>
-        Press / to focus input &middot; Ctrl+Shift+C to switch to Admin
+        {t("chat.welcomeScreen.shortcutHint")}
       </p>
     </div>
   );

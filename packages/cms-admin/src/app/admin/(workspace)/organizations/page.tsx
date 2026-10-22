@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Building2, Plus, Search, MoreVertical, Settings2, Trash2 } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { switchOrg, switchToNewOrg } from "@/lib/switch-context";
+import { useT } from "@/lib/i18n-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,7 @@ function setCookie(name: string, value: string) {
 }
 
 export default function OrganizationsPage() {
+  const t = useT();
   const router = useRouter();
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState<string>("");
@@ -70,7 +72,7 @@ export default function OrganizationsPage() {
   if (!loaded) {
     return (
       <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
-        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Loading organizations...</p>
+        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>{t("pages.orgsList.loading")}</p>
       </div>
     );
   }
@@ -85,11 +87,11 @@ export default function OrganizationsPage() {
     <ActionBar
       actions={
         <ActionButton variant="primary" onClick={() => router.push("/admin/organizations/new")} icon={<Plus style={{ width: 14, height: 14 }} />}>
-          New organization
+          {t("pages.orgsList.newOrg")}
         </ActionButton>
       }
     >
-      <ActionBarBreadcrumb items={["Organizations"]} />
+      <ActionBarBreadcrumb items={[t("pages.orgsList.breadcrumb")]} />
     </ActionBar>
     <div className="p-8 max-w-5xl">
       {/* Search */}
@@ -101,7 +103,7 @@ export default function OrganizationsPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search for an organization"
+            placeholder={t("pages.orgsList.searchPlaceholder")}
             style={{
               width: "100%", padding: "0.45rem 0.6rem 0.45rem 2rem", borderRadius: "6px",
               border: "1px solid var(--border)", background: "var(--background)",
@@ -148,13 +150,13 @@ export default function OrganizationsPage() {
                 <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); switchToOrg(org, "/admin/organizations/settings"); }}>
                     <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                    Settings
+                    {t("pages.orgsList.settings")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
             <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0 }}>
-              {org.sites.length} site{org.sites.length !== 1 ? "s" : ""}
+              {org.sites.length === 1 ? t("pages.orgsList.siteCountOne", { count: org.sites.length }) : t("pages.orgsList.siteCountOther", { count: org.sites.length })}
               {org.id === activeOrgId && (
                 <span style={{
                   marginLeft: "0.5rem", fontSize: "0.65rem", fontWeight: 600,
@@ -162,7 +164,7 @@ export default function OrganizationsPage() {
                   background: "color-mix(in srgb, #22c55e 15%, transparent)",
                   color: "#22c55e", textTransform: "uppercase",
                 }}>
-                  Active
+                  {t("pages.orgsList.active")}
                 </span>
               )}
             </p>
@@ -172,7 +174,7 @@ export default function OrganizationsPage() {
 
       {filtered.length === 0 && search && (
         <div style={{ textAlign: "center", padding: "3rem 1rem", color: "var(--muted-foreground)", fontSize: "0.85rem" }}>
-          No organizations matching &ldquo;{search}&rdquo;
+          {t("pages.orgsList.noMatch", { search })}
         </div>
       )}
     </div>

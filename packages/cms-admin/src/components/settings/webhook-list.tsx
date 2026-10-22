@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Copy, ChevronUp, ChevronDown, Check, Send } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 export interface WebhookEntry {
   id: string;
@@ -16,6 +17,7 @@ interface Props {
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
 export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
+  const t = useT();
   function onChange(w: WebhookEntry[]) {
     onChangeRaw(w);
     window.dispatchEvent(new CustomEvent("cms:settings-dirty"));
@@ -113,7 +115,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
                 data-testid={`webhook-test-${wh.id}`}
                 onClick={() => sendTest(wh.url, wh.id)}
                 disabled={testing === wh.id}
-                title="Send test"
+                title={t("integrations.webhookList.sendTest")}
                 style={{
                   display: "flex", alignItems: "center", padding: "0.15rem",
                   background: "none", border: "none", cursor: testing === wh.id ? "wait" : "pointer",
@@ -124,7 +126,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
                 }}
               >
                 {testResult?.id === wh.id
-                  ? testResult.ok ? <Check style={{ width: 12, height: 12 }} /> : <span style={{ fontSize: "0.6rem" }}>fail</span>
+                  ? testResult.ok ? <Check style={{ width: 12, height: 12 }} /> : <span style={{ fontSize: "0.6rem" }}>{t("integrations.webhookList.fail")}</span>
                   : <Send style={{ width: 12, height: 12 }} />}
               </button>
 
@@ -133,7 +135,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
                 type="button"
                 data-testid={`webhook-copy-${wh.id}`}
                 onClick={() => copyUrl(wh.url, wh.id)}
-                title="Copy URL"
+                title={t("integrations.webhookList.copyUrl")}
                 style={{
                   display: "flex", alignItems: "center", padding: "0.15rem",
                   background: "none", border: "none", cursor: "pointer",
@@ -150,7 +152,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
                 data-testid={`webhook-moveup-${wh.id}`}
                 onClick={() => moveUp(idx)}
                 disabled={idx === 0}
-                title="Move up"
+                title={t("integrations.webhookList.moveUp")}
                 style={{
                   display: "flex", alignItems: "center", padding: "0.15rem",
                   background: "none", border: "none", cursor: idx === 0 ? "default" : "pointer",
@@ -167,7 +169,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
                 data-testid={`webhook-movedown-${wh.id}`}
                 onClick={() => moveDown(idx)}
                 disabled={idx === webhooks.length - 1}
-                title="Move down"
+                title={t("integrations.webhookList.moveDown")}
                 style={{
                   display: "flex", alignItems: "center", padding: "0.15rem",
                   background: "none", border: "none",
@@ -182,22 +184,22 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
               {/* Remove */}
               {confirmRemove === wh.id ? (
                 <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", flexShrink: 0 }}>
-                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("integrations.webhookList.removeConfirm")}</span>
                   <button data-testid={`webhook-remove-confirm-yes-${wh.id}`} type="button" onClick={() => remove(wh.id)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                       border: "none", background: "var(--destructive)", color: "#fff",
-                      cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      cursor: "pointer", lineHeight: 1 }}>{t("integrations.webhookList.yes")}</button>
                   <button data-testid={`webhook-remove-confirm-no-${wh.id}`} type="button" onClick={() => setConfirmRemove(null)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                       border: "1px solid var(--border)", background: "transparent",
-                      color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                      color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("integrations.webhookList.no")}</button>
                 </span>
               ) : (
                 <button
                   type="button"
                   data-testid={`webhook-remove-${wh.id}`}
                   onClick={() => setConfirmRemove(wh.id)}
-                  title="Remove webhook"
+                  title={t("integrations.webhookList.removeWebhook")}
                   style={{
                     width: "18px", height: "18px", borderRadius: "50%", border: "none",
                     background: "transparent", cursor: "pointer", display: "flex",
@@ -219,7 +221,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
           value={newUrl}
           onChange={(e) => setNewUrl(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
-          placeholder="https://discord.com/api/webhooks/... or any URL"
+          placeholder={t("integrations.webhookList.urlPlaceholder")}
           style={{
             flex: 1, padding: "0.4rem 0.6rem", borderRadius: "0.375rem",
             border: "1px solid var(--border)", background: "var(--background)",
@@ -241,7 +243,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
           }}
         >
           <Plus style={{ width: 14, height: 14 }} />
-          Add
+          {t("integrations.webhookList.add")}
         </button>
       </div>
     </div>

@@ -4,8 +4,10 @@ import { BrandLogo } from "@/components/brand-logo";
 
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/lib/i18n-context";
 
 export default function SetupPage() {
+  const t = useT();
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,14 +38,14 @@ export default function SetupPage() {
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
-        setError(data.error ?? "Setup failed");
+        setError(data.error ?? t("auth.setup.failed"));
         setLoading(false);
         return;
       }
       router.push("/admin");
       router.refresh();
     } catch {
-      setError("Network error — try again");
+      setError(t("auth.setup.networkError"));
       setLoading(false);
     }
   }
@@ -51,7 +53,7 @@ export default function SetupPage() {
   if (checking) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--background)" }}>
-        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Checking setup status…</p>
+        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>{t("auth.setup.checking")}</p>
       </div>
     );
   }
@@ -104,12 +106,12 @@ export default function SetupPage() {
         <div style={{ marginBottom: "1.75rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
           <BrandLogo variant="icon" light={false} style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
           <BrandLogo variant="wordmark" light={false} style={{ height: "28px", width: "auto" }} />
-          <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>Create your admin account to get started</p>
+          <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>{t("auth.setup.subtitle")}</p>
         </div>
 
         <form data-testid="setup-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Name</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>{t("auth.setup.name")}</label>
             <input
               data-testid="setup-name-input"
               type="text"
@@ -117,7 +119,7 @@ export default function SetupPage() {
               onChange={(e) => setName(e.target.value)}
               required
               autoFocus
-              placeholder="Your name"
+              placeholder={t("auth.setup.namePlaceholder")}
               style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid hsl(0 0% 20%)", background: "hsl(0 0% 10%)", color: "#fff", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
               onFocus={(e) => { e.target.style.borderColor = "var(--brand-strong)"; }}
               onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
@@ -125,14 +127,14 @@ export default function SetupPage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Email</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>{t("auth.setup.email")}</label>
             <input
               data-testid="setup-email-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="admin@example.com"
+              placeholder={t("auth.setup.emailPlaceholder")}
               style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid hsl(0 0% 20%)", background: "hsl(0 0% 10%)", color: "#fff", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
               onFocus={(e) => { e.target.style.borderColor = "var(--brand-strong)"; }}
               onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
@@ -140,7 +142,7 @@ export default function SetupPage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Password</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>{t("auth.setup.password")}</label>
             <input
               data-testid="setup-password-input"
               type="password"
@@ -148,7 +150,7 @@ export default function SetupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              placeholder="Min 8 characters"
+              placeholder={t("auth.setup.passwordPlaceholder")}
               style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid hsl(0 0% 20%)", background: "hsl(0 0% 10%)", color: "#fff", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
               onFocus={(e) => { e.target.style.borderColor = "var(--brand-strong)"; }}
               onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
@@ -165,13 +167,13 @@ export default function SetupPage() {
             disabled={loading}
             style={{ padding: "0.6rem", borderRadius: "7px", border: "none", background: loading ? "hsl(0 0% 25%)" : "var(--brand-strong)", color: loading ? "hsl(0 0% 50%)" : "var(--brand-strong-foreground)", fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "wait" : "pointer", marginTop: "0.25rem", transition: "opacity 150ms" }}
           >
-            {loading ? "Creating account…" : "Create admin account"}
+            {loading ? t("auth.setup.creating") : t("auth.setup.create")}
           </button>
         </form>
 
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", margin: "1.25rem 0 0.25rem" }}>
           <div style={{ flex: 1, height: "1px", background: "hsl(0 0% 20%)" }} />
-          <span style={{ fontSize: "0.7rem", color: "hsl(0 0% 40%)", textTransform: "uppercase", letterSpacing: "0.05em" }}>or</span>
+          <span style={{ fontSize: "0.7rem", color: "hsl(0 0% 40%)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("auth.setup.or")}</span>
           <div style={{ flex: 1, height: "1px", background: "hsl(0 0% 20%)" }} />
         </div>
         <a
@@ -190,7 +192,7 @@ export default function SetupPage() {
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 20%)"; e.currentTarget.style.color = "hsl(0 0% 85%)"; }}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
-          Set up with GitHub
+          {t("auth.setup.github")}
         </a>
       </div>
       <PoweredBy />

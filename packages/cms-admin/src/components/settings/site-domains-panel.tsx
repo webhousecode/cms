@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { SettingsCard } from "./settings-card";
 import { Loader2, Plus } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface DerivedDomain { origin: string; source: string }
 interface DomainsResponse {
@@ -22,6 +23,7 @@ interface DomainsResponse {
  * read anywhere, only inferred from three unrelated settings.
  */
 export function SiteDomainsPanel() {
+  const t = useT();
   const [domains, setDomains] = useState<string[]>([]);
   const [derived, setDerived] = useState<DerivedDomain[]>([]);
   const [draft, setDraft] = useState("");
@@ -37,19 +39,19 @@ export function SiteDomainsPanel() {
       const res = await fetch("/api/admin/site-domains");
       if (!res.ok) {
         throw new Error(res.status === 403
-          ? "Du har ikke adgang til domæner"
-          : `Kunne ikke hente domæner (${res.status})`);
+          ? t("settings.siteDomains.noAccess")
+          : t("settings.siteDomains.loadErrorStatus", { status: res.status }));
       }
       const data = (await res.json()) as DomainsResponse;
       setDomains(data.domains ?? []);
       setDerived(data.derived ?? []);
       setError("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Kunne ikke hente domæner");
+      setError(e instanceof Error ? e.message : t("settings.siteDomains.loadError"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -65,18 +67,18 @@ export function SiteDomainsPanel() {
         body: JSON.stringify({ domains: next }),
       });
       const data = (await res.json()) as DomainsResponse;
-      if (!res.ok) throw new Error(data.error || `Kunne ikke gemme (${res.status})`);
+      if (!res.ok) throw new Error(data.error || t("settings.siteDomains.saveErrorStatus", { status: res.status }));
       setDomains(data.domains ?? []);
       setDerived(data.derived ?? []);
       setDraft("");
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Kunne ikke gemme");
+      setError(e instanceof Error ? e.message : t("settings.siteDomains.saveError"));
     } finally {
       setSaving(false);
     }
-  }, []);
+  }, [t]);
 
   const rowStyle: CSSProperties = {
     display: "flex", alignItems: "center", gap: "0.6rem",
@@ -88,22 +90,22 @@ export function SiteDomainsPanel() {
 
   return (
     <div data-testid="site-domains-root">
-      <SectionHeading>Domæner</SectionHeading>
+      <SectionHeading>{t("settings.siteDomains.heading")}</SectionHeading>
       <SettingsCard>
         <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
-          Adresser sitet er betroet på. De afgør hvorfra der må redigeres live og sendes formularer.
+          {t("settings.siteDomains.intro")}
         </p>
 
         {loading ? (
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--muted-foreground)", fontSize: "0.85rem" }}>
-            <Loader2 size={14} /> Henter domæner…
+            <Loader2 size={14} /> {t("settings.siteDomains.loading")}
           </div>
         ) : (
           <>
             {derived.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
                 <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
-                  Kommer automatisk fra andre indstillinger
+                  {t("settings.siteDomains.derivedLabel")}
                 </span>
                 {derived.map((d) => (
                   <div key={d.origin} data-testid={`site-domains-derived-${d.origin}`} style={{ ...rowStyle, opacity: 0.75 }}>
@@ -115,10 +117,10 @@ export function SiteDomainsPanel() {
             )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-              <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Tilføjet her</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{t("settings.siteDomains.addedHere")}</span>
               {domains.length === 0 && (
                 <span data-testid="site-domains-empty" style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                  Ingen ekstra domæner endnu.
+                  {t("settings.siteDomains.empty")}
                 </span>
               )}
               {domains.map((d) => (
@@ -126,23 +128,23 @@ export function SiteDomainsPanel() {
                   <span style={mono}>{d}</span>
                   {confirming === d ? (
                     <>
-                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Fjern?</span>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("settings.common.removeConfirm")}</span>
                       <button
                         data-testid={`site-domains-remove-yes-${d}`}
                         onClick={() => { setConfirming(null); void save(domains.filter((x) => x !== d)); }}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
-                      >Yes</button>
+                      >{t("settings.common.yes")}</button>
                       <button
                         data-testid={`site-domains-remove-no-${d}`}
                         onClick={() => setConfirming(null)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
-                      >No</button>
+                      >{t("settings.common.no")}</button>
                     </>
                   ) : (
                     <button
                       data-testid={`site-domains-remove-${d}`}
                       onClick={() => setConfirming(d)}
-                      aria-label={`Fjern ${d}`}
+                      aria-label={t("settings.siteDomains.removeNamed", { name: d })}
                       style={{ background: "none", border: "none", color: "var(--muted-foreground)", cursor: "pointer", fontSize: "1rem", lineHeight: 1, padding: "0 2px" }}
                     >×</button>
                   )}
@@ -156,7 +158,7 @@ export function SiteDomainsPanel() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && canAdd) void save([...domains, draft]); }}
-                placeholder="eksempel.dk"
+                placeholder={t("settings.siteDomains.placeholder")}
                 style={{ flex: 1, padding: "0.5rem 0.7rem", border: "1px solid var(--border)", borderRadius: "8px", background: "var(--background)", color: "var(--foreground)", fontSize: "0.85rem" }}
               />
               <button
@@ -173,7 +175,7 @@ export function SiteDomainsPanel() {
                 }}
               >
                 {saving ? <Loader2 size={13} /> : <Plus size={13} />}
-                {saving ? "Gemmer…" : "Tilføj"}
+                {saving ? t("settings.common.saving") : t("settings.siteDomains.add")}
               </button>
             </div>
 
@@ -181,7 +183,7 @@ export function SiteDomainsPanel() {
               <span data-testid="site-domains-error" style={{ fontSize: "0.78rem", color: "var(--destructive)" }}>{error}</span>
             )}
             {saved && !error && (
-              <span data-testid="site-domains-saved" style={{ fontSize: "0.78rem", color: "var(--primary)" }}>Gemt ✓</span>
+              <span data-testid="site-domains-saved" style={{ fontSize: "0.78rem", color: "var(--primary)" }}>{t("settings.siteDomains.saved")}</span>
             )}
           </>
         )}

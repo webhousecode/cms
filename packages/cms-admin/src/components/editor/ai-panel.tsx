@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { Sparkles, X, Send, Copy, Check } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import type { CollectionConfig } from "@webhouse/cms";
+import { useT } from "@/lib/i18n-context";
 
 interface Message {
   role: "user" | "assistant";
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props) {
+  const t = useT();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -95,7 +97,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
         setMessages((prev) => {
           const next = [...prev];
           const last = next[next.length - 1];
-          if (last) last.content = `Error: ${err.error ?? "Unknown error"}`;
+          if (last) last.content = t("editor.aiPanel.errorPrefixed", { error: err.error ?? t("editor.aiPanel.unknownError") });
           return next;
         });
         setStreaming(false);
@@ -121,7 +123,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
         setMessages((prev) => {
           const next = [...prev];
           const last = next[next.length - 1];
-          if (last && !last.content) last.content = "Network error";
+          if (last && !last.content) last.content = t("editor.aiPanel.networkError");
           return next;
         });
       }
@@ -203,7 +205,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <Sparkles style={{ width: "1rem", height: "1rem", color: "var(--primary)" }} />
-          <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>AI Assistant</span>
+          <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>{t("editor.aiPanel.title")}</span>
         </div>
         <button
           data-testid="ai-panel-close-button"
@@ -226,7 +228,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
           flexShrink: 0,
           background: "var(--muted)/20",
         }}>
-          <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", flexShrink: 0 }}>Insert into</span>
+          <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", flexShrink: 0 }}>{t("editor.aiPanel.insertInto")}</span>
           <CustomSelect
             options={richTextFields.map((f) => ({ value: f.name, label: f.label }))}
             value={insertTarget}
@@ -242,7 +244,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
         {messages.length === 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.5rem" }}>
             <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Ask me to generate, rewrite, or improve content for this document.
+              {t("editor.aiPanel.intro")}
             </p>
 
             {/* Generate new version — primary action */}
@@ -305,21 +307,21 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "color-mix(in oklch, var(--primary) 8%, transparent)"; }}
             >
               <Sparkles style={{ width: "0.875rem", height: "0.875rem", flexShrink: 0 }} />
-              Generate a new version
+              {t("editor.aiPanel.generateVersion")}
             </button>
 
             <div style={{ height: "1px", background: "var(--border)", margin: "0.125rem 0" }} />
 
             {[
-              "Write an introduction paragraph",
-              "Generate a summary of this article",
-              "Make the title more engaging",
-            ].map((suggestion) => (
+              { id: "Write an introduction paragraph", key: "editor.aiPanel.suggestIntro" },
+              { id: "Generate a summary of this article", key: "editor.aiPanel.suggestSummary" },
+              { id: "Make the title more engaging", key: "editor.aiPanel.suggestTitle" },
+            ].map(({ id: suggestion, key: suggestionKey }) => (
               <button
                 data-testid={`ai-panel-suggestion-${suggestion.toLowerCase().replace(/\s+/g, '-')}`}
                 key={suggestion}
                 type="button"
-                onClick={() => { setInput(suggestion); inputRef.current?.focus(); }}
+                onClick={() => { setInput(t(suggestionKey)); inputRef.current?.focus(); }}
                 style={{
                   padding: "0.4rem 0.625rem",
                   borderRadius: "6px",
@@ -334,7 +336,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
                 onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
               >
-                {suggestion}
+                {t(suggestionKey)}
               </button>
             ))}
           </div>
@@ -367,7 +369,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
                   data-testid={`ai-panel-copy-message-${idx}`}
                   type="button"
                   onClick={() => copyMessage(msg.content, idx)}
-                  title="Copy"
+                  title={t("editor.aiPanel.copy")}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -382,7 +384,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
                   }}
                 >
                   {copied === idx ? <Check style={{ width: "0.65rem", height: "0.65rem" }} /> : <Copy style={{ width: "0.65rem", height: "0.65rem" }} />}
-                  {copied === idx ? "Copied" : "Copy"}
+                  {copied === idx ? t("editor.aiPanel.copied") : t("editor.aiPanel.copy")}
                 </button>
                 {insertTarget && (
                   <button
@@ -402,7 +404,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
                       cursor: "pointer",
                     }}
                   >
-                    Insert
+                    {t("editor.aiPanel.insert")}
                   </button>
                 )}
               </div>
@@ -427,7 +429,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask AI to help with content… (Enter to send)"
+          placeholder={t("editor.aiPanel.inputPlaceholder")}
           rows={2}
           style={{
             flex: 1,

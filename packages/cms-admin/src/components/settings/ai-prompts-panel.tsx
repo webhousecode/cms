@@ -5,6 +5,7 @@ import { Loader2, RotateCcw, Save, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { SettingsCard } from "./settings-card";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { useT } from "@/lib/i18n-context";
 
 interface PromptDef {
   id: string;
@@ -14,6 +15,7 @@ interface PromptDef {
 }
 
 export function AIPromptsPanel() {
+  const t = useT();
   const [prompts, setPrompts] = useState<PromptDef[]>([]);
   const [defaults, setDefaults] = useState<Record<string, string>>({});
   const [confirmResetId, setConfirmResetId] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function AIPromptsPanel() {
         const data = (await res.json()) as { prompts: PromptDef[] };
         setPrompts(data.prompts);
         setSaved(true);
-        toast.success("Prompts saved");
+        toast.success(t("settings.aiPrompts.saved"));
         setTimeout(() => setSaved(false), 2000);
       }
     } catch {
@@ -59,7 +61,7 @@ export function AIPromptsPanel() {
     }
     setSaving(false);
     window.dispatchEvent(new CustomEvent("cms:settings-saved"));
-  }, [prompts]);
+  }, [prompts, t]);
 
   useEffect(() => {
     function onSave() { handleSave(); }
@@ -84,17 +86,17 @@ export function AIPromptsPanel() {
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground py-8">
-        <Loader2 className="w-4 h-4 animate-spin" /> Loading prompts…
+        <Loader2 className="w-4 h-4 animate-spin" /> {t("settings.aiPrompts.loading")}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <SectionHeading>AI Prompts</SectionHeading>
+      <SectionHeading>{t("settings.aiPrompts.heading")}</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-          Edit the system prompts used by all AI features. Variables in {"{braces}"} are replaced at runtime.
+          {t("settings.aiPrompts.intro", { braces: "{braces}" })}
         </p>
 
       {prompts.map((p) => (
@@ -110,18 +112,18 @@ export function AIPromptsPanel() {
                 type="button"
                 onClick={() => { navigator.clipboard.writeText(p.value); setCopiedId(p.id); setTimeout(() => setCopiedId(null), 2000); }}
                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
-                title="Copy to clipboard"
+                title={t("settings.settingsCard.copyToClipboard")}
               >
                 {copiedId === p.id ? <Check style={{ width: "0.65rem", height: "0.65rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.65rem", height: "0.65rem" }} />}
-                {copiedId === p.id ? <span style={{ color: "#4ade80" }}>Copied</span> : "Copy"}
+                {copiedId === p.id ? <span style={{ color: "#4ade80" }}>{t("settings.aiPrompts.copied")}</span> : t("settings.aiPrompts.copy")}
               </button>
               {confirmResetId === p.id ? (
                 <span className="flex items-center gap-1">
-                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Reset?</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("settings.aiPrompts.resetConfirm")}</span>
                   <button data-testid="ai-prompts-reset-confirm-button" type="button" onClick={() => { setConfirmResetId(null); resetPrompt(p.id); }}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("settings.common.yes")}</button>
                   <button data-testid="ai-prompts-reset-cancel-button" type="button" onClick={() => setConfirmResetId(null)}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("settings.common.no")}</button>
                 </span>
               ) : (
                 <button
@@ -129,10 +131,10 @@ export function AIPromptsPanel() {
                   type="button"
                   onClick={() => setConfirmResetId(p.id)}
                   className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
-                  title="Reset to default"
+                  title={t("settings.aiPrompts.resetToDefault")}
                 >
                   <RotateCcw style={{ width: "0.65rem", height: "0.65rem" }} />
-                  Reset
+                  {t("settings.aiPrompts.reset")}
                 </button>
               )}
             </span>

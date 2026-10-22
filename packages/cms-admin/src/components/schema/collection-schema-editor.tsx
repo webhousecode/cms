@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import type { FieldConfig } from "@webhouse/cms";
 import type { CollectionDef } from "@/lib/config-writer";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n-context";
 
 const FIELD_TYPES = [
   "text", "textarea", "richtext", "htmldoc", "number", "boolean",
@@ -29,6 +30,7 @@ interface Props {
 }
 
 export function CollectionSchemaEditor({ collection, isNew }: Props) {
+  const t = useT();
   const [name, setName] = useState(collection?.name ?? "");
   const [label, setLabel] = useState(collection?.label ?? "");
   const [urlPrefix, setUrlPrefix] = useState(collection?.urlPrefix ?? "");
@@ -61,8 +63,8 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
 
   async function save() {
     setError(null);
-    if (!name.trim()) { setError("Collection name is required"); return; }
-    if (fields.some((f) => !f.name.trim())) { setError("All fields must have a name"); return; }
+    if (!name.trim()) { setError(t("schema.collectionSchemaEditor.nameRequired")); return; }
+    if (fields.some((f) => !f.name.trim())) { setError(t("schema.collectionSchemaEditor.fieldsNeedName")); return; }
 
     setSaving(true);
     const body: CollectionDef = {
@@ -87,7 +89,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
 
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      setError((j as { error?: string }).error ?? "Save failed");
+      setError((j as { error?: string }).error ?? t("schema.collectionSchemaEditor.saveFailed"));
       return;
     }
 
@@ -109,42 +111,42 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
     <div className="space-y-8">
       {/* Collection metadata */}
       <div className="space-y-4 p-6 rounded-lg border border-border bg-card">
-        <h2 className="text-sm font-mono tracking-widest uppercase text-muted-foreground">Collection</h2>
+        <h2 className="text-sm font-mono tracking-widest uppercase text-muted-foreground">{t("schema.collectionSchemaEditor.collection")}</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label>Name <span className="text-primary">*</span></Label>
+            <Label>{t("schema.collectionSchemaEditor.name")} <span className="text-primary">*</span></Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. posts"
+              placeholder={t("schema.collectionSchemaEditor.namePlaceholder")}
               className="font-mono"
               disabled={!isNew} // Can't rename existing (would break content files)
             />
             {!isNew && (
-              <p className="text-xs text-muted-foreground">Name cannot be changed (would break existing content)</p>
+              <p className="text-xs text-muted-foreground">{t("schema.collectionSchemaEditor.nameLocked")}</p>
             )}
           </div>
           <div className="space-y-1.5">
-            <Label>Label</Label>
+            <Label>{t("schema.collectionSchemaEditor.label")}</Label>
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="e.g. Blog Posts"
+              placeholder={t("schema.collectionSchemaEditor.labelPlaceholder")}
             />
           </div>
           <div className="space-y-1.5">
-            <Label>URL Prefix</Label>
+            <Label>{t("schema.collectionSchemaEditor.urlPrefix")}</Label>
             <Input
               value={urlPrefix}
               onChange={(e) => setUrlPrefix(e.target.value)}
-              placeholder="e.g. /blog"
+              placeholder={t("schema.collectionSchemaEditor.urlPrefixPlaceholder")}
               className="font-mono"
             />
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "0.5rem" }}>
             <div>
-              <Label>Translatable</Label>
-              <p className="text-xs text-muted-foreground">Allow translation of documents in this collection</p>
+              <Label>{t("schema.collectionSchemaEditor.translatable")}</Label>
+              <p className="text-xs text-muted-foreground">{t("schema.collectionSchemaEditor.translatableHint")}</p>
             </div>
             <button
               data-testid="schema-translatable-toggle"
@@ -165,8 +167,8 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "0.5rem" }}>
             <div>
-              <Label>Previewable</Label>
-              <p className="text-xs text-muted-foreground">Documents have individual pages on the site</p>
+              <Label>{t("schema.collectionSchemaEditor.previewable")}</Label>
+              <p className="text-xs text-muted-foreground">{t("schema.collectionSchemaEditor.previewableHint")}</p>
             </div>
             <button
               data-testid="schema-previewable-toggle"
@@ -191,7 +193,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
       {/* Fields */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-mono tracking-widest uppercase text-muted-foreground">Fields</h2>
+          <h2 className="text-sm font-mono tracking-widest uppercase text-muted-foreground">{t("schema.collectionSchemaEditor.fields")}</h2>
           <Button
             variant="outline"
             size="sm"
@@ -199,13 +201,13 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
             className="gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
-            Add field
+            {t("schema.collectionSchemaEditor.addField")}
           </Button>
         </div>
 
         {fields.length === 0 && (
           <div className="text-center py-12 text-muted-foreground border border-dashed border-border rounded-lg">
-            <p className="text-sm">No fields yet. Add your first field.</p>
+            <p className="text-sm">{t("schema.collectionSchemaEditor.noFields")}</p>
           </div>
         )}
 
@@ -241,13 +243,13 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
             className="text-muted-foreground hover:text-destructive gap-1.5"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            Delete collection
+            {t("schema.collectionSchemaEditor.deleteCollection")}
           </Button>
         ) : <div />}
 
         <Button onClick={save} disabled={saving} className="gap-1.5">
           <Save className="w-3.5 h-3.5" />
-          {saving ? "Saving…" : "Save changes"}
+          {saving ? t("schema.collectionSchemaEditor.saving") : t("schema.collectionSchemaEditor.saveChanges")}
         </Button>
       </div>
 
@@ -262,19 +264,25 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
             <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
               <AlertTriangle style={{ width: "1.25rem", height: "1.25rem", color: "rgb(239 68 68)", flexShrink: 0, marginTop: "1px" }} />
               <div>
-                <p style={{ fontWeight: 600, fontSize: "0.95rem" }}>Delete collection?</p>
+                <p style={{ fontWeight: 600, fontSize: "0.95rem" }}>{t("schema.collectionSchemaEditor.deleteTitle")}</p>
                 <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace", marginTop: "0.2rem" }}>{collection!.name}</p>
               </div>
             </div>
 
             <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <p>This will <strong style={{ color: "rgb(239 68 68)" }}>permanently delete</strong> the collection definition, remove it from your schema, and delete all documents belonging to this collection.</p>
-              <p>This action cannot be undone.</p>
+              <p>{(() => {
+                const [before, after] = t("schema.collectionSchemaEditor.deleteBody", { emphasis: "\u0000" }).split("\u0000");
+                return <>{before}<strong style={{ color: "rgb(239 68 68)" }}>{t("schema.collectionSchemaEditor.deleteEmphasis")}</strong>{after}</>;
+              })()}</p>
+              <p>{t("schema.collectionSchemaEditor.cannotUndo")}</p>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
               <label style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
-                To confirm, type <strong style={{ color: "var(--foreground)", fontFamily: "monospace" }}>{collection!.name}</strong> below:
+                {(() => {
+                  const [before, after] = t("schema.collectionSchemaEditor.typeToConfirm", { name: "\u0000" }).split("\u0000");
+                  return <>{before}<strong style={{ color: "var(--foreground)", fontFamily: "monospace" }}>{collection!.name}</strong>{after}</>;
+                })()}
               </label>
               <Input
                 autoFocus
@@ -289,7 +297,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
 
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
               <Button variant="outline" size="sm" onClick={() => setDeleteOpen(false)} disabled={deleting}>
-                Cancel
+                {t("schema.collectionSchemaEditor.cancel")}
               </Button>
               <Button
                 variant="destructive"
@@ -297,7 +305,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
                 onClick={deleteCollection}
                 disabled={deleteConfirmInput !== collection!.name || deleting}
               >
-                {deleting ? "Deleting…" : "Delete this collection"}
+                {deleting ? t("schema.collectionSchemaEditor.deleting") : t("schema.collectionSchemaEditor.deleteThis")}
               </Button>
             </div>
           </div>
@@ -320,6 +328,7 @@ function FieldRow({
   onRemove: () => void;
   onReorder: (toIndex: number) => void;
 }) {
+  const t = useT();
   const [dragOver, setDragOver] = useState<"above" | "below" | null>(null);
   const dragRef = useRef<number | null>(null);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -379,11 +388,11 @@ function FieldRow({
         <Input
           value={field.name}
           onChange={(e) => onChange({ name: e.target.value })}
-          placeholder="field_name"
+          placeholder={t("schema.collectionSchemaEditor.fieldNamePlaceholder")}
           className="font-mono text-xs h-8"
         />
         <CustomSelect
-          options={FIELD_TYPES.map((t) => ({ value: t, label: t }))}
+          options={FIELD_TYPES.map((ft) => ({ value: ft, label: ft }))}
           value={field.type}
           onChange={(v) => onChange({ type: v as FieldConfig["type"] })}
           style={{ height: "2rem", fontFamily: "monospace", fontSize: "0.75rem" }}
@@ -391,14 +400,14 @@ function FieldRow({
         <Input
           value={field.label ?? ""}
           onChange={(e) => onChange({ label: e.target.value || undefined })}
-          placeholder="Label (optional)"
+          placeholder={t("schema.collectionSchemaEditor.labelOptional")}
           className="text-xs h-8"
         />
-        <div className="flex items-center gap-1.5" title="Required — this field must have a value before the document can be saved">
+        <div className="flex items-center gap-1.5" title={t("schema.collectionSchemaEditor.requiredHint")}>
           <Checkbox
             checked={field.required ?? false}
             onChange={(v) => onChange({ required: v || undefined })}
-            label="req"
+            label={t("schema.collectionSchemaEditor.req")}
           />
         </div>
       </div>

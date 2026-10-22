@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, Check } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 import { CustomRangeSlider } from "./custom-range-slider";
 
 /**
@@ -11,6 +12,7 @@ import { CustomRangeSlider } from "./custom-range-slider";
  * media processing config directly — no navigation needed.
  */
 export function ISUMediaProcessing() {
+  const t = useT();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -57,7 +59,7 @@ export function ISUMediaProcessing() {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.5rem 0", color: "var(--muted-foreground)", fontSize: "0.72rem" }}>
         <Loader2 className="animate-spin" style={{ width: "0.7rem", height: "0.7rem" }} />
-        Loading settings...
+        {t("media.isuMediaProcessing.loading")}
       </div>
     );
   }
@@ -78,13 +80,13 @@ export function ISUMediaProcessing() {
           onChange={(e) => setEnabled(e.target.checked)}
           style={{ accentColor: "var(--primary)" }}
         />
-        <span style={{ fontSize: "0.72rem", fontWeight: 500 }}>Generate WebP variants on upload</span>
+        <span style={{ fontSize: "0.72rem", fontWeight: 500 }}>{t("media.isuMediaProcessing.generateVariants")}</span>
       </label>
 
       {/* Variant widths */}
       <div>
         <label style={{ fontSize: "0.68rem", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "0.2rem" }}>
-          Variant widths (px)
+          {t("media.isuMediaProcessing.variantWidths")}
         </label>
         <input
           data-testid="isu-media-widths-input"
@@ -103,7 +105,7 @@ export function ISUMediaProcessing() {
       {/* Quality slider */}
       <div>
         <label style={{ fontSize: "0.68rem", fontWeight: 500, color: "var(--muted-foreground)" }}>
-          WebP quality: {quality}
+          {t("media.isuMediaProcessing.webpQuality", { quality })}
         </label>
         <CustomRangeSlider min={10} max={100} step={5} value={quality} onChange={setQuality} />
       </div>
@@ -130,7 +132,7 @@ export function ISUMediaProcessing() {
         ) : saved ? (
           <Check style={{ width: "0.65rem", height: "0.65rem" }} />
         ) : null}
-        {saved ? "Saved" : saving ? "Saving..." : "Save"}
+        {saved ? t("media.isuMediaProcessing.saved") : saving ? t("media.isuMediaProcessing.saving") : t("media.isuMediaProcessing.save")}
       </button>
     </div>
   );

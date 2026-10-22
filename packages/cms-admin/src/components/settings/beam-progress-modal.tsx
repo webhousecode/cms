@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CheckCircle, AlertTriangle, X, Minimize2, Zap } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface BeamProgress {
   beamId: string;
@@ -22,11 +23,11 @@ interface Props {
 }
 
 const PHASE_LABEL: Record<string, string> = {
-  initiate: "Connecting to target CMS",
-  files: "Sending files",
-  finalize: "Finalizing",
-  done: "Complete!",
-  error: "Failed",
+  initiate: "integrations.beamProgress.phaseInitiate",
+  files: "integrations.beamProgress.phaseFiles",
+  finalize: "integrations.beamProgress.phaseFinalize",
+  done: "integrations.beamProgress.phaseDone",
+  error: "integrations.beamProgress.phaseError",
 };
 
 function formatBytes(b: number): string {
@@ -44,6 +45,7 @@ function formatBytes(b: number): string {
  * pill so the user can re-open progress at any time.
  */
 export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Props) {
+  const t = useT();
   const [progress, setProgress] = useState<BeamProgress | null>(null);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,12 +57,12 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
         const data = JSON.parse((e as MessageEvent).data) as BeamProgress;
         setProgress(data);
         if (data.phase === "done") { setDone(true); es.close(); window.dispatchEvent(new CustomEvent("cms:beam-done", { detail: { beamId, success: true } })); }
-        else if (data.phase === "error") { setError(data.error ?? "Transfer failed"); es.close(); window.dispatchEvent(new CustomEvent("cms:beam-done", { detail: { beamId, success: false, error: data.error } })); }
+        else if (data.phase === "error") { setError(data.error ?? t("integrations.beamProgress.transferFailed")); es.close(); window.dispatchEvent(new CustomEvent("cms:beam-done", { detail: { beamId, success: false, error: data.error } })); }
       } catch { /* skip parse errors */ }
     });
     es.onerror = () => { /* SSE will reconnect */ };
     return () => es.close();
-  }, [beamId]);
+  }, [beamId, t]);
 
   const filePct = progress && progress.totalFiles > 0
     ? Math.round((progress.transferredFiles / progress.totalFiles) * 100)
@@ -68,7 +70,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
   const bytePct = progress && progress.totalBytes > 0
     ? Math.round((progress.transferredBytes / progress.totalBytes) * 100)
     : 0;
-  const phaseLabel = progress ? (PHASE_LABEL[progress.phase] ?? progress.phase) : "Starting...";
+  const phaseLabel = progress ? (PHASE_LABEL[progress.phase] ? t(PHASE_LABEL[progress.phase]) : progress.phase) : t("integrations.beamProgress.starting");
 
   return (
     <div
@@ -103,7 +105,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
               : error ? <AlertTriangle style={{ width: 18, height: 18, color: "var(--destructive)" }} />
               : <Zap style={{ width: 18, height: 18, color: "var(--brand)" }} className="animate-pulse" />}
             <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>
-              {done ? "Beam complete" : error ? "Beam failed" : "Beaming…"}
+              {done ? t("integrations.beamProgress.titleDone") : error ? t("integrations.beamProgress.titleFailed") : t("integrations.beamProgress.titleRunning")}
             </h2>
           </div>
           <div style={{ display: "flex", gap: "0.4rem" }}>
@@ -112,7 +114,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
                 data-testid="beam-progress-minimize-button"
                 type="button"
                 onClick={onMinimize}
-                title="Run in background"
+                title={t("integrations.beamProgress.runInBackground")}
                 style={{
                   background: "none", border: "1px solid var(--border)",
                   borderRadius: 6, padding: "0.3rem 0.55rem",
@@ -122,14 +124,14 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
                 }}
               >
                 <Minimize2 style={{ width: 12, height: 12 }} />
-                Run in background
+                {t("integrations.beamProgress.runInBackground")}
               </button>
             )}
             <button
               data-testid="beam-progress-close-button"
               type="button"
               onClick={onClose}
-              title="Close"
+              title={t("integrations.beamProgress.close")}
               style={{
                 background: "none", border: "none", cursor: "pointer",
                 color: "var(--muted-foreground)", padding: "0.3rem",
@@ -150,7 +152,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
           <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>{phaseLabel}</span>
           {progress && progress.totalFiles > 0 && (
             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-              {progress.transferredFiles} / {progress.totalFiles} files
+              {t("integrations.beamProgress.filesCount", { done: progress.transferredFiles, total: progress.totalFiles })}
             </span>
           )}
         </div>
@@ -207,7 +209,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
               cursor: "pointer",
             }}
           >
-            Done
+            {t("integrations.beamProgress.done")}
           </button>
         )}
       </div>

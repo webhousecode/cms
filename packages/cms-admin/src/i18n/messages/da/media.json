@@ -1,1 +1,36 @@
-{}
+{
+  "aiMetadataPopover": {
+    "copyCaption": "Kopiér billedtekst",
+    "copyAlt": "Kopiér alt-tekst",
+    "copyTags": "Kopiér tags",
+    "copy": "Kopiér",
+    "analysisFailed": "Analysen mislykkedes",
+    "triggerTitle": "AI-metadata",
+    "heading": "AI-billedanalyse",
+    "reanalyze": "Analysér igen",
+    "loading": "Indlæser…",
+    "noAnalysis": "Ingen AI-analyse endnu.",
+    "analyze": "Analysér",
+    "analyzing": "Analyserer billede…",
+    "caption": "Billedtekst",
+    "altText": "Alt-tekst",
+    "applied": "Anvendt",
+    "applyAltTitle": "Brug alt-teksten på billedet",
+    "apply": "Anvend",
+    "tags": "Tags",
+    "analyzedAt": "Analyseret: {date} · {provider}",
+    "ai": "AI"
+  },
+  "isuMediaProcessing": {
+    "loading": "Indlæser indstillinger...",
+    "generateVariants": "Generér WebP-varianter ved upload",
+    "variantWidths": "Variantbredder (px)",
+    "webpQuality": "WebP-kvalitet: {quality}",
+    "saved": "Gemt",
+    "saving": "Gemmer...",
+    "save": "Gem"
+  },
+  "previewThumb": {
+    "noPreview": "Ingen forhåndsvisning"
+  }
+}

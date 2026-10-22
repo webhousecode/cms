@@ -1,12 +1,21 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Fragment, useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { SettingsCard } from "./settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy, Globe, Search } from "lucide-react";
 import { DeployModal } from "@/components/deploy-modal";
 import { PushSubscriptionToggle } from "@/components/push-subscription-toggle";
+import { useT } from "@/lib/i18n-context";
+
+/** Renders a translated sentence whose {placeholders} are React nodes (e.g. <strong>). */
+function fillNodes(template: string, nodes: Record<string, React.ReactNode>): React.ReactNode[] {
+  return template.split(/(\{\w+\})/).map((part, i) => {
+    const m = /^\{(\w+)\}$/.exec(part);
+    return m && m[1] in nodes ? <Fragment key={i}>{nodes[m[1]]}</Fragment> : part;
+  });
+}
 
 type DeployProvider =
   | "off"
@@ -67,6 +76,7 @@ const CONFIG_DEFAULTS: DeployConfig = {
 /** Re-check button with full feedback per CLAUDE.md hard rule:
  *  hover, active, loading-while-running, success-flash after. */
 function RecheckButton({ busy, justRan, onClick }: { busy: boolean; justRan: boolean; onClick: () => void }) {
+  const t = useT();
   const [hover, setHover] = useState(false);
   const [active, setActive] = useState(false);
   const success = justRan && !busy;
@@ -79,7 +89,7 @@ function RecheckButton({ busy, justRan, onClick }: { busy: boolean; justRan: boo
       onMouseLeave={() => { setHover(false); setActive(false); }}
       onMouseDown={() => setActive(true)}
       onMouseUp={() => setActive(false)}
-      title={busy ? "Checking DNS..." : success ? "Updated just now" : "Re-check DNS"}
+      title={busy ? t("integrations.deploy.checkingDns") : success ? t("integrations.deploy.updatedJustNow") : t("integrations.deploy.recheckDns")}
       style={{
         padding: "0.35rem 0.7rem", borderRadius: "5px",
         background: success
@@ -100,7 +110,7 @@ function RecheckButton({ busy, justRan, onClick }: { busy: boolean; justRan: boo
       }}
     >
       {busy && <Loader2 className="animate-spin" style={{ width: "0.7rem", height: "0.7rem" }} />}
-      {busy ? "Checking..." : success ? "✓ Updated" : "Re-check"}
+      {busy ? t("integrations.deploy.checking") : success ? `✓ ${t("integrations.deploy.updated")}` : t("integrations.deploy.recheck")}
     </button>
   );
 }
@@ -118,6 +128,7 @@ interface FlyLiveStatus {
 }
 
 export function DeploySettingsPanel() {
+  const t = useT();
   const [config, setConfig] = useState<DeployConfig>(CONFIG_DEFAULTS);
   const [canAutoDeploy, setCanAutoDeploy] = useState(false);
   const [hasGitHubToken, setHasGitHubToken] = useState(false);
@@ -247,7 +258,7 @@ export function DeploySettingsPanel() {
       return;
     }
     setDomainCheck((s) => ({ ...s, state: "checking" }));
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       try {
         const res = await fetch(`/api/admin/deploy/dns/availability?domain=${encodeURIComponent(domain)}`);
         if (!res.ok) { setDomainCheck({ state: "invalid" }); return; }
@@ -256,7 +267,7 @@ export function DeploySettingsPanel() {
         setDomainCheck({ state: "invalid" });
       }
     }, 400);
-    return () => clearTimeout(t);
+    return () => clearTimeout(timer);
   }, [config.deployCustomDomain, dnsStatus?.available, config.deployProvider, config.deployAppName]);
 
   const handleCreateCname = useCallback(async () => {
@@ -265,16 +276,16 @@ export function DeploySettingsPanel() {
     try {
       const res = await fetch("/api/admin/deploy/dns/cname", { method: "POST" });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? "CNAME creation failed");
-      const verb = body.status === "created" ? "Created" : body.status === "updated" ? "Updated" : "Already up to date";
-      setDnsMsg(`${verb}: ${body.subdomain}.${body.zone} → ${body.target}`);
+      if (!res.ok) throw new Error(body.error ?? t("integrations.deploy.cnameFailed"));
+      const record = `${body.subdomain}.${body.zone} → ${body.target}`;
+      setDnsMsg(body.status === "created" ? t("integrations.deploy.cnameCreated", { record }) : body.status === "updated" ? t("integrations.deploy.cnameUpdated", { record }) : t("integrations.deploy.cnameUpToDate", { record }));
       await loadDnsStatus();
     } catch (err) {
-      setDnsMsg(`Failed: ${err instanceof Error ? err.message : String(err)}`);
+      setDnsMsg(t("integrations.deploy.failed", { error: err instanceof Error ? err.message : String(err) }));
     } finally {
       setDnsBusy(false);
     }
-  }, [loadDnsStatus]);
+  }, [loadDnsStatus, t]);
 
   const handleRegistrarSearch = useCallback(async () => {
     const q = registrarQuery.trim();
@@ -287,14 +298,14 @@ export function DeploySettingsPanel() {
     try {
       const res = await fetch(`/api/admin/dns/registrar?action=search&q=${encodeURIComponent(q)}&limit=5`);
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "Search failed");
+      if (!res.ok) throw new Error(data.error ?? t("integrations.deploy.searchFailed"));
       setRegistrarResults(data.results ?? []);
     } catch (err) {
-      setRegistrarError(err instanceof Error ? err.message : "Search failed");
+      setRegistrarError(err instanceof Error ? err.message : t("integrations.deploy.searchFailed"));
     } finally {
       setRegistrarSearching(false);
     }
-  }, [registrarQuery]);
+  }, [registrarQuery, t]);
 
   const handleRegistrarInitiate = useCallback(async (domainName: string) => {
     setRegistrarError(null);
@@ -305,7 +316,7 @@ export function DeploySettingsPanel() {
         body: JSON.stringify({ action: "initiate", domain_name: domainName }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "Failed to initiate registration");
+      if (!res.ok) throw new Error(data.error ?? t("integrations.deploy.initiateFailed"));
       setRegistrarPending({
         domain_name: data.domain_name ?? domainName,
         price: data.price,
@@ -314,9 +325,9 @@ export function DeploySettingsPanel() {
         expires_at: data.expires_at,
       });
     } catch (err) {
-      setRegistrarError(err instanceof Error ? err.message : "Failed to initiate registration");
+      setRegistrarError(err instanceof Error ? err.message : t("integrations.deploy.initiateFailed"));
     }
-  }, []);
+  }, [t]);
 
   const handleRegistrarConfirm = useCallback(async () => {
     if (!registrarPending) return;
@@ -333,35 +344,35 @@ export function DeploySettingsPanel() {
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "Registration failed");
+      if (!res.ok) throw new Error(data.error ?? t("integrations.deploy.registrationFailed"));
       setRegistrarDone(registrarPending.domain_name);
       setRegistrarPending(null);
       setRegistrarResults([]);
       // Suggest the newly registered domain as custom domain
       setRegistrarQuery("");
     } catch (err) {
-      setRegistrarError(err instanceof Error ? err.message : "Registration failed");
+      setRegistrarError(err instanceof Error ? err.message : t("integrations.deploy.registrationFailed"));
     } finally {
       setRegistrarConfirming(false);
     }
-  }, [registrarPending]);
+  }, [registrarPending, t]);
 
   const handleRebuildInfra = useCallback(async () => {
     setRebuilding(true);
-    setRebuildMsg("Rebuilding Docker image on Fly... this takes ~60 seconds.");
+    setRebuildMsg(t("integrations.deploy.rebuildingMsg"));
     try {
       const res = await fetch("/api/admin/deploy/fly-live/rebuild", { method: "POST" });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error ?? "Rebuild failed");
-      setRebuildMsg("Infrastructure rebuilt. Content is preserved.");
+      if (!res.ok) throw new Error(body.error ?? t("integrations.deploy.rebuildFailed"));
+      setRebuildMsg(t("integrations.deploy.rebuilt"));
       await loadFlyLiveStatus();
     } catch (err) {
-      setRebuildMsg(`Failed: ${err instanceof Error ? err.message : String(err)}`);
+      setRebuildMsg(t("integrations.deploy.failed", { error: err instanceof Error ? err.message : String(err) }));
     } finally {
       setRebuilding(false);
       setRebuildConfirm(false);
     }
-  }, [loadFlyLiveStatus]);
+  }, [loadFlyLiveStatus, t]);
 
   // Save config via ActionBar save event
   const handleSave = useCallback(async () => {
@@ -413,7 +424,7 @@ export function DeploySettingsPanel() {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "2rem 0", color: "var(--muted-foreground)" }}>
         <Loader2 className="animate-spin" style={{ width: "1rem", height: "1rem" }} />
-        <span style={{ fontSize: "0.8rem" }}>Loading deploy status...</span>
+        <span style={{ fontSize: "0.8rem" }}>{t("integrations.deploy.loading")}</span>
       </div>
     );
   }
@@ -423,19 +434,19 @@ export function DeploySettingsPanel() {
   // The underlying value stays "off" — the user can still pick a different
   // provider explicitly without us touching their config in the background.
   const offLabel = canAutoDeploy && config.deployProvider === "off"
-    ? "GitHub Pages (auto-detected)"
-    : "Off";
+    ? t("integrations.deploy.githubAuto")
+    : t("integrations.deploy.off");
   const deployProviders = [
     { value: "off", label: offLabel },
     { value: "vercel", label: "Vercel" },
     { value: "netlify", label: "Netlify" },
-    { value: "cloudflare-pages", label: "Cloudflare Pages (direct)" },
+    { value: "cloudflare-pages", label: t("integrations.deploy.cfPagesDirect") },
     { value: "github-pages", label: "GitHub Pages" },
-    { value: "flyio-live", label: "Fly.io Live (instant sync)" },
-    { value: "flyio", label: "Fly.io (rebuild)" },
-    { value: "fly-ephemeral", label: "Fly.io (ephemeral builder)" },
-    { value: "cloudflare", label: "Cloudflare (webhook)" },
-    { value: "custom", label: "Custom webhook" },
+    { value: "flyio-live", label: t("integrations.deploy.flyLiveInstant") },
+    { value: "flyio", label: t("integrations.deploy.flyRebuild") },
+    { value: "fly-ephemeral", label: t("integrations.deploy.flyEphemeral") },
+    { value: "cloudflare", label: t("integrations.deploy.cfWebhook") },
+    { value: "custom", label: t("integrations.deploy.customWebhook") },
   ];
 
   const effectiveProvider = config.deployProvider !== "off"
@@ -451,12 +462,12 @@ export function DeploySettingsPanel() {
     "github-pages": "GitHub Pages",
     vercel: "Vercel",
     netlify: "Netlify",
-    flyio: "Fly.io (rebuild)",
+    flyio: t("integrations.deploy.flyRebuild"),
     "flyio-live": "Fly.io Live",
-    "fly-ephemeral": "Fly.io (ephemeral builder)",
-    cloudflare: "Cloudflare (webhook)",
+    "fly-ephemeral": t("integrations.deploy.flyEphemeral"),
+    cloudflare: t("integrations.deploy.cfWebhook"),
     "cloudflare-pages": "Cloudflare Pages",
-    custom: "Custom webhook",
+    custom: t("integrations.deploy.customWebhook"),
   };
 
   const inputStyle = {
@@ -485,9 +496,9 @@ export function DeploySettingsPanel() {
           }}
         >
           <div>
-            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#d97706" }}>Sync endpoint is out of date</div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#d97706" }}>{t("integrations.deploy.driftTitle")}</div>
             <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-              Your Fly container runs sync-endpoint v{flyLiveStatus.version}, but cms-admin now bundles v{flyLiveStatus.expectedVersion}. Rebuild to get the latest fixes.
+              {t("integrations.deploy.driftBody", { version: flyLiveStatus.version ?? "", expected: flyLiveStatus.expectedVersion })}
             </div>
           </div>
           <button
@@ -503,7 +514,7 @@ export function DeploySettingsPanel() {
               cursor: "pointer", whiteSpace: "nowrap",
             }}
           >
-            Rebuild infrastructure →
+            {t("integrations.deploy.rebuildInfraArrow")}
           </button>
         </div>
       )}
@@ -520,9 +531,9 @@ export function DeploySettingsPanel() {
         justifyContent: "space-between",
       }}>
         <div>
-          <div style={{ fontSize: "0.8rem", fontWeight: 600 }}>Docker Deploy Wizard</div>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t("integrations.deploy.wizardTitle")}</div>
           <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-            Deploy a new site to Fly.io with a few clicks — pick a template, configure, and go.
+            {t("integrations.deploy.wizardIntro")}
           </div>
         </div>
         <a
@@ -539,15 +550,15 @@ export function DeploySettingsPanel() {
             whiteSpace: "nowrap",
           }}
         >
-          Open Wizard
+          {t("integrations.deploy.openWizard")}
         </a>
       </div>
 
       {/* ── Provider config ─────────────────────────────── */}
-      <SectionHeading first>Provider</SectionHeading>
+      <SectionHeading first>{t("integrations.deploy.provider")}</SectionHeading>
       <SettingsCard>
         <div>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" }}>Deploy provider</label>
+          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" }}>{t("integrations.deploy.deployProvider")}</label>
           <CustomSelect
             value={config.deployProvider}
             onChange={(v) => updateConfig((c) => ({ ...c, deployProvider: v as DeployProvider }))}
@@ -560,7 +571,7 @@ export function DeploySettingsPanel() {
               background: "color-mix(in srgb, var(--primary) 8%, transparent)",
               color: "var(--muted-foreground)",
             }}>
-              Your site has a build pipeline and a connected GitHub account, so it will deploy to GitHub Pages automatically. Pick a different provider above to override.
+              {t("integrations.deploy.autoConfigured")}
             </p>
           )}
           {config.deployProvider !== "off" && (
@@ -570,28 +581,28 @@ export function DeploySettingsPanel() {
               background: "color-mix(in srgb, var(--primary) 8%, transparent)",
               color: "var(--muted-foreground)",
             }}>
-              {config.deployProvider === "vercel" && "Recommended for Next.js and static sites. Supports SSR, API routes, and edge functions."}
-              {config.deployProvider === "netlify" && "Supports Next.js via adapter, static sites, and serverless functions."}
-              {config.deployProvider === "flyio" && "Docker-based rebuild on every deploy. Best for SSR apps (Next.js, Remix) that genuinely need Docker. Slow for content edits — use Fly.io Live for static sites."}
-              {config.deployProvider === "flyio-live" && "Your site runs on Fly.io. The first deploy takes about a minute; every edit after goes live in under a second. Best for EU hosting."}
-              {config.deployProvider === "fly-ephemeral" && "A short-lived Fly Machine builds a container image (Next.js standalone, Bun + Hono, or your own Dockerfile) and pushes to GHCR, then your target Fly app rolls to the new tag. Requires GHCR_PUSH_TOKEN + FLY_API_TOKEN secrets on cms-admin."}
-              {config.deployProvider === "cloudflare" && "Legacy webhook-only — just POSTs to a Cloudflare Pages deploy hook URL. Prefer 'Cloudflare Pages (direct)' for full integration."}
-              {config.deployProvider === "cloudflare-pages" && "Direct Cloudflare Pages API upload. 300+ global edge PoPs, free tier covers most small sites. Fastest option for pure-static sites worldwide."}
-              {config.deployProvider === "github-pages" && canAutoDeploy && "Ready to deploy — GitHub connected. A repository will be created automatically if needed, and your site files pushed to GitHub Pages in one click."}
-              {config.deployProvider === "github-pages" && !canAutoDeploy && "Static files only. Connect GitHub above, or provide a token and repository manually."}
-              {config.deployProvider === "custom" && "Any service that accepts a POST request to trigger a build."}
+              {config.deployProvider === "vercel" && t("integrations.deploy.descVercel")}
+              {config.deployProvider === "netlify" && t("integrations.deploy.descNetlify")}
+              {config.deployProvider === "flyio" && t("integrations.deploy.descFly")}
+              {config.deployProvider === "flyio-live" && t("integrations.deploy.descFlyLive")}
+              {config.deployProvider === "fly-ephemeral" && t("integrations.deploy.descFlyEphemeral")}
+              {config.deployProvider === "cloudflare" && t("integrations.deploy.descCloudflare")}
+              {config.deployProvider === "cloudflare-pages" && t("integrations.deploy.descCfPages")}
+              {config.deployProvider === "github-pages" && canAutoDeploy && t("integrations.deploy.descGithubReady")}
+              {config.deployProvider === "github-pages" && !canAutoDeploy && t("integrations.deploy.descGithubManual")}
+              {config.deployProvider === "custom" && t("integrations.deploy.descCustom")}
             </p>
           )}
         </div>
 
         {needsHookUrl && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Deploy hook URL</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.hookUrl")}</label>
             <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-              {config.deployProvider === "vercel" && "Vercel → Project → Settings → Git → Deploy Hooks"}
-              {config.deployProvider === "netlify" && "Netlify → Site → Build & deploy → Build hooks"}
-              {config.deployProvider === "cloudflare" && "Cloudflare → Pages → Settings → Builds → Deploy hooks"}
-              {config.deployProvider === "custom" && "Any URL that accepts a POST request to trigger a build"}
+              {config.deployProvider === "vercel" && t("integrations.deploy.hookVercel")}
+              {config.deployProvider === "netlify" && t("integrations.deploy.hookNetlify")}
+              {config.deployProvider === "cloudflare" && t("integrations.deploy.hookCloudflare")}
+              {config.deployProvider === "custom" && t("integrations.deploy.hookCustom")}
             </p>
             <input data-testid="deploy-input-1" type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
               placeholder="https://api.vercel.com/v1/integrations/deploy/..." style={inputStyle} />
@@ -601,25 +612,25 @@ export function DeploySettingsPanel() {
         {needsToken && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.apiToken")}</label>
               {(config.deployProvider === "flyio" || config.deployProvider === "flyio-live") && (
                 <a data-testid="flyio-token-link" href="https://fly.io/dashboard/personal/tokens" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get token <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("integrations.deploy.getToken")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               )}
               {config.deployProvider === "github-pages" && (
                 <a data-testid="github-token-link" href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("integrations.deploy.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               )}
             </div>
             <input data-testid="deploy-input-2" type="password" value={config.deployApiToken} onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}
-              placeholder="Token..." style={{ ...inputStyle, fontFamily: "inherit" }} />
+              placeholder={t("integrations.deploy.tokenPlaceholder")} style={{ ...inputStyle, fontFamily: "inherit" }} />
           </div>
         )}
 
         {needsAppName && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
-              {config.deployProvider === "flyio" || config.deployProvider === "flyio-live" ? "App name" : "Repository (owner/repo)"}
+              {config.deployProvider === "flyio" || config.deployProvider === "flyio-live" ? t("integrations.deploy.appName") : t("integrations.deploy.repository")}
             </label>
             <input data-testid="deploy-input-3" type="text" value={config.deployAppName} onChange={(e) => updateConfig((c) => ({ ...c, deployAppName: e.target.value }))}
               placeholder={config.deployProvider === "flyio" || config.deployProvider === "flyio-live" ? "my-app" : "owner/repo"} style={inputStyle} />
@@ -628,18 +639,18 @@ export function DeploySettingsPanel() {
 
         {(config.deployProvider === "flyio" || config.deployProvider === "flyio-live") && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Organization</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.organization")}</label>
             <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Fly.io org slug — auto-detected from token if left empty
+              {t("integrations.deploy.orgHelp")}
             </p>
             <input data-testid="deploy-input-4" type="text" value={config.deployFlyOrg} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyOrg: e.target.value }))}
-              placeholder="Auto-detect from token" style={inputStyle} />
+              placeholder={t("integrations.deploy.orgPlaceholder")} style={inputStyle} />
           </div>
         )}
 
         {config.deployProvider === "flyio" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Or: Deploy hook URL (alternative)</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.hookAlt")}</label>
             <input data-testid="deploy-input-5" type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
               placeholder="https://..." style={inputStyle} />
           </div>
@@ -648,30 +659,30 @@ export function DeploySettingsPanel() {
         {config.deployProvider === "flyio-live" && (
           <>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Region</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.region")}</label>
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-                Fly region code for the volume. Cannot be changed after first deploy.
+                {t("integrations.deploy.regionHelp")}
               </p>
               <input data-testid="deploy-input-6" type="text" value={config.deployFlyLiveRegion} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveRegion: e.target.value }))}
                 placeholder="arn" style={inputStyle} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Volume name</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.volumeName")}</label>
               <input data-testid="deploy-input-7" type="text" value={config.deployFlyLiveVolumeName} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveVolumeName: e.target.value }))}
                 placeholder="site_data" style={inputStyle} />
             </div>
             {config.deployFlyLiveSyncSecret && (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Sync secret status</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.syncSecret")}</label>
                 <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-                  HMAC secret shared with the Fly container. Generated on first deploy. Rotate from the "Rebuild infrastructure" action (not yet in UI — use CLI or regenerate manually).
+                  {t("integrations.deploy.syncSecretHelp")}
                 </p>
                 <div style={{
                   fontSize: "0.7rem", fontFamily: "monospace",
                   padding: "0.3rem 0.5rem", borderRadius: "4px",
                   background: "var(--muted)", color: "var(--muted-foreground)",
                 }}>
-                  {config.deployFlyLiveSyncSecret.slice(0, 12)}…{config.deployFlyLiveSyncSecret.slice(-4)} (configured)
+                  {config.deployFlyLiveSyncSecret.slice(0, 12)}…{config.deployFlyLiveSyncSecret.slice(-4)} {t("integrations.deploy.configured")}
                 </div>
               </div>
             )}
@@ -682,18 +693,18 @@ export function DeploySettingsPanel() {
           <>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.apiToken")}</label>
                 <a data-testid="cloudflare-token-link" href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get token <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("integrations.deploy.getToken")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-                Permission: "Account → Cloudflare Pages → Edit"
+                {t("integrations.deploy.cfPermission")}
               </p>
               <input data-testid="deploy-input-8" type="password" value={config.deployApiToken} onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}
-                placeholder="Token..." style={{ ...inputStyle, fontFamily: "inherit" }} />
+                placeholder={t("integrations.deploy.tokenPlaceholder")} style={{ ...inputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Account ID</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.accountId")}</label>
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0, display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap" }}>
                 <a
                   data-testid="cloudflare-dashboard-link"
@@ -702,17 +713,17 @@ export function DeploySettingsPanel() {
                   rel="noopener noreferrer"
                   style={{ color: "var(--muted-foreground)", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}
                 >
-                  Cloudflare dashboard <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
+                  {t("integrations.deploy.cfDashboard")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
                 </a>
-                → right sidebar → Account ID
+                → {t("integrations.deploy.cfAccountIdPath")}
               </p>
               <input data-testid="deploy-input-9" type="text" value={config.deployCloudflareAccountId} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareAccountId: e.target.value }))}
                 placeholder="abcdef0123456789..." style={inputStyle} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Project name</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.projectName")}</label>
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-                Lowercase letters, digits, hyphens. Auto-created on first deploy if missing.
+                {t("integrations.deploy.projectNameHelp")}
               </p>
               <input data-testid="deploy-input-10" type="text" value={config.deployCloudflareProjectName} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareProjectName: e.target.value }))}
                 placeholder="my-site" style={inputStyle} />
@@ -724,10 +735,13 @@ export function DeploySettingsPanel() {
       {/* ── F133: Fly Live infrastructure status ────────── */}
       {config.deployProvider === "flyio-live" && !flyLiveStatus?.provisioned && (
         <>
-          <SectionHeading>Infrastructure</SectionHeading>
+          <SectionHeading>{t("integrations.deploy.infrastructure")}</SectionHeading>
           <SettingsCard>
             <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
-              Not provisioned yet. Click <strong style={{ color: "var(--foreground)" }}>Deploy now</strong> below to spin up the Fly app and volume. After that, this card will show the server status and a <strong style={{ color: "var(--foreground)" }}>Rebuild infrastructure</strong> button.
+              {fillNodes(t("integrations.deploy.notProvisioned"), {
+                deployNow: <strong style={{ color: "var(--foreground)" }}>{t("integrations.deploy.deployNow")}</strong>,
+                rebuild: <strong style={{ color: "var(--foreground)" }}>{t("integrations.deploy.rebuildInfra")}</strong>,
+              })}
             </div>
           </SettingsCard>
         </>
@@ -735,28 +749,28 @@ export function DeploySettingsPanel() {
 
       {config.deployProvider === "flyio-live" && flyLiveStatus?.provisioned && (
         <div data-rebuild-infra-section>
-          <SectionHeading>Infrastructure</SectionHeading>
+          <SectionHeading>{t("integrations.deploy.infrastructure")}</SectionHeading>
           <SettingsCard>
             <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.4rem 1rem", fontSize: "0.75rem" }}>
-              <span style={{ color: "var(--muted-foreground)" }}>Status</span>
+              <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.status")}</span>
               <span>
                 {flyLiveStatus.reachable
-                  ? <span style={{ color: "#16a34a" }}>● Reachable</span>
-                  : <span style={{ color: "#dc2626" }}>● Unreachable — {flyLiveStatus.error ?? "no response"}</span>
+                  ? <span style={{ color: "#16a34a" }}>● {t("integrations.deploy.reachable")}</span>
+                  : <span style={{ color: "#dc2626" }}>● {t("integrations.deploy.unreachable", { error: flyLiveStatus.error ?? t("integrations.deploy.noResponse") })}</span>
                 }
               </span>
-              <span style={{ color: "var(--muted-foreground)" }}>Server version</span>
+              <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.serverVersion")}</span>
               <span style={{ fontFamily: "monospace" }}>
-                {flyLiveStatus.version ?? "unknown"}
+                {flyLiveStatus.version ?? t("integrations.deploy.unknown")}
                 {flyLiveStatus.isOutdated && (
                   <span style={{ marginLeft: "0.5rem", color: "#d97706", fontSize: "0.7rem" }}>
-                    (admin bundles {flyLiveStatus.expectedVersion})
+                    {t("integrations.deploy.adminBundles", { version: flyLiveStatus.expectedVersion })}
                   </span>
                 )}
               </span>
-              <span style={{ color: "var(--muted-foreground)" }}>Region</span>
+              <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.region")}</span>
               <span style={{ fontFamily: "monospace" }}>{flyLiveStatus.region}</span>
-              <span style={{ color: "var(--muted-foreground)" }}>Volume</span>
+              <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.volume")}</span>
               <span style={{ fontFamily: "monospace" }}>{flyLiveStatus.volumeName}</span>
               {flyLiveStatus.url && (
                 <>
@@ -768,9 +782,9 @@ export function DeploySettingsPanel() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid var(--border)" }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.75rem", fontWeight: 500 }}>Rebuild infrastructure</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.rebuildInfra")}</div>
                 <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>
-                  Pushes a fresh Docker image (web server + sync endpoint). Content on the volume is preserved. Takes ~60 s.
+                  {t("integrations.deploy.rebuildHelp")}
                 </div>
               </div>
               {!rebuildConfirm && !rebuilding && (
@@ -784,22 +798,22 @@ export function DeploySettingsPanel() {
                     cursor: "pointer", whiteSpace: "nowrap",
                   }}
                 >
-                  Rebuild
+                  {t("integrations.deploy.rebuild")}
                 </button>
               )}
               {rebuildConfirm && !rebuilding && (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Rebuild?</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("integrations.deploy.rebuildConfirm")}</span>
                   <button data-testid="deploy-button-1" onClick={handleRebuildInfra}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("integrations.deploy.yes")}</button>
                   <button data-testid="deploy-button-2" onClick={() => setRebuildConfirm(false)}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("integrations.deploy.no")}</button>
                 </div>
               )}
               {rebuilding && (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
                   <Loader2 className="animate-spin" style={{ width: "0.8rem", height: "0.8rem" }} />
-                  Rebuilding...
+                  {t("integrations.deploy.rebuilding")}
                 </div>
               )}
             </div>
@@ -819,37 +833,37 @@ export function DeploySettingsPanel() {
       {/* ── Connect GitHub (when needed and no token) ───── */}
       {effectiveProvider === "github-pages" && !hasGitHubToken && !needsToken && (
         <>
-          <SectionHeading>GitHub Connection</SectionHeading>
+          <SectionHeading>{t("integrations.deploy.githubConnection")}</SectionHeading>
           <SettingsCard>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
-                GitHub Pages hosts your site for free. Connect your GitHub account and the CMS will create a repository and deploy automatically.
+                {t("integrations.deploy.githubIntro")}
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
                   <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--primary)", minWidth: "1.25rem" }}>1</span>
                   <div>
-                    <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>Have a GitHub account</p>
+                    <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>{t("integrations.deploy.step1")}</p>
                     <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-                      Don&apos;t have one? <a data-testid="github-signup-link" href="https://github.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "none" }}>Create a free account →</a>
+                      {t("integrations.deploy.noAccount")} <a data-testid="github-signup-link" href="https://github.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "none" }}>{t("integrations.deploy.createAccount")}</a>
                     </p>
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
                   <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--primary)", minWidth: "1.25rem" }}>2</span>
                   <div>
-                    <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>Connect your account</p>
+                    <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>{t("integrations.deploy.step2")}</p>
                     <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-                      Authorizes the CMS to create a repository and push your site files.
+                      {t("integrations.deploy.step2Help")}
                     </p>
                   </div>
                 </div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
                   <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--primary)", minWidth: "1.25rem" }}>3</span>
                   <div>
-                    <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>Click Deploy</p>
+                    <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>{t("integrations.deploy.step3")}</p>
                     <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-                      The CMS creates the repo, builds your site, and enables GitHub Pages — all in one click.
+                      {t("integrations.deploy.step3Help")}
                     </p>
                   </div>
                 </div>
@@ -866,7 +880,7 @@ export function DeploySettingsPanel() {
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
-                Connect GitHub
+                {t("integrations.deploy.connectGithub")}
               </a>
             </div>
           </SettingsCard>
@@ -876,7 +890,7 @@ export function DeploySettingsPanel() {
       {/* ── Deploy action ────────────────────────────────── */}
       {effectiveProvider !== "off" && (
         <>
-          <SectionHeading>Deploy</SectionHeading>
+          <SectionHeading>{t("integrations.deploy.deploy")}</SectionHeading>
           <SettingsCard>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
@@ -888,7 +902,7 @@ export function DeploySettingsPanel() {
                     <span style={{
                       fontSize: "0.6rem", padding: "0.1rem 0.4rem", borderRadius: "9999px",
                       background: "var(--primary)", color: "#fff", fontWeight: 600,
-                    }}>AUTO</span>
+                    }}>{t("integrations.deploy.auto")}</span>
                   )}
                 </div>
                 {config.deployAppName && (
@@ -911,8 +925,8 @@ export function DeploySettingsPanel() {
                 }}
               >
                 {deploying
-                  ? <><Loader2 className="animate-spin" style={{ width: "0.85rem", height: "0.85rem" }} /> Deploying...</>
-                  : <><Rocket style={{ width: "0.85rem", height: "0.85rem" }} /> Deploy now</>}
+                  ? <><Loader2 className="animate-spin" style={{ width: "0.85rem", height: "0.85rem" }} /> {t("integrations.deploy.deploying")}</>
+                  : <><Rocket style={{ width: "0.85rem", height: "0.85rem" }} /> {t("integrations.deploy.deployNow")}</>}
               </button>
             </div>
 
@@ -932,7 +946,7 @@ export function DeploySettingsPanel() {
                 onChange={(e) => updateConfig((c) => ({ ...c, deployOnSave: e.target.checked }))}
                 style={{ accentColor: "var(--primary)" }}
               />
-              <span style={{ fontSize: "0.8rem" }}>Auto-deploy when content is saved</span>
+              <span style={{ fontSize: "0.8rem" }}>{t("integrations.deploy.deployOnSave")}</span>
             </label>
           </SettingsCard>
         </>
@@ -941,12 +955,12 @@ export function DeploySettingsPanel() {
       {/* ── Custom domain ────────────────────────────────── */}
       {["github-pages", "flyio", "flyio-live", "vercel", "netlify", "cloudflare-pages"].includes(effectiveProvider) && (
         <>
-          <SectionHeading id="custom-domain">Custom Domain</SectionHeading>
+          <SectionHeading id="custom-domain">{t("integrations.deploy.customDomain")}</SectionHeading>
           <SettingsCard>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
               {effectiveProvider === "github-pages"
-                ? <>Use your own domain instead of <code style={{ fontSize: "0.7rem" }}>username.github.io/repo/</code>. Set up a <strong>CNAME</strong> record:</>
-                : <>Use your own domain instead of the default. Set up a <strong>CNAME</strong> record:</>
+                ? <>{fillNodes(t("integrations.deploy.domainIntroGithub"), { url: <code style={{ fontSize: "0.7rem" }}>username.github.io/repo/</code>, cname: <strong>CNAME</strong> })}</>
+                : <>{fillNodes(t("integrations.deploy.domainIntro"), { cname: <strong>CNAME</strong> })}</>
               }
             </p>
             <div style={{
@@ -954,9 +968,9 @@ export function DeploySettingsPanel() {
               borderRadius: "5px", background: "var(--background)", border: "1px solid var(--border)",
               color: "var(--foreground)", lineHeight: 1.6,
             }}>
-              <span style={{ color: "var(--muted-foreground)" }}>Type:</span> CNAME<br />
-              <span style={{ color: "var(--muted-foreground)" }}>Name:</span> {dnsStatus?.subdomain ?? "your-subdomain"}<br />
-              <span style={{ color: "var(--muted-foreground)" }}>Target:</span> {dnsStatus?.expectedTarget ?? (
+              <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.dnsType")}</span> CNAME<br />
+              <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.dnsName")}</span> {dnsStatus?.subdomain ?? "your-subdomain"}<br />
+              <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.dnsTarget")}</span> {dnsStatus?.expectedTarget ?? (
                 effectiveProvider === "github-pages"
                   ? "your-username.github.io."
                   : effectiveProvider === "vercel"
@@ -974,7 +988,7 @@ export function DeploySettingsPanel() {
                 type="text"
                 value={config.deployCustomDomain}
                 onChange={(e) => updateConfig((c) => ({ ...c, deployCustomDomain: e.target.value }))}
-                placeholder="No custom domain — using default"
+                placeholder={t("integrations.deploy.domainPlaceholder")}
                 style={{ ...inputStyle, flex: 1, fontStyle: config.deployCustomDomain ? "normal" : "italic" }}
               />
               {config.deployCustomDomain && (
@@ -987,7 +1001,7 @@ export function DeploySettingsPanel() {
               const suggested = `${(config.deployAppName.split("/")[1] ?? "my-site").replace(/-site$/, "")}.webhouse.app`;
               return (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.65rem", color: "var(--muted-foreground)" }}>
-                  <span>Suggestion:</span>
+                  <span>{t("integrations.deploy.suggestion")}</span>
                   <button
                     data-testid="use-suggested-domain-button"
                     type="button"
@@ -1000,7 +1014,7 @@ export function DeploySettingsPanel() {
                       cursor: "pointer",
                     }}
                   >
-                    + Use {suggested}
+                    + {t("integrations.deploy.useSuggested", { domain: suggested })}
                   </button>
                 </div>
               );
@@ -1010,26 +1024,26 @@ export function DeploySettingsPanel() {
             {dnsStatus?.available && config.deployCustomDomain && (
               <div style={{ fontSize: "0.65rem", marginTop: "-0.1rem" }}>
                 {domainCheck.state === "checking" && (
-                  <span style={{ color: "var(--muted-foreground)" }}>Checking availability…</span>
+                  <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.checkingAvailability")}</span>
                 )}
                 {domainCheck.state === "available" && (
-                  <span style={{ color: "#16a34a" }}>✓ {domainCheck.subdomain}.{domainCheck.zone} is available</span>
+                  <span style={{ color: "#16a34a" }}>✓ {t("integrations.deploy.domainAvailable", { domain: `${domainCheck.subdomain}.${domainCheck.zone}` })}</span>
                 )}
                 {domainCheck.state === "ours" && (
-                  <span style={{ color: "#16a34a" }}>✓ Already pointed to this site</span>
+                  <span style={{ color: "#16a34a" }}>✓ {t("integrations.deploy.alreadyOurs")}</span>
                 )}
                 {domainCheck.state === "taken" && (
                   <span style={{ color: "#dc2626" }}>
-                    ✗ Already in use ({domainCheck.conflicts?.[0]?.type} → {domainCheck.conflicts?.[0]?.value}). Pick a different subdomain.
+                    ✗ {t("integrations.deploy.domainTaken", { type: domainCheck.conflicts?.[0]?.type ?? "", value: domainCheck.conflicts?.[0]?.value ?? "" })}
                   </span>
                 )}
                 {domainCheck.state === "no-zone" && (
                   <span style={{ color: "var(--muted-foreground)" }}>
-                    Zone {domainCheck.zone} not managed here — set the CNAME at your registrar.
+                    {t("integrations.deploy.zoneNotManaged", { zone: domainCheck.zone ?? "" })}
                   </span>
                 )}
                 {domainCheck.state === "invalid" && config.deployCustomDomain.includes(".") && (
-                  <span style={{ color: "var(--muted-foreground)" }}>Invalid domain</span>
+                  <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.invalidDomain")}</span>
                 )}
               </div>
             )}
@@ -1049,15 +1063,15 @@ export function DeploySettingsPanel() {
               }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: "0.72rem", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    {dnsStatus.state === "ok" && <span style={{ color: "#16a34a" }}>● CNAME record live</span>}
-                    {dnsStatus.state === "missing" && <span style={{ color: "#d97706" }}>● CNAME record not yet created</span>}
-                    {dnsStatus.state === "mismatch" && <span style={{ color: "#d97706" }}>● CNAME points elsewhere</span>}
-                    {dnsStatus.state === "no-zone" && <span style={{ color: "var(--muted-foreground)" }}>● Zone not managed by our DNS — set this CNAME manually at your registrar</span>}
-                    {dnsStatus.state === "no-target" && <span style={{ color: "var(--muted-foreground)" }}>● Configure the deploy provider before creating the CNAME</span>}
+                    {dnsStatus.state === "ok" && <span style={{ color: "#16a34a" }}>● {t("integrations.deploy.cnameLive")}</span>}
+                    {dnsStatus.state === "missing" && <span style={{ color: "#d97706" }}>● {t("integrations.deploy.cnameMissing")}</span>}
+                    {dnsStatus.state === "mismatch" && <span style={{ color: "#d97706" }}>● {t("integrations.deploy.cnameMismatch")}</span>}
+                    {dnsStatus.state === "no-zone" && <span style={{ color: "var(--muted-foreground)" }}>● {t("integrations.deploy.cnameNoZone")}</span>}
+                    {dnsStatus.state === "no-target" && <span style={{ color: "var(--muted-foreground)" }}>● {t("integrations.deploy.cnameNoTarget")}</span>}
                   </div>
                   {dnsStatus.currentTarget && dnsStatus.state === "mismatch" && (
                     <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.2rem", fontFamily: "monospace" }}>
-                      Current: {dnsStatus.currentTarget} → Expected: {dnsStatus.expectedTarget}
+                      {t("integrations.deploy.cnameCurrentExpected", { current: dnsStatus.currentTarget, expected: dnsStatus.expectedTarget ?? "" })}
                     </div>
                   )}
                 </div>
@@ -1066,7 +1080,7 @@ export function DeploySettingsPanel() {
                     data-testid="create-cname-button"
                     onClick={handleCreateCname}
                     disabled={dnsBusy || domainCheck.state === "taken"}
-                    title={domainCheck.state === "taken" ? "Subdomain is already used by another site" : undefined}
+                    title={domainCheck.state === "taken" ? t("integrations.deploy.subdomainUsed") : undefined}
                     style={{
                       padding: "0.35rem 0.7rem", borderRadius: "5px",
                       background: domainCheck.state === "taken" ? "var(--muted)" : "var(--primary)",
@@ -1076,7 +1090,7 @@ export function DeploySettingsPanel() {
                       opacity: dnsBusy ? 0.6 : 1,
                     }}
                   >
-                    {dnsBusy ? "..." : dnsStatus.state === "mismatch" ? "Update CNAME" : "Create CNAME"}
+                    {dnsBusy ? "..." : dnsStatus.state === "mismatch" ? t("integrations.deploy.updateCname") : t("integrations.deploy.createCname")}
                   </button>
                 )}
                 {dnsStatus.zoneManagedByApi && dnsStatus.state === "ok" && (
@@ -1108,7 +1122,7 @@ export function DeploySettingsPanel() {
 
             {config.deployCustomDomain && (
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "0.4rem 0 0" }}>
-                Deploys will serve on <strong>{config.deployCustomDomain}</strong> with root paths.
+                {fillNodes(t("integrations.deploy.servesOn"), { domain: <strong>{config.deployCustomDomain}</strong> })}
               </p>
             )}
           </SettingsCard>
@@ -1118,10 +1132,10 @@ export function DeploySettingsPanel() {
       {/* ── Domain Registrar (only when DNS API configured) ─────────── */}
       {dnsStatus?.available && ["github-pages", "flyio", "flyio-live", "vercel", "netlify", "cloudflare-pages"].includes(effectiveProvider) && (
         <>
-          <SectionHeading>Register a Domain</SectionHeading>
+          <SectionHeading>{t("integrations.deploy.registerDomain")}</SectionHeading>
           <SettingsCard>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Search for and register a new domain via Cloudflare Registrar. Purchases are non-refundable and billed immediately.
+              {t("integrations.deploy.registrarIntro")}
             </p>
 
             {registrarDone && (
@@ -1133,7 +1147,7 @@ export function DeploySettingsPanel() {
                 display: "flex", alignItems: "center", gap: "0.4rem",
               }}>
                 <Check style={{ width: "0.85rem", height: "0.85rem", flexShrink: 0 }} />
-                <strong>{registrarDone}</strong> registered successfully. It may take a few minutes to propagate.
+                {fillNodes(t("integrations.deploy.registered"), { domain: <strong>{registrarDone}</strong> })}
               </div>
             )}
 
@@ -1147,7 +1161,7 @@ export function DeploySettingsPanel() {
                     value={registrarQuery}
                     onChange={(e) => setRegistrarQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleRegistrarSearch()}
-                    placeholder="Search domains — e.g. myblog"
+                    placeholder={t("integrations.deploy.searchPlaceholder")}
                     style={{
                       flex: 1, fontSize: "0.8rem", padding: "0.45rem 0.65rem",
                       borderRadius: "5px", border: "1px solid var(--border)",
@@ -1171,7 +1185,7 @@ export function DeploySettingsPanel() {
                     {registrarSearching
                       ? <Loader2 className="animate-spin" style={{ width: "0.8rem", height: "0.8rem" }} />
                       : <Search style={{ width: "0.8rem", height: "0.8rem" }} />}
-                    {registrarSearching ? "Searching..." : "Search"}
+                    {registrarSearching ? t("integrations.deploy.searching") : t("integrations.deploy.search")}
                   </button>
                 </div>
 
@@ -1194,13 +1208,13 @@ export function DeploySettingsPanel() {
                             {r.name}
                           </span>
                           {!r.registrable && (
-                            <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)" }}>taken</span>
+                            <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)" }}>{t("integrations.deploy.taken")}</span>
                           )}
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
                           {r.pricing && r.registrable && (
                             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-                              {r.pricing.currency} {r.pricing.registration_cost}/yr
+                              {t("integrations.deploy.perYear", { currency: r.pricing.currency, price: r.pricing.registration_cost })}
                             </span>
                           )}
                           {r.registrable && (
@@ -1214,7 +1228,7 @@ export function DeploySettingsPanel() {
                                 cursor: "pointer",
                               }}
                             >
-                              Register
+                              {t("integrations.deploy.register")}
                             </button>
                           )}
                         </div>
@@ -1233,15 +1247,15 @@ export function DeploySettingsPanel() {
                 background: "var(--background)",
                 display: "flex", flexDirection: "column", gap: "0.5rem",
               }}>
-                <div style={{ fontSize: "0.75rem", fontWeight: 600 }}>Confirm purchase</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 600 }}>{t("integrations.deploy.confirmPurchase")}</div>
                 <div style={{ fontSize: "0.8rem" }}>
-                  Domain: <strong style={{ fontFamily: "monospace" }}>{registrarPending.domain_name}</strong>
+                  {t("integrations.deploy.domainLabel")} <strong style={{ fontFamily: "monospace" }}>{registrarPending.domain_name}</strong>
                 </div>
                 <div style={{ fontSize: "0.8rem" }}>
-                  Price: <strong>{registrarPending.currency} {registrarPending.price}/yr</strong>
+                  {t("integrations.deploy.priceLabel")} <strong>{t("integrations.deploy.perYear", { currency: registrarPending.currency, price: registrarPending.price })}</strong>
                 </div>
                 <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-                  This purchase is <strong>non-refundable</strong> and will be charged immediately to the Cloudflare account.
+                  {fillNodes(t("integrations.deploy.nonRefundable"), { nonRefundable: <strong>{t("integrations.deploy.nonRefundableWord")}</strong> })}
                 </p>
                 {registrarError && (
                   <div style={{ fontSize: "0.65rem", color: "var(--destructive)" }}>{registrarError}</div>
@@ -1261,7 +1275,7 @@ export function DeploySettingsPanel() {
                     }}
                   >
                     {registrarConfirming && <Loader2 className="animate-spin" style={{ width: "0.75rem", height: "0.75rem" }} />}
-                    {registrarConfirming ? "Registering..." : "Yes, register domain"}
+                    {registrarConfirming ? t("integrations.deploy.registering") : t("integrations.deploy.yesRegister")}
                   </button>
                   <button
                     data-testid="cancel-domain-registration-button"
@@ -1273,7 +1287,7 @@ export function DeploySettingsPanel() {
                       cursor: "pointer",
                     }}
                   >
-                    Cancel
+                    {t("integrations.deploy.cancel")}
                   </button>
                 </div>
               </div>
@@ -1284,11 +1298,11 @@ export function DeploySettingsPanel() {
 
       {/* ── Deploy history (only when a provider is configured) ── */}
       {effectiveProvider !== "off" && <>
-      <SectionHeading>Deploy History</SectionHeading>
+      <SectionHeading>{t("integrations.deploy.history")}</SectionHeading>
       <SettingsCard>
         {deploys.length === 0 ? (
           <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
-            No deploys yet. Click &quot;Deploy now&quot; to publish your site.
+            {t("integrations.deploy.noDeploys")}
           </p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
@@ -1299,9 +1313,9 @@ export function DeploySettingsPanel() {
               textTransform: "uppercase", letterSpacing: "0.05em",
               borderBottom: "1px solid var(--border)",
             }}>
-              <span>Status</span>
-              <span>Time</span>
-              <span>Duration</span>
+              <span>{t("integrations.deploy.status")}</span>
+              <span>{t("integrations.deploy.time")}</span>
+              <span>{t("integrations.deploy.duration")}</span>
               <span>URL</span>
             </div>
             {deploys.slice(0, 10).map((d) => (
@@ -1337,7 +1351,7 @@ export function DeploySettingsPanel() {
         {deploys.length > 0 && (
           <button data-testid="deploy-button-3" type="button" onClick={loadData}
             style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0", border: "none", background: "none", color: "var(--muted-foreground)", fontSize: "0.7rem", cursor: "pointer" }}>
-            <RefreshCw style={{ width: "0.65rem", height: "0.65rem" }} /> Refresh
+            <RefreshCw style={{ width: "0.65rem", height: "0.65rem" }} /> {t("integrations.deploy.refresh")}
           </button>
         )}
       </SettingsCard>
@@ -1346,7 +1360,7 @@ export function DeploySettingsPanel() {
       {/* ── Browser push notifications ── */}
       {effectiveProvider !== "off" && (
         <>
-          <SectionHeading>Notifications</SectionHeading>
+          <SectionHeading>{t("integrations.deploy.notifications")}</SectionHeading>
           <SettingsCard>
             <PushSubscriptionToggle />
           </SettingsCard>
@@ -1371,12 +1385,13 @@ export function DeploySettingsPanel() {
 }
 
 function CopyButton({ text }: { text: string }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   return (
     <button
       data-testid="copy-domain-button"
       type="button"
-      title="Copy to clipboard"
+      title={t("integrations.deploy.copyToClipboard")}
       onClick={async () => {
         await navigator.clipboard.writeText(text);
         setCopied(true);

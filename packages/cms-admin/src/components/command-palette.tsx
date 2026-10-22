@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { switchSite, switchOrg } from "@/lib/switch-context";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useCapabilities } from "@/hooks/use-capabilities";
+import { useT } from "@/lib/i18n-context";
 
 /* ─── Quick actions (Spotlight-style) ────────────────────────── */
 
@@ -38,75 +39,75 @@ interface QuickAction {
 const ICON_SIZE = { width: "0.9rem", height: "0.9rem" };
 const MUTED = "var(--muted-foreground)";
 
-function buildQuickActions(logout: () => void): QuickAction[] {
+function buildQuickActions(logout: () => void, t: (key: string, vars?: Record<string, string | number>) => string): QuickAction[] {
   return [
     // Navigation
-    { id: "nav-dashboard", label: "Dashboard", sublabel: "Overview", category: "navigation", icon: <LayoutDashboard style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin", keywords: ["home", "oversigt"], featured: true },
-    { id: "nav-sites", label: "Sites", sublabel: "Manage sites", category: "navigation", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["site", "sider"] },
-    { id: "nav-agents", capability: "agents", label: "AI Agents", sublabel: "Automated content generation", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents", keywords: ["agent", "ai", "bot", "automation"], featured: true },
+    { id: "nav-dashboard", label: t("shell.commandPalette.items.navDashboard.label"), sublabel: t("shell.commandPalette.items.navDashboard.sublabel"), category: "navigation", icon: <LayoutDashboard style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin", keywords: ["home", "oversigt"], featured: true },
+    { id: "nav-sites", label: t("shell.commandPalette.items.navSites.label"), sublabel: t("shell.commandPalette.items.navSites.sublabel"), category: "navigation", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["site", "sider"] },
+    { id: "nav-agents", capability: "agents", label: t("shell.commandPalette.items.navAgents.label"), sublabel: t("shell.commandPalette.items.navAgents.sublabel"), category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents", keywords: ["agent", "ai", "bot", "automation"], featured: true },
     // Phase 6 — Templates and Workflows are tabs on /admin/agents but
     // it's nice to deep-link to them from the palette so curators can
     // jump straight in. The localStorage key cms:agents-tab is read by
     // AgentsTabs on mount, so we set it before navigating.
-    { id: "nav-agent-templates", capability: "agents", label: "Agent Templates", sublabel: "Local + marketplace agent presets", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["template", "templates", "marketplace", "preset", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "templates"); } catch {} window.location.href = "/admin/agents"; } },
-    { id: "nav-workflows", capability: "agents", label: "Agent Workflows", sublabel: "Multi-agent pipelines", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["workflow", "workflows", "pipeline", "chain", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); } catch {} window.location.href = "/admin/agents"; } },
-    { id: "nav-media", label: "Media", sublabel: "Images and files", category: "navigation", icon: <Image style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/media", keywords: ["billeder", "images", "files", "upload"], featured: true },
-    { id: "nav-ints", capability: "interactives", label: "Interactives", sublabel: "HTML interactives", category: "navigation", icon: <Puzzle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/interactives", keywords: ["ints", "interactive", "html"] },
-    { id: "nav-calendar", capability: "scheduling", label: "Calendar", sublabel: "Scheduled content", category: "navigation", icon: <Calendar style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/scheduled", keywords: ["kalender", "schedule", "planned"], featured: true },
-    { id: "nav-curation", capability: "ai", label: "Curation Queue", sublabel: "Review AI-generated content", category: "navigation", icon: <ListChecks style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/curation", keywords: ["queue", "review", "approve"] },
-    { id: "nav-chat", capability: "chat", label: "Chat", sublabel: "Chat with your site", category: "navigation", icon: <Terminal style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["chat", "ai", "spørg"], featured: true, action: () => { window.dispatchEvent(new CustomEvent("cms:set-admin-mode", { detail: "chat" })); } },
-    { id: "nav-seo", capability: "seo", label: "SEO", sublabel: "SEO dashboard & optimization", category: "navigation", icon: <Search style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/seo", keywords: ["seo", "meta", "keywords", "optimize", "søgemaskine"], featured: true },
-    { id: "nav-visibility", capability: "seo", label: "Visibility", sublabel: "SEO + GEO combined score", category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/visibility", keywords: ["visibility", "synlighed", "geo", "ai", "score", "ranking"] },
-    { id: "nav-analytics", capability: "quality", label: "AI Analytics", sublabel: "Content performance insights", category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/performance", keywords: ["analytics", "performance", "stats", "statistik", "ai analytics"] },
-    { id: "nav-linkchecker", capability: "quality", label: "Link Checker", sublabel: "Find broken links", category: "navigation", icon: <Link2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["links", "broken", "check"] },
-    { id: "nav-log", label: "Event Log", sublabel: "Audit trail, server errors, client events", category: "navigation", icon: <ScrollText style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/log", keywords: ["log", "audit", "events", "trail", "history", "errors", "gdpr", "logs"], permission: "logs.view" },
-    { id: "nav-backup", capability: "backup", label: "Backup", sublabel: "Backup & restore content", category: "navigation", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/backup", keywords: ["backup", "restore", "export", "sikkerhedskopi"] },
-    { id: "nav-trash", label: "Trash", sublabel: "Deleted items", category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
+    { id: "nav-agent-templates", capability: "agents", label: t("shell.commandPalette.items.navAgentTemplates.label"), sublabel: t("shell.commandPalette.items.navAgentTemplates.sublabel"), category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["template", "templates", "marketplace", "preset", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "templates"); } catch {} window.location.href = "/admin/agents"; } },
+    { id: "nav-workflows", capability: "agents", label: t("shell.commandPalette.items.navWorkflows.label"), sublabel: t("shell.commandPalette.items.navWorkflows.sublabel"), category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["workflow", "workflows", "pipeline", "chain", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); } catch {} window.location.href = "/admin/agents"; } },
+    { id: "nav-media", label: t("shell.commandPalette.items.navMedia.label"), sublabel: t("shell.commandPalette.items.navMedia.sublabel"), category: "navigation", icon: <Image style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/media", keywords: ["billeder", "images", "files", "upload"], featured: true },
+    { id: "nav-ints", capability: "interactives", label: t("shell.commandPalette.items.navInts.label"), sublabel: t("shell.commandPalette.items.navInts.sublabel"), category: "navigation", icon: <Puzzle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/interactives", keywords: ["ints", "interactive", "html"] },
+    { id: "nav-calendar", capability: "scheduling", label: t("shell.commandPalette.items.navCalendar.label"), sublabel: t("shell.commandPalette.items.navCalendar.sublabel"), category: "navigation", icon: <Calendar style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/scheduled", keywords: ["kalender", "schedule", "planned"], featured: true },
+    { id: "nav-curation", capability: "ai", label: t("shell.commandPalette.items.navCuration.label"), sublabel: t("shell.commandPalette.items.navCuration.sublabel"), category: "navigation", icon: <ListChecks style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/curation", keywords: ["queue", "review", "approve"] },
+    { id: "nav-chat", capability: "chat", label: t("shell.commandPalette.items.navChat.label"), sublabel: t("shell.commandPalette.items.navChat.sublabel"), category: "navigation", icon: <Terminal style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["chat", "ai", "spørg"], featured: true, action: () => { window.dispatchEvent(new CustomEvent("cms:set-admin-mode", { detail: "chat" })); } },
+    { id: "nav-seo", capability: "seo", label: t("shell.commandPalette.items.navSeo.label"), sublabel: t("shell.commandPalette.items.navSeo.sublabel"), category: "navigation", icon: <Search style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/seo", keywords: ["seo", "meta", "keywords", "optimize", "søgemaskine"], featured: true },
+    { id: "nav-visibility", capability: "seo", label: t("shell.commandPalette.items.navVisibility.label"), sublabel: t("shell.commandPalette.items.navVisibility.sublabel"), category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/visibility", keywords: ["visibility", "synlighed", "geo", "ai", "score", "ranking"] },
+    { id: "nav-analytics", capability: "quality", label: t("shell.commandPalette.items.navAnalytics.label"), sublabel: t("shell.commandPalette.items.navAnalytics.sublabel"), category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/performance", keywords: ["analytics", "performance", "stats", "statistik", "ai analytics"] },
+    { id: "nav-linkchecker", capability: "quality", label: t("shell.commandPalette.items.navLinkchecker.label"), sublabel: t("shell.commandPalette.items.navLinkchecker.sublabel"), category: "navigation", icon: <Link2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["links", "broken", "check"] },
+    { id: "nav-log", label: t("shell.commandPalette.items.navLog.label"), sublabel: t("shell.commandPalette.items.navLog.sublabel"), category: "navigation", icon: <ScrollText style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/log", keywords: ["log", "audit", "events", "trail", "history", "errors", "gdpr", "logs"], permission: "logs.view" },
+    { id: "nav-backup", capability: "backup", label: t("shell.commandPalette.items.navBackup.label"), sublabel: t("shell.commandPalette.items.navBackup.sublabel"), category: "navigation", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/backup", keywords: ["backup", "restore", "export", "sikkerhedskopi"] },
+    { id: "nav-trash", label: t("shell.commandPalette.items.navTrash.label"), sublabel: t("shell.commandPalette.items.navTrash.sublabel"), category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
 
     // Actions — create
-    { id: "act-new-agent", capability: "agents", label: "New Agent", sublabel: "Create a new AI agent", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents/new", keywords: ["new", "agent", "create", "ny", "opret"], featured: true, permission: "agents.manage" },
-    { id: "act-new-workflow", capability: "agents", label: "New Workflow", sublabel: "Chain agents into a pipeline", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["new", "workflow", "pipeline", "chain", "create", "ny", "opret"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); localStorage.setItem("cms:agents-workflows-create", "1"); } catch {} window.location.href = "/admin/agents"; }, permission: "agents.manage" },
-    { id: "act-new-site", label: "New site", sublabel: "Create a new site", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites/new", keywords: ["new", "site", "create", "ny", "opret"], permission: "settings.edit" },
-    { id: "act-new-org", label: "New organization", sublabel: "Create a new organization", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/organizations/new", keywords: ["new", "org", "organization", "create", "ny", "opret"], permission: "settings.edit" },
+    { id: "act-new-agent", capability: "agents", label: t("shell.commandPalette.items.actNewAgent.label"), sublabel: t("shell.commandPalette.items.actNewAgent.sublabel"), category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents/new", keywords: ["new", "agent", "create", "ny", "opret"], featured: true, permission: "agents.manage" },
+    { id: "act-new-workflow", capability: "agents", label: t("shell.commandPalette.items.actNewWorkflow.label"), sublabel: t("shell.commandPalette.items.actNewWorkflow.sublabel"), category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["new", "workflow", "pipeline", "chain", "create", "ny", "opret"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); localStorage.setItem("cms:agents-workflows-create", "1"); } catch {} window.location.href = "/admin/agents"; }, permission: "agents.manage" },
+    { id: "act-new-site", label: t("shell.commandPalette.items.actNewSite.label"), sublabel: t("shell.commandPalette.items.actNewSite.sublabel"), category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites/new", keywords: ["new", "site", "create", "ny", "opret"], permission: "settings.edit" },
+    { id: "act-new-org", label: t("shell.commandPalette.items.actNewOrg.label"), sublabel: t("shell.commandPalette.items.actNewOrg.sublabel"), category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/organizations/new", keywords: ["new", "org", "organization", "create", "ny", "opret"], permission: "settings.edit" },
 
     // Actions — run
-    { id: "act-backup", capability: "backup", label: "Create Backup", sublabel: "Backup all content now", category: "action", icon: <HardDrive style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["backup", "sikkerhedskopi", "export"], action: () => { fetch("/api/admin/backups", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ trigger: "manual" }) }).then(() => { window.location.href = "/admin/backup"; }); }, permission: "backup.manage" },
-    { id: "act-linkcheck", label: "Run Link Check", sublabel: "Scan all content for broken links", category: "action", icon: <Play style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["link", "check", "scan", "broken", "links"] },
-    { id: "act-preview", label: "Preview site", sublabel: "Open site preview", category: "action", icon: <ExternalLink style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["preview", "site", "view", "se", "forhåndsvisning"], action: () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "p", bubbles: true })); } },
-    { id: "act-refresh", label: "Refresh data", sublabel: "Reload current page data", category: "action", icon: <RefreshCw style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["refresh", "reload", "genindlæs"], action: () => { window.location.reload(); } },
+    { id: "act-backup", capability: "backup", label: t("shell.commandPalette.items.actBackup.label"), sublabel: t("shell.commandPalette.items.actBackup.sublabel"), category: "action", icon: <HardDrive style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["backup", "sikkerhedskopi", "export"], action: () => { fetch("/api/admin/backups", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ trigger: "manual" }) }).then(() => { window.location.href = "/admin/backup"; }); }, permission: "backup.manage" },
+    { id: "act-linkcheck", label: t("shell.commandPalette.items.actLinkcheck.label"), sublabel: t("shell.commandPalette.items.actLinkcheck.sublabel"), category: "action", icon: <Play style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["link", "check", "scan", "broken", "links"] },
+    { id: "act-preview", label: t("shell.commandPalette.items.actPreview.label"), sublabel: t("shell.commandPalette.items.actPreview.sublabel"), category: "action", icon: <ExternalLink style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["preview", "site", "view", "se", "forhåndsvisning"], action: () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "p", bubbles: true })); } },
+    { id: "act-refresh", label: t("shell.commandPalette.items.actRefresh.label"), sublabel: t("shell.commandPalette.items.actRefresh.sublabel"), category: "action", icon: <RefreshCw style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["refresh", "reload", "genindlæs"], action: () => { window.location.reload(); } },
 
     // Actions — misc
-    { id: "act-view-landing", label: "View landing page", sublabel: "Open in new tab", category: "action", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/home", keywords: ["landing", "homepage", "forside", "public", "view"], newTab: true },
-    { id: "act-help", label: "Help & Support", sublabel: "Docs, shortcuts, community", category: "action", icon: <HelpCircle style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["help", "hjælp", "support", "docs", "shortcuts"], action: () => { window.dispatchEvent(new CustomEvent("cms:open-help")); }, featured: true },
+    { id: "act-view-landing", label: t("shell.commandPalette.items.actViewLanding.label"), sublabel: t("shell.commandPalette.items.actViewLanding.sublabel"), category: "action", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/home", keywords: ["landing", "homepage", "forside", "public", "view"], newTab: true },
+    { id: "act-help", label: t("shell.commandPalette.items.actHelp.label"), sublabel: t("shell.commandPalette.items.actHelp.sublabel"), category: "action", icon: <HelpCircle style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["help", "hjælp", "support", "docs", "shortcuts"], action: () => { window.dispatchEvent(new CustomEvent("cms:open-help")); }, featured: true },
 
     // Settings
-    { id: "set-general", label: "Site Settings", sublabel: "General site configuration", category: "settings", icon: <Settings2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings", keywords: ["settings", "indstillinger", "config"], featured: true, permission: "settings.edit" },
-    { id: "set-team", label: "Team", sublabel: "Manage team members", category: "settings", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=team", keywords: ["team", "invite", "members", "brugere"], permission: "users.manage" },
-    { id: "set-email", label: "Email Settings", sublabel: "Configure email delivery", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=email", keywords: ["email", "resend", "smtp"], permission: "settings.edit" },
-    { id: "set-ai", label: "AI Settings", sublabel: "API keys and providers", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=ai", keywords: ["ai", "api", "keys", "anthropic", "openai"], permission: "settings.edit" },
-    { id: "set-deploy", label: "Deploy", sublabel: "Deploy hooks and triggers", category: "settings", icon: <ArrowRightLeft style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=deploy", keywords: ["deploy", "vercel", "netlify", "fly", "cloudflare", "publish", "ship", "github"], permission: "settings.edit" },
+    { id: "set-general", label: t("shell.commandPalette.items.setGeneral.label"), sublabel: t("shell.commandPalette.items.setGeneral.sublabel"), category: "settings", icon: <Settings2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings", keywords: ["settings", "indstillinger", "config"], featured: true, permission: "settings.edit" },
+    { id: "set-team", label: t("shell.commandPalette.items.setTeam.label"), sublabel: t("shell.commandPalette.items.setTeam.sublabel"), category: "settings", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=team", keywords: ["team", "invite", "members", "brugere"], permission: "users.manage" },
+    { id: "set-email", label: t("shell.commandPalette.items.setEmail.label"), sublabel: t("shell.commandPalette.items.setEmail.sublabel"), category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=email", keywords: ["email", "resend", "smtp"], permission: "settings.edit" },
+    { id: "set-ai", label: t("shell.commandPalette.items.setAi.label"), sublabel: t("shell.commandPalette.items.setAi.sublabel"), category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=ai", keywords: ["ai", "api", "keys", "anthropic", "openai"], permission: "settings.edit" },
+    { id: "set-deploy", label: t("shell.commandPalette.items.setDeploy.label"), sublabel: t("shell.commandPalette.items.setDeploy.sublabel"), category: "settings", icon: <ArrowRightLeft style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=deploy", keywords: ["deploy", "vercel", "netlify", "fly", "cloudflare", "publish", "ship", "github"], permission: "settings.edit" },
     // Hash anchors directly to the Custom Domain section so users searching
     // for "domain" / "dns" don't have to scroll past Provider + Build to find it.
-    { id: "set-custom-domain", label: "Custom Domain", sublabel: "DNS, registrar, custom URL for the live site", category: "settings", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=deploy#custom-domain", keywords: ["domain", "custom", "dns", "cname", "cloudflare", "registrar", "buy", "register", "url"], permission: "settings.edit" },
-    { id: "set-automation", label: "Automation", sublabel: "Backup, link checker, webhooks", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=tools", keywords: ["automation", "backup", "webhook", "schedule", "link checker", "notification"], permission: "settings.edit" },
-    { id: "set-brand", label: "Brand Voice", sublabel: "Tone and writing style", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=brand-voice", keywords: ["brand", "voice", "tone", "stil", "stemme"] },
-    { id: "set-mcp", label: "MCP Settings", sublabel: "Model Context Protocol", category: "settings", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=mcp", keywords: ["mcp", "protocol", "claude", "cursor"] },
-    { id: "set-prompts", label: "AI Prompts", sublabel: "Customize AI prompts", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=prompts", keywords: ["prompts", "ai", "custom", "skabelon"] },
+    { id: "set-custom-domain", label: t("shell.commandPalette.items.setCustomDomain.label"), sublabel: t("shell.commandPalette.items.setCustomDomain.sublabel"), category: "settings", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=deploy#custom-domain", keywords: ["domain", "custom", "dns", "cname", "cloudflare", "registrar", "buy", "register", "url"], permission: "settings.edit" },
+    { id: "set-automation", label: t("shell.commandPalette.items.setAutomation.label"), sublabel: t("shell.commandPalette.items.setAutomation.sublabel"), category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=tools", keywords: ["automation", "backup", "webhook", "schedule", "link checker", "notification"], permission: "settings.edit" },
+    { id: "set-brand", label: t("shell.commandPalette.items.setBrand.label"), sublabel: t("shell.commandPalette.items.setBrand.sublabel"), category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=brand-voice", keywords: ["brand", "voice", "tone", "stil", "stemme"] },
+    { id: "set-mcp", label: t("shell.commandPalette.items.setMcp.label"), sublabel: t("shell.commandPalette.items.setMcp.sublabel"), category: "settings", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=mcp", keywords: ["mcp", "protocol", "claude", "cursor"] },
+    { id: "set-prompts", label: t("shell.commandPalette.items.setPrompts.label"), sublabel: t("shell.commandPalette.items.setPrompts.sublabel"), category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=prompts", keywords: ["prompts", "ai", "custom", "skabelon"] },
 
     // Account
-    { id: "acc-prefs", label: "Account Preferences", sublabel: "Profile and preferences", category: "account", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account", keywords: ["account", "profil", "preferences", "konto"], featured: true },
-    { id: "acc-security", label: "Security", sublabel: "Password and authentication", category: "account", icon: <Lock style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account?tab=security", keywords: ["password", "security", "2fa", "adgangskode"] },
-    { id: "acc-logout", label: "Log out", sublabel: "Sign out of your account", category: "account", icon: <LogOut style={{ ...ICON_SIZE, color: "rgb(239 68 68)" }} />, action: logout, keywords: ["logout", "sign out", "log ud", "afslut"], featured: true },
+    { id: "acc-prefs", label: t("shell.commandPalette.items.accPrefs.label"), sublabel: t("shell.commandPalette.items.accPrefs.sublabel"), category: "account", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account", keywords: ["account", "profil", "preferences", "konto"], featured: true },
+    { id: "acc-security", label: t("shell.commandPalette.items.accSecurity.label"), sublabel: t("shell.commandPalette.items.accSecurity.sublabel"), category: "account", icon: <Lock style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account?tab=security", keywords: ["password", "security", "2fa", "adgangskode"] },
+    { id: "acc-logout", label: t("shell.commandPalette.items.accLogout.label"), sublabel: t("shell.commandPalette.items.accLogout.sublabel"), category: "account", icon: <LogOut style={{ ...ICON_SIZE, color: "rgb(239 68 68)" }} />, action: logout, keywords: ["logout", "sign out", "log ud", "afslut"], featured: true },
   ];
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
-  favorites: "Favorites",
-  content: "Content",
-  navigation: "Navigation",
-  action: "Actions",
-  settings: "Settings",
-  account: "Account",
+  favorites: "shell.commandPalette.categories.favorites",
+  content: "shell.commandPalette.categories.content",
+  navigation: "shell.commandPalette.categories.navigation",
+  action: "shell.commandPalette.categories.action",
+  settings: "shell.commandPalette.categories.settings",
+  account: "shell.commandPalette.categories.account",
 };
 
 /* ─── Unified result type ────────────────────────────────────── */
@@ -147,6 +148,7 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
 
 /* ─── Palette ────────────────────────────────────────────────── */
 function CommandPalette({ onClose }: { onClose: () => void }) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [contentResults, setContentResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -194,7 +196,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   }, []);
 
   const quickActions = useMemo(() => {
-    const actions = buildQuickActions(logout)
+    const actions = buildQuickActions(logout, t)
       .filter((a) => !a.permission || can(a.permission))
       .filter((a) => !a.capability || canUse(a.capability));
     // Add dynamic collection navigation
@@ -202,7 +204,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       actions.push({
         id: `col-${col.name}`,
         label: col.label,
-        sublabel: `Collection · ${col.name}`,
+        sublabel: t("shell.commandPalette.collectionSub", { name: col.name }),
         category: "navigation",
         icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />,
         href: `/admin/content/${col.name}`,
@@ -215,7 +217,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       actions.push({
         id: `site-${site.id}`,
         label: site.name,
-        sublabel: "Switch to site",
+        sublabel: t("shell.commandPalette.switchToSite"),
         category: "action",
         icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />,
         keywords: [site.name.toLowerCase(), "site", "switch", "skift"],
@@ -230,7 +232,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       actions.push({
         id: `org-${org.id}`,
         label: org.name,
-        sublabel: "Switch to organization",
+        sublabel: t("shell.commandPalette.switchToOrg"),
         category: "action",
         icon: <Building2 style={{ ...ICON_SIZE, color: MUTED }} />,
         keywords: [org.name.toLowerCase(), "org", "organization", "organisation", "switch", "skift"],
@@ -245,7 +247,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       actions.push({
         id: `wf-${wf.id}`,
         label: wf.name,
-        sublabel: `Workflow · ${wf.stepCount} step${wf.stepCount === 1 ? "" : "s"}`,
+        sublabel: t(wf.stepCount === 1 ? "shell.commandPalette.workflowStepsOne" : "shell.commandPalette.workflowStepsOther", { count: wf.stepCount }),
         category: "navigation",
         icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />,
         keywords: [wf.name.toLowerCase(), "workflow", "pipeline", "chain"],
@@ -262,7 +264,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       actions.push({
         id: `tpl-${tpl.id}`,
         label: tpl.name,
-        sublabel: `${tpl.source === "local" ? "Local template" : "Marketplace template"} · ${tpl.description.slice(0, 70)}`,
+        sublabel: t(tpl.source === "local" ? "shell.commandPalette.localTemplate" : "shell.commandPalette.marketplaceTemplate", { description: tpl.description.slice(0, 70) }),
         category: "action",
         icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />,
         href: `/admin/agents/new?template=${encodeURIComponent(tpl.id)}`,
@@ -270,7 +272,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       });
     }
     return actions;
-  }, [logout, can, collections, sites, activeSiteId, orgs, activeOrgId, workflows, agentTemplates, router]);
+  }, [logout, can, collections, sites, activeSiteId, orgs, activeOrgId, workflows, agentTemplates, router, t]);
 
   /* Auto-focus input + fetch collections + sites */
   useEffect(() => {
@@ -394,7 +396,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           id: `content-${r.collection}-${r.slug}`,
           label: r.title || r.slug,
           sublabel: r.matchedIn === "body"
-            ? `${r.collectionLabel} · found in body`
+            ? t("shell.commandPalette.foundInBody", { collection: r.collectionLabel })
             : `${r.collectionLabel} · ${r.slug}`,
           category: "content",
           icon: r.status === "published"
@@ -408,7 +410,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     }
 
     return result;
-  }, [query, quickActions, contentResults, favorites]);
+  }, [query, quickActions, contentResults, favorites, t]);
 
   /* Reset selection when results change */
   useEffect(() => { setSelected(0); }, [items.length]);
@@ -516,7 +518,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Search content, navigate, or run actions…"
+            placeholder={t("shell.commandPalette.placeholder")}
             style={{
               flex: 1, background: "transparent", border: "none", outline: "none",
               fontSize: "1rem", color: "var(--foreground)",
@@ -535,7 +537,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
             onClick={onClose}
             style={{ padding: "0.2rem", borderRadius: "4px", border: "none", color: "var(--muted-foreground)", flexShrink: 0, background: "none", cursor: "pointer", display: "flex", alignItems: "center" }}
             className="hover:text-foreground transition-colors"
-            title="Close (Esc)"
+            title={t("shell.commandPalette.close")}
           >
             <X style={{ width: "0.875rem", height: "0.875rem" }} />
           </button>
@@ -544,11 +546,13 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         {/* Results */}
         <div ref={listRef} style={{ overflowY: "auto", flex: 1 }}>
           {loading && (
-            <div style={{ padding: "1.25rem 1rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Searching…</div>
+            <div style={{ padding: "1.25rem 1rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>{t("shell.commandPalette.searching")}</div>
           )}
           {!loading && query && items.length === 0 && (
             <div style={{ padding: "1.25rem 1rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
-              No results for <strong style={{ color: "var(--foreground)" }}>"{query}"</strong>
+              {t("shell.commandPalette.noResults", { query: "\u0000" }).split("\u0000").map((part, i) => (
+                <span key={i}>{i > 0 && <strong style={{ color: "var(--foreground)" }}>"{query}"</strong>}{part}</span>
+              ))}
             </div>
           )}
 
@@ -563,7 +567,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
                 letterSpacing: "0.08em",
                 color: "var(--muted-foreground)",
               }}>
-                {CATEGORY_LABELS[group.category] ?? group.category}
+                {CATEGORY_LABELS[group.category] ? t(CATEGORY_LABELS[group.category]) : group.category}
               </div>
 
               {group.items.map((item, localIdx) => {
@@ -608,10 +612,10 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 
         {/* Footer */}
         <div style={{ padding: "0.5rem 1rem", borderTop: "1px solid var(--border)", display: "flex", gap: "1rem", fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-          <span>↑↓ navigate</span>
-          <span>↵ open</span>
-          <span>ESC close</span>
-          <span style={{ marginLeft: "auto" }}>⌘K toggle</span>
+          <span>{t("shell.commandPalette.hintNavigate")}</span>
+          <span>{t("shell.commandPalette.hintOpen")}</span>
+          <span>{t("shell.commandPalette.hintClose")}</span>
+          <span style={{ marginLeft: "auto" }}>{t("shell.commandPalette.hintToggle")}</span>
         </div>
       </div>
     </div>

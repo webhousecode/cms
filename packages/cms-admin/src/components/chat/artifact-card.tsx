@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { Eye, Code, Save, Download, Check, Loader2, Copy } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface ArtifactCardProps {
   title: string;
@@ -9,6 +10,7 @@ interface ArtifactCardProps {
 }
 
 export function ArtifactCard({ title, html }: ArtifactCardProps) {
+  const t = useT();
   const [tab, setTab] = useState<"preview" | "code">("preview");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -35,14 +37,14 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       } else {
-        const data = await res.json().catch(() => ({ error: "Save failed" }));
-        setSaveError(data.error ?? "Save failed");
+        const data = await res.json().catch(() => ({ error: t("chat.artifactCard.saveFailed") }));
+        setSaveError(data.error ?? t("chat.artifactCard.saveFailed"));
       }
     } catch {
-      setSaveError("Network error");
+      setSaveError(t("chat.artifactCard.networkError"));
     }
     setSaving(false);
-  }, [html, title]);
+  }, [html, title, t]);
 
   const handleDownload = useCallback(() => {
     const blob = new Blob([html], { type: "text/html" });
@@ -88,8 +90,8 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
         </div>
         <div style={{ display: "flex", gap: "2px" }}>
           {([
-            { id: "preview" as const, label: "Preview", icon: Eye },
-            { id: "code" as const, label: "Code", icon: Code },
+            { id: "preview" as const, label: t("chat.artifactCard.preview"), icon: Eye },
+            { id: "code" as const, label: t("chat.artifactCard.code"), icon: Code },
           ]).map(({ id, label, icon: Icon }) => (
             <button
               data-testid={`artifact-tab-${id}`}
@@ -158,7 +160,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
             }}
           >
             {copied ? <Check style={{ width: "11px", height: "11px" }} /> : <Copy style={{ width: "11px", height: "11px" }} />}
-            {copied ? "Copied" : "Copy"}
+            {copied ? t("chat.artifactCard.copied") : t("chat.artifactCard.copy")}
           </button>
           <pre
             style={{
@@ -217,7 +219,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
           ) : (
             <Save style={{ width: "14px", height: "14px" }} />
           )}
-          {saving ? "Saving..." : saved ? "Saved to Interactives" : "Save to CMS"}
+          {saving ? t("chat.artifactCard.saving") : saved ? t("chat.artifactCard.savedToInteractives") : t("chat.artifactCard.saveToCms")}
         </button>
 
         <button
@@ -238,7 +240,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
           }}
         >
           <Download style={{ width: "14px", height: "14px" }} />
-          Download
+          {t("chat.artifactCard.download")}
         </button>
 
         {saveError && (

@@ -21,18 +21,20 @@ import { AgentsList } from "@/components/agents-list";
 import type { AgentConfig } from "@/lib/agents";
 import type { AgentTemplate } from "@/lib/agent-templates";
 import type { AgentWorkflow } from "@/lib/agent-workflows";
+import { useT } from "@/lib/i18n-context";
 
 type TabId = "agents" | "templates" | "workflows";
 
 const STORAGE_KEY = "cms:agents-tab";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "agents", label: "Agents" },
-  { id: "templates", label: "Templates" },
-  { id: "workflows", label: "Workflows" },
+  { id: "agents", label: "agents.agentsTabs.tabAgents" },
+  { id: "templates", label: "agents.agentsTabs.tabTemplates" },
+  { id: "workflows", label: "agents.agentsTabs.tabWorkflows" },
 ];
 
 export function AgentsTabs({ agents, readOnly }: { agents: AgentConfig[]; readOnly: boolean }) {
+  const t = useT();
   const [tab, setTab] = useState<TabId>("agents");
 
   useEffect(() => {
@@ -44,29 +46,29 @@ export function AgentsTabs({ agents, readOnly }: { agents: AgentConfig[]; readOn
     } catch { /* ignore */ }
   }, []);
 
-  function switchTab(t: TabId) {
-    setTab(t);
-    try { localStorage.setItem(STORAGE_KEY, t); } catch { /* ignore */ }
+  function switchTab(next: TabId) {
+    setTab(next);
+    try { localStorage.setItem(STORAGE_KEY, next); } catch { /* ignore */ }
   }
 
   return (
     <div>
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
-        {TABS.map((t) => (
+        {TABS.map((tb) => (
           <button
-            data-testid={`agents-tab-${t.id}`}
-            key={t.id}
+            data-testid={`agents-tab-${tb.id}`}
+            key={tb.id}
             type="button"
-            onClick={() => switchTab(t.id)}
+            onClick={() => switchTab(tb.id)}
             className={`px-4 py-2 text-sm font-medium -mb-px transition-colors ${
-              tab === t.id
+              tab === tb.id
                 ? "border-b-2 border-primary text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {t.label}
-            {t.id === "agents" && agents.length > 0 && (
+            {t(tb.label)}
+            {tb.id === "agents" && agents.length > 0 && (
               <span className="ml-1.5 text-xs bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded-full">
                 {agents.length}
               </span>
@@ -96,6 +98,7 @@ interface EditDraft {
 }
 
 function TemplatesTab({ readOnly }: { readOnly: boolean }) {
+  const t = useT();
   const [local, setLocal] = useState<AgentTemplate[]>([]);
   const [marketplace, setMarketplace] = useState<AgentTemplate[]>([]);
   const [marketplaceError, setMarketplaceError] = useState<string | undefined>(undefined);
@@ -138,15 +141,15 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
     }
   }
 
-  function startEditTemplate(t: AgentTemplate) {
-    const p = t.payload as Record<string, unknown>;
+  function startEditTemplate(tpl: AgentTemplate) {
+    const p = tpl.payload as Record<string, unknown>;
     const beh = (p.behavior ?? {}) as { temperature?: number; formality?: number; verbosity?: number };
     const tools = (p.tools ?? {}) as { webSearch?: boolean; internalDatabase?: boolean; imageGeneration?: boolean };
-    setEditingId(t.id);
+    setEditingId(tpl.id);
     setEditDraft({
-      name: t.name,
-      description: t.description ?? "",
-      category: t.category ?? "",
+      name: tpl.name,
+      description: tpl.description ?? "",
+      category: tpl.category ?? "",
       systemPrompt: typeof p.systemPrompt === "string" ? p.systemPrompt : "",
       temperature: beh.temperature ?? 50,
       formality: beh.formality ?? 50,
@@ -164,7 +167,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
     setEditError("");
   }
 
-  async function handleSaveEdit(t: AgentTemplate) {
+  async function handleSaveEdit(tpl: AgentTemplate) {
     if (!editDraft) return;
     setSaving(true);
     setEditError("");
@@ -172,7 +175,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
       // Reuse the existing payload as the base, then patch the editable fields.
       // Anything we don't expose in the form (autonomy, targetCollections,
       // fieldDefaults, role) is preserved.
-      const basePayload = (t.payload ?? {}) as Record<string, unknown>;
+      const basePayload = (tpl.payload ?? {}) as Record<string, unknown>;
       const newPayload = {
         ...basePayload,
         name: editDraft.name,
@@ -188,7 +191,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
           imageGeneration: editDraft.imageGeneration,
         },
       };
-      const res = await fetch(`/api/cms/agent-templates/${t.id}`, {
+      const res = await fetch(`/api/cms/agent-templates/${tpl.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -200,20 +203,20 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        setEditError(data.error ?? "Failed to save");
+        setEditError(data.error ?? t("agents.agentsTabs.failedToSave"));
         return;
       }
       cancelEdit();
       await load();
     } catch {
-      setEditError("Network error");
+      setEditError(t("agents.agentsTabs.networkError"));
     } finally {
       setSaving(false);
     }
   }
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading templates…</p>;
+    return <p className="text-sm text-muted-foreground">{t("agents.agentsTabs.loadingTemplates")}</p>;
   }
 
   return (
@@ -223,25 +226,28 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
         <div className="flex items-center gap-2 mb-3">
           <HardDrive className="w-3.5 h-3.5 text-muted-foreground" />
           <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-            Your org ({local.length})
+            {t("agents.agentsTabs.yourOrg", { count: local.length })}
           </p>
           <p className="text-xs text-muted-foreground ml-auto">
-            Saved from existing agents via the &ldquo;Save as template&rdquo; button. Shared across every site in this org.
+            {t("agents.agentsTabs.yourOrgHint")}
           </p>
         </div>
         {local.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            No local templates yet. Open an agent and click <strong>Save as template</strong> in the action bar to make one.
+            {(() => {
+              const [before, after] = t("agents.agentsTabs.localEmpty", { button: "\u0000" }).split("\u0000");
+              return <>{before}<strong>{t("agents.agentsTabs.saveAsTemplate")}</strong>{after}</>;
+            })()}
           </div>
         ) : (
           <div className="grid gap-3" style={{ gridTemplateColumns: editingId ? "1fr" : "repeat(auto-fill, minmax(280px, 1fr))" }}>
-            {local.map((t) => (
-              editingId === t.id && editDraft ? (
-                <div key={t.id} className="rounded-lg border border-primary/40 bg-primary/5 p-5 space-y-3">
-                  <p className="text-sm font-semibold">Edit template</p>
+            {local.map((tpl) => (
+              editingId === tpl.id && editDraft ? (
+                <div key={tpl.id} className="rounded-lg border border-primary/40 bg-primary/5 p-5 space-y-3">
+                  <p className="text-sm font-semibold">{t("agents.agentsTabs.editTemplate")}</p>
                   {editError && <p className="text-xs text-destructive">{editError}</p>}
                   <div>
-                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Name</label>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.name")}</label>
                     <input
                       data-testid="template-name-input"
                       type="text"
@@ -251,7 +257,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                     />
                   </div>
                   <div>
-                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Description</label>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.description")}</label>
                     <input
                       data-testid="template-description-input"
                       type="text"
@@ -261,18 +267,18 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                     />
                   </div>
                   <div>
-                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Category</label>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.category")}</label>
                     <input
                       data-testid="template-category-input"
                       type="text"
                       value={editDraft.category}
                       onChange={(e) => setEditDraft({ ...editDraft, category: e.target.value })}
-                      placeholder="e.g. blog, fitness, ecommerce"
+                      placeholder={t("agents.agentsTabs.categoryPlaceholder")}
                       className="w-full px-2 py-1.5 rounded border border-border bg-background text-xs"
                     />
                   </div>
                   <div>
-                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">System prompt</label>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.systemPrompt")}</label>
                     <textarea
                       data-testid="template-system-prompt-textarea"
                       value={editDraft.systemPrompt}
@@ -283,41 +289,41 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Creativity ({editDraft.temperature})</label>
+                      <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.creativity", { value: editDraft.temperature })}</label>
                       <CustomRangeSlider min={0} max={100} value={editDraft.temperature} onChange={(v) => setEditDraft({ ...editDraft, temperature: v })} />
                     </div>
                     <div>
-                      <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Formality ({editDraft.formality})</label>
+                      <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.formality", { value: editDraft.formality })}</label>
                       <CustomRangeSlider min={0} max={100} value={editDraft.formality} onChange={(v) => setEditDraft({ ...editDraft, formality: v })} />
                     </div>
                     <div>
-                      <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Verbosity ({editDraft.verbosity})</label>
+                      <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.verbosity", { value: editDraft.verbosity })}</label>
                       <CustomRangeSlider min={0} max={100} value={editDraft.verbosity} onChange={(v) => setEditDraft({ ...editDraft, verbosity: v })} />
                     </div>
                   </div>
                   <div className="flex gap-3 text-xs">
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input data-testid="template-websearch-checkbox" type="checkbox" checked={editDraft.webSearch} onChange={(e) => setEditDraft({ ...editDraft, webSearch: e.target.checked })} className="accent-primary" />
-                      Web search
+                      {t("agents.agentsTabs.webSearch")}
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input data-testid="template-internal-db-checkbox" type="checkbox" checked={editDraft.internalDatabase} onChange={(e) => setEditDraft({ ...editDraft, internalDatabase: e.target.checked })} className="accent-primary" />
-                      Internal database
+                      {t("agents.agentsTabs.internalDatabase")}
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input data-testid="template-imggen-checkbox" type="checkbox" checked={editDraft.imageGeneration} onChange={(e) => setEditDraft({ ...editDraft, imageGeneration: e.target.checked })} className="accent-primary" />
-                      Image generation
+                      {t("agents.agentsTabs.imageGeneration")}
                     </label>
                   </div>
                   <div className="flex gap-2 pt-1">
                     <button
                       data-testid="template-save-button"
                       type="button"
-                      onClick={() => handleSaveEdit(t)}
+                      onClick={() => handleSaveEdit(tpl)}
                       disabled={saving || !editDraft.name.trim()}
                       className="px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
                     >
-                      {saving ? "Saving…" : "Save changes"}
+                      {saving ? t("agents.agentsTabs.saving") : t("agents.agentsTabs.saveChanges")}
                     </button>
                     <button
                       data-testid="template-cancel-button"
@@ -325,38 +331,38 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                       onClick={cancelEdit}
                       className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
                     >
-                      Cancel
+                      {t("agents.agentsTabs.cancel")}
                     </button>
                   </div>
                 </div>
               ) : (
               <div
-                key={t.id}
+                key={tpl.id}
                 className="rounded-lg border border-border bg-card p-4 flex flex-col gap-2"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-sm truncate">
-                      {t.icon ? `${t.icon} ` : ""}{t.name}
+                      {tpl.icon ? `${tpl.icon} ` : ""}{tpl.name}
                     </p>
-                    {t.category && (
+                    {tpl.category && (
                       <span className="inline-block mt-1 text-[0.6rem] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                        {t.category}
+                        {tpl.category}
                       </span>
                     )}
                   </div>
                   {!readOnly && (
-                    confirming === t.id ? (
+                    confirming === tpl.id ? (
                       <div className="flex items-center gap-1 shrink-0">
-                        <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                        <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("agents.agentsTabs.removeConfirm")}</span>
                         <button
                           data-testid="template-confirm-delete"
                           type="button"
-                          onClick={() => handleDelete(t.id)}
-                          disabled={deleting === t.id}
+                          onClick={() => handleDelete(tpl.id)}
+                          disabled={deleting === tpl.id}
                           style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
                         >
-                          Yes
+                          {t("agents.agentsTabs.yes")}
                         </button>
                         <button
                           data-testid="template-cancel-delete"
@@ -364,7 +370,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                           onClick={() => setConfirming(null)}
                           style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
                         >
-                          No
+                          {t("agents.agentsTabs.no")}
                         </button>
                       </div>
                     ) : (
@@ -372,8 +378,8 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                         <button
                           data-testid="template-edit-button"
                           type="button"
-                          onClick={() => startEditTemplate(t)}
-                          title="Edit template"
+                          onClick={() => startEditTemplate(tpl)}
+                          title={t("agents.agentsTabs.editTemplate")}
                           className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                         >
                           <Pencil className="w-3.5 h-3.5" />
@@ -381,8 +387,8 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                         <button
                           data-testid="template-delete-button"
                           type="button"
-                          onClick={() => setConfirming(t.id)}
-                          title="Delete template"
+                          onClick={() => setConfirming(tpl.id)}
+                          title={t("agents.agentsTabs.deleteTemplate")}
                           className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -392,10 +398,10 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-2">
-                  {t.description || <em>No description</em>}
+                  {tpl.description || <em>{t("agents.agentsTabs.noDescription")}</em>}
                 </p>
                 <p className="text-[0.65rem] font-mono text-muted-foreground/70 mt-auto">
-                  Saved {new Date(t.createdAt).toLocaleDateString()}
+                  {t("agents.agentsTabs.savedOn", { date: new Date(tpl.createdAt).toLocaleDateString() })}
                 </p>
               </div>
               )
@@ -409,37 +415,40 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
         <div className="flex items-center gap-2 mb-3">
           <Globe className="w-3.5 h-3.5 text-muted-foreground" />
           <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-            Marketplace ({marketplace.length})
+            {t("agents.agentsTabs.marketplace", { count: marketplace.length })}
           </p>
           <p className="text-xs text-muted-foreground ml-auto">
-            Curated templates — updated automatically.
+            {t("agents.agentsTabs.marketplaceHint")}
           </p>
         </div>
         {marketplace.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             {marketplaceError
-              ? <>Marketplace unreachable — <span className="italic">{marketplaceError}</span></>
-              : <>The marketplace is currently empty. New templates land at <code className="text-xs">webhousecode/cms-agents</code>.</>
+              ? <>{t("agents.agentsTabs.marketplaceUnreachable")}<span className="italic">{marketplaceError}</span></>
+              : (() => {
+                  const [before, after] = t("agents.agentsTabs.marketplaceEmpty", { repo: "\u0000" }).split("\u0000");
+                  return <>{before}<code className="text-xs">webhousecode/cms-agents</code>{after}</>;
+                })()
             }
           </div>
         ) : (
           <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
-            {marketplace.map((t) => (
+            {marketplace.map((tpl) => (
               <Link
-                key={t.id}
-                href={`/admin/agents/new?template=${t.id}`}
+                key={tpl.id}
+                href={`/admin/agents/new?template=${tpl.id}`}
                 className="rounded-lg border border-border bg-card p-4 flex flex-col gap-2 hover:border-primary hover:bg-primary/5 transition-colors"
               >
                 <p className="font-semibold text-sm truncate">
-                  {t.icon ? `${t.icon} ` : ""}{t.name}
+                  {tpl.icon ? `${tpl.icon} ` : ""}{tpl.name}
                 </p>
-                {t.category && (
+                {tpl.category && (
                   <span className="inline-block self-start text-[0.6rem] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-secondary text-secondary-foreground">
-                    {t.category}
+                    {tpl.category}
                   </span>
                 )}
                 <p className="text-xs text-muted-foreground line-clamp-2">
-                  {t.description || <em>No description</em>}
+                  {tpl.description || <em>{t("agents.agentsTabs.noDescription")}</em>}
                 </p>
               </Link>
             ))}
@@ -451,6 +460,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
 }
 
 function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: boolean }) {
+  const t = useT();
   const [workflows, setWorkflows] = useState<AgentWorkflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -590,7 +600,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
         setJsonError("");
         setFormMode("ui");
       } catch (err) {
-        setJsonError(err instanceof Error ? err.message : "Invalid JSON");
+        setJsonError(err instanceof Error ? err.message : t("agents.agentsTabs.invalidJson"));
       }
     }
   }
@@ -604,14 +614,14 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
       try {
         body = JSON.parse(jsonDraft);
       } catch (err) {
-        setJsonError(err instanceof Error ? err.message : "Invalid JSON");
+        setJsonError(err instanceof Error ? err.message : t("agents.agentsTabs.invalidJson"));
         return;
       }
     } else {
       body = currentBody();
     }
     if (!body.name?.trim() || !Array.isArray(body.steps) || body.steps.length === 0) {
-      setError("name and at least one step are required");
+      setError(t("agents.agentsTabs.nameAndStepRequired"));
       return;
     }
     const isEdit = editingId !== null;
@@ -624,13 +634,13 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? `Failed to ${isEdit ? "update" : "create"} workflow`);
+        setError(data.error ?? (isEdit ? t("agents.agentsTabs.failedUpdateWorkflow") : t("agents.agentsTabs.failedCreateWorkflow")));
         return;
       }
       resetForm();
       await load();
     } catch {
-      setError("Network error");
+      setError(t("agents.agentsTabs.networkError"));
     }
   }
 
@@ -653,7 +663,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Workflow failed");
+        setError(data.error ?? t("agents.agentsTabs.workflowFailed"));
         return;
       }
       setRunning(id);
@@ -661,7 +671,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
       await load();
       setTimeout(() => setRunning(null), 3000);
     } catch {
-      setError("Network error");
+      setError(t("agents.agentsTabs.networkError"));
     } finally {
       setRunningId(null);
     }
@@ -681,7 +691,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
     setNewSteps((s) => s.filter((step) => step.id !== rowId));
   }
 
-  if (loading) return <p className="text-sm text-muted-foreground">Loading workflows…</p>;
+  if (loading) return <p className="text-sm text-muted-foreground">{t("agents.agentsTabs.loadingWorkflows")}</p>;
 
   return (
     <div className="space-y-6">
@@ -689,7 +699,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
 
       <div className="flex items-center justify-between">
         <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-          Pipelines ({workflows.length})
+          {t("agents.agentsTabs.pipelines", { count: workflows.length })}
         </p>
         {!readOnly && !creating && (
           <button
@@ -699,7 +709,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
             className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90"
           >
             <Plus className="w-3.5 h-3.5" />
-            New workflow
+            {t("agents.agentsTabs.newWorkflow")}
           </button>
         )}
       </div>
@@ -707,13 +717,13 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
       {creating && (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold">{editingId ? "Edit workflow" : "New workflow"}</p>
+            <p className="text-sm font-semibold">{editingId ? t("agents.agentsTabs.editWorkflow") : t("agents.agentsTabs.newWorkflow")}</p>
             <ModeToggle mode={formMode} onToggle={switchMode} />
           </div>
 
           {formMode === "json" ? (
             <div>
-              <label className="text-xs font-semibold text-muted-foreground block mb-1">Workflow JSON</label>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">{t("agents.agentsTabs.workflowJson")}</label>
               <textarea
                 data-testid="workflow-json-textarea"
                 value={jsonDraft}
@@ -726,25 +736,25 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                 <p className="text-xs text-destructive mt-1">⚠ {jsonError}</p>
               )}
               <p className="text-[0.65rem] text-muted-foreground mt-1">
-                Switch back to UI mode to validate, or click {editingId ? "Save changes" : "Create"} to save directly from JSON.
+                {t("agents.agentsTabs.jsonHint", { button: editingId ? t("agents.agentsTabs.saveChanges") : t("agents.agentsTabs.create") })}
               </p>
             </div>
           ) : (
             <>
           <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-1">Name</label>
+            <label className="text-xs font-semibold text-muted-foreground block mb-1">{t("agents.agentsTabs.name")}</label>
             <input
               data-testid="workflow-name-input"
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="e.g. Writer → SEO → Translator"
+              placeholder={t("agents.agentsTabs.workflowNamePlaceholder")}
               className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-2">Steps</label>
+            <label className="text-xs font-semibold text-muted-foreground block mb-2">{t("agents.agentsTabs.steps")}</label>
             <SortableWorkflowSteps
               steps={newSteps.map((s) => ({
                 id: s.id,
@@ -762,7 +772,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                 s.id === id ? { ...s, overrideCollection: value || undefined } : s
               ))}
             />
-            <p className="text-[0.65rem] uppercase font-mono text-muted-foreground mb-1">Add agent</p>
+            <p className="text-[0.65rem] uppercase font-mono text-muted-foreground mb-1">{t("agents.agentsTabs.addAgent")}</p>
             <div className="flex flex-wrap gap-1.5">
               {agents.filter((a) => a.active).map((a) => (
                 <button
@@ -788,27 +798,27 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                 onChange={(e) => setNewScheduleEnabled(e.target.checked)}
                 className="accent-primary"
               />
-              Run on a schedule
+              {t("agents.agentsTabs.runOnSchedule")}
             </label>
             {newScheduleEnabled && (
               <>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Frequency</label>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.frequency")}</label>
                     <select
                       data-testid="workflow-frequency-select"
                       value={newFrequency}
                       onChange={(e) => setNewFrequency(e.target.value as "daily" | "weekly" | "manual" | "cron")}
                       className="w-full px-2 py-1 rounded border border-border bg-background text-xs"
                     >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly (Mon)</option>
-                      <option value="manual">Manual</option>
-                      <option value="cron">Cron (advanced)</option>
+                      <option value="daily">{t("agents.agentsTabs.daily")}</option>
+                      <option value="weekly">{t("agents.agentsTabs.weeklyMon")}</option>
+                      <option value="manual">{t("agents.agentsTabs.manual")}</option>
+                      <option value="cron">{t("agents.agentsTabs.cronAdvanced")}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Time</label>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.time")}</label>
                     <CustomTimeInput
                       value={newTime}
                       onChange={setNewTime}
@@ -816,7 +826,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                     />
                   </div>
                   <div>
-                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Max per run</label>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">{t("agents.agentsTabs.maxPerRun")}</label>
                     <input
                       data-testid="workflow-maxperrun-input"
                       type="number"
@@ -831,7 +841,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                 {newFrequency === "cron" && (
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">
-                      Cron expression
+                      {t("agents.agentsTabs.cronExpression")}
                     </label>
                     <input
                       data-testid="workflow-cron-input"
@@ -843,27 +853,26 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                       className="w-full px-2 py-1 rounded border border-border bg-background text-xs font-mono"
                     />
                     <p className="text-[0.65rem] text-muted-foreground mt-1 leading-snug">
-                      5-field cron syntax: <code>min hour dom month dow</code>. The scheduler ticks every 5 minutes,
-                      so cron expressions finer than 5 minutes are silently coarsened. Examples:
+                      {t("agents.agentsTabs.cronSyntax")} <code>min hour dom month dow</code>. {t("agents.agentsTabs.cronHelp")}
                       <br />
-                      <code>0 9 * * 1-5</code> — weekdays at 09:00
-                      &nbsp;·&nbsp;
-                      <code>0 */6 * * *</code> — every 6 hours
-                      &nbsp;·&nbsp;
-                      <code>0 8 1 * *</code> — 1st of each month at 08:00
+                      <code>0 9 * * 1-5</code> {t("agents.agentsTabs.cronExWeekdays")}
+                      {"\u00a0·\u00a0"}
+                      <code>0 */6 * * *</code> {t("agents.agentsTabs.cronExEvery6h")}
+                      {"\u00a0·\u00a0"}
+                      <code>0 8 1 * *</code> {t("agents.agentsTabs.cronExMonthly")}
                     </p>
                   </div>
                 )}
                 <div>
                   <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">
-                    Default prompt (sent to step 1 on each scheduled run)
+                    {t("agents.agentsTabs.defaultPrompt")}
                   </label>
                   <textarea
                     data-testid="workflow-defaultprompt-textarea"
                     value={newDefaultPrompt}
                     onChange={(e) => setNewDefaultPrompt(e.target.value)}
                     rows={2}
-                    placeholder="e.g. Write a fresh blog post about a topic the site hasn't covered yet."
+                    placeholder={t("agents.agentsTabs.defaultPromptPlaceholder")}
                     className="w-full px-2 py-1.5 rounded border border-border bg-background text-xs resize-none"
                   />
                 </div>
@@ -881,7 +890,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
               disabled={formMode === "ui" ? (!newName.trim() || newSteps.length === 0) : !jsonDraft.trim()}
               className="px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
-              {editingId ? "Save changes" : "Create"}
+              {editingId ? t("agents.agentsTabs.saveChanges") : t("agents.agentsTabs.create")}
             </button>
             <button
               data-testid="workflow-cancel-button"
@@ -889,7 +898,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
               onClick={resetForm}
               className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
             >
-              Cancel
+              {t("agents.agentsTabs.cancel")}
             </button>
           </div>
         </div>
@@ -898,10 +907,9 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
       {workflows.length === 0 && !creating ? (
         <div className="rounded-xl border border-dashed border-border p-12 text-center">
           <Workflow className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
-          <p className="text-sm font-medium text-foreground mb-1">No workflows yet</p>
+          <p className="text-sm font-medium text-foreground mb-1">{t("agents.agentsTabs.noWorkflows")}</p>
           <p className="text-xs text-muted-foreground max-w-md mx-auto">
-            Chain multiple agents into a single pipeline (e.g. Writer → SEO → Translator).
-            One prompt in, one curation queue item out.
+            {t("agents.agentsTabs.noWorkflowsHint")}
           </p>
         </div>
       ) : (
@@ -924,22 +932,22 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                     ))}
                   </div>
                   <div className="flex items-center gap-3 mt-2 text-[0.65rem] font-mono text-muted-foreground">
-                    <span>{wf.stats.totalRuns} runs</span>
-                    <span>${wf.stats.totalCostUsd.toFixed(4)} total</span>
-                    {wf.stats.lastRunAt && <span>last: {new Date(wf.stats.lastRunAt).toLocaleString()}</span>}
+                    <span>{t("agents.agentsTabs.runs", { count: wf.stats.totalRuns })}</span>
+                    <span>{t("agents.agentsTabs.totalCost", { cost: wf.stats.totalCostUsd.toFixed(4) })}</span>
+                    {wf.stats.lastRunAt && <span>{t("agents.agentsTabs.lastRun", { date: new Date(wf.stats.lastRunAt).toLocaleString() })}</span>}
                   </div>
                 </div>
                 {!readOnly && (
                   confirming === wf.id ? (
                     <div className="flex items-center gap-1 shrink-0">
-                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("agents.agentsTabs.removeConfirm")}</span>
                       <button data-testid="workflow-confirm-delete" type="button" onClick={() => handleDelete(wf.id)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>
-                        Yes
+                        {t("agents.agentsTabs.yes")}
                       </button>
                       <button data-testid="workflow-cancel-delete" type="button" onClick={() => setConfirming(null)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>
-                        No
+                        {t("agents.agentsTabs.no")}
                       </button>
                     </div>
                   ) : (
@@ -948,7 +956,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                         data-testid="workflow-edit-button"
                         type="button"
                         onClick={() => startEdit(wf)}
-                        title="Edit workflow"
+                        title={t("agents.agentsTabs.editWorkflow")}
                         className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                       >
                         <Pencil className="w-3.5 h-3.5" />
@@ -957,7 +965,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                         data-testid="workflow-delete-button"
                         type="button"
                         onClick={() => setConfirming(wf.id)}
-                        title="Delete workflow"
+                        title={t("agents.agentsTabs.deleteWorkflow")}
                         className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -975,7 +983,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                       value={runPrompt[wf.id] ?? ""}
                       onChange={(e) => setRunPrompt((p) => ({ ...p, [wf.id]: e.target.value }))}
                       rows={2}
-                      placeholder="Prompt to start the pipeline (sent to step 1)"
+                      placeholder={t("agents.agentsTabs.runPromptPlaceholder")}
                       className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-xs resize-none"
                       disabled={runningId === wf.id}
                     />
@@ -994,7 +1002,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                     ) : (
                       <Play className="w-3.5 h-3.5" />
                     )}
-                    {runningId === wf.id ? "Running…" : running === wf.id ? "Done" : "Run"}
+                    {runningId === wf.id ? t("agents.agentsTabs.running") : running === wf.id ? t("agents.agentsTabs.done") : t("agents.agentsTabs.run")}
                   </button>
                 </div>
               )}

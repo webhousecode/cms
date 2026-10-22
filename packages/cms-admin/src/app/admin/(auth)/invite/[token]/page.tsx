@@ -4,8 +4,10 @@ import { BrandLogo } from "@/components/brand-logo";
 
 import { useState, useEffect, FormEvent } from "react";
 import { useParams } from "next/navigation";
+import { useT } from "@/lib/i18n-context";
 
 export default function InviteAcceptPage() {
+  const t = useT();
   const { token } = useParams<{ token: string }>();
   const [status, setStatus] = useState<"loading" | "valid" | "invalid" | "accepted">("loading");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -66,14 +68,14 @@ export default function InviteAcceptPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to accept invitation");
+        setError(data.error ?? t("auth.invite.failedAccept"));
         setSubmitting(false);
         return;
       }
       setStatus("accepted");
       setSiteCookiesAndRedirect();
     } catch {
-      setError("Network error");
+      setError(t("auth.invite.networkError"));
       setSubmitting(false);
     }
   }
@@ -90,14 +92,14 @@ export default function InviteAcceptPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to create account");
+        setError(data.error ?? t("auth.invite.failedCreate"));
         setSubmitting(false);
         return;
       }
       setStatus("accepted");
       setSiteCookiesAndRedirect();
     } catch {
-      setError("Network error");
+      setError(t("auth.invite.networkError"));
       setSubmitting(false);
     }
   }
@@ -164,21 +166,21 @@ export default function InviteAcceptPage() {
 
           {status === "loading" && (
             <p style={{ textAlign: "center", fontSize: "0.875rem", color: "hsl(0 0% 50%)" }}>
-              Validating invitation...
+              {t("auth.invite.validating")}
             </p>
           )}
 
           {status === "invalid" && (
             <div style={{ textAlign: "center" }}>
               <p style={{ fontSize: "0.875rem", color: "hsl(0 70% 60%)", marginBottom: "1rem" }}>
-                This invitation link is invalid or has expired.
+                {t("auth.invite.invalid")}
               </p>
               <a
                 data-testid="invite-go-to-login"
                 href="/admin/login"
                 style={{ fontSize: "0.8rem", color: "var(--brand-on-dark)", textDecoration: "none" }}
               >
-                Go to login
+                {t("auth.invite.goToLogin")}
               </a>
             </div>
           )}
@@ -186,7 +188,7 @@ export default function InviteAcceptPage() {
           {status === "accepted" && (
             <div style={{ textAlign: "center" }}>
               <p style={{ fontSize: "0.875rem", color: "hsl(140 60% 50%)" }}>
-                {isLoggedInAsInvitee ? "Access granted! Redirecting..." : "Account created! Redirecting..."}
+                {isLoggedInAsInvitee ? t("auth.invite.accessGranted") : t("auth.invite.accountCreated")}
               </p>
             </div>
           )}
@@ -195,7 +197,7 @@ export default function InviteAcceptPage() {
             <>
               <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
                 <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>
-                  You&apos;ve been invited as
+                  {t("auth.invite.invitedAs")}
                 </p>
                 <span style={{
                   display: "inline-block",
@@ -227,7 +229,7 @@ export default function InviteAcceptPage() {
                     textAlign: "center",
                   }}>
                     <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 60%)", margin: 0 }}>
-                      Signed in as
+                      {t("auth.invite.signedInAs")}
                     </p>
                     <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#fafafa", margin: "0.25rem 0 0" }}>
                       {loggedInUser.name}
@@ -262,14 +264,14 @@ export default function InviteAcceptPage() {
                       transition: "opacity 150ms",
                     }}
                   >
-                    {submitting ? "Accepting..." : "Accept invitation"}
+                    {submitting ? t("auth.invite.accepting") : t("auth.invite.accept")}
                   </button>
                 </div>
               ) : (
                 /* ── New user: name + password form ── */
                 <form data-testid="invite-form" onSubmit={handleSubmitNew} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Your name</label>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>{t("auth.invite.yourName")}</label>
                     <input
                       data-testid="invite-name-input"
                       type="text"
@@ -277,7 +279,7 @@ export default function InviteAcceptPage() {
                       onChange={(e) => setName(e.target.value)}
                       required
                       autoFocus
-                      placeholder="Jane Smith"
+                      placeholder={t("auth.invite.namePlaceholder")}
                       style={inputStyle}
                       onFocus={(e) => { e.target.style.borderColor = "var(--brand-strong)"; }}
                       onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
@@ -285,7 +287,7 @@ export default function InviteAcceptPage() {
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                    <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Choose a password</label>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>{t("auth.invite.choosePassword")}</label>
                     <input
                       data-testid="invite-password-input"
                       type="password"
@@ -293,7 +295,7 @@ export default function InviteAcceptPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       minLength={8}
-                      placeholder="Min. 8 characters"
+                      placeholder={t("auth.invite.passwordPlaceholder")}
                       style={inputStyle}
                       onFocus={(e) => { e.target.style.borderColor = "var(--brand-strong)"; }}
                       onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
@@ -328,7 +330,7 @@ export default function InviteAcceptPage() {
                       transition: "opacity 150ms",
                     }}
                   >
-                    {submitting ? "Creating account..." : "Create account"}
+                    {submitting ? t("auth.invite.creatingAccount") : t("auth.invite.createAccount")}
                   </button>
                 </form>
               )}

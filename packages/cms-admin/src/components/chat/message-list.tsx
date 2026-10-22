@@ -7,6 +7,7 @@ import { MarkdownRenderer } from "./markdown-renderer";
 import { InlineForm } from "./inline-form";
 import { ArtifactCard } from "./artifact-card";
 import { Bot, Copy, Check } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 export interface ToolCall {
   tool: string;
@@ -55,6 +56,7 @@ interface MessageListProps {
 }
 
 function MessageCopyButton({ text }: { text: string }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(text).then(() => {
@@ -66,7 +68,7 @@ function MessageCopyButton({ text }: { text: string }) {
     <button
       data-testid="message-copy-button"
       onClick={handleCopy}
-      title="Copy response"
+      title={t("chat.messageList.copyResponse")}
       style={{
         marginTop: "8px",
         background: "none",
@@ -86,7 +88,7 @@ function MessageCopyButton({ text }: { text: string }) {
       onMouseLeave={(e) => { if (!copied) e.currentTarget.style.opacity = "0.5"; }}
     >
       {copied ? <Check style={{ width: "11px", height: "11px" }} /> : <Copy style={{ width: "11px", height: "11px" }} />}
-      {copied ? "Copied" : "Copy"}
+      {copied ? t("chat.messageList.copied") : t("chat.messageList.copy")}
     </button>
   );
 }
@@ -185,6 +187,7 @@ function MessageBubble({ message, userAvatarUrl }: { message: ChatMessageUI; use
 }
 
 export function MessageList({ messages, isThinking, thinkingText, thinkingStartTime, showThinking }: MessageListProps) {
+  const t = useT();
   const [thinkingExpanded, setThinkingExpanded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(() => {
@@ -259,7 +262,7 @@ export function MessageList({ messages, isThinking, thinkingText, thinkingStartT
                   ▶
                 </span>
               )}
-              <ThinkingAnimation label="Thinking..." startTime={thinkingStartTime} />
+              <ThinkingAnimation label={t("chat.messageList.thinking")} startTime={thinkingStartTime} />
             </div>
             {(thinkingExpanded || showThinking) && thinkingText && (
               <div

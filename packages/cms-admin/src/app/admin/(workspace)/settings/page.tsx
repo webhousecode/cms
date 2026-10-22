@@ -29,6 +29,7 @@ import { getTeamMembers } from "@/lib/team";
 import { redirect } from "next/navigation";
 import { SettingsAnchorScroll } from "@/components/settings/settings-anchor";
 import { resolveMembershipRole } from "@/lib/require-role";
+import { getServerT } from "@/i18n/server";
 
 export default async function SettingsPage({
   searchParams,
@@ -54,24 +55,25 @@ export default async function SettingsPage({
   const activeOrgId = cookieStore.get("cms-active-org")?.value ?? "default";
 
   const globals = config.collections.filter((c) => c.kind === "global");
+  const t = await getServerT();
 
   const tabs = [
-    { id: "general",     label: "General" },
-    { id: "capabilities", label: "Features" },
-    { id: "team",        label: "Team" },
-    { id: "email",       label: "Email" },
-    { id: "ai",          label: "AI" },
-    { id: "brand-voice", label: "Brand Voice" },
-    { id: "deploy",      label: "Deploy" },
-    { id: "build",       label: "Build" },
-    { id: "backup",      label: "Backup" },
-    { id: "tools",       label: "Automation" },
-    { id: "geo",         label: "GEO" },
-    { id: "mcp",         label: "MCP" },
-    { id: "beam",        label: "Beam" },
-    ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
-    { id: "schema", label: "Schema" },
-    { id: "prompts", label: "AI Prompts" },
+    { id: "general",     label: t("pages.settings.tabs.general") },
+    { id: "capabilities", label: t("pages.settings.tabs.features") },
+    { id: "team",        label: t("pages.settings.tabs.team") },
+    { id: "email",       label: t("pages.settings.tabs.email") },
+    { id: "ai",          label: t("pages.settings.tabs.ai") },
+    { id: "brand-voice", label: t("pages.settings.tabs.brandVoice") },
+    { id: "deploy",      label: t("pages.settings.tabs.deploy") },
+    { id: "build",       label: t("pages.settings.tabs.build") },
+    { id: "backup",      label: t("pages.settings.tabs.backup") },
+    { id: "tools",       label: t("pages.settings.tabs.automation") },
+    { id: "geo",         label: t("pages.settings.tabs.geo") },
+    { id: "mcp",         label: t("pages.settings.tabs.mcp") },
+    { id: "beam",        label: t("pages.settings.tabs.beam") },
+    ...(globals.length > 0 ? [{ id: "globals", label: t("pages.settings.tabs.globals") }] : []),
+    { id: "schema", label: t("pages.settings.tabs.schema") },
+    { id: "prompts", label: t("pages.settings.tabs.aiPrompts") },
   ];
 
   return (
@@ -81,24 +83,24 @@ export default async function SettingsPage({
         actions={<SettingsSaveButton />}
         favorite={{ type: "page", label: "Site Settings", path: "/admin/settings", icon: "Settings2" }}
       >
-        <ActionBarBreadcrumb items={["Site Settings"]} />
+        <ActionBarBreadcrumb items={[t("pages.settings.siteSettings")]} />
       </ActionBar>
       <div className="p-8">
 
         {/* Tab strip */}
         <div className="flex gap-1 mb-8 border-b border-border">
-          {tabs.map((t) => (
+          {tabs.map((tb) => (
             <Link
-              key={t.id}
-              href={`/admin/settings?tab=${t.id}`}
-              data-testid={`settings-tab-${t.id}`}
+              key={tb.id}
+              href={`/admin/settings?tab=${tb.id}`}
+              data-testid={`settings-tab-${tb.id}`}
               className={`px-4 py-2 text-sm font-medium -mb-px transition-colors whitespace-nowrap ${
-                tab === t.id
+                tab === tb.id
                   ? "border-b-2 border-primary text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t.label}
+              {tb.label}
             </Link>
           ))}
         </div>
@@ -124,9 +126,9 @@ export default async function SettingsPage({
         {/* Email tab */}
         {tab === "email" && (
           <div className="max-w-lg" data-testid="settings-panel-email">
-            <SectionHeading>Email</SectionHeading>
+            <SectionHeading>{t("pages.settings.email.heading")}</SectionHeading>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1rem" }}>
-              Configure transactional email for invitations and notifications.
+              {t("pages.settings.email.description")}
             </p>
             <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-email" variant="compact" /></div>
             <EmailSettingsPanel />
@@ -139,15 +141,15 @@ export default async function SettingsPage({
             <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-schema" variant="compact" /></div>
             <div className="flex items-center justify-between mb-6">
               <div>
-                <SectionHeading>Collections</SectionHeading>
+                <SectionHeading>{t("pages.settings.schema.heading")}</SectionHeading>
                 <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem" }}>
-                  Edit collection names, labels, and field definitions.
+                  {t("pages.settings.schema.description")}
                 </p>
               </div>
               <Link href="/admin/settings/new">
                 <Button size="sm" className="gap-1.5">
                   <Plus className="w-3.5 h-3.5" />
-                  New collection
+                  {t("pages.settings.schema.newCollection")}
                 </Button>
               </Link>
             </div>
@@ -161,14 +163,14 @@ export default async function SettingsPage({
                   <div>
                     <p className="font-medium text-foreground">{col.label ?? col.name}</p>
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                      {col.name} · {col.fields.length} fields
+                      {t("pages.settings.fieldCount", { name: col.name, count: col.fields.length })}
                     </p>
                   </div>
                 </div>
                 <Link href={`/admin/settings/${col.name}?from=settings`}>
                   <Button variant="outline" size="sm" className="gap-1.5">
                     <Edit2 className="w-3.5 h-3.5" />
-                    Edit schema
+                    {t("pages.settings.schema.editSchema")}
                   </Button>
                 </Link>
               </div>
@@ -189,12 +191,12 @@ export default async function SettingsPage({
                   </div>
                   <Link href="/admin/settings/brand-voice">
                     <Button variant="outline" size="sm" className="gap-1.5">
-                      <Edit2 className="w-3.5 h-3.5" /> Edit / Re-interview
+                      <Edit2 className="w-3.5 h-3.5" /> {t("pages.settings.brandVoice.editReinterview")}
                     </Button>
                   </Link>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-4">
-                  <p className="text-sm text-muted-foreground mb-3 font-medium">Brand persona</p>
+                  <p className="text-sm text-muted-foreground mb-3 font-medium">{t("pages.settings.brandVoice.persona")}</p>
                   <p className="text-sm leading-relaxed">{brandVoice.description}</p>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {brandVoice.brandPersonality.map((p) => (
@@ -204,10 +206,10 @@ export default async function SettingsPage({
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Tone", value: brandVoice.primaryTone },
-                    { label: "Target audience", value: brandVoice.targetAudience },
-                    { label: "Content pillars", value: brandVoice.contentPillars.join(", ") },
-                    { label: "SEO keywords", value: brandVoice.seoKeywords.join(", ") },
+                    { label: t("pages.settings.brandVoice.tone"), value: brandVoice.primaryTone },
+                    { label: t("pages.settings.brandVoice.targetAudience"), value: brandVoice.targetAudience },
+                    { label: t("pages.settings.brandVoice.contentPillars"), value: brandVoice.contentPillars.join(", ") },
+                    { label: t("pages.settings.brandVoice.seoKeywords"), value: brandVoice.seoKeywords.join(", ") },
                   ].map(({ label, value }) => (
                     <div key={label} className="rounded-lg border border-border bg-card p-3">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
@@ -220,12 +222,12 @@ export default async function SettingsPage({
               <div className="rounded-lg border border-border bg-card p-6 flex flex-col items-start gap-4">
                 <Fingerprint className="w-8 h-8 text-muted-foreground" />
                 <div>
-                  <p className="font-semibold text-foreground">No brand voice defined yet</p>
-                  <p className="text-sm text-muted-foreground mt-1">A short AI interview will define your site persona, tone and content goals — used by every agent.</p>
+                  <p className="font-semibold text-foreground">{t("pages.settings.brandVoice.emptyTitle")}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{t("pages.settings.brandVoice.emptyBody")}</p>
                 </div>
                 <Link href="/admin/settings/brand-voice">
                   <Button className="gap-1.5">
-                    <Fingerprint className="w-3.5 h-3.5" /> Start interview
+                    <Fingerprint className="w-3.5 h-3.5" /> {t("pages.settings.brandVoice.startInterview")}
                   </Button>
                 </Link>
               </div>
@@ -238,7 +240,7 @@ export default async function SettingsPage({
           <div className="space-y-3 max-w-2xl">
             <HelpCard articleId="settings-globals" variant="compact" />
             <p className="text-sm text-muted-foreground">
-              Global collections contain site-wide settings and data shared across all pages.
+              {t("pages.settings.globals.description")}
             </p>
             {globals.map((col) => (
               <div key={col.name} className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
@@ -246,12 +248,12 @@ export default async function SettingsPage({
                   <Globe className="w-4 h-4 text-muted-foreground" />
                   <div>
                     <p className="font-medium text-foreground">{col.label ?? col.name}</p>
-                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{col.name} · {col.fields.length} fields</p>
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{t("pages.settings.fieldCount", { name: col.name, count: col.fields.length })}</p>
                   </div>
                 </div>
                 <Link href={`/admin/content/${col.name}`}>
                   <Button variant="outline" size="sm" className="gap-1.5">
-                    <Edit2 className="w-3.5 h-3.5" /> Edit
+                    <Edit2 className="w-3.5 h-3.5" /> {t("pages.settings.globals.edit")}
                   </Button>
                 </Link>
               </div>
@@ -263,17 +265,16 @@ export default async function SettingsPage({
         {tab === "ai" && (
           <div className="max-w-lg" data-testid="settings-panel-ai">
             <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-ai" variant="compact" /></div>
-            <SectionHeading>AI Providers</SectionHeading>
+            <SectionHeading>{t("pages.settings.ai.providersHeading")}</SectionHeading>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
-              Configure API keys for AI-powered content generation and rewriting.
-              Keys are stored per project — not shared across sites.
+              {t("pages.settings.ai.providersDescription")}
             </p>
             <AISettingsPanel />
 
             <div style={{ borderTop: "1px solid var(--border)", marginTop: "2rem", paddingTop: "2rem" }}>
-              <SectionHeading>AI Model Defaults</SectionHeading>
+              <SectionHeading>{t("pages.settings.ai.defaultsHeading")}</SectionHeading>
               <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
-                Choose default models and token limits for different AI features.
+                {t("pages.settings.ai.defaultsDescription")}
               </p>
               <AIDefaultsPanel />
             </div>
@@ -335,9 +336,9 @@ export default async function SettingsPage({
         {/* MCP tab */}
         {tab === "mcp" && (
           <div className="max-w-lg" data-testid="settings-panel-mcp">
-            <SectionHeading>Model Context Protocol</SectionHeading>
+            <SectionHeading>{t("pages.settings.mcp.heading")}</SectionHeading>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1rem" }}>
-              Connect Claude iOS, Cursor, or any MCP-compatible AI client to read and manage content on this site.
+              {t("pages.settings.mcp.description")}
             </p>
             <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-mcp" variant="compact" /></div>
             <MCPSettingsPanel />
@@ -347,9 +348,9 @@ export default async function SettingsPage({
         {/* Beam tab — site teleportation */}
         {tab === "beam" && (
           <div className="max-w-lg" data-testid="settings-panel-beam">
-            <SectionHeading>Beam — Site Teleportation</SectionHeading>
+            <SectionHeading>{t("pages.settings.beam.heading")}</SectionHeading>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1rem" }}>
-              Export your complete site as a portable .beam archive, or import one from another CMS instance.
+              {t("pages.settings.beam.description")}
             </p>
             <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-beam" variant="compact" /></div>
             <BeamSettingsPanel orgId={activeOrgId} />

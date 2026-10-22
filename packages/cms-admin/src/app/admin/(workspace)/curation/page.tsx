@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TabTitle } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { useT } from "@/lib/i18n-context";
 
 interface AlternativeOutput {
   model: string;
@@ -115,21 +116,21 @@ function shortModelName(model: string): string {
 type TabId = "ready" | "in_review" | "approved" | "rejected";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "ready", label: "Ready" },
-  { id: "in_review", label: "In review" },
-  { id: "approved", label: "Approved" },
-  { id: "rejected", label: "Rejected" },
+  { id: "ready", label: "tools.curation.tabReady" },
+  { id: "in_review", label: "tools.curation.tabInReview" },
+  { id: "approved", label: "tools.curation.tabApproved" },
+  { id: "rejected", label: "tools.curation.tabRejected" },
 ];
 
-function relativeTime(iso: string): string {
+function relativeTime(iso: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("tools.curation.justNow");
+  if (mins < 60) return t("tools.curation.minsAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t("tools.curation.hoursAgo", { n: hours });
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return t("tools.curation.daysAgo", { n: days });
 }
 
 const VALID_TABS: TabId[] = ["ready", "in_review", "approved", "rejected"];
@@ -143,6 +144,7 @@ function getSavedTab(): TabId {
 }
 
 export default function CurationPage() {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const siteRole = useSiteRole();
@@ -164,11 +166,11 @@ export default function CurationPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function switchTab(t: TabId) {
-    setTab(t);
-    try { localStorage.setItem(STORAGE_KEY, t); } catch {}
-    fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ curationTab: t }) }).catch(() => {});
-    router.replace(`/admin/curation?tab=${t}`, { scroll: false });
+  function switchTab(next: TabId) {
+    setTab(next);
+    try { localStorage.setItem(STORAGE_KEY, next); } catch {}
+    fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ curationTab: next }) }).catch(() => {});
+    router.replace(`/admin/curation?tab=${next}`, { scroll: false });
   }
   const [items, setItems] = useState<QueueItem[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -319,32 +321,32 @@ export default function CurationPage() {
     <div data-testid="curation-root">
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div className="p-8 max-w-5xl">
-      <TabTitle value="Curation Queue" />
+      <TabTitle value={t("tools.curation.title")} />
       <div className="mb-8">
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
-          AI
+          {t("tools.curation.ai")}
         </p>
-        <h1 className="text-2xl font-bold text-foreground">Curation Queue</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("tools.curation.title")}</h1>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
-        {TABS.map((t) => (
+        {TABS.map((tb) => (
           <button
-            data-testid={`curation-tab-${t.id}`}
-            key={t.id}
+            data-testid={`curation-tab-${tb.id}`}
+            key={tb.id}
             type="button"
-            onClick={() => switchTab(t.id)}
+            onClick={() => switchTab(tb.id)}
             className={`px-4 py-2 text-sm font-medium -mb-px transition-colors ${
-              tab === t.id
+              tab === tb.id
                 ? "border-b-2 border-primary text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {t.label}
-            {(counts[t.id] ?? 0) > 0 && (
+            {t(tb.label)}
+            {(counts[tb.id] ?? 0) > 0 && (
               <span className="ml-1.5 text-xs bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded-full">
-                {counts[t.id]}
+                {counts[tb.id]}
               </span>
             )}
           </button>
@@ -353,11 +355,11 @@ export default function CurationPage() {
 
       {/* Items */}
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{t("tools.common.loading")}</p>
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
           <Inbox className="w-12 h-12 mx-auto mb-4 opacity-20" />
-          <p>No items in this category.</p>
+          <p>{t("tools.curation.empty")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -375,13 +377,13 @@ export default function CurationPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <Badge variant="outline" className="bg-status-warning/10 text-status-warning border-status-warning/20 text-xs">draft</Badge>
+                    <Badge variant="outline" className="bg-status-warning/10 text-status-warning border-status-warning/20 text-xs">{t("tools.curation.draftBadge")}</Badge>
                     <span className="text-xs text-muted-foreground">
                       {item.agentName}
                     </span>
                     <Badge variant="secondary">{item.collection}</Badge>
                     <span className="text-xs text-muted-foreground">
-                      {relativeTime(item.generatedAt)}
+                      {relativeTime(item.generatedAt, t)}
                     </span>
                     <span className="text-xs font-mono text-muted-foreground">
                       ${item.costUsd.toFixed(3)}
@@ -390,7 +392,7 @@ export default function CurationPage() {
                       <Badge
                         variant={item.seoScore >= 80 ? "default" : "secondary"}
                       >
-                        SEO {item.seoScore}
+                        {t("tools.curation.seoBadge", { score: item.seoScore })}
                       </Badge>
                     )}
                   </div>
@@ -400,7 +402,7 @@ export default function CurationPage() {
                   <button
                     data-testid={`curation-speak-${item.id}`}
                     type="button"
-                    title={speakingId === item.id ? "Stop" : "Read aloud"}
+                    title={speakingId === item.id ? t("tools.curation.stop") : t("tools.curation.readAloud")}
                     onClick={() => speakingId === item.id ? handleStop() : handleSpeak(item)}
                     className={`p-1.5 rounded-md hover:bg-secondary transition-colors ${speakingId === item.id ? "text-primary animate-pulse" : "text-muted-foreground"}`}
                   >
@@ -412,11 +414,11 @@ export default function CurationPage() {
                     data-testid={`curation-preview-${item.id}`}
                     type="button"
                     onClick={() => setPreviewItem(item)}
-                    title="Preview rendered content"
+                    title={t("tools.curation.previewTitle")}
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    Preview
+                    {t("tools.curation.preview")}
                   </button>
                   {!readOnly && (tab === "ready" || tab === "in_review") && (
                     <>
@@ -424,21 +426,21 @@ export default function CurationPage() {
                         data-testid={`curation-fields-${item.id}`}
                         type="button"
                         onClick={() => handleEditFields(item)}
-                        title="Edit fields before approving"
+                        title={t("tools.curation.fieldsTitle")}
                         className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors ${editingId === item.id ? "border-primary text-primary bg-primary/10" : "border-border hover:bg-secondary"}`}
                       >
                         <SlidersHorizontal className="w-3.5 h-3.5" />
-                        Fields
+                        {t("tools.curation.fields")}
                       </button>
                       <button
                         data-testid={`curation-approve-${item.id}`}
                         type="button"
-                        title="Approve & Publish"
+                        title={t("tools.curation.approvePublish")}
                         onClick={() => handleApprove(item.id)}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-green-600 text-white hover:opacity-90 transition-opacity"
                       >
                         <Check className="w-3.5 h-3.5" />
-                        Approve
+                        {t("tools.curation.approve")}
                       </button>
                       {tab === "ready" && (
                         <button
@@ -448,7 +450,7 @@ export default function CurationPage() {
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
                         >
                           <Pencil className="w-3.5 h-3.5" />
-                          Edit
+                          {t("tools.curation.edit")}
                         </button>
                       )}
                       {tab === "in_review" && (
@@ -459,18 +461,18 @@ export default function CurationPage() {
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
                         >
                           <Pencil className="w-3.5 h-3.5" />
-                          Open in editor
+                          {t("tools.curation.openInEditor")}
                         </button>
                       )}
                       <button
                         data-testid={`curation-reject-${item.id}`}
                         type="button"
-                        title="Reject"
+                        title={t("tools.curation.reject")}
                         onClick={() => setRejectingId(item.id)}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                       >
                         <X className="w-3.5 h-3.5" />
-                        Reject
+                        {t("tools.curation.reject")}
                       </button>
                     </>
                   )}
@@ -484,7 +486,7 @@ export default function CurationPage() {
               {item.alternatives && item.alternatives.length > 0 && (
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
                   <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Models
+                    {t("tools.curation.models")}
                   </span>
                   {/* Active = primary contentData (always first chip) */}
                   <button
@@ -492,9 +494,9 @@ export default function CurationPage() {
                     type="button"
                     disabled
                     className="px-2 py-1 rounded-md text-[0.7rem] font-mono border border-primary text-primary bg-primary/10 cursor-default"
-                    title="Currently selected"
+                    title={t("tools.curation.currentlySelected")}
                   >
-                    ✓ active
+                    {t("tools.curation.active")}
                   </button>
                   {item.alternatives.map((alt, i) => (
                     <button
@@ -503,7 +505,7 @@ export default function CurationPage() {
                       type="button"
                       onClick={() => handlePickAlternative(item, i)}
                       disabled={readOnly || !(tab === "ready" || tab === "in_review")}
-                      title={`Swap to ${alt.model}${alt.costUsd ? ` ($${alt.costUsd.toFixed(4)})` : ""}`}
+                      title={t("tools.curation.swapTo", { model: `${alt.model}${alt.costUsd ? ` ($${alt.costUsd.toFixed(4)})` : ""}` })}
                       className="px-2 py-1 rounded-md text-[0.7rem] font-mono border border-border hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {shortModelName(alt.model)}
@@ -524,7 +526,7 @@ export default function CurationPage() {
                     data-testid={`curation-reject-feedback-${item.id}`}
                     value={rejectFeedback}
                     onChange={(e) => setRejectFeedback(e.target.value)}
-                    placeholder="Feedback for the agent..."
+                    placeholder={t("tools.curation.feedbackPlaceholder")}
                     rows={2}
                     className="flex-1 text-sm p-2 rounded-md border border-border bg-background resize-none"
                   />
@@ -536,7 +538,7 @@ export default function CurationPage() {
                       disabled={!rejectFeedback.trim()}
                       className="px-3 py-1.5 rounded-md text-xs bg-destructive text-white hover:opacity-90 disabled:opacity-50"
                     >
-                      Confirm
+                      {t("tools.curation.confirm")}
                     </button>
                     <button
                       data-testid={`curation-reject-cancel-${item.id}`}
@@ -547,7 +549,7 @@ export default function CurationPage() {
                       }}
                       className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
                     >
-                      Cancel
+                      {t("tools.curation.cancel")}
                     </button>
                   </div>
                 </div>
@@ -556,7 +558,7 @@ export default function CurationPage() {
               {/* Inline field editor */}
               {editingId === item.id && (
                 <div className="mt-3 p-3 rounded-lg border border-primary/20 bg-primary/5 space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Edit fields</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("tools.curation.editFields")}</p>
                   {(schemas[item.collection] ?? [])
                     .filter((f) => !["content", "body", "richtext"].includes(f.type) && f.name !== "relatedPosts")
                     .map((field) => (
@@ -571,7 +573,7 @@ export default function CurationPage() {
                             onChange={(e) => setEditDraft((prev) => ({ ...prev, [field.name]: e.target.value }))}
                             style={{ flex: 1, padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem" }}
                           >
-                            <option value="">— none —</option>
+                            <option value="">{t("tools.curation.none")}</option>
                             {field.options.map((o) => (
                               <option key={o.value} value={o.value}>{o.label}</option>
                             ))}
@@ -586,11 +588,11 @@ export default function CurationPage() {
                                 ...prev,
                                 [field.name]: e.target.value
                                   .split(",")
-                                  .map((t) => t.trim())
+                                  .map((s) => s.trim())
                                   .filter(Boolean),
                               }))
                             }
-                            placeholder="tag1, tag2, tag3"
+                            placeholder={t("tools.curation.tagsPlaceholder")}
                             style={{ flex: 1, padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem" }}
                           />
                         ) : field.type === "boolean" ? (
@@ -616,7 +618,7 @@ export default function CurationPage() {
                       onClick={() => handleSaveFields(item)}
                       className="px-3 py-1.5 rounded-md text-xs bg-primary text-primary-foreground hover:opacity-90"
                     >
-                      Save fields
+                      {t("tools.curation.saveFields")}
                     </button>
                     <button
                       data-testid={`curation-field-cancel-${item.id}`}
@@ -624,7 +626,7 @@ export default function CurationPage() {
                       onClick={() => setEditingId(null)}
                       className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
                     >
-                      Cancel
+                      {t("tools.curation.cancel")}
                     </button>
                   </div>
                 </div>
@@ -633,7 +635,7 @@ export default function CurationPage() {
               {/* Show rejection feedback for rejected items */}
               {item.status === "rejected" && item.rejectionFeedback && (
                 <p className="mt-2 text-xs text-destructive bg-destructive/5 p-2 rounded">
-                  Feedback: {item.rejectionFeedback}
+                  {t("tools.curation.feedback", { feedback: item.rejectionFeedback })}
                 </p>
               )}
             </div>
@@ -667,7 +669,7 @@ export default function CurationPage() {
             data-testid="curation-preview-modal-close"
             type="button"
             onClick={() => setPreviewItem(null)}
-            title="Close preview"
+            title={t("tools.curation.closePreview")}
             style={{
               position: "absolute", top: "0.75rem", right: "0.75rem",
               background: "transparent", border: "none", cursor: "pointer",
@@ -682,7 +684,7 @@ export default function CurationPage() {
           {/* Meta header */}
           <div style={{ marginBottom: "1.5rem", paddingBottom: "1rem", borderBottom: "1px solid var(--border)" }}>
             <p style={{ fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", fontFamily: "monospace", margin: 0 }}>
-              {previewItem.collection} · {previewItem.agentName} · {relativeTime(previewItem.generatedAt)}
+              {previewItem.collection} · {previewItem.agentName} · {relativeTime(previewItem.generatedAt, t)}
             </p>
             <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: "0.5rem 0 0", lineHeight: 1.15 }}>
               {(previewItem.contentData.title as string) || previewItem.title}
@@ -694,11 +696,11 @@ export default function CurationPage() {
             )}
             {Array.isArray(previewItem.contentData.tags) && (previewItem.contentData.tags as string[]).length > 0 && (
               <div style={{ marginTop: "0.75rem", display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
-                {(previewItem.contentData.tags as string[]).map((t) => (
-                  <span key={t} style={{
+                {(previewItem.contentData.tags as string[]).map((tag) => (
+                  <span key={tag} style={{
                     fontSize: "0.65rem", padding: "0.15rem 0.5rem", borderRadius: "9999px",
                     background: "var(--secondary)", color: "var(--secondary-foreground)",
-                  }}>{t}</span>
+                  }}>{tag}</span>
                 ))}
               </div>
             )}
@@ -720,9 +722,9 @@ export default function CurationPage() {
 
           {/* Footer with cost / SEO chip */}
           <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid var(--border)", display: "flex", gap: "1rem", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-            <span>Cost: ${previewItem.costUsd.toFixed(4)}</span>
-            {previewItem.seoScore != null && <span>SEO: {previewItem.seoScore}</span>}
-            <span>Slug: {previewItem.slug}</span>
+            <span>{t("tools.curation.cost", { cost: `$${previewItem.costUsd.toFixed(4)}` })}</span>
+            {previewItem.seoScore != null && <span>{t("tools.curation.seo", { score: previewItem.seoScore })}</span>}
+            <span>{t("tools.curation.slug", { slug: previewItem.slug })}</span>
           </div>
         </div>
       </div>

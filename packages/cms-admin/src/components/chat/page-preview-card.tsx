@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ExternalLink, Monitor, RefreshCw } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 // ── Shared build singleton — all preview cards share one build ───
 let buildPromise: Promise<string | null> | null = null;
@@ -45,6 +46,7 @@ interface PagePreviewCardProps {
 }
 
 export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
+  const t = useT();
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [status, setStatus] = useState<"building" | "ready" | "error">("building");
 
@@ -107,7 +109,7 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
         {status === "ready" && fullUrl ? (
           <iframe
             src={fullUrl}
-            title={`Preview: ${pagePath}`}
+            title={t("chat.pagePreviewCard.iframeTitle", { path: pagePath })}
             style={{
               width: "200%",
               height: "200%",
@@ -133,7 +135,7 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
             {status === "building" ? (
               <>
                 <RefreshCw style={{ width: "20px", height: "20px", opacity: 0.5 }} className="animate-spin" />
-                Building preview...
+                {t("chat.pagePreviewCard.building")}
                 <button
                   data-testid="preview-cancel-button"
                   onClick={() => setStatus("error")}
@@ -143,13 +145,13 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
                     color: "var(--muted-foreground)", fontSize: "0.7rem",
                   }}
                 >
-                  Cancel
+                  {t("chat.pagePreviewCard.cancel")}
                 </button>
               </>
             ) : (
               <>
                 <Monitor style={{ width: "20px", height: "20px", opacity: 0.5 }} />
-                Preview unavailable
+                {t("chat.pagePreviewCard.unavailable")}
               </>
             )}
           </div>
@@ -187,7 +189,7 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
               fontWeight: 500,
             }}
           >
-            Open
+            {t("chat.pagePreviewCard.open")}
             <ExternalLink style={{ width: "10px", height: "10px" }} />
           </a>
         )}

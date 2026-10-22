@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import type { TourStep } from "@/lib/onboarding/tours";
+import { useT } from "@/lib/i18n-context";
 
 interface TourTooltipProps {
   step: TourStep;
@@ -28,6 +29,7 @@ export function TourTooltip({
   onNext,
   onSkip,
 }: TourTooltipProps) {
+  const t = useT();
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [visible, setVisible] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -125,7 +127,7 @@ export function TourTooltip({
             lineHeight: 1,
             padding: "2px 4px",
           }}
-          aria-label="Skip tour"
+          aria-label={t("misc.tourTooltip.skipTour")}
         >
           ×
         </button>

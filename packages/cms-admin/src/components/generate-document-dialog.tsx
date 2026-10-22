@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, Loader2, X } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   collection: string;
@@ -14,15 +15,15 @@ interface Props {
 }
 
 const STATUS_MESSAGES = [
-  "Analyzing prompt…",
-  "Building schema context…",
-  "Generating title and structure…",
-  "Writing content…",
-  "Composing paragraphs…",
-  "Adding metadata…",
-  "Selecting tags…",
-  "Polishing output…",
-  "Almost there…",
+  "misc.generateDocument.status.analyzing",
+  "misc.generateDocument.status.schema",
+  "misc.generateDocument.status.structure",
+  "misc.generateDocument.status.writing",
+  "misc.generateDocument.status.paragraphs",
+  "misc.generateDocument.status.metadata",
+  "misc.generateDocument.status.tags",
+  "misc.generateDocument.status.polishing",
+  "misc.generateDocument.status.almost",
 ];
 
 export function GenerateDocumentDialog({
@@ -33,6 +34,7 @@ export function GenerateDocumentDialog({
   onClose,
   onGenerated,
 }: Props) {
+  const t = useT();
   const [prompt, setPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
@@ -84,7 +86,7 @@ export function GenerateDocumentDialog({
       stopTimer();
 
       if (!genRes.ok || !genData.data) {
-        setError(genData.error ?? "Generation failed");
+        setError(genData.error ?? t("misc.generateDocument.generationFailed"));
         setGenerating(false);
         return;
       }
@@ -102,7 +104,7 @@ export function GenerateDocumentDialog({
       });
       const created = await createRes.json() as { slug?: string; error?: string };
       if (!createRes.ok) {
-        setError(created.error ?? "Failed to create document");
+        setError(created.error ?? t("misc.generateDocument.createFailed"));
         setGenerating(false);
         return;
       }
@@ -111,7 +113,7 @@ export function GenerateDocumentDialog({
       router.push(`/admin/content/${collection}/${created.slug ?? genData.slug}`);
     } catch {
       stopTimer();
-      setError("Network error");
+      setError(t("misc.generateDocument.networkError"));
       setGenerating(false);
     }
   }
@@ -140,7 +142,7 @@ export function GenerateDocumentDialog({
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
           <Sparkles style={{ width: "1rem", height: "1rem", color: "var(--primary)" }} />
           <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
-            {existingData ? "Generate content" : `Generate ${collectionLabel}`}
+            {existingData ? t("misc.generateDocument.generateContent") : t("misc.generateDocument.generateNamed", { name: collectionLabel })}
           </span>
           <button
             data-testid="generate-dialog-header-close-button"
@@ -166,7 +168,7 @@ export function GenerateDocumentDialog({
               }
             }}
             rows={3}
-            placeholder={`Describe what to generate, e.g. "Write an article about the history of CMS systems from the 90's to 2026"`}
+            placeholder={t("misc.generateDocument.promptPlaceholder")}
             style={{
               width: "100%", padding: "0.75rem", borderRadius: "8px",
               border: "1px solid var(--border)", background: "var(--background)",
@@ -199,14 +201,14 @@ export function GenerateDocumentDialog({
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
               <Loader2 style={{ width: "0.875rem", height: "0.875rem", color: "var(--primary)", animation: "spin 1s linear infinite" }} />
               <span style={{ fontSize: "0.8rem", color: "var(--foreground)", fontWeight: 500 }}>
-                {STATUS_MESSAGES[statusIdx]}
+                {t(STATUS_MESSAGES[statusIdx])}
               </span>
             </div>
 
             {/* Elapsed time + model */}
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-              <span>Elapsed: {formatTime(elapsed)}</span>
-              <span>Collection: {collectionLabel}</span>
+              <span>{t("misc.generateDocument.elapsed", { time: formatTime(elapsed) })}</span>
+              <span>{t("misc.generateDocument.collection", { name: collectionLabel })}</span>
             </div>
 
             {/* Prompt preview */}
@@ -216,7 +218,7 @@ export function GenerateDocumentDialog({
               overflow: "hidden", textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}>
-              &ldquo;{prompt}&rdquo;
+              {"\u201C"}{prompt}{"\u201D"}
             </p>
           </div>
         )}
@@ -236,7 +238,7 @@ export function GenerateDocumentDialog({
                 color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer",
               }}
             >
-              Cancel
+              {t("common.cancel")}
             </button>
             <button
               data-testid="generate-dialog-generate-button"
@@ -253,14 +255,14 @@ export function GenerateDocumentDialog({
               }}
             >
               <Sparkles style={{ width: "0.875rem", height: "0.875rem" }} />
-              Generate
+              {t("misc.generateDocument.generate")}
             </button>
           </div>
         )}
 
         {!generating && (
           <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.75rem", textAlign: "center" }}>
-            ⌘ Enter to generate
+            {t("misc.generateDocument.shortcutHint")}
           </p>
         )}
       </div>

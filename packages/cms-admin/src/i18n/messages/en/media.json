@@ -1,1 +1,36 @@
-{}
+{
+  "aiMetadataPopover": {
+    "copyCaption": "Copy caption",
+    "copyAlt": "Copy alt-text",
+    "copyTags": "Copy tags",
+    "copy": "Copy",
+    "analysisFailed": "Analysis failed",
+    "triggerTitle": "AI metadata",
+    "heading": "AI Image Analysis",
+    "reanalyze": "Re-analyze",
+    "loading": "Loading…",
+    "noAnalysis": "No AI analysis yet.",
+    "analyze": "Analyze",
+    "analyzing": "Analyzing image…",
+    "caption": "Caption",
+    "altText": "Alt-text",
+    "applied": "Applied",
+    "applyAltTitle": "Apply alt-text to image",
+    "apply": "Apply",
+    "tags": "Tags",
+    "analyzedAt": "Analyzed: {date} · {provider}",
+    "ai": "AI"
+  },
+  "isuMediaProcessing": {
+    "loading": "Loading settings...",
+    "generateVariants": "Generate WebP variants on upload",
+    "variantWidths": "Variant widths (px)",
+    "webpQuality": "WebP quality: {quality}",
+    "saved": "Saved",
+    "saving": "Saving...",
+    "save": "Save"
+  },
+  "previewThumb": {
+    "noPreview": "No preview"
+  }
+}

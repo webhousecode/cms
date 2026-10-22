@@ -5,6 +5,7 @@ import { FieldEditor } from "./field-editor";
 import { ColumnsEditor } from "./columns-editor";
 import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus, Copy, Settings2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   field: FieldConfig;
@@ -17,8 +18,8 @@ interface Props {
   onExpandedChange?: (expanded: Record<number, boolean>) => void;
 }
 
-function getBlockLabel(block: Record<string, unknown>, config: BlockConfig | undefined): string {
-  if (!config) return String(block._block ?? "Unknown");
+function getBlockLabel(block: Record<string, unknown>, config: BlockConfig | undefined, t: ReturnType<typeof useT>): string {
+  if (!config) return String(block._block ?? t("editor.blocksEditor.unknown"));
   // Use first text/textarea/richtext field value if available
   for (const f of config.fields) {
     if ((f.type === "text" || f.type === "textarea" || f.type === "richtext") && block[f.name]) {
@@ -33,6 +34,7 @@ function getBlockLabel(block: Record<string, unknown>, config: BlockConfig | und
 }
 
 export function BlocksEditor({ field, value, onChange, locked, blocksConfig = [], expandedState, onExpandedChange }: Props) {
+  const t = useT();
   const blocks = Array.isArray(value) ? value : [];
   const baseNames = field.blocks ?? blocksConfig.map((b) => b.name);
   // Add builtin blocks that exist in blocksConfig but aren't already in baseNames
@@ -272,7 +274,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
             }}
             className={allOpen ? "" : "hover:text-foreground transition-colors"}
           >
-            Open all
+            {t("editor.columnsEditor.openAll")}
           </button>
           <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: 0.3 }}>|</span>
           <button
@@ -287,13 +289,13 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
             }}
             className={allClosed ? "" : "hover:text-foreground transition-colors"}
           >
-            Close all
+            {t("editor.columnsEditor.closeAll")}
           </button>
         </div>
       )}
       {blocks.length === 0 && (
         <div style={{ padding: "1.5rem", textAlign: "center", color: "var(--muted-foreground)", fontSize: "0.85rem", border: "1px dashed var(--border)", borderRadius: "8px" }}>
-          No sections added
+          {t("editor.blocksEditor.empty")}
         </div>
       )}
       {blocks.map((block, i) => {
@@ -350,27 +352,27 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                 {config?.label ?? blockType}
               </span>
               <span style={{ flex: 1, fontSize: "0.85rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
-                {getBlockLabel(block, config)}
+                {getBlockLabel(block, config, t)}
               </span>
               {!locked && (
                 <span data-testid={`block-actions-${i}`} style={{ display: "flex", gap: "0.25rem", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
                   {confirmRemoveIdx === i ? (
                     <>
-                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px", whiteSpace: "nowrap" }}>Remove?</span>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px", whiteSpace: "nowrap" }}>{t("editor.confirm.remove")}</span>
                       <button data-testid={`block-remove-confirm-${i}`} type="button" onClick={() => {
                         if (confirmTimer.current) clearTimeout(confirmTimer.current);
                         setConfirmRemoveIdx(null);
                         removeBlock(i);
-                      }} style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      }} style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.confirm.yes")}</button>
                       <button data-testid={`block-remove-cancel-${i}`} type="button" onClick={() => {
                         if (confirmTimer.current) clearTimeout(confirmTimer.current);
                         setConfirmRemoveIdx(null);
-                      }} style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                      }} style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.confirm.no")}</button>
                     </>
                   ) : (
                     <>
                     {config?.propertyFields && config.propertyFields.length > 0 && (
-                      <button data-testid={`block-properties-${i}`} type="button" onClick={() => setPropsOpenIdx(propsOpenIdx === i ? null : i)} title="Properties" style={{ background: "none", border: "none", cursor: "pointer", color: propsOpenIdx === i ? "var(--primary)" : "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
+                      <button data-testid={`block-properties-${i}`} type="button" onClick={() => setPropsOpenIdx(propsOpenIdx === i ? null : i)} title={t("editor.blocksEditor.properties")} style={{ background: "none", border: "none", cursor: "pointer", color: propsOpenIdx === i ? "var(--primary)" : "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
                         <Settings2 style={{ width: 14, height: 14 }} />
                       </button>
                     )}
@@ -380,14 +382,14 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                     <button data-testid={`block-move-down-${i}`} type="button" disabled={i === blocks.length - 1} onClick={() => moveBlock(i, 1)} style={{ background: "none", border: "none", cursor: i === blocks.length - 1 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === blocks.length - 1 ? 0.3 : 1 }}>
                       <ArrowDown style={{ width: 14, height: 14 }} />
                     </button>
-                    <button data-testid={`block-clone-${i}`} type="button" onClick={() => cloneBlock(i)} title="Clone block" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
+                    <button data-testid={`block-clone-${i}`} type="button" onClick={() => cloneBlock(i)} title={t("editor.blocksEditor.cloneBlock")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
                       <Copy style={{ width: 14, height: 14 }} />
                     </button>
                     <button data-testid={`block-remove-trigger-${i}`} type="button" onClick={() => {
                       if (confirmTimer.current) clearTimeout(confirmTimer.current);
                       setConfirmRemoveIdx(i);
                       confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000);
-                    }} style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }} title="Remove block" className="hover:text-destructive transition-colors">×</button>
+                    }} style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }} title={t("editor.blocksEditor.removeBlock")} className="hover:text-destructive transition-colors">×</button>
                     </>
                   )}
                 </span>
@@ -396,7 +398,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
             {/* Properties panel — inline below header */}
             {propsOpenIdx === i && propFields.length > 0 && (
               <div style={{ padding: "0.75rem", borderTop: "1px solid var(--border)", background: "color-mix(in srgb, var(--muted) 30%, transparent)" }}>
-                <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Properties</p>
+                <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>{t("editor.blocksEditor.properties")}</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {propFields.map((f) => (
                     <div key={f.name}>
@@ -432,7 +434,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                   <>
                     {fields.length === 0 && (
                       <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                        No block definition found for &ldquo;{blockType}&rdquo;
+                        {t("editor.blocksEditor.noDefinition", { type: blockType })}
                       </div>
                     )}
                     {(() => {
@@ -530,7 +532,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                 btn.style.boxShadow = "none";
               }}
             >
-              <Plus style={{ width: 14, height: 14 }} /> Add block
+              <Plus style={{ width: 14, height: 14 }} /> {t("editor.blocksEditor.addBlock")}
             </button>
           ) : (
             <div style={{ width: "220px" }}>
@@ -540,7 +542,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                 type="text"
                 value={pickerQuery}
                 onChange={(e) => setPickerQuery(e.target.value)}
-                placeholder="Type to search..."
+                placeholder={t("editor.blocksEditor.searchPlaceholder")}
                 style={{
                   width: "100%",
                   padding: "0.3rem 0.5rem",
@@ -608,7 +610,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                     })}
                     {filteredBlockNames.length === 0 && pickerQuery && (
                       <div style={{ padding: "0.5rem", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
-                        No match
+                        {t("editor.blocksEditor.noMatch")}
                       </div>
                     )}
                   </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock, Calendar, Image, Zap, Search, Eye } from "lucide-react";
 import { SiteIntroCard } from "@/components/site-intro-card";
+import { useT } from "@/lib/i18n-context";
 
 interface CollectionStat {
   name: string;
@@ -54,6 +55,7 @@ function SkeletonCard() {
 }
 
 export function DashboardStats() {
+  const t = useT();
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState(false);
 
@@ -77,7 +79,7 @@ export function DashboardStats() {
   if (error) {
     return (
       <div className="p-8 max-w-5xl">
-        <p className="text-muted-foreground text-sm">Failed to load dashboard stats.</p>
+        <p className="text-muted-foreground text-sm">{t("dashboard.dashboardStats.loadFailed")}</p>
       </div>
     );
   }
@@ -86,8 +88,8 @@ export function DashboardStats() {
     return (
       <div className="p-8 max-w-5xl">
         <div className="mb-10">
-          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Dashboard</p>
-          <h1 className="text-2xl font-bold text-foreground">Content Overview</h1>
+          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">{t("dashboard.dashboardStats.eyebrow")}</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("dashboard.dashboardStats.title")}</h1>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoRows: "minmax(10rem, auto)" }}>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -103,8 +105,8 @@ export function DashboardStats() {
   return (
     <div className="p-8 max-w-5xl">
       <div className="mb-10">
-        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Dashboard</p>
-        <h1 className="text-2xl font-bold text-foreground">Content Overview</h1>
+        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">{t("dashboard.dashboardStats.eyebrow")}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("dashboard.dashboardStats.title")}</h1>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoRows: "minmax(10rem, auto)" }}>
@@ -123,11 +125,11 @@ export function DashboardStats() {
             <div className="flex gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-                {col.published} published
+                {t("dashboard.dashboardStats.published", { count: col.published })}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-status-warning inline-block" />
-                {col.draft} draft
+                {t("dashboard.dashboardStats.draft", { count: col.draft })}
               </span>
             </div>
           </Link>
@@ -139,12 +141,12 @@ export function DashboardStats() {
           className="group block p-5 rounded-xl border border-border bg-card hover:border-status-warning/40 hover:bg-secondary transition-all duration-200"
         >
           <div className="flex items-start justify-between mb-4">
-            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">scheduled</p>
+            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">{t("dashboard.dashboardStats.scheduledEyebrow")}</p>
             <span className="text-2xl font-bold text-status-warning">{scheduledCount}</span>
           </div>
           <p className="font-semibold text-foreground mb-3 group-hover:text-status-warning transition-colors flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Scheduled Content
+            {t("dashboard.dashboardStats.scheduledTitle")}
           </p>
           {upcomingItems.length > 0 ? (
             <div className="space-y-1.5">
@@ -162,11 +164,11 @@ export function DashboardStats() {
                 );
               })}
               {upcomingItems.length > 2 && (
-                <p className="text-[10px] text-muted-foreground">+{upcomingItems.length - 2} more</p>
+                <p className="text-[10px] text-muted-foreground">{t("dashboard.dashboardStats.more", { count: upcomingItems.length - 2 })}</p>
               )}
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">No upcoming scheduled content</p>
+            <p className="text-xs text-muted-foreground">{t("dashboard.dashboardStats.noScheduled")}</p>
           )}
         </Link>
 
@@ -176,14 +178,14 @@ export function DashboardStats() {
           className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-all duration-200"
         >
           <div className="flex items-start justify-between mb-4">
-            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">media</p>
+            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">{t("dashboard.dashboardStats.mediaEyebrow")}</p>
             <span className="text-2xl font-bold text-primary">{mediaCount}</span>
           </div>
           <p className="font-semibold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center gap-2">
             <Image className="w-4 h-4" />
-            Media Library
+            {t("dashboard.dashboardStats.mediaTitle")}
           </p>
-          <p className="text-xs text-muted-foreground">Images, videos, audio, files</p>
+          <p className="text-xs text-muted-foreground">{t("dashboard.dashboardStats.mediaHint")}</p>
         </Link>
 
         {/* Interactives card */}
@@ -192,14 +194,14 @@ export function DashboardStats() {
           className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-all duration-200"
         >
           <div className="flex items-start justify-between mb-4">
-            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">interactives</p>
+            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">{t("dashboard.dashboardStats.intsEyebrow")}</p>
             <span className="text-2xl font-bold text-primary">{intsCount}</span>
           </div>
           <p className="font-semibold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center gap-2">
             <Zap className="w-4 h-4" />
-            Interactives
+            {t("dashboard.dashboardStats.intsTitle")}
           </p>
-          <p className="text-xs text-muted-foreground">Charts, demos, calculators</p>
+          <p className="text-xs text-muted-foreground">{t("dashboard.dashboardStats.intsHint")}</p>
         </Link>
 
         {/* SEO card */}
@@ -208,24 +210,24 @@ export function DashboardStats() {
           className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-all duration-200"
         >
           <div className="flex items-start justify-between mb-4">
-            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">seo</p>
+            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">{t("dashboard.dashboardStats.seoEyebrow")}</p>
             <span className="text-2xl font-bold" style={{ color: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "var(--status-warning)" : "#f87171" }}>
               {seoAvgScore}
             </span>
           </div>
           <p className="font-semibold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center gap-2">
             <Search className="w-4 h-4" />
-            SEO Health
+            {t("dashboard.dashboardStats.seoTitle")}
           </p>
           <div className="space-y-1 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#4ade80" }} />
-                {seoOptimized} optimized
+                {t("dashboard.dashboardStats.optimized", { count: seoOptimized })}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#f87171" }} />
-                {seoIssues} need attention
+                {t("dashboard.dashboardStats.needAttention", { count: seoIssues })}
               </span>
             </div>
             <div className="h-1 rounded-full mt-2" style={{ background: "var(--border)" }}>
@@ -236,7 +238,7 @@ export function DashboardStats() {
                 <span className="font-mono" style={{ fontWeight: 600, color: keywordCoverage >= 50 ? "#4ade80" : keywordCoverage >= 20 ? "var(--status-warning)" : "#f87171" }}>
                   {keywordCoverage}%
                 </span>
-                <span>keyword coverage ({keywordCount} tracked)</span>
+                <span>{t("dashboard.dashboardStats.keywordCoverage", { count: keywordCount })}</span>
               </div>
             )}
           </div>
@@ -248,14 +250,14 @@ export function DashboardStats() {
           className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-all duration-200"
         >
           <div className="flex items-start justify-between mb-4">
-            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">visibility</p>
+            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">{t("dashboard.dashboardStats.visibilityEyebrow")}</p>
             <span className="text-2xl font-bold" style={{ color: visibilityScore >= 80 ? "#4ade80" : visibilityScore >= 50 ? "var(--status-warning)" : "#f87171" }}>
               {visibilityScore}
             </span>
           </div>
           <p className="font-semibold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center gap-2">
             <Eye className="w-4 h-4" />
-            Visibility
+            {t("dashboard.dashboardStats.visibilityTitle")}
           </p>
           <div className="space-y-1 text-xs text-muted-foreground">
             <div className="flex items-center gap-3">
@@ -263,19 +265,19 @@ export function DashboardStats() {
                 <span className="font-mono" style={{ fontWeight: 600, color: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "var(--status-warning)" : "#f87171" }}>
                   {seoAvgScore}
                 </span>
-                SEO
+                {t("dashboard.dashboardStats.seo")}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="font-mono" style={{ fontWeight: 600, color: geoAvgScore >= 80 ? "#4ade80" : geoAvgScore >= 50 ? "var(--status-warning)" : "#f87171" }}>
                   {geoAvgScore}
                 </span>
-                GEO
+                {t("dashboard.dashboardStats.geo")}
               </span>
             </div>
             <div className="h-1 rounded-full mt-2" style={{ background: "var(--border)" }}>
               <div className="h-full rounded-full" style={{ width: `${visibilityScore}%`, background: visibilityScore >= 80 ? "#4ade80" : visibilityScore >= 50 ? "var(--status-warning)" : "#f87171" }} />
             </div>
-            <p className="mt-1">Search engines + AI platforms</p>
+            <p className="mt-1">{t("dashboard.dashboardStats.visibilityHint")}</p>
           </div>
         </Link>
       </div>

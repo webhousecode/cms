@@ -5,6 +5,7 @@ import { Trash2, RotateCcw, X, Search, AlertTriangle } from "lucide-react";
 import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useT } from "@/lib/i18n-context";
 
 const RETENTION_DAYS = parseInt(process.env.NEXT_PUBLIC_TRASH_RETENTION_DAYS ?? "30");
 
@@ -21,9 +22,10 @@ interface TrashedItem {
   };
 }
 
-function ConfirmDialog({ message, confirmLabel = "Confirm", onConfirm, onCancel }: {
+function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: {
   message: string; confirmLabel?: string; onConfirm: () => void; onCancel: () => void;
 }) {
+  const t = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
     document.addEventListener("keydown", onKey);
@@ -41,8 +43,8 @@ function ConfirmDialog({ message, confirmLabel = "Confirm", onConfirm, onCancel 
           <p style={{ fontSize: "0.9rem", color: "var(--foreground)", margin: 0 }}>{message}</p>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-          <button data-testid="trash-confirm-dialog-cancel" type="button" onClick={onCancel} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
-          <button data-testid="trash-confirm-dialog-confirm" type="button" onClick={onConfirm} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>{confirmLabel}</button>
+          <button data-testid="trash-confirm-dialog-cancel" type="button" onClick={onCancel} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>{t("tools.trash.cancel")}</button>
+          <button data-testid="trash-confirm-dialog-confirm" type="button" onClick={onConfirm} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>{confirmLabel ?? t("tools.trash.confirm")}</button>
         </div>
       </div>
     </div>
@@ -50,6 +52,7 @@ function ConfirmDialog({ message, confirmLabel = "Confirm", onConfirm, onCancel 
 }
 
 export default function TrashPage() {
+  const t = useT();
   const [items, setItems] = useState<TrashedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -148,7 +151,7 @@ export default function TrashPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid var(--border)", position: "sticky", top: "var(--cms-chrome-top, 84px)", zIndex: 30, backgroundColor: "var(--card)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
           <Trash2 style={{ width: "16px", height: "16px", color: "var(--muted-foreground)" }} />
-          <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Trash</span>{!loading && items.length > 0 && (
+          <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("tools.trash.title")}</span>{!loading && items.length > 0 && (
             <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", background: "var(--muted)", borderRadius: "999px", padding: "0.1rem 0.5rem" }}>
               {items.length}
             </span>
@@ -156,7 +159,7 @@ export default function TrashPage() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-            Auto-deleted after {RETENTION_DAYS} days
+            {t("tools.trash.autoDeleted", { n: RETENTION_DAYS })}
           </span>
           {canEmpty && items.length > 0 && (
             <button
@@ -166,7 +169,7 @@ export default function TrashPage() {
               style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.35rem 0.75rem", borderRadius: "6px", border: "1px solid color-mix(in oklch, var(--destructive) 40%, transparent)", background: "transparent", color: "var(--destructive)", fontSize: "0.75rem", cursor: "pointer" }}
             >
               <Trash2 style={{ width: "12px", height: "12px" }} />
-              Empty Trash
+              {t("tools.trash.emptyTrash")}
             </button>
           )}
         </div>
@@ -182,7 +185,7 @@ export default function TrashPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search trash…"
+              placeholder={t("tools.trash.searchPlaceholder")}
               style={{ width: "100%", padding: "0.4rem 0.75rem 0.4rem 2rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--input)", color: "var(--foreground)", fontSize: "0.85rem", outline: "none" }}
             />
             {search && (
@@ -194,18 +197,18 @@ export default function TrashPage() {
         )}
 
         {loading && (
-          <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Loading…</p>
+          <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>{t("tools.trash.loading")}</p>
         )}
 
         {!loading && items.length === 0 && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", padding: "4rem 0", color: "var(--muted-foreground)" }}>
             <Trash2 style={{ width: "40px", height: "40px", opacity: 0.2 }} />
-            <p style={{ fontSize: "0.9rem" }}>Trash is empty</p>
+            <p style={{ fontSize: "0.9rem" }}>{t("tools.trash.empty")}</p>
           </div>
         )}
 
         {!loading && filtered.length === 0 && items.length > 0 && (
-          <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>No results for &ldquo;{search}&rdquo;</p>
+          <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>{t("tools.trash.noResults", { search })}</p>
         )}
 
         {!loading && filtered.length > 0 && (
@@ -238,11 +241,11 @@ export default function TrashPage() {
                         type="button"
                         disabled={isWorking}
                         onClick={() => restore(item)}
-                        title="Restore"
+                        title={t("tools.trash.restore")}
                         style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.75rem", cursor: isWorking ? "wait" : "pointer" }}
                       >
                         <RotateCcw style={{ width: "11px", height: "11px" }} />
-                        Restore
+                        {t("tools.trash.restore")}
                       </button>
                       <button
                         data-testid="trash-delete-button"
@@ -259,7 +262,7 @@ export default function TrashPage() {
                             confirmDeleteTimer.current = setTimeout(() => setConfirmDeleteId(null), 3000);
                           }
                         }}
-                        title="Delete permanently"
+                        title={t("tools.trash.deletePermanently")}
                         style={{
                           display: "flex", alignItems: "center", justifyContent: "center",
                           minWidth: confirmDeleteId === item.doc.id ? "auto" : "28px",
@@ -276,7 +279,7 @@ export default function TrashPage() {
                         onMouseEnter={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--destructive)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "color-mix(in oklch, var(--destructive) 30%, transparent)"; } }}
                         onMouseLeave={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent"; } }}
                       >
-                        {confirmDeleteId === item.doc.id ? "OK" : <X style={{ width: "13px", height: "13px" }} />}
+                        {confirmDeleteId === item.doc.id ? t("tools.trash.ok") : <X style={{ width: "13px", height: "13px" }} />}
                       </button>
                     </div>
                   )}
@@ -289,8 +292,8 @@ export default function TrashPage() {
 
       {confirmEmpty && (
         <ConfirmDialog
-          message={`Permanently delete all ${items.length} item${items.length !== 1 ? "s" : ""} in trash? This cannot be undone.`}
-          confirmLabel="Empty Trash"
+          message={items.length === 1 ? t("tools.trash.emptyConfirmOne", { n: items.length }) : t("tools.trash.emptyConfirmOther", { n: items.length })}
+          confirmLabel={t("tools.trash.emptyTrash")}
           onConfirm={emptyTrash}
           onCancel={() => setConfirmEmpty(false)}
         />

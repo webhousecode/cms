@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { X, Copy, Download, Square, Terminal, Check, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ansiToHtml } from "@/lib/build/ansi-to-html";
+import { useT } from "@/lib/i18n-context";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -43,6 +44,7 @@ interface BuildLogPanelProps {
 // ── Component ────────────────────────────────────────────────
 
 export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChange }: BuildLogPanelProps) {
+  const t = useT();
   const [logs, setLogs] = useState<LogLine[]>([]);
   const [status, setStatus] = useState<BuildStatus>("idle");
   const [exitCode, setExitCode] = useState<number | null>(null);
@@ -94,7 +96,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
     setCommand("");
     setAutoScroll(true);
 
-    toast.info(profile ? `Build started (${profile})` : "Build started", { duration: 2000 });
+    toast.info(profile ? t("misc.buildLog.startedProfile", { profile }) : t("misc.buildLog.started"), { duration: 2000 });
 
     try {
       const res = await fetch("/api/cms/build/execute", {
@@ -114,7 +116,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
         } catch { /* ignore */ }
         if (currentBuild === buildIdRef.current) {
           setStatus("failed");
-          toast.error("Build failed", { description: errMsg, duration: 8000 });
+          toast.error(t("misc.buildLog.failed"), { description: errMsg, duration: 8000 });
         }
         return;
       }
@@ -142,12 +144,12 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
       if ((err as Error).name === "AbortError") {
         if (currentBuild === buildIdRef.current) {
           setStatus("cancelled");
-          toast.info("Build cancelled", { duration: 3000 });
+          toast.info(t("misc.buildLog.cancelledToast"), { duration: 3000 });
         }
       } else {
         if (currentBuild === buildIdRef.current) {
           setStatus("failed");
-          toast.error("Build failed", {
+          toast.error(t("misc.buildLog.failed"), {
             description: (err as Error).message,
             duration: 8000,
           });
@@ -186,13 +188,13 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
           setExitCode(event.exitCode as number);
           setDuration(event.duration as number);
           if (success) {
-            toast.success("Build complete", {
+            toast.success(t("misc.buildLog.complete"), {
               description: `${formatDuration(event.duration as number)}`,
               duration: 5000,
             });
           } else {
-            toast.error("Build failed", {
-              description: `Exit code ${event.exitCode}`,
+            toast.error(t("misc.buildLog.failed"), {
+              description: t("misc.buildLog.exitCode", { code: String(event.exitCode) }),
               duration: 8000,
             });
           }
@@ -200,7 +202,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
         }
         case "error":
           setStatus("failed");
-          toast.error("Build error", {
+          toast.error(t("misc.buildLog.error"), {
             description: event.message as string,
             duration: 8000,
           });
@@ -217,7 +219,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
   const handleCopy = useCallback(() => {
     const text = logs.map((l) => `[${l.stream}] ${l.line}`).join("\n");
     navigator.clipboard.writeText(text).then(() => {
-      toast.success("Copied to clipboard", { duration: 2000 });
+      toast.success(t("misc.buildLog.copied"), { duration: 2000 });
     });
   }, [logs]);
 
@@ -269,7 +271,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
           <Terminal
             style={{ width: "0.9rem", height: "0.9rem", color: "var(--muted-foreground)" }}
           />
-          <span style={{ fontWeight: 600, fontSize: "0.8rem" }}>Build Log</span>
+          <span style={{ fontWeight: 600, fontSize: "0.8rem" }}>{t("misc.buildLog.title")}</span>
           <StatusBadge status={status} />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
@@ -277,7 +279,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
             <button
               type="button"
               onClick={handleCancel}
-              title="Cancel build"
+              title={t("misc.buildLog.cancelBuild")}
               style={{
                 background: "none",
                 border: "1px solid var(--destructive)",
@@ -292,14 +294,14 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
               }}
             >
               <Square style={{ width: "0.6rem", height: "0.6rem" }} />
-              Cancel
+              {t("misc.buildLog.cancel")}
             </button>
           )}
           {status !== "running" && status !== "idle" && (
             <button
               type="button"
               onClick={startBuild}
-              title="Re-run build"
+              title={t("misc.buildLog.rerunBuild")}
               style={{
                 background: "none",
                 border: "1px solid var(--border)",
@@ -314,7 +316,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
               }}
             >
               <Terminal style={{ width: "0.6rem", height: "0.6rem" }} />
-              Re-run
+              {t("misc.buildLog.rerun")}
             </button>
           )}
           <button
@@ -411,7 +413,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
             }}
           >
             <Terminal style={{ width: "2rem", height: "2rem", opacity: 0.3 }} />
-            <span style={{ fontSize: "0.8rem" }}>No build running</span>
+            <span style={{ fontSize: "0.8rem" }}>{t("misc.buildLog.noBuild")}</span>
             <button
               type="button"
               onClick={startBuild}
@@ -426,7 +428,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
                 cursor: "pointer",
               }}
             >
-              Start Build
+              {t("misc.buildLog.start")}
             </button>
           </div>
         )}
@@ -477,7 +479,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
               style={{ width: "0.7rem", height: "0.7rem" }}
               className="animate-spin"
             />
-            Building...
+            {t("misc.buildLog.building")}
           </div>
         )}
       </div>
@@ -495,16 +497,16 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
         }}
       >
         <div style={{ display: "flex", gap: "0.75rem" }}>
-          {exitCode !== null && <span>Exit: {exitCode}</span>}
+          {exitCode !== null && <span>{t("misc.buildLog.exit", { code: exitCode })}</span>}
           {duration > 0 && <span>{formatDuration(duration)}</span>}
-          {logs.length > 0 && <span>{logs.length} lines</span>}
+          {logs.length > 0 && <span>{t("misc.buildLog.lines", { count: logs.length })}</span>}
         </div>
         <div style={{ display: "flex", gap: "0.25rem" }}>
           <button
             type="button"
             onClick={handleCopy}
             disabled={logs.length === 0}
-            title="Copy logs"
+            title={t("misc.buildLog.copyLogs")}
             style={{
               background: "none",
               border: "1px solid var(--border)",
@@ -519,13 +521,13 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
             }}
           >
             <Copy style={{ width: "0.6rem", height: "0.6rem" }} />
-            Copy
+            {t("misc.buildLog.copy")}
           </button>
           <button
             type="button"
             onClick={handleDownload}
             disabled={logs.length === 0}
-            title="Download logs"
+            title={t("misc.buildLog.downloadLogs")}
             style={{
               background: "none",
               border: "1px solid var(--border)",
@@ -540,7 +542,7 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
             }}
           >
             <Download style={{ width: "0.6rem", height: "0.6rem" }} />
-            Download
+            {t("misc.buildLog.download")}
           </button>
         </div>
       </div>
@@ -552,29 +554,30 @@ export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChang
 // ─�� Helpers ──────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: BuildStatus }) {
+  const t = useT();
   const config: Record<BuildStatus, { label: string; color: string; bg: string; icon?: React.ReactNode }> =
     {
-      idle: { label: "Ready", color: "var(--muted-foreground)", bg: "transparent" },
+      idle: { label: "misc.buildLog.status.ready", color: "var(--muted-foreground)", bg: "transparent" },
       running: {
-        label: "Running",
+        label: "misc.buildLog.status.running",
         color: "#f0c674",
         bg: "rgba(240,198,116,0.12)",
         icon: <Loader2 style={{ width: "0.55rem", height: "0.55rem" }} className="animate-spin" />,
       },
       success: {
-        label: "Success",
+        label: "misc.buildLog.status.success",
         color: "rgb(74 222 128)",
         bg: "rgba(74,222,128,0.12)",
         icon: <Check style={{ width: "0.55rem", height: "0.55rem" }} />,
       },
       failed: {
-        label: "Failed",
+        label: "misc.buildLog.status.failed",
         color: "var(--destructive)",
         bg: "rgba(229,85,97,0.12)",
         icon: <AlertTriangle style={{ width: "0.55rem", height: "0.55rem" }} />,
       },
       cancelled: {
-        label: "Cancelled",
+        label: "misc.buildLog.status.cancelled",
         color: "var(--muted-foreground)",
         bg: "rgba(128,128,128,0.12)",
         icon: <Square style={{ width: "0.55rem", height: "0.55rem" }} />,
@@ -600,7 +603,7 @@ function StatusBadge({ status }: { status: BuildStatus }) {
       }}
     >
       {c.icon}
-      {c.label}
+      {t(c.label)}
     </span>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n-context";
 
 /* Walk up the React fiber tree to find the nearest named components */
 function getComponentName(el: Element): string | null {
@@ -49,6 +50,7 @@ function getComponentName(el: Element): string | null {
 }
 
 export function DevInspector() {
+  const t = useT();
   const [active, setActive] = useState(false);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; name: string } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -123,7 +125,7 @@ export function DevInspector() {
         data-testid="dev-inspector-toggle-button"
         type="button"
         onClick={toggle}
-        title="Toggle dev inspector (Ctrl+I)"
+        title={t("misc.devInspector.toggleTitle")}
         style={{
           position: "fixed", bottom: "12px", right: "12px", zIndex: 9999,
           padding: "3px 8px", borderRadius: "6px", border: "none",
@@ -158,8 +160,8 @@ export function DevInspector() {
           overflow: "hidden",
           textOverflow: "ellipsis",
         }}>
-          {copied ? <span style={{ color: "#4ade80" }}>✓ copied</span> : tooltip.name}
-          {!copied && <span style={{ opacity: 0.4, marginLeft: "0.75rem" }}>⌘C</span>}
+          {copied ? <span style={{ color: "#4ade80" }}>{t("misc.devInspector.copied")}</span> : tooltip.name}
+          {!copied && <span style={{ opacity: 0.4, marginLeft: "0.75rem" }}>{"⌘C"}</span>}
         </div>
       )}
     </>

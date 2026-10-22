@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { FLY_REGIONS, FLY_VM_SIZES } from "@/lib/deploy/fly-machines";
 import { Download } from "lucide-react";
 import type { WizardState } from "./deploy-wizard";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   appName: string;
@@ -33,6 +34,7 @@ const labelStyle: React.CSSProperties = {
 };
 
 export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }: Props) {
+  const t = useT();
   const appNameValid = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/.test(appName);
 
   function handleDownloadZip() {
@@ -54,21 +56,21 @@ export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }:
 
   return (
     <div>
-      <SectionHeading>Configure deployment</SectionHeading>
+      <SectionHeading>{t("misc.deployWizard.configure.title")}</SectionHeading>
       <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.5rem" }}>
-        Set your app name, region, and VM size. All settings can be changed after deploy.
+        {t("misc.deployWizard.configure.intro")}
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxWidth: "28rem" }}>
         {/* App name */}
         <div>
-          <label style={labelStyle}>App name</label>
+          <label style={labelStyle}>{t("misc.deployWizard.configure.appName")}</label>
           <input
             data-testid="deploy-app-name-input"
             type="text"
             value={appName}
             onChange={(e) => onUpdate({ appName: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
-            placeholder="my-awesome-site"
+            placeholder={t("misc.deployWizard.configure.appNamePlaceholder")}
             style={{
               ...inputStyle,
               borderColor: appName && !appNameValid ? "var(--destructive)" : undefined,
@@ -76,30 +78,30 @@ export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }:
           />
           <div style={{ fontSize: "0.68rem", color: appName && !appNameValid ? "var(--destructive)" : "var(--muted-foreground)", marginTop: "0.25rem" }}>
             {appName && !appNameValid
-              ? "3-30 characters, lowercase letters, numbers, and hyphens only"
-              : `Your site will be at ${appName || "___"}.fly.dev`}
+              ? t("misc.deployWizard.configure.appNameInvalid")
+              : t("misc.deployWizard.configure.appNameHint", { host: `${appName || "___"}.fly.dev` })}
           </div>
         </div>
 
         {/* Admin email */}
         <div>
-          <label style={labelStyle}>Admin email</label>
+          <label style={labelStyle}>{t("misc.deployWizard.configure.adminEmail")}</label>
           <input
             data-testid="deploy-admin-email-input"
             type="email"
             value={adminEmail}
             onChange={(e) => onUpdate({ adminEmail: e.target.value })}
-            placeholder="admin@webhouse.app"
+            placeholder={t("misc.deployWizard.configure.adminEmailPlaceholder")}
             style={inputStyle}
           />
           <div style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-            Login email for the CMS admin. Password is auto-generated.
+            {t("misc.deployWizard.configure.adminEmailHint")}
           </div>
         </div>
 
         {/* Region */}
         <div>
-          <label style={labelStyle}>Region</label>
+          <label style={labelStyle}>{t("misc.deployWizard.configure.region")}</label>
           <CustomSelect
             options={FLY_REGIONS.map((r) => ({ value: r.value, label: r.label }))}
             value={region}
@@ -110,7 +112,7 @@ export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }:
 
         {/* VM size */}
         <div>
-          <label style={labelStyle}>VM size</label>
+          <label style={labelStyle}>{t("misc.deployWizard.configure.vmSize")}</label>
           <CustomSelect
             options={FLY_VM_SIZES.map((s) => ({ value: s.value, label: s.label }))}
             value={vmSize}
@@ -127,7 +129,7 @@ export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }:
         borderTop: "1px solid var(--border)",
       }}>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
-          Prefer to self-host? Download a Docker package with everything you need.
+          {t("misc.deployWizard.configure.selfHost")}
         </p>
         <button
           data-testid="deploy-download-docker-button"
@@ -148,7 +150,7 @@ export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }:
           }}
         >
           <Download style={{ width: 14, height: 14 }} />
-          Download Docker package
+          {t("misc.deployWizard.configure.downloadDocker")}
         </button>
       </div>
     </div>

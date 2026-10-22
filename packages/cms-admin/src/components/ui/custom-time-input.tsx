@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, type CSSProperties } from "react";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   value: string;
@@ -38,6 +39,7 @@ function normalize(raw: string): string | null {
 }
 
 export function CustomTimeInput({ value, onChange, disabled = false, style }: Props) {
+  const t = useT();
   const [draft, setDraft] = useState(value);
   const [focused, setFocused] = useState(false);
   const lastEmitted = useRef(value);
@@ -86,7 +88,7 @@ export function CustomTimeInput({ value, onChange, disabled = false, style }: Pr
         autoComplete="off"
         spellCheck={false}
         value={draft}
-        placeholder="HH:MM"
+        placeholder={t("common.timeInput.placeholder")}
         disabled={disabled}
         onChange={handleChange}
         onFocus={() => setFocused(true)}
@@ -111,7 +113,7 @@ export function CustomTimeInput({ value, onChange, disabled = false, style }: Pr
       />
       {showError && (
         <span style={{ fontSize: "0.7rem", color: "var(--destructive)", lineHeight: 1.2 }}>
-          Use HH:MM (00:00 – 23:59)
+          {t("common.timeInput.formatHint")}
         </span>
       )}
     </div>

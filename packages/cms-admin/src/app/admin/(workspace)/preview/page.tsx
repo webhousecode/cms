@@ -3,8 +3,10 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { ExternalLink, RefreshCw, Hammer } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 function PreviewFrame() {
+  const t = useT();
   const params = useSearchParams();
   const rawUrl = params.get("url") ?? "";
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -43,11 +45,11 @@ function PreviewFrame() {
         }, 300);
       }
     } catch {
-      setBuildResult({ error: "Build request failed" });
+      setBuildResult({ error: t("tools.preview.buildFailed") });
     } finally {
       setBuilding(false);
     }
-  }, [url]);
+  }, [url, t]);
 
   return (
     <div data-testid="preview-root" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 84px)" }}>
@@ -70,7 +72,7 @@ function PreviewFrame() {
               : "color-mix(in srgb, var(--destructive) 15%, transparent)",
             color: buildResult.ok ? "#22c55e" : "var(--destructive)",
           }}>
-            {buildResult.ok ? "Built" : "Error"}
+            {buildResult.ok ? t("tools.preview.built") : t("tools.preview.error")}
           </span>
         )}
 
@@ -80,7 +82,7 @@ function PreviewFrame() {
           type="button"
           onClick={rebuild}
           disabled={building}
-          title="Rebuild site (run build.ts)"
+          title={t("tools.preview.rebuildTitle")}
           style={{
             display: "flex", alignItems: "center", gap: "0.3rem",
             background: "none", border: "1px solid var(--border)", borderRadius: "4px",
@@ -91,7 +93,7 @@ function PreviewFrame() {
           className="hover:border-primary hover:text-primary"
         >
           <Hammer style={{ width: 11, height: 11, animation: building ? "spin 1s linear infinite" : "none" }} />
-          {building ? "Building..." : "Rebuild"}
+          {building ? t("tools.preview.building") : t("tools.preview.rebuild")}
         </button>
 
         {/* Reload button */}
@@ -99,7 +101,7 @@ function PreviewFrame() {
           data-testid="preview-reload-button"
           type="button"
           onClick={reload}
-          title="Reload preview"
+          title={t("tools.preview.reloadTitle")}
           style={{
             display: "flex", alignItems: "center",
             background: "none", border: "none", cursor: "pointer",
@@ -115,7 +117,7 @@ function PreviewFrame() {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          title="Open in new browser tab"
+          title={t("tools.preview.openNewTab")}
           style={{ display: "flex", alignItems: "center", color: "var(--muted-foreground)", flexShrink: 0 }}
         >
           <ExternalLink style={{ width: 13, height: 13 }} />
@@ -126,11 +128,11 @@ function PreviewFrame() {
           ref={iframeRef}
           src={url}
           style={{ flex: 1, border: "none", width: "100%" }}
-          title="Preview"
+          title={t("tools.preview.iframeTitle")}
         />
       ) : (
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.875rem" }}>
-          Starting preview server...
+          {t("tools.preview.starting")}
         </div>
       )}
     </div>

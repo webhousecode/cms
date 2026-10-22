@@ -10,8 +10,10 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useT } from "@/lib/i18n-context";
 
 export function BidPanel() {
+  const t = useT();
   const params = useSearchParams();
   const [state, setState] = useState<{ configured: boolean; linked: boolean } | null>(null);
   const [error, setError] = useState("");
@@ -24,8 +26,8 @@ export function BidPanel() {
         if (!r.ok) throw new Error(String(r.status));
         setState((await r.json()) as { configured: boolean; linked: boolean });
       })
-      .catch(() => setError("Could not load Broberg ID status"));
-  }, []);
+      .catch(() => setError(t("settings.bidPanel.loadError")));
+  }, [t]);
 
   if (!state?.configured && !error) return null;
 
@@ -40,18 +42,18 @@ export function BidPanel() {
             Broberg ID
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Sign in with your Broberg ID account — the same login across broberg.ai services.
+            {t("settings.bidPanel.description")}
           </p>
         </div>
         {state && (
           <span data-testid="account-bid-status" className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
-            {state.linked ? "CONNECTED" : "NOT CONNECTED"}
+            {state.linked ? t("settings.bidPanel.connected") : t("settings.bidPanel.notConnected")}
           </span>
         )}
       </div>
 
       {justLinked && state?.linked && (
-        <p className="text-xs" style={{ color: "var(--primary)" }}>Broberg ID is connected. You can now sign in with it.</p>
+        <p className="text-xs" style={{ color: "var(--primary)" }}>{t("settings.bidPanel.justLinked")}</p>
       )}
       {error && <p className="text-xs" style={{ color: "var(--destructive)" }}>{error}</p>}
 
@@ -63,7 +65,7 @@ export function BidPanel() {
           className="inline-block text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent active:opacity-70 transition-colors"
           style={{ cursor: going ? "wait" : "pointer", textDecoration: "none" }}
         >
-          {going ? "Opening Broberg ID…" : "Connect Broberg ID"}
+          {going ? t("settings.bidPanel.opening") : t("settings.bidPanel.connect")}
         </a>
       )}
     </div>

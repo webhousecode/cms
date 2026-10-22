@@ -10,6 +10,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MapPin, Search, Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
+import { useT } from "@/lib/i18n-context";
 
 // Dynamically import Leaflet components (no SSR)
 const LeafletMap = dynamic(() => import("./map-leaflet"), { ssr: false });
@@ -33,6 +34,7 @@ const DEFAULT_CENTER = { lat: 55.676, lng: 12.568 }; // Copenhagen
 const DEFAULT_ZOOM = 14;
 
 export function MapEditor({ value, onChange, defaultCenter, defaultZoom, locked }: Props) {
+  const t = useT();
   const [address, setAddress] = useState(value?.address ?? "");
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
@@ -64,13 +66,13 @@ export function MapEditor({ value, onChange, defaultCenter, defaultZoom, locked 
         onChange(newVal);
         setAddress(r.display_name);
       } else {
-        setError("No results found");
+        setError(t("editor.mapEditor.noResults"));
       }
     } catch {
-      setError("Geocoding failed");
+      setError(t("editor.mapEditor.geocodingFailed"));
     }
     setSearching(false);
-  }, [locked, onChange, value?.zoom, defaultZoom]);
+  }, [locked, onChange, value?.zoom, defaultZoom, t]);
 
   function handleAddressKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") {
@@ -121,7 +123,7 @@ export function MapEditor({ value, onChange, defaultCenter, defaultZoom, locked 
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             onKeyDown={handleAddressKeyDown}
-            placeholder="Search address..."
+            placeholder={t("editor.mapEditor.searchPlaceholder")}
             disabled={locked}
             style={{ ...inputStyle, paddingLeft: "1.75rem" }}
           />
@@ -164,9 +166,9 @@ export function MapEditor({ value, onChange, defaultCenter, defaultZoom, locked 
       {/* Coordinates (read-only) */}
       {value && (
         <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-          <span>lat: {value.lat.toFixed(6)}</span>
-          <span>lng: {value.lng.toFixed(6)}</span>
-          <span>zoom: {value.zoom}</span>
+          <span>{t("editor.mapEditor.lat", { value: value.lat.toFixed(6) })}</span>
+          <span>{t("editor.mapEditor.lng", { value: value.lng.toFixed(6) })}</span>
+          <span>{t("editor.mapEditor.zoom", { value: value.zoom })}</span>
         </div>
       )}
     </div>

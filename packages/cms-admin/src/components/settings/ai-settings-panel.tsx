@@ -5,6 +5,7 @@ import { Sparkles, Check, ExternalLink } from "lucide-react";
 import { SettingsCard } from "./settings-card";
 import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { useT } from "@/lib/i18n-context";
 
 interface AiConfigMasked {
   defaultProvider: "anthropic" | "openai" | "gemini";
@@ -41,6 +42,7 @@ const PROVIDERS = [
 ] as const;
 
 export function AISettingsPanel() {
+  const t = useT();
   const [config, setConfig] = useState<AiConfigMasked>({ defaultProvider: "anthropic" });
   const [editing, setEditing] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -96,12 +98,12 @@ export function AISettingsPanel() {
     });
     const data = (await res.json()) as AiConfigMasked & { error?: string };
     if (!res.ok) {
-      setError(data.error ?? "Save failed");
+      setError(data.error ?? t("settings.common.saveFailed"));
     } else {
       setConfig(data);
       setEditing({});
       setSaved(true);
-      toast.success("AI settings saved");
+      toast.success(t("settings.aiSettings.saved"));
       setTimeout(() => setSaved(false), 2500);
     }
     setSaving(false);
@@ -129,7 +131,7 @@ export function AISettingsPanel() {
   };
 
   if (loading) {
-    return <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Loading…</p>;
+    return <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("settings.common.loading")}</p>;
   }
 
   return (
@@ -139,7 +141,7 @@ export function AISettingsPanel() {
       <div style={{ marginBottom: "1.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
           <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
-            Default provider
+            {t("settings.aiSettings.defaultProvider")}
           </label></div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
           {PROVIDERS.map((p) => (
@@ -175,7 +177,7 @@ export function AISettingsPanel() {
           return (
             <div key={p.id} style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{p.label} API key</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("settings.aiSettings.apiKeyLabel", { provider: p.label })}</label>
                 {hasKey && !isEditing && (
                   orgKeys[p.field] && !isEditing ? (
                     <span style={{
@@ -183,14 +185,14 @@ export function AISettingsPanel() {
                       padding: "0.1rem 0.4rem", borderRadius: "4px",
                       background: "color-mix(in srgb, var(--primary) 10%, transparent)",
                       color: "var(--primary)",
-                    }}>inherited{orgName ? ` from ${orgName}` : ""}</span>
+                    }}>{orgName ? t("settings.aiSettings.inheritedFrom", { org: orgName }) : t("settings.aiSettings.inherited")}</span>
                   ) : (
                     <span style={{
                       fontSize: "0.65rem", fontFamily: "monospace",
                       padding: "0.1rem 0.4rem", borderRadius: "4px",
                       background: "color-mix(in srgb, var(--primary) 10%, transparent)",
                       color: "var(--primary)",
-                    }}>configured</span>
+                    }}>{t("settings.common.configured")}</span>
                   )
                 )}
                 <a
@@ -200,7 +202,7 @@ export function AISettingsPanel() {
                   rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", display: "flex", alignItems: "center", gap: "0.2rem", marginLeft: "auto" }}
                 >
-                  Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
+                  {t("settings.common.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
                 </a>
               </div>
               {isEditing ? (
@@ -222,7 +224,7 @@ export function AISettingsPanel() {
                     onClick={() => setEditing((prev) => { const n = { ...prev }; delete n[p.field]; return n; })}
                     style={{ padding: "0.5rem 0.625rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}
                   >
-                    Cancel
+                    {t("settings.common.cancel")}
                   </button>
                 </div>
               ) : (
@@ -238,7 +240,7 @@ export function AISettingsPanel() {
                     opacity: hasKey ? 1 : 0.6,
                   }}
                 >
-                  {hasKey ? currentMasked : `Click to set ${p.label} key…`}
+                  {hasKey ? currentMasked : t("settings.aiSettings.clickToSetProviderKey", { provider: p.label })}
                 </button>
               )}
             </div>
@@ -248,9 +250,12 @@ export function AISettingsPanel() {
 
       {/* Web Search */}
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1.25rem", marginBottom: "1.5rem" }}>
-        <SectionHeading>Web Search (for AI agents)</SectionHeading>
+        <SectionHeading>{t("settings.aiSettings.webSearchHeading")}</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
-          Enables the <code style={{ fontSize: "0.7rem" }}>web_search</code> tool for agents with &ldquo;Web search&rdquo; enabled.
+          {(() => {
+            const [before, after] = t("settings.aiSettings.webSearchHint").split("{tool}");
+            return <>{before}<code style={{ fontSize: "0.7rem" }}>web_search</code>{after}</>;
+          })()}
         </p>
 
         {/* Provider selector */}
@@ -293,7 +298,7 @@ export function AISettingsPanel() {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
-                  {providerLabel} API key
+                  {t("settings.aiSettings.apiKeyLabel", { provider: providerLabel })}
                 </label>
                 {currentKey && !(keyField in editing) && (
                   <span style={{
@@ -301,7 +306,7 @@ export function AISettingsPanel() {
                     padding: "0.1rem 0.4rem", borderRadius: "4px",
                     background: "color-mix(in srgb, var(--primary) 10%, transparent)",
                     color: "var(--primary)",
-                  }}>{orgKeys[keyField] ? `inherited${orgName ? ` from ${orgName}` : ""}` : "configured"}</span>
+                  }}>{orgKeys[keyField] ? (orgName ? t("settings.aiSettings.inheritedFrom", { org: orgName }) : t("settings.aiSettings.inherited")) : t("settings.common.configured")}</span>
                 )}
               </div>
               {keyField in editing ? (
@@ -323,7 +328,7 @@ export function AISettingsPanel() {
                     onClick={() => setEditing((prev) => { const n = { ...prev }; delete n[keyField]; return n; })}
                     style={{ padding: "0.5rem 0.625rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}
                   >
-                    Cancel
+                    {t("settings.common.cancel")}
                   </button>
                 </div>
               ) : (
@@ -333,7 +338,7 @@ export function AISettingsPanel() {
                   onClick={() => setEditing((prev) => ({ ...prev, [keyField]: "" }))}
                   style={{ ...fieldStyle, textAlign: "left", cursor: "pointer", color: "var(--muted-foreground)", opacity: currentKey ? 1 : 0.6 }}
                 >
-                  {currentKey ? currentKey : `Click to set API key…`}
+                  {currentKey ? currentKey : t("settings.aiSettings.clickToSetKey")}
                 </button>
               )}
             </div>
@@ -346,7 +351,10 @@ export function AISettingsPanel() {
       )}
 
       <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-        Keys are stored in <code style={{ fontSize: "0.7rem" }}>_data/ai-config.json</code> in your project directory — not in environment variables.
+        {(() => {
+          const [before, after] = t("settings.aiSettings.storageNote").split("{file}");
+          return <>{before}<code style={{ fontSize: "0.7rem" }}>_data/ai-config.json</code>{after}</>;
+        })()}
       </p>
       </SettingsCard>
     </form>

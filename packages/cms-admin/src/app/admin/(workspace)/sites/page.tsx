@@ -9,6 +9,7 @@ import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { previewPath } from "@/lib/utils";
 import { switchSite } from "@/lib/switch-context";
+import { useT } from "@/lib/i18n-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +53,7 @@ function setCookie(name: string, value: string) {
 }
 
 export default function SitesDashboard() {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const notice = searchParams.get("notice");
@@ -94,12 +96,12 @@ export default function SitesDashboard() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Clone failed");
+      if (!res.ok) throw new Error(data.error ?? t("pages.sitesList.cloneFailed"));
       setCloningSite(null);
       setCloneName("");
       loadSites();
     } catch (err) {
-      setCloneError(err instanceof Error ? err.message : "Clone failed");
+      setCloneError(err instanceof Error ? err.message : t("pages.sitesList.cloneFailed"));
     } finally {
       setCloneInProgress(false);
     }
@@ -222,7 +224,7 @@ export default function SitesDashboard() {
   if (!loaded) {
     return (
       <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
-        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Loading sites...</p>
+        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>{t("pages.sitesList.loading")}</p>
       </div>
     );
   }
@@ -233,11 +235,11 @@ export default function SitesDashboard() {
       <ActionBar
         actions={
           <ActionButton variant="primary" onClick={() => router.push("/admin/sites/new")} icon={<Plus style={{ width: 14, height: 14 }} />}>
-            New site
+            {t("pages.sitesList.newSite")}
           </ActionButton>
         }
       >
-        <ActionBarBreadcrumb items={["Sites"]} />
+        <ActionBarBreadcrumb items={[t("pages.sitesList.breadcrumb")]} />
       </ActionBar>
       <div style={{ padding: "2rem", maxWidth: "64rem" }}>
         {notice === "create-first" && (
@@ -247,7 +249,7 @@ export default function SitesDashboard() {
             border: "1px solid color-mix(in srgb, var(--primary) 35%, transparent)",
             borderRadius: "8px", fontSize: "0.85rem",
           }}>
-            Create or beam a site first — that page is only available once you have a site.
+            {t("pages.sitesList.createFirst")}
           </div>
         )}
         <div style={{
@@ -256,9 +258,9 @@ export default function SitesDashboard() {
           background: "var(--card)", marginTop: "1rem",
         }}>
           <Globe style={{ width: "2.5rem", height: "2.5rem", color: "var(--muted-foreground)", marginBottom: "1rem", opacity: 0.5 }} />
-          <p style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 0.35rem" }}>No sites yet</p>
+          <p style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 0.35rem" }}>{t("pages.sitesList.emptyTitle")}</p>
           <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: "0 0 1.25rem", textAlign: "center", maxWidth: "320px" }}>
-            Add your first site to start managing content. Connect a GitHub repo or use a local filesystem.
+            {t("pages.sitesList.emptyBody")}
           </p>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
@@ -273,14 +275,14 @@ export default function SitesDashboard() {
               }}
             >
               <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
-              New site
+              {t("pages.sitesList.newSite")}
             </button>
             {isAdmin && (
               <button
                 data-testid="sites-empty-beam-button"
                 type="button"
                 onClick={() => router.push("/admin/account?tab=beam")}
-                title="Generate a Beam token to receive a site from another CMS"
+                title={t("pages.sitesList.beamTitle")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.5rem",
                   padding: "0.5rem 1rem", borderRadius: "8px",
@@ -290,7 +292,7 @@ export default function SitesDashboard() {
                 }}
               >
                 <Zap style={{ width: "0.875rem", height: "0.875rem" }} />
-                Receive via Beam
+                {t("pages.sitesList.receiveBeam")}
               </button>
             )}
           </div>
@@ -305,11 +307,11 @@ export default function SitesDashboard() {
     <ActionBar
       actions={isAdmin ? (
         <ActionButton variant="primary" onClick={() => router.push("/admin/sites/new")} icon={<Plus style={{ width: 14, height: 14 }} />}>
-          New site
+          {t("pages.sitesList.newSite")}
         </ActionButton>
       ) : undefined}
     >
-      <ActionBarBreadcrumb items={["Sites"]} />
+      <ActionBarBreadcrumb items={[t("pages.sitesList.breadcrumb")]} />
     </ActionBar>
     <div className="p-8 max-w-5xl">
 
@@ -319,7 +321,7 @@ export default function SitesDashboard() {
           <button
             data-testid="sites-view-toggle-grid"
             type="button"
-            title="Grid view"
+            title={t("pages.sitesList.gridView")}
             onClick={() => { setViewMode("grid"); localStorage.setItem("cms-sites-view", "grid"); }}
             style={{
               padding: "0.35rem 0.5rem", border: "none", cursor: "pointer",
@@ -333,7 +335,7 @@ export default function SitesDashboard() {
           <button
             data-testid="sites-view-toggle-list"
             type="button"
-            title="List view"
+            title={t("pages.sitesList.listView")}
             onClick={() => { setViewMode("list"); localStorage.setItem("cms-sites-view", "list"); }}
             style={{
               padding: "0.35rem 0.5rem", border: "none", cursor: "pointer",
@@ -363,16 +365,16 @@ export default function SitesDashboard() {
           onEnter={enterSite}
           onSettings={goToSiteSettings}
           onRename={(site) => { setRenameValue(site.name); setRenamingSiteId(site.id); }}
-          onClone={(site) => { setCloningSite(site); setCloneName(`${site.name} (Clone)`); setCloneError(""); }}
+          onClone={(site) => { setCloningSite(site); setCloneName(t("pages.sitesList.cloneNameDefault", { name: site.name })); setCloneError(""); }}
           onPreview={async (site) => {
             persistSiteChoice(site.id);
             if (site.previewUrl) {
-              openTab(previewPath(site.previewUrl), `Preview: ${site.name}`);
+              openTab(previewPath(site.previewUrl), t("pages.sitesList.previewTabTitle", { name: site.name }));
             } else {
               const res = await fetch("/api/preview-serve", { method: "POST" });
               if (res.ok) {
                 const { url } = await res.json() as { url: string };
-                openTab(previewPath(url), `Preview: ${site.name}`);
+                openTab(previewPath(url), t("pages.sitesList.previewTabTitle", { name: site.name }));
               }
             }
           }}
@@ -414,7 +416,7 @@ export default function SitesDashboard() {
                 <span style={{
                   width: "0.5rem", height: "0.5rem", borderRadius: "50%", flexShrink: 0,
                   background: healthMap[site.id] === "up" ? "rgb(74 222 128)" : healthMap[site.id] === "down" ? "var(--destructive)" : "var(--muted-foreground)",
-                }} title={healthMap[site.id] === "up" ? "Running" : healthMap[site.id] === "down" ? "Unreachable" : "No preview"} />
+                }} title={healthMap[site.id] === "up" ? t("pages.sitesList.healthRunning") : healthMap[site.id] === "down" ? t("pages.sitesList.healthUnreachable") : t("pages.sitesList.healthNoPreview")} />
                 <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: 0 }}>{site.name}</h3>
               </div>
 
@@ -429,28 +431,28 @@ export default function SitesDashboard() {
                   {isAdmin && (
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameValue(site.name); setRenamingSiteId(site.id); }}>
                       <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
-                      Rename
+                      {t("pages.sitesList.rename")}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(site.id); }}>
                     <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
-                    Copy site ID
+                    {t("pages.sitesList.copyId")}
                   </DropdownMenuItem>
                   {isAdmin && site.adapter === "filesystem" && (
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
                       setCloningSite(site);
-                      setCloneName(`${site.name} (Clone)`);
+                      setCloneName(t("pages.sitesList.cloneNameDefault", { name: site.name }));
                       setCloneError("");
                     }}>
                       <FileStack className="mr-2 h-4 w-4 text-muted-foreground" />
-                      Clone site
+                      {t("pages.sitesList.cloneSite")}
                     </DropdownMenuItem>
                   )}
                   {isAdmin && (
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); goToSiteSettings(site); }}>
                       <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                      Settings
+                      {t("pages.sitesList.settings")}
                     </DropdownMenuItem>
                   )}
                   {isDev && (() => {
@@ -465,8 +467,8 @@ export default function SitesDashboard() {
                         onClick={(e) => { e.stopPropagation(); if (port) togglePm2(port, isOnline ? "stop" : "start"); }}
                       >
                         {isOnline
-                          ? <><Square className="mr-2 h-4 w-4 text-destructive" />{busy ? "Stopping…" : "Stop server"}</>
-                          : <><Play className="mr-2 h-4 w-4 text-green-500" />{busy ? "Starting…" : "Start server"}</>
+                          ? <><Square className="mr-2 h-4 w-4 text-destructive" />{busy ? t("pages.sitesList.stopping") : t("pages.sitesList.stopServer")}</>
+                          : <><Play className="mr-2 h-4 w-4 text-green-500" />{busy ? t("pages.sitesList.starting") : t("pages.sitesList.startServer")}</>
                         }
                       </DropdownMenuItem>
                     );
@@ -476,11 +478,11 @@ export default function SitesDashboard() {
             </div>
 
             <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 0.5rem", fontFamily: "monospace" }}>
-              {site.adapter === "github" ? "GitHub" : "Filesystem"}{site.previewUrl ? ` · ${site.previewUrl.replace(/^https?:\/\//, "")}` : ""}
+              {site.adapter === "github" ? "GitHub" : t("pages.sitesList.filesystem")}{site.previewUrl ? ` · ${site.previewUrl.replace(/^https?:\/\//, "")}` : ""}
             </p>
             {stats[site.id] && (
               <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 0.75rem" }}>
-                Pages: {stats[site.id].pages} · Collections: {stats[site.id].collections}
+                {t("pages.sitesList.statsLine", { pages: stats[site.id].pages, collections: stats[site.id].collections })}
               </p>
             )}
 
@@ -492,7 +494,7 @@ export default function SitesDashboard() {
                   background: "color-mix(in srgb, #22c55e 15%, transparent)",
                   color: "#22c55e", textTransform: "uppercase",
                 }}>
-                  Active
+                  {t("pages.sitesList.active")}
                 </span>
                 <span style={{
                   fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
@@ -500,7 +502,7 @@ export default function SitesDashboard() {
                   background: "var(--muted)",
                   color: "var(--muted-foreground)", textTransform: "uppercase",
                 }}>
-                  {site.adapter === "github" ? "GitHub" : "Local"}
+                  {site.adapter === "github" ? "GitHub" : t("pages.sitesList.local")}
                 </span>
                 {isDev && (() => {
                   const port = extractPort(site.previewUrl);
@@ -525,8 +527,8 @@ export default function SitesDashboard() {
                       }}
                     >
                       {isOnline
-                        ? <>{busy ? "Stopping…" : <><Square style={{ width: "0.6rem", height: "0.6rem" }} /> Stop</>}</>
-                        : <>{busy ? "Starting…" : <><Play style={{ width: "0.6rem", height: "0.6rem" }} /> Start</>}</>
+                        ? <>{busy ? t("pages.sitesList.stopping") : <><Square style={{ width: "0.6rem", height: "0.6rem" }} /> {t("pages.sitesList.stop")}</>}</>
+                        : <>{busy ? t("pages.sitesList.starting") : <><Play style={{ width: "0.6rem", height: "0.6rem" }} /> {t("pages.sitesList.start")}</>}</>
                       }
                     </button>
                   );
@@ -539,12 +541,12 @@ export default function SitesDashboard() {
                   e.stopPropagation();
                   persistSiteChoice(site.id);
                   if (site.previewUrl) {
-                    openTab(previewPath(site.previewUrl), `Preview: ${site.name}`);
+                    openTab(previewPath(site.previewUrl), t("pages.sitesList.previewTabTitle", { name: site.name }));
                   } else {
                     const res = await fetch("/api/preview-serve", { method: "POST" });
                     if (res.ok) {
                       const { url } = await res.json() as { url: string };
-                      openTab(previewPath(url), `Preview: ${site.name}`);
+                      openTab(previewPath(url), t("pages.sitesList.previewTabTitle", { name: site.name }));
                     }
                   }
                 }}
@@ -561,7 +563,7 @@ export default function SitesDashboard() {
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted-foreground)"; }}
               >
                 <Eye style={{ width: "0.8rem", height: "0.8rem" }} />
-                Preview
+                {t("pages.sitesList.preview")}
               </button>
               {liveUrls[site.id] && (
                 <a
@@ -583,7 +585,7 @@ export default function SitesDashboard() {
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted-foreground)"; }}
                 >
                   <ExternalLink style={{ width: "0.8rem", height: "0.8rem" }} />
-                  Live
+                  {t("pages.sitesList.live")}
                 </a>
               )}
             </div>
@@ -605,7 +607,7 @@ export default function SitesDashboard() {
           style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", width: "24rem", boxShadow: "0 8px 30px rgba(0,0,0,0.4)" }}
           onClick={(e) => e.stopPropagation()}
         >
-          <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 1rem" }}>Rename Site</h3>
+          <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 1rem" }}>{t("pages.sitesList.renameTitle")}</h3>
           <input
             data-testid="sites-rename-input"
             autoFocus
@@ -632,7 +634,7 @@ export default function SitesDashboard() {
                 border: "1px solid var(--border)", background: "transparent",
                 color: "var(--foreground)", cursor: "pointer",
               }}
-            >No</button>
+            >{t("pages.sitesList.no")}</button>
             <button
               data-testid="sites-rename-confirm"
               type="button"
@@ -642,7 +644,7 @@ export default function SitesDashboard() {
                 border: "none", background: "var(--primary)", color: "var(--primary-foreground)",
                 cursor: "pointer", fontWeight: 500,
               }}
-            >Yes</button>
+            >{t("pages.sitesList.yes")}</button>
           </div>
         </div>
       </div>
@@ -662,14 +664,13 @@ export default function SitesDashboard() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
             <FileStack style={{ width: 18, height: 18, color: "var(--brand)" }} />
-            <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: 0 }}>Clone Site</h3>
+            <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: 0 }}>{t("pages.sitesList.cloneTitle")}</h3>
           </div>
           <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
-            Creates a complete copy of <strong>{cloningSite.name}</strong> — content, media, config, agents, and brand voice.
-            Secrets (API keys, deploy tokens) are stripped from the copy.
+            {t("pages.sitesList.cloneBodyBefore")} <strong>{cloningSite.name}</strong> {t("pages.sitesList.cloneBodyAfter")}
           </p>
           <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "var(--muted-foreground)", marginBottom: "0.35rem" }}>
-            New site name
+            {t("pages.sitesList.newSiteName")}
           </label>
           <input
             data-testid="sites-clone-input"
@@ -707,7 +708,7 @@ export default function SitesDashboard() {
                 color: "var(--foreground)", cursor: cloneInProgress ? "not-allowed" : "pointer",
                 opacity: cloneInProgress ? 0.5 : 1,
               }}
-            >Cancel</button>
+            >{t("pages.sitesList.cancel")}</button>
             <button
               data-testid="sites-clone-confirm"
               type="button"
@@ -722,7 +723,7 @@ export default function SitesDashboard() {
               }}
             >
               {cloneInProgress && <Loader2 className="animate-spin" style={{ width: 13, height: 13 }} />}
-              {cloneInProgress ? "Cloning…" : "Clone"}
+              {cloneInProgress ? t("pages.sitesList.cloning") : t("pages.sitesList.clone")}
             </button>
           </div>
         </div>
@@ -751,6 +752,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
   onTogglePm2?: (port: string, action: "start" | "stop") => void;
   isAdmin?: boolean;
 }) {
+  const t = useT();
   const pm2StatusMap = pm2Map ?? {};
   const isDev = process.env.NODE_ENV !== "production";
   const adminMode = isAdmin ?? false;
@@ -836,11 +838,11 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
       <thead>
         <tr style={{ borderBottom: "1px solid var(--border)" }}>
-          <SortHeader label="Name" sk="name" />
-          <SortHeader label="Type" sk="type" />
-          <SortHeader label="Pages" sk="pages" />
-          <SortHeader label="Collections" sk="collections" />
-          <SortHeader label="Status" sk="status" />
+          <SortHeader label={t("pages.sitesList.colName")} sk="name" />
+          <SortHeader label={t("pages.sitesList.colType")} sk="type" />
+          <SortHeader label={t("pages.sitesList.colPages")} sk="pages" />
+          <SortHeader label={t("pages.sitesList.colCollections")} sk="collections" />
+          <SortHeader label={t("pages.sitesList.colStatus")} sk="status" />
           <th style={{ ...thBase, textAlign: "right" }}></th>
         </tr>
       </thead>
@@ -863,7 +865,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
               </div>
             </td>
             <td style={{ padding: "0.6rem 0.75rem", color: "var(--muted-foreground)" }}>
-              {site.adapter === "github" ? "GitHub" : "Filesystem"}
+              {site.adapter === "github" ? "GitHub" : t("pages.sitesList.filesystem")}
             </td>
             <td style={{ padding: "0.6rem 0.75rem", color: "var(--muted-foreground)" }}>
               {stats[site.id]?.pages ?? "—"}
@@ -887,7 +889,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
                       color: "#22c55e", textTransform: "uppercase", textDecoration: "none",
                     }}
                   >
-                    Live
+                    {t("pages.sitesList.live")}
                   </a>
                 )}
                 <span style={{
@@ -896,7 +898,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
                   background: "var(--muted)",
                   color: "var(--muted-foreground)", textTransform: "uppercase",
                 }}>
-                  {site.adapter === "github" ? "GitHub" : "Local"}
+                  {site.adapter === "github" ? "GitHub" : t("pages.sitesList.local")}
                 </span>
               </div>
             </td>
@@ -913,7 +915,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
                   }}
                 >
                   <Eye style={{ width: "0.7rem", height: "0.7rem" }} />
-                  Preview
+                  {t("pages.sitesList.preview")}
                 </button>
                 <DropdownMenu>
                   <DropdownMenuTrigger
@@ -926,23 +928,23 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
                     {adminMode && (
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRename(site); }}>
                         <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
-                        Rename
+                        {t("pages.sitesList.rename")}
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onCopyId(site.id); }}>
                       <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
-                      Copy site ID
+                      {t("pages.sitesList.copyId")}
                     </DropdownMenuItem>
                     {adminMode && site.adapter === "filesystem" && onClone && (
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onClone(site); }}>
                         <FileStack className="mr-2 h-4 w-4 text-muted-foreground" />
-                        Clone site
+                        {t("pages.sitesList.cloneSite")}
                       </DropdownMenuItem>
                     )}
                     {adminMode && (
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSettings(site); }}>
                         <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                        Settings
+                        {t("pages.sitesList.settings")}
                       </DropdownMenuItem>
                     )}
                     {isDev && (() => {
@@ -957,8 +959,8 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
                           onClick={(e) => { e.stopPropagation(); if (port && onTogglePm2) onTogglePm2(port, isOnline ? "stop" : "start"); }}
                         >
                           {isOnline
-                            ? <><Square className="mr-2 h-4 w-4 text-destructive" />{busy ? "Stopping…" : "Stop server"}</>
-                            : <><Play className="mr-2 h-4 w-4 text-green-500" />{busy ? "Starting…" : "Start server"}</>
+                            ? <><Square className="mr-2 h-4 w-4 text-destructive" />{busy ? t("pages.sitesList.stopping") : t("pages.sitesList.stopServer")}</>
+                            : <><Play className="mr-2 h-4 w-4 text-green-500" />{busy ? t("pages.sitesList.starting") : t("pages.sitesList.startServer")}</>
                           }
                         </DropdownMenuItem>
                       );
@@ -980,30 +982,31 @@ function SiteFilters({ sites, liveUrls, filter, onFilter }: {
   filter: string;
   onFilter: (f: "all" | "local" | "github" | "live") => void;
 }) {
+  const t = useT();
   const liveCount = sites.filter((s) => !!liveUrls[s.id]).length;
   const tabs = [
-    { key: "all" as const, label: "All", count: sites.length },
-    { key: "local" as const, label: "Local", count: sites.filter((s) => s.adapter === "filesystem").length },
+    { key: "all" as const, label: t("pages.sitesList.filterAll"), count: sites.length },
+    { key: "local" as const, label: t("pages.sitesList.local"), count: sites.filter((s) => s.adapter === "filesystem").length },
     { key: "github" as const, label: "GitHub", count: sites.filter((s) => s.adapter === "github").length },
-    { key: "live" as const, label: "Live", count: liveCount },
+    { key: "live" as const, label: t("pages.sitesList.live"), count: liveCount },
   ];
   return (
     <div style={{ display: "flex", gap: "0.5rem" }}>
-      {tabs.map((t) => (
+      {tabs.map((tab) => (
         <button
-          key={t.key}
-          data-testid={`sites-filter-${t.key}`}
+          key={tab.key}
+          data-testid={`sites-filter-${tab.key}`}
           type="button"
-          onClick={() => onFilter(t.key)}
+          onClick={() => onFilter(tab.key)}
           style={{
             padding: "0.3rem 0.75rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
             cursor: "pointer",
-            background: filter === t.key ? "var(--secondary)" : "transparent",
-            color: filter === t.key ? (t.key === "live" ? "rgb(74 222 128)" : "var(--foreground)") : "var(--muted-foreground)",
-            border: filter === t.key ? "1px solid var(--border)" : "1px solid transparent",
+            background: filter === tab.key ? "var(--secondary)" : "transparent",
+            color: filter === tab.key ? (tab.key === "live" ? "rgb(74 222 128)" : "var(--foreground)") : "var(--muted-foreground)",
+            border: filter === tab.key ? "1px solid var(--border)" : "1px solid transparent",
           }}
         >
-          {t.label} ({t.count})
+          {tab.label} ({tab.count})
         </button>
       ))}
     </div>

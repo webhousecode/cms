@@ -1,6 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useT } from "@/lib/i18n-context";
+
+/** Renders a translated sentence whose {placeholders} are React nodes. */
+function withParts(text: string, parts: Record<string, ReactNode>): ReactNode[] {
+  return text.split(/(\{\w+\})/).map((p, i) => {
+    const m = p.match(/^\{(\w+)\}$/);
+    return <Fragment key={i}>{m && m[1] in parts ? parts[m[1]] : p}</Fragment>;
+  });
+}
 
 interface PairingResponse {
   sessionId: string;
@@ -19,6 +28,7 @@ interface PairingResponse {
  * understands.
  */
 export function MobilePairingClient() {
+  const t = useT();
   const [data, setData] = useState<PairingResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -83,7 +93,7 @@ export function MobilePairingClient() {
             <img
               data-testid="mobile-pairing-qr"
               src={data.qrDataUrl}
-              alt="Mobile pairing QR code"
+              alt={t("tools.mobilePairing.qrAlt")}
               width={260}
               height={260}
               className="rounded-lg"
@@ -92,16 +102,16 @@ export function MobilePairingClient() {
               {data.serverUrl}
             </p>
             <p className="text-sm text-muted-foreground">
-              Expires in <span className="font-mono">{secondsLeft}s</span>
+              {withParts(t("tools.mobilePairing.expiresIn"), { seconds: <span className="font-mono">{t("tools.mobilePairing.secondsShort", { n: secondsLeft })}</span> })}
             </p>
           </>
         ) : loading ? (
           <div className="h-[260px] w-[260px] flex items-center justify-center text-muted-foreground">
-            Generating...
+            {t("tools.mobilePairing.generating")}
           </div>
         ) : (
           <div className="h-[260px] w-[260px] flex flex-col items-center justify-center gap-3 text-muted-foreground">
-            <p>QR code expired</p>
+            <p>{t("tools.mobilePairing.expired")}</p>
           </div>
         )}
 
@@ -112,28 +122,28 @@ export function MobilePairingClient() {
           disabled={loading}
           className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 active:scale-[0.98] transition disabled:opacity-50"
         >
-          {expired ? "Generate new code" : "Refresh"}
+          {expired ? t("tools.mobilePairing.generateNew") : t("tools.mobilePairing.refresh")}
         </button>
       </div>
 
       <details className="text-sm text-muted-foreground">
         <summary className="cursor-pointer hover:text-foreground">
-          How to use this
+          {t("tools.mobilePairing.howTo")}
         </summary>
         <ol className="mt-3 ml-5 list-decimal space-y-2">
-          <li>Open the webhouse.app app on your phone</li>
-          <li>Tap <strong>Sign in</strong> → <strong>QR code</strong></li>
-          <li>Tap <strong>Scan QR with camera</strong> and point it at this code</li>
-          <li>You're in — biometric unlock works on the next launch</li>
+          <li>{t("tools.mobilePairing.step1")}</li>
+          <li>{withParts(t("tools.mobilePairing.step2"), { signIn: <strong>{t("tools.mobilePairing.signIn")}</strong>, qrCode: <strong>{t("tools.mobilePairing.qrCode")}</strong> })}</li>
+          <li>{withParts(t("tools.mobilePairing.step3"), { scan: <strong>{t("tools.mobilePairing.scanWithCamera")}</strong> })}</li>
+          <li>{t("tools.mobilePairing.step4")}</li>
         </ol>
         {data && (
           <details className="mt-4">
-            <summary className="cursor-pointer text-xs">Developer: deep link URL</summary>
+            <summary className="cursor-pointer text-xs">{t("tools.mobilePairing.devDeepLink")}</summary>
             <code className="mt-2 block break-all rounded bg-muted p-2 text-xs">
               {data.deepLink}
             </code>
             <p className="mt-2 text-xs">
-              On the iOS simulator (no camera), open this URL via:
+              {t("tools.mobilePairing.simulatorHint")}
             </p>
             <code className="mt-1 block break-all rounded bg-muted p-2 text-xs">
               xcrun simctl openurl booted &quot;{data.deepLink}&quot;

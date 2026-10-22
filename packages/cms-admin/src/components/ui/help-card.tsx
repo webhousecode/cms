@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "@/lib/i18n-context";
 import { Lightbulb, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { getHelpArticle, type HelpArticle } from "@/lib/help/articles";
 
@@ -72,6 +73,7 @@ function renderInline(text: string): React.ReactNode {
 }
 
 export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
+  const t = useT();
   const article = getHelpArticle(articleId);
   const [expanded, setExpanded] = useState(variant === "inline");
 
@@ -135,7 +137,7 @@ export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
                 rel="noopener noreferrer"
                 style={{ fontSize: "0.7rem", color: "var(--brand)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
               >
-                Learn more at docs <ExternalLink style={{ width: 10, height: 10 }} />
+                {t("common.help.learnMore")} <ExternalLink style={{ width: 10, height: 10 }} />
               </a>
             </div>
           )}

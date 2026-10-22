@@ -1,1 +1,305 @@
-{}
+{
+  "beamTokens": {
+    "loadFailed": "Kunne ikke hente tokens",
+    "generateFailed": "Kunne ikke oprette token",
+    "title": "Beam-tokens",
+    "intro": "Opret et engangstoken for at modtage et site via Beam. Indsæt tokenet i kilde-CMS'ets Site-indstillinger → Beam → Send til fjern-CMS, så bliver sitet overført til denne instans. Tokens udløber efter 1 time og kan kun bruges én gang.",
+    "newToken": "Nyt token — kopiér det nu, det bliver ikke vist igen",
+    "copied": "Kopieret",
+    "copy": "Kopiér",
+    "expiresAt": "Udløber {date}",
+    "generating": "Opretter...",
+    "generate": "Opret nyt token",
+    "refresh": "Opdater",
+    "active": "Aktive tokens",
+    "loading": "Indlæser…",
+    "none": "Ingen aktive tokens.",
+    "expiresLower": "udløber {date}"
+  },
+  "buildHistory": {
+    "phase": {
+      "init": "Starter op",
+      "sourceExtract": "Udpakker kildekode",
+      "imageBuild": "Bygger image",
+      "imagePush": "Sender til registry",
+      "done": "Færdig",
+      "failed": "Fejlet"
+    },
+    "loading": "Indlæser byggehistorik…",
+    "unavailable": "Byggehistorik er ikke tilgængelig: {error}",
+    "empty": "Ingen SSR-byg endnu. Klik Udgiv på et Next.js-, Bun-Hono- eller custom-Dockerfile-site for at starte et.",
+    "image": "Image:"
+  },
+  "buildLog": {
+    "startedProfile": "Byg startet ({profile})",
+    "started": "Byg startet",
+    "failed": "Byg fejlede",
+    "cancelledToast": "Byg annulleret",
+    "complete": "Byg færdigt",
+    "exitCode": "Exitkode {code}",
+    "error": "Byggefejl",
+    "copied": "Kopieret til udklipsholderen",
+    "title": "Bygge-log",
+    "cancelBuild": "Annuller byg",
+    "cancel": "Annuller",
+    "rerunBuild": "Kør byg igen",
+    "rerun": "Kør igen",
+    "noBuild": "Intet byg kører",
+    "start": "Start byg",
+    "building": "Bygger...",
+    "exit": "Exit: {code}",
+    "lines": "{count} linjer",
+    "copyLogs": "Kopiér log",
+    "copy": "Kopiér",
+    "downloadLogs": "Download log",
+    "download": "Download",
+    "status": {
+      "ready": "Klar",
+      "running": "Kører",
+      "success": "Gennemført",
+      "failed": "Fejlet",
+      "cancelled": "Annulleret"
+    }
+  },
+  "deployModal": {
+    "step": {
+      "init": "Starter op",
+      "build": "Bygger og optimerer",
+      "push": "Sender til udbyder",
+      "done": "Live"
+    },
+    "failedStatus": "Udgivelse fejlede: {status}",
+    "deploying": "Udgiver",
+    "title": "Udgiv site",
+    "list": {
+      "build": "Byg statiske sider ud fra indholdet",
+      "generate": "Generér sitemap, robots.txt, llms.txt og RSS-feed",
+      "seo": "Optimér SEO (OpenGraph, JSON-LD, meta-tags)",
+      "push": "Send til {provider}"
+    },
+    "deployNow": "Udgiv nu",
+    "skipDialog": "Vis ikke denne dialog — udgiv med det samme",
+    "waiting": "Venter...",
+    "failed": "Udgivelse fejlede",
+    "close": "Luk"
+  },
+  "deployOutput": {
+    "loading": "Indlæser udgivelsens output…",
+    "unavailable": "Browseren er ikke tilgængelig: {error}",
+    "icd": {
+      "title": "Dette site bygges ikke af CMS'et.",
+      "body": "Sitet er en selvstændig webapplikation, der bygges og udgives for sig (typisk Next.js / Bun på Fly.io, sendt ud via sitets eget repos CI/CD). Indholdsændringer, du laver her, går live via {icd} — en signeret webhook, der skriver det nye dokument til live-sitets volume og genvaliderer de berørte ruter (typisk <100 ms på serveren).",
+      "name": "Instant Content Deployment",
+      "noDir": "Der er ingen {dir}-mappe, fordi CMS'et ikke genererer sitets HTML eller filer — kun dets indhold. Kode bygges igen via {gitPush} til sitets eget repository."
+    },
+    "ssr": {
+      "title": "Byg for dette site sker i en midlertidig Fly Machine.",
+      "body": "CMS'et laver ikke en lokal {dir}-mappe for {kind}-sites — bygget kører i en kortlivet VM, der sender et Docker-image til GHCR og udgiver det direkte til Fly-appen. Se panelet {panel} nedenfor for den seneste byggehistorik og live-log.",
+      "panel": "SSR-byg"
+    },
+    "empty": "Ingen {dir}-mappe endnu. Klik {deployNow} for at bygge sitet.",
+    "deployNow": "Udgiv nu",
+    "stats": "{files} filer · {html} HTML · {size}",
+    "refresh": "Opdater",
+    "selectFile": "Vælg en fil for at se forhåndsvisning",
+    "loadingShort": "Indlæser…",
+    "openRaw": "Åbn rå fil",
+    "error": "Fejl: {error}",
+    "rel": {
+      "justNow": "lige nu",
+      "minutes": "for {n} min. siden",
+      "hours": "for {n} t. siden",
+      "days": "for {n} d. siden"
+    }
+  },
+  "deployWizard": {
+    "steps": {
+      "template": "Skabelon",
+      "configure": "Konfigurér",
+      "connect": "Forbind",
+      "deploy": "Udgiv"
+    },
+    "back": "Tilbage",
+    "deploy": "Udgiv",
+    "next": "Næste",
+    "configure": {
+      "title": "Konfigurér udgivelse",
+      "intro": "Angiv appnavn, region og VM-størrelse. Alle indstillinger kan ændres efter udgivelsen.",
+      "appName": "Appnavn",
+      "appNamePlaceholder": "mit-flotte-site",
+      "appNameInvalid": "3-30 tegn, kun små bogstaver, tal og bindestreger",
+      "appNameHint": "Dit site kommer til at ligge på {host}",
+      "adminEmail": "Admin-e-mail",
+      "adminEmailPlaceholder": "admin@webhouse.app",
+      "adminEmailHint": "E-mail til at logge ind i CMS-admin. Adgangskoden genereres automatisk.",
+      "region": "Region",
+      "vmSize": "VM-størrelse",
+      "selfHost": "Vil du hellere hoste selv? Download en Docker-pakke med alt, hvad du skal bruge.",
+      "downloadDocker": "Download Docker-pakke"
+    },
+    "connect": {
+      "verifyFailedStatus": "Tokenet kunne ikke verificeres (HTTP {status})",
+      "verifyFailed": "Verificering fejlede",
+      "title": "Forbind til Fly.io",
+      "intro": "Indtast dit Fly.io API-token for at udgive direkte. Tokenet bruges kun til denne udgivelse og bliver aldrig gemt.",
+      "apiToken": "API-token",
+      "tokenPlaceholder": "fo1_...",
+      "verify": "Verificér",
+      "getKey": "Hent nøgle",
+      "verified": "Token verificeret",
+      "organizationValue": "Organisation: {org}",
+      "available": "({count} tilgængelige)",
+      "organization": "Organisation"
+    },
+    "deployStep": {
+      "steps": {
+        "init": "Validerer",
+        "createApp": "Opretter app",
+        "setSecrets": "Sætter secrets",
+        "createMachine": "Udgiver container",
+        "waitHealthy": "Starter",
+        "allocateIp": "Tildeler IP-adresser",
+        "done": "Live"
+      },
+      "failed": "Udgivelse fejlede",
+      "title": "Udgiver til Fly.io",
+      "initializing": "Starter op...",
+      "credentials": "Admin-loginoplysninger (gem dem!)",
+      "email": "E-mail: {email}",
+      "password": "Adgangskode: {hint}",
+      "passwordHint": "se Fly.io secrets",
+      "runHint": "Kør {command} for at se den genererede adgangskode."
+    },
+    "template": {
+      "loading": "Indlæser...",
+      "title": "Hvad vil du udgive?",
+      "intro": "Udgiv et eksisterende site fra dit CMS, eller start forfra med en skabelon.",
+      "yourSites": "Dine sites",
+      "templates": "Skabeloner",
+      "boilerplates": "Startskabeloner"
+    }
+  },
+  "importWizard": {
+    "transform": {
+      "none": "Ingen",
+      "slugify": "Lav slug",
+      "dateIso": "Dato → ISO",
+      "splitComma": "Del ved komma → liste",
+      "number": "Til tal",
+      "boolean": "Til ja/nej"
+    },
+    "uploadFailed": "Upload fejlede",
+    "previewFailed": "Forhåndsvisning fejlede",
+    "importFailed": "Import fejlede",
+    "title": "Importér til {collection}",
+    "stepOf": "Trin {step} af {total}",
+    "fileSelected": "Fil valgt",
+    "dropHint": "Slip filen her, eller klik for at vælge",
+    "formats": "CSV, JSON eller Markdown (.md)",
+    "parsing": "Læser fil...",
+    "uploadDetect": "Upload og registrér",
+    "detected": "Fandt {rows} rækker og {fields} felter ({format}). Knyt kildefelterne til samlingens skema.",
+    "addMapping": "+ Tilføj kobling",
+    "back": "Tilbage",
+    "previewing": "Laver forhåndsvisning...",
+    "preview": "Forhåndsvisning",
+    "validRows": "{valid} af {total} rækker er gyldige.",
+    "willSkip": "{count} bliver sprunget over.",
+    "slug": "Slug",
+    "status": "Status",
+    "importing": "Importerer...",
+    "importDocs": "Importér {count} dokumenter",
+    "complete": "Import færdig",
+    "summary": "{imported} dokumenter oprettet som kladder · {skipped} sprunget over",
+    "errorCount": "{count} fejl",
+    "rowError": "Række {row}: {field} — {message}",
+    "done": "Færdig"
+  },
+  "collectionList": {
+    "itemCount": "{count} elementer",
+    "unpublish": "Afpublicér",
+    "publish": "Udgiv",
+    "cloning": "Kloner…",
+    "clone": "Klon",
+    "removeFavorite": "Fjern fra favoritter",
+    "addFavorite": "Føj til favoritter",
+    "moveToTrashConfirm": "Flyt til papirkurven?",
+    "moveToTrash": "Flyt til papirkurven",
+    "filterAll": "Alle",
+    "filterPublished": "Udgivet",
+    "filterDraft": "Kladde",
+    "filterScheduled": "Planlagt",
+    "filterExpired": "Udløbet",
+    "filterTrashed": "I papirkurven",
+    "filterSource": "Kilde",
+    "emptyTitle": "Ingen elementer endnu",
+    "emptyHint": "Opret dit første element for at komme i gang.",
+    "searchPlaceholder": "Søg…",
+    "colTitle": "Titel",
+    "colStatus": "Status",
+    "colUpdated": "Opdateret",
+    "clickToUnpublish": "Klik for at afpublicere",
+    "clickToPublish": "Klik for at udgive",
+    "statusScheduled": "planlagt",
+    "status": {
+      "published": "udgivet",
+      "draft": "kladde",
+      "expired": "udløbet",
+      "trashed": "i papirkurven"
+    },
+    "expires": "Udløber: {date}",
+    "noMatches": "Ingen elementer matcher dine filtre."
+  },
+  "collectionListPage": {
+    "gridView": "Gittervisning",
+    "listView": "Listevisning",
+    "editSchema": "Redigér skema",
+    "import": "Importér"
+  },
+  "newDocumentButton": {
+    "newDocument": "Nyt dokument",
+    "titlePlaceholder": "Titel…",
+    "creating": "Opretter…",
+    "create": "Opret"
+  },
+  "generateDocument": {
+    "generate": "Generér",
+    "generateContent": "Generér indhold",
+    "generateNamed": "Generér {name}",
+    "promptPlaceholder": "Beskriv hvad der skal genereres, fx \"Skriv en artikel om CMS-systemernes historie fra 90'erne til 2026\"",
+    "elapsed": "Forløbet: {time}",
+    "collection": "Samling: {name}",
+    "shortcutHint": "⌘ Enter for at generere",
+    "generationFailed": "Genereringen mislykkedes",
+    "createFailed": "Kunne ikke oprette dokumentet",
+    "networkError": "Netværksfejl",
+    "status": {
+      "analyzing": "Analyserer prompt…",
+      "schema": "Bygger skema-kontekst…",
+      "structure": "Genererer titel og struktur…",
+      "writing": "Skriver indhold…",
+      "paragraphs": "Sammensætter afsnit…",
+      "metadata": "Tilføjer metadata…",
+      "tags": "Vælger tags…",
+      "polishing": "Finpudser resultatet…",
+      "almost": "Næsten færdig…"
+    }
+  },
+  "devInspector": {
+    "toggleTitle": "Slå dev-inspektør til/fra (Ctrl+I)",
+    "copied": "✓ kopieret"
+  },
+  "tourTooltip": {
+    "skipTour": "Spring rundvisningen over"
+  },
+  "pushToggle": {
+    "title": "Browsernotifikationer",
+    "unsupported": "Din browser understøtter ikke web push (ingen Notification API eller PushManager). Prøv Chrome/Firefox/Safari 16+.",
+    "blocked": "Du har blokeret notifikationer for dette site. Sådan slår du dem til igen: klik på hængelåsen i adresselinjen → Webstedsindstillinger → Notifikationer → Tillad, og genindlæs siden.",
+    "noVapid": "Serveren mangler VAPID-nøgler. Kør {cmd} og sæt {pub}, {priv} og {subject} som Fly-secrets, og udrul derefter cms-admin igen.",
+    "on": "TIL",
+    "disable": "Slå fra",
+    "enable": "Slå til",
+    "description": "Få en notifikation fra styresystemet, når dit site er færdigt med at udgive — også når denne fane er lukket."
+  }
+}

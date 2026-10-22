@@ -25,18 +25,20 @@ import {
   type CapabilityMap,
   type CapabilityKey,
 } from "@/lib/capabilities-shared";
+import { useT } from "@/lib/i18n-context";
 
 const PROFILE_OPTIONS = [
-  { value: "minimal", label: "Minimal — content + media only" },
-  { value: "standard", label: "Standard — + SEO, forms, scheduling" },
-  { value: "full", label: "Full — everything (default)" },
-  { value: "custom", label: "Custom" },
+  { value: "minimal", label: "settings.capabilities.profileMinimal" },
+  { value: "standard", label: "settings.capabilities.profileStandard" },
+  { value: "full", label: "settings.capabilities.profileFull" },
+  { value: "custom", label: "settings.capabilities.profileCustom" },
 ];
 
 export function CapabilitiesSettingsPanel({
   endpoint = "/api/admin/site-config",
   selfSave = false,
 }: { endpoint?: string; selfSave?: boolean } = {}) {
+  const t = useT();
   const [caps, setCaps] = useState<CapabilityMap>(() => resolveCapabilities({}));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -93,24 +95,23 @@ export function CapabilitiesSettingsPanel({
 
   return (
     <div data-testid="capabilities-settings-panel">
-      <SectionHeading>Profile</SectionHeading>
+      <SectionHeading>{t("settings.capabilities.profileHeading")}</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0 0 0.75rem" }}>
-          Turn whole feature areas on or off for this site. Nothing is removed — disabled features
-          just disappear from the editor. Pick a profile to set everything at once, then fine-tune below.
+          {t("settings.capabilities.profileHint")}
         </p>
         <CustomSelect
           value={profile}
           onChange={applyProfile}
-          options={PROFILE_OPTIONS}
+          options={PROFILE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }))}
         />
       </SettingsCard>
 
-      <SectionHeading>Features</SectionHeading>
+      <SectionHeading>{t("settings.capabilities.featuresHeading")}</SectionHeading>
       <SettingsCard>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-            Content and Media are always on (the core). Everything else can be toggled.
+            {t("settings.capabilities.featuresHint")}
           </p>
           {CAPABILITY_KEYS.map((key) => {
             const def = CAPABILITIES[key];
@@ -132,7 +133,7 @@ export function CapabilitiesSettingsPanel({
                     {def.label}
                     {disabled && (
                       <span style={{ fontSize: "0.68rem", fontWeight: 400, color: "var(--muted-foreground)", marginLeft: "0.4rem" }}>
-                        (needs {blockedBy.map((r) => CAPABILITIES[r as CapabilityKey].label).join(", ")})
+                        {t("settings.capabilities.needs", { list: blockedBy.map((r) => CAPABILITIES[r as CapabilityKey].label).join(", ") })}
                       </span>
                     )}
                   </label>
@@ -143,7 +144,7 @@ export function CapabilitiesSettingsPanel({
           })}
           {saved && (
             <p data-testid="capabilities-saved" style={{ fontSize: "0.72rem", color: "rgb(74 222 128)", margin: 0 }}>
-              Saved.
+              {t("settings.capabilities.saved")}
             </p>
           )}
           {selfSave && (
@@ -153,7 +154,7 @@ export function CapabilitiesSettingsPanel({
               disabled={saving}
               style={{ alignSelf: "flex-start" }}
             >
-              {saving ? "Saving…" : "Save features"}
+              {saving ? t("settings.common.saving") : t("settings.capabilities.saveFeatures")}
             </Button>
           )}
         </div>

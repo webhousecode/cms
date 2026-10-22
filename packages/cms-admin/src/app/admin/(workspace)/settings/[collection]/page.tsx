@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { CollectionSchemaEditor } from "@/components/schema/collection-schema-editor";
 import { PageHeader } from "@/components/page-header";
+import { getServerT } from "@/i18n/server";
 
 type Props = { params: Promise<{ collection: string }>; searchParams: Promise<{ from?: string }> };
 
@@ -20,13 +21,14 @@ export default async function EditCollectionPage({ params, searchParams }: Props
   const role = await getSiteRole();
   if (role !== "admin") redirect("/admin");
   const config = await getAdminConfig();
+  const t = await getServerT();
 
   if (collection === "new") {
     return (
       <>
         <PageHeader>
           <Link href="/admin/settings" className="text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-4 h-4" /></Link>
-          <span className="text-sm text-muted-foreground font-mono">settings / new collection</span>
+          <span className="text-sm text-muted-foreground font-mono">{t("pages.settingsCollection.newCollectionCrumb")}</span>
         </PageHeader>
         <div className="p-8 max-w-3xl">
           <CollectionSchemaEditor isNew />
@@ -42,7 +44,7 @@ export default async function EditCollectionPage({ params, searchParams }: Props
     <>
       <PageHeader>
         <Link href={from === "settings" ? "/admin/settings?tab=schema" : `/admin/content/${col.name}`} className="text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-4 h-4" /></Link>
-        <span className="text-sm text-muted-foreground font-mono">{from === "settings" ? `settings / schema / ${col.name}` : `${col.label ?? col.name} / schema`}</span>
+        <span className="text-sm text-muted-foreground font-mono">{from === "settings" ? t("pages.settingsCollection.settingsSchemaCrumb", { name: col.name }) : t("pages.settingsCollection.collectionSchemaCrumb", { name: col.label ?? col.name })}</span>
       </PageHeader>
       <div className="p-8 max-w-3xl">
         <CollectionSchemaEditor

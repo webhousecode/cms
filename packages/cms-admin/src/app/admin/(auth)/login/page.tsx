@@ -7,11 +7,13 @@ import { useState, useEffect, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { startAuthentication } from "@simplewebauthn/browser";
+import { useT } from "@/lib/i18n-context";
 
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const brand = useBrand();
+  const t = useT();
   const from = params.get("from") ?? "/admin";
   // F199.4 — BID's login rule: with Broberg ID on there is ONE login element,
   // the button to BID. No password, passkey, GitHub or QR — for anyone.
@@ -88,18 +90,18 @@ function LoginForm() {
   // Check for GitHub OAuth error in URL
   useEffect(() => {
     const ghError = params.get("error");
-    if (ghError === "no_github_email") setError("GitHub account has no verified email — use email/password login");
-    else if (ghError === "github_csrf") setError("GitHub login failed (CSRF) — try again");
-    else if (ghError === "github_api_failed") setError("Could not reach GitHub — try again");
-    else if (ghError === "github_token_failed") setError("GitHub token exchange failed — try again");
+    if (ghError === "no_github_email") setError(t("auth.login.errNoGithubEmail"));
+    else if (ghError === "github_csrf") setError(t("auth.login.errGithubCsrf"));
+    else if (ghError === "github_api_failed") setError(t("auth.login.errGithubApi"));
+    else if (ghError === "github_token_failed") setError(t("auth.login.errGithubToken"));
     // F199 — Broberg ID callback errors (/api/auth/bid/callback)
-    else if (ghError === "bid_unknown_account") setError(`This Broberg ID account has no access to ${brand.name}. Sign in with your password and connect Broberg ID under Account, or ask your administrator for an invitation.`);
-    else if (ghError === "bid_login_expired") setError("The Broberg ID sign-in took too long — try again");
-    else if (ghError === "bid_sub_taken") setError(`This Broberg ID account is already connected to another ${brand.name} user`);
-    else if (ghError === "bid_already_linked") setError("Your user is already connected to a different Broberg ID account");
-    else if (ghError === "bid_required") setError("Sign in with Broberg ID");
-    else if (ghError?.startsWith("bid_")) setError("Broberg ID sign-in could not complete — try again");
-  }, [params, brand.name]);
+    else if (ghError === "bid_unknown_account") setError(t("auth.login.errBidUnknownAccount", { brand: brand.name }));
+    else if (ghError === "bid_login_expired") setError(t("auth.login.errBidExpired"));
+    else if (ghError === "bid_sub_taken") setError(t("auth.login.errBidSubTaken", { brand: brand.name }));
+    else if (ghError === "bid_already_linked") setError(t("auth.login.errBidAlreadyLinked"));
+    else if (ghError === "bid_required") setError(t("auth.login.errBidRequired"));
+    else if (ghError?.startsWith("bid_")) setError(t("auth.login.errBidGeneric"));
+  }, [params, brand.name, t]);
 
   if (checking) {
     return (
@@ -108,7 +110,7 @@ function LoginForm() {
         display: "flex", alignItems: "center", justifyContent: "center",
         background: "hsl(0 0% 6%)",
       }}>
-        <p style={{ color: "hsl(0 0% 40%)", fontSize: "0.875rem" }}>Loading…</p>
+        <p style={{ color: "hsl(0 0% 40%)", fontSize: "0.875rem" }}>{t("auth.login.loading")}</p>
       </div>
     );
   }
@@ -126,7 +128,7 @@ function LoginForm() {
       });
       const data = (await res.json()) as { error?: string; totpRequired?: boolean };
       if (!res.ok) {
-        setError(data.error ?? "Login failed");
+        setError(data.error ?? t("auth.login.loginFailed"));
         setLoading(false);
         return;
       }
@@ -139,14 +141,14 @@ function LoginForm() {
       const me = await fetch("/api/auth/me", { credentials: "same-origin" });
       const meData = (await me.json()) as { user?: { id: string } | null };
       if (!meData.user) {
-        setError("Cookie was not stored — try a different browser or check privacy settings");
+        setError(t("auth.login.cookieNotStored"));
         setLoading(false);
         return;
       }
       // Full page load — ensures all client components get fresh auth state
       window.location.href = from;
     } catch {
-      setError("Network error — try again");
+      setError(t("auth.login.networkErrorRetry"));
       setLoading(false);
     }
   }
@@ -164,13 +166,13 @@ function LoginForm() {
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
-        setError(data.error ?? "Verification failed");
+        setError(data.error ?? t("auth.login.verificationFailed"));
         setLoading(false);
         return;
       }
       window.location.href = from;
     } catch {
-      setError("Network error");
+      setError(t("auth.login.networkError"));
       setLoading(false);
     }
   }
@@ -187,7 +189,7 @@ function LoginForm() {
       });
       const options = await optsRes.json();
       if (!optsRes.ok) {
-        setError((options as { error?: string }).error ?? "Passkey login failed");
+        setError((options as { error?: string }).error ?? t("auth.login.passkeyFailed"));
         setLoading(false);
         return;
       }
@@ -200,7 +202,7 @@ function LoginForm() {
       });
       const data = (await verifyRes.json()) as { error?: string; totpRequired?: boolean };
       if (!verifyRes.ok) {
-        setError(data.error ?? "Passkey verification failed");
+        setError(data.error ?? t("auth.login.passkeyVerifyFailed"));
         setLoading(false);
         return;
       }
@@ -211,7 +213,7 @@ function LoginForm() {
       }
       window.location.href = from;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Passkey login cancelled");
+      setError(err instanceof Error ? err.message : t("auth.login.passkeyCancelled"));
       setLoading(false);
     }
   }
@@ -265,17 +267,17 @@ function LoginForm() {
           <div style={{ marginBottom: "1.75rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
             <BrandLogo variant="icon" light={false} style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
             <BrandLogo variant="wordmark" light={false} style={{ height: "28px", width: "auto" }} />
-            <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>{hasBid ? "Broberg ID sign-in did not complete" : "Sign in to continue"}</p>
+            <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>{hasBid ? t("auth.login.bidDidNotComplete") : t("auth.login.signInToContinue")}</p>
           </div>
 
           {totpRequired ? (
             <form data-testid="login-totp-form" onSubmit={handleTotpSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
               <div>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>
-                  Authenticator code
+                  {t("auth.login.authenticatorCode")}
                 </label>
                 <p style={{ fontSize: "0.7rem", color: "hsl(0 0% 50%)", margin: "0.25rem 0 0.5rem" }}>
-                  Enter the 6-digit code from your authenticator app, or a backup code.
+                  {t("auth.login.authenticatorHint")}
                 </p>
                 <input
                   data-testid="login-totp-input"
@@ -306,7 +308,7 @@ function LoginForm() {
                   fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "wait" : "pointer",
                 }}
               >
-                {loading ? "Verifying…" : "Verify"}
+                {loading ? t("auth.login.verifying") : t("auth.login.verify")}
               </button>
               <button
                 data-testid="login-totp-back"
@@ -318,7 +320,7 @@ function LoginForm() {
                   fontSize: "0.75rem", cursor: "pointer",
                 }}
               >
-                ← Back
+                {t("auth.login.back")}
               </button>
             </form>
           ) : (
@@ -326,7 +328,7 @@ function LoginForm() {
           {!hasBid && (
           <form data-testid="login-password-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Email</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>{t("auth.login.email")}</label>
               <input
                 data-testid="login-email-input"
                 type="email"
@@ -334,7 +336,7 @@ function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoFocus
-                placeholder="admin@example.com"
+                placeholder={t("auth.login.emailPlaceholder")}
                 style={{
                   padding: "0.5rem 0.75rem",
                   borderRadius: "7px",
@@ -352,7 +354,7 @@ function LoginForm() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Password</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>{t("auth.login.password")}</label>
               <input
                 data-testid="login-password-input"
                 type="password"
@@ -404,7 +406,7 @@ function LoginForm() {
                 transition: "opacity 150ms",
               }}
             >
-              {loading ? "Signing in…" : "Sign in"}
+              {loading ? t("auth.login.signingIn") : t("auth.login.signIn")}
             </button>
 
             {!hasBid && (
@@ -429,7 +431,7 @@ function LoginForm() {
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 20%)"; e.currentTarget.style.color = "hsl(0 0% 85%)"; }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="12" r="4"/><path d="M14 12h8"/><path d="M18 12v4"/><path d="M22 12v2"/></svg>
-              Sign in with passkey
+              {t("auth.login.signInPasskey")}
             </button>
             )}
           </form>
@@ -456,7 +458,7 @@ function LoginForm() {
               onMouseDown={(e) => { e.currentTarget.style.opacity = "0.85"; }}
               onMouseUp={(e) => { e.currentTarget.style.opacity = "1"; }}
             >
-              {loading ? "Opening Broberg ID…" : "Try again with Broberg ID"}
+              {loading ? t("auth.login.openingBid") : t("auth.login.retryBid")}
             </a>
           )}
 
@@ -467,7 +469,7 @@ function LoginForm() {
                 margin: "1.25rem 0 0.25rem",
               }}>
                 <div style={{ flex: 1, height: "1px", background: "hsl(0 0% 20%)" }} />
-                <span style={{ fontSize: "0.7rem", color: "hsl(0 0% 40%)", textTransform: "uppercase", letterSpacing: "0.05em" }}>or</span>
+                <span style={{ fontSize: "0.7rem", color: "hsl(0 0% 40%)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("auth.login.or")}</span>
                 <div style={{ flex: 1, height: "1px", background: "hsl(0 0% 20%)" }} />
               </div>
               <a
@@ -486,7 +488,7 @@ function LoginForm() {
                 onMouseLeave={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 20%)"; e.currentTarget.style.color = "hsl(0 0% 85%)"; }}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
-                Sign in with GitHub
+                {t("auth.login.signInGithub")}
               </a>
             </>
           )}
@@ -506,10 +508,10 @@ function LoginForm() {
           display: "flex", flexDirection: "column", alignItems: "center",
         }}>
           <h3 style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: "0 0 0.5rem", textAlign: "center" }}>
-            Log in with QR code
+            {t("auth.login.qrTitle")}
           </h3>
           <p style={{ fontSize: "0.7rem", color: "hsl(0 0% 50%)", margin: "0 0 1rem", textAlign: "center", lineHeight: 1.4 }}>
-            Scan with the webhouse.app mobile app or another signed-in device.
+            {t("auth.login.qrHint")}
           </p>
           <div style={{
             width: "200px", height: "200px",
@@ -519,9 +521,9 @@ function LoginForm() {
           }}>
             {qrDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={qrDataUrl} alt="Login QR code" style={{ width: "100%", height: "100%" }} />
+              <img src={qrDataUrl} alt={t("auth.login.qrAlt")} style={{ width: "100%", height: "100%" }} />
             ) : (
-              <span style={{ fontSize: "0.7rem", color: "#999" }}>Loading…</span>
+              <span style={{ fontSize: "0.7rem", color: "#999" }}>{t("auth.login.loading")}</span>
             )}
             {(qrStatus === "expired" || qrStatus === "rejected") && (
               <div style={{
@@ -530,7 +532,7 @@ function LoginForm() {
                 borderRadius: "8px",
               }}>
                 <span style={{ color: "#fff", fontSize: "0.75rem", marginBottom: "0.5rem" }}>
-                  {qrStatus === "expired" ? "Expired" : "Rejected"}
+                  {qrStatus === "expired" ? t("auth.login.qrExpired") : t("auth.login.qrRejected")}
                 </span>
                 <button
                   data-testid="login-qr-refresh-button"
@@ -541,7 +543,7 @@ function LoginForm() {
                     color: "var(--brand-strong)", cursor: "pointer",
                   }}
                 >
-                  Refresh
+                  {t("auth.login.refresh")}
                 </button>
               </div>
             )}
@@ -550,12 +552,12 @@ function LoginForm() {
                 position: "absolute", inset: 0, background: "rgba(13, 13, 13, 0.9)",
                 display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px",
               }}>
-                <span style={{ color: "hsl(140 60% 50%)", fontSize: "1.5rem" }}>✓ Signing in…</span>
+                <span style={{ color: "hsl(140 60% 50%)", fontSize: "1.5rem" }}>{t("auth.login.qrSigningIn")}</span>
               </div>
             )}
           </div>
           <p style={{ fontSize: "0.65rem", color: "hsl(0 0% 35%)", margin: "0.75rem 0 0", textAlign: "center" }}>
-            {qrSessionId ? "Waiting for approval…" : ""}
+            {qrSessionId ? t("auth.login.qrWaiting") : ""}
           </p>
         </div>}
         </div>

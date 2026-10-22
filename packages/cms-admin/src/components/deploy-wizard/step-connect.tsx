@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CheckCircle, Loader2, AlertCircle, ExternalLink } from "lucide-react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { WizardState } from "./deploy-wizard";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   flyToken: string;
@@ -23,6 +24,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
+  const t = useT();
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
         error?: string;
       };
       if (!res.ok) {
-        throw new Error(data.error ?? `Token verification failed (HTTP ${res.status})`);
+        throw new Error(data.error ?? t("misc.deployWizard.connect.verifyFailedStatus", { status: res.status }));
       }
       const orgNodes = data.orgs ?? [];
 
@@ -57,7 +59,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
       onUpdate({ flyOrg: personalOrg?.slug ?? orgNodes[0].slug });
       setVerified(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Verification failed");
+      setError(err instanceof Error ? err.message : t("misc.deployWizard.connect.verifyFailed"));
     } finally {
       setVerifying(false);
     }
@@ -65,16 +67,16 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
 
   return (
     <div>
-      <SectionHeading>Connect to Fly.io</SectionHeading>
+      <SectionHeading>{t("misc.deployWizard.connect.title")}</SectionHeading>
       <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.5rem" }}>
-        Enter your Fly.io API token to deploy directly. Your token is used only for this deploy session and is never stored.
+        {t("misc.deployWizard.connect.intro")}
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxWidth: "28rem" }}>
         {/* Token input */}
         <div>
           <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted-foreground)", display: "block", marginBottom: "0.3rem" }}>
-            API Token
+            {t("misc.deployWizard.connect.apiToken")}
           </label>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input
@@ -86,7 +88,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
                 setVerified(false);
                 setError(null);
               }}
-              placeholder="fo1_..."
+              placeholder={t("misc.deployWizard.connect.tokenPlaceholder")}
               style={{ ...inputStyle, flex: 1 }}
             />
             <button
@@ -107,7 +109,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
             >
               {verifying ? (
                 <Loader2 className="animate-spin" style={{ width: 14, height: 14 }} />
-              ) : "Verify"}
+              ) : t("misc.deployWizard.connect.verify")}
             </button>
           </div>
           <a
@@ -117,7 +119,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
             rel="noopener noreferrer"
             style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", display: "inline-flex", alignItems: "center", gap: "0.3rem", marginTop: "0.5rem" }}
           >
-            Get key <ExternalLink style={{ width: 11, height: 11 }} />
+            {t("misc.deployWizard.connect.getKey")} <ExternalLink style={{ width: 11, height: 11 }} />
           </a>
         </div>
 
@@ -134,10 +136,10 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
           }}>
             <CheckCircle style={{ width: 16, height: 16, color: "#22c55e", flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: "0.8rem", fontWeight: 500 }}>Token verified</div>
+              <div style={{ fontSize: "0.8rem", fontWeight: 500 }}>{t("misc.deployWizard.connect.verified")}</div>
               <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-                Organization: {flyOrg}
-                {orgs.length > 1 && ` (${orgs.length} available)`}
+                {t("misc.deployWizard.connect.organizationValue", { org: flyOrg })}
+                {orgs.length > 1 && ` ${t("misc.deployWizard.connect.available", { count: orgs.length })}`}
               </div>
             </div>
           </div>
@@ -147,7 +149,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
         {verified && orgs.length > 1 && (
           <div>
             <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted-foreground)", display: "block", marginBottom: "0.3rem" }}>
-              Organization
+              {t("misc.deployWizard.connect.organization")}
             </label>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
               {orgs.map((org) => (

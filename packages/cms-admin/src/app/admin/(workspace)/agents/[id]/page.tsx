@@ -12,14 +12,15 @@ import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
 import type { AgentConfig } from "@/lib/agents";
 import { TabTitle } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { useT } from "@/lib/i18n-context";
 
 const ROLES = [
-  { value: "copywriter", label: "Content Writer" },
-  { value: "seo", label: "SEO" },
-  { value: "geo", label: "GEO Optimizer" },
-  { value: "translator", label: "Translator" },
-  { value: "refresher", label: "Content Refresher" },
-  { value: "custom", label: "Custom" },
+  { value: "copywriter", labelKey: "pages.agentEdit.roles.copywriter" },
+  { value: "seo", labelKey: "pages.agentEdit.roles.seo" },
+  { value: "geo", labelKey: "pages.agentEdit.roles.geo" },
+  { value: "translator", labelKey: "pages.agentEdit.roles.translator" },
+  { value: "refresher", labelKey: "pages.agentEdit.roles.refresher" },
+  { value: "custom", labelKey: "pages.agentEdit.roles.custom" },
 ] as const;
 
 const labelStyle: React.CSSProperties = {
@@ -43,6 +44,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function AgentDetailPage() {
+  const t = useT();
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const siteRole = useSiteRole();
@@ -180,7 +182,7 @@ export default function AgentDetailPage() {
         setLoading(false);
       })
       .catch(() => {
-        setError("Failed to load agent");
+        setError(t("pages.agentEdit.failedLoad"));
         setLoading(false);
       });
   }, [id]);
@@ -230,7 +232,7 @@ export default function AgentDetailPage() {
       if (data.prompt) setSystemPrompt(data.prompt);
       else if (data.error) setError(data.error);
     } catch {
-      setError("Failed to generate prompt");
+      setError(t("pages.agentEdit.failedGeneratePrompt"));
     }
     setGenerating(false);
   }
@@ -264,9 +266,9 @@ export default function AgentDetailPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) setError(data.error ?? "Failed to save");
+      if (!res.ok) setError(data.error ?? t("pages.agentEdit.failedSave"));
     } catch {
-      setError("Network error");
+      setError(t("pages.agentEdit.networkError"));
     }
     setSaving(false);
   }
@@ -283,10 +285,10 @@ export default function AgentDetailPage() {
         body: JSON.stringify({ prompt: runPrompt }),
       });
       const data = await res.json();
-      if (!res.ok) setRunError(data.error ?? "Failed to run agent");
+      if (!res.ok) setRunError(data.error ?? t("pages.agentEdit.failedRun"));
       else setRunResult(data);
     } catch {
-      setRunError("Network error");
+      setRunError(t("pages.agentEdit.networkError"));
     }
     setRunning(false);
   }
@@ -317,13 +319,13 @@ export default function AgentDetailPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) setError(data.error ?? "Failed to save template");
+      if (!res.ok) setError(data.error ?? t("pages.agentEdit.failedSaveTemplate"));
       else {
         setTemplateSaved(true);
         setTimeout(() => setTemplateSaved(false), 2500);
       }
     } catch {
-      setError("Network error");
+      setError(t("pages.agentEdit.networkError"));
     }
     setSavingTemplate(false);
   }
@@ -334,9 +336,9 @@ export default function AgentDetailPage() {
       const res = await fetch(`/api/cms/agents/${id}/clone`, { method: "POST" });
       const data = await res.json();
       if (res.ok && data.id) router.push(`/admin/agents/${data.id}`);
-      else setError(data.error ?? "Clone failed");
+      else setError(data.error ?? t("pages.agentEdit.cloneFailed"));
     } catch {
-      setError("Network error");
+      setError(t("pages.agentEdit.networkError"));
     }
     setCloning(false);
   }
@@ -347,7 +349,7 @@ export default function AgentDetailPage() {
       await fetch(`/api/cms/agents/${id}`, { method: "DELETE" });
       router.push("/admin/agents");
     } catch {
-      setError("Failed to delete agent");
+      setError(t("pages.agentEdit.failedDelete"));
       setDeleting(false);
     }
   }
@@ -355,7 +357,7 @@ export default function AgentDetailPage() {
   if (loading) {
     return (
       <div className="p-8">
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{t("pages.agentEdit.loading")}</p>
       </div>
     );
   }
@@ -370,7 +372,7 @@ export default function AgentDetailPage() {
             variant="secondary"
             onClick={handleSaveAsTemplate}
             disabled={savingTemplate}
-            title="Save this agent as a reusable template for the org"
+            title={t("pages.agentEdit.saveAsTemplateTitle")}
             icon={
               templateSaved ? (
                 <CheckCircle style={{ width: "0.8rem", height: "0.8rem", color: "#22c55e" }} />
@@ -379,16 +381,16 @@ export default function AgentDetailPage() {
               )
             }
           >
-            {savingTemplate ? "Saving..." : templateSaved ? "Saved!" : "Save as template"}
+            {savingTemplate ? t("pages.agentEdit.saving") : templateSaved ? t("pages.agentEdit.savedBang") : t("pages.agentEdit.saveAsTemplate")}
           </ActionButton>
           <ActionButton
             variant="secondary"
             onClick={handleClone}
             disabled={cloning}
-            title="Clone agent"
+            title={t("pages.agentEdit.cloneTitle")}
             icon={<Copy style={{ width: "0.8rem", height: "0.8rem" }} />}
           >
-            {cloning ? "Cloning..." : "Clone"}
+            {cloning ? t("pages.agentEdit.cloning") : t("pages.agentEdit.clone")}
           </ActionButton>
           <ActionButton
             variant="primary"
@@ -399,30 +401,30 @@ export default function AgentDetailPage() {
             disabled={saving}
             icon={saving ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> : <Save style={{ width: 14, height: 14 }} />}
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? t("pages.agentEdit.saving") : t("pages.agentEdit.save")}
           </ActionButton>
         </>
       ) : undefined}
     >
       <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
-      <Link href="/admin/agents" className="text-muted-foreground hover:text-foreground transition-colors" title="Back to Agents">
+      <Link href="/admin/agents" className="text-muted-foreground hover:text-foreground transition-colors" title={t("pages.agentEdit.backToAgents")}>
         <ArrowLeft className="w-4 h-4" />
       </Link>
-      <ActionBarBreadcrumb items={["agents", name || id]} />
+      <ActionBarBreadcrumb items={[t("pages.agentEdit.breadcrumb"), name || id]} />
     </ActionBar>
 
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div className="p-8 max-w-2xl">
-      <TabTitle value={name || "Agent"} />
+      <TabTitle value={name || t("pages.agentEdit.tabFallback")} />
 
       {/* Stats */}
       {stats.totalGenerated > 0 && (
         <div className="grid grid-cols-4 gap-3 mb-8">
           {[
-            { label: "Generated", value: stats.totalGenerated },
-            { label: "Approved", value: stats.approved },
-            { label: "Rejected", value: stats.rejected },
-            { label: "Edited", value: stats.edited },
+            { label: t("pages.agentEdit.statGenerated"), value: stats.totalGenerated },
+            { label: t("pages.agentEdit.statApproved"), value: stats.approved },
+            { label: t("pages.agentEdit.statRejected"), value: stats.rejected },
+            { label: t("pages.agentEdit.statEdited"), value: stats.edited },
           ].map((s) => (
             <div
               key={s.label}
@@ -439,7 +441,7 @@ export default function AgentDetailPage() {
       {feedback.length > 0 && (
         <div className="mb-8">
           <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
-            Recent feedback ({feedback.length})
+            {t("pages.agentEdit.recentFeedback", { count: feedback.length })}
           </h3>
           <div className="space-y-2">
             {feedback.map((f) => {
@@ -459,7 +461,7 @@ export default function AgentDetailPage() {
                       background: `color-mix(in srgb, ${badgeColor} 15%, transparent)`,
                       color: badgeColor,
                     }}>{f.type}</span>
-                    {f.field && <span className="text-muted-foreground">field: <code>{f.field}</code></span>}
+                    {f.field && <span className="text-muted-foreground">{t("pages.agentEdit.fieldLabel")} <code>{f.field}</code></span>}
                     <span className="text-muted-foreground ml-auto">
                       {new Date(f.createdAt).toLocaleString()}
                     </span>
@@ -478,7 +480,7 @@ export default function AgentDetailPage() {
             })}
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            The agent reads the last 5 corrections back into its system prompt on each run.
+            {t("pages.agentEdit.feedbackHint")}
           </p>
         </div>
       )}
@@ -486,7 +488,7 @@ export default function AgentDetailPage() {
       <form data-testid="agent-form" id="agent-form" onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
-          <label style={labelStyle}>Agent Name</label>
+          <label style={labelStyle}>{t("pages.agentEdit.agentName")}</label>
           <input
             data-testid="agent-name-input"
             type="text"
@@ -498,9 +500,9 @@ export default function AgentDetailPage() {
 
         {/* Role */}
         <div>
-          <label style={labelStyle}>Role</label>
+          <label style={labelStyle}>{t("pages.agentEdit.role")}</label>
           <CustomSelect
-            options={ROLES.map((r) => ({ value: r.value, label: r.label }))}
+            options={ROLES.map((r) => ({ value: r.value, label: t(r.labelKey) }))}
             value={role}
             onChange={setRole}
           />
@@ -510,7 +512,7 @@ export default function AgentDetailPage() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label style={{ ...labelStyle, marginBottom: 0 }}>
-              System Prompt
+              {t("pages.agentEdit.systemPrompt")}
             </label>
             <button
               data-testid="agent-generate-prompt"
@@ -524,7 +526,7 @@ export default function AgentDetailPage() {
               ) : (
                 <Sparkles className="w-3 h-3" />
               )}
-              Auto-generate
+              {t("pages.agentEdit.autoGenerate")}
             </button>
           </div>
           <textarea
@@ -538,25 +540,25 @@ export default function AgentDetailPage() {
 
         {/* Behavior sliders */}
         <div className="rounded-lg border border-border p-4 space-y-4">
-          <p style={{ ...labelStyle, marginBottom: 0 }}>Behavior</p>
+          <p style={{ ...labelStyle, marginBottom: 0 }}>{t("pages.agentEdit.behavior")}</p>
           <SliderField
-            label="Creativity"
-            leftLabel="Factual"
-            rightLabel="Creative"
+            label={t("pages.agentEdit.creativity")}
+            leftLabel={t("pages.agentEdit.factual")}
+            rightLabel={t("pages.agentEdit.creative")}
             value={temperature}
             onChange={setTemperature}
           />
           <SliderField
-            label="Formality"
-            leftLabel="Casual"
-            rightLabel="Academic"
+            label={t("pages.agentEdit.formality")}
+            leftLabel={t("pages.agentEdit.casual")}
+            rightLabel={t("pages.agentEdit.academic")}
             value={formality}
             onChange={setFormality}
           />
           <SliderField
-            label="Verbosity"
-            leftLabel="Concise"
-            rightLabel="Detailed"
+            label={t("pages.agentEdit.verbosity")}
+            leftLabel={t("pages.agentEdit.concise")}
+            rightLabel={t("pages.agentEdit.detailed")}
             value={verbosity}
             onChange={setVerbosity}
           />
@@ -564,18 +566,18 @@ export default function AgentDetailPage() {
 
         {/* Tools */}
         <div>
-          <p style={labelStyle}>Tools</p>
+          <p style={labelStyle}>{t("pages.agentEdit.tools")}</p>
           <div className="space-y-2">
-            <Checkbox checked={webSearch} onChange={(v) => setWebSearch(v)} label="Web search" />
-            <Checkbox checked={internalDatabase} onChange={(v) => setInternalDatabase(v)} label="Internal database" />
-            <Checkbox checked={imageGeneration} onChange={(v) => setImageGeneration(v)} label="Image generation (FLUX 2, EU)" />
+            <Checkbox checked={webSearch} onChange={(v) => setWebSearch(v)} label={t("pages.agentEdit.webSearch")} />
+            <Checkbox checked={internalDatabase} onChange={(v) => setInternalDatabase(v)} label={t("pages.agentEdit.internalDatabase")} />
+            <Checkbox checked={imageGeneration} onChange={(v) => setImageGeneration(v)} label={t("pages.agentEdit.imageGeneration")} />
           </div>
         </div>
 
         {/* Target Collections */}
         <div>
-          <p style={labelStyle}>Target Collections</p>
-          <p className="text-xs text-muted-foreground mb-2">Which collections this agent generates content for.</p>
+          <p style={labelStyle}>{t("pages.agentEdit.targetCollections")}</p>
+          <p className="text-xs text-muted-foreground mb-2">{t("pages.agentEdit.targetCollectionsHint")}</p>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {targetCollections.map((col) => (
               <span
@@ -608,7 +610,7 @@ export default function AgentDetailPage() {
           {availableCollections.filter((c) => !targetCollections.includes(c.name)).length > 0 && (
             <CustomSelect
               options={[
-                { value: "", label: "— add a collection —" },
+                { value: "", label: t("pages.agentEdit.addCollection") },
                 ...availableCollections
                   .filter((c) => !targetCollections.includes(c.name))
                   .map((c) => ({ value: c.name, label: c.label })),
@@ -622,8 +624,8 @@ export default function AgentDetailPage() {
         {/* Field Defaults */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p style={labelStyle}>Field Defaults</p>
-            <span className="text-xs text-muted-foreground">Override LLM — agent always uses these values</span>
+            <p style={labelStyle}>{t("pages.agentEdit.fieldDefaults")}</p>
+            <span className="text-xs text-muted-foreground">{t("pages.agentEdit.fieldDefaultsHint")}</span>
           </div>
           <div className="space-y-2">
             {fieldDefaults.map((fd, i) => {
@@ -652,16 +654,16 @@ export default function AgentDetailPage() {
                       type={fieldDef?.type === "number" ? "number" : "text"}
                       value={fd.value}
                       onChange={(e) => setFieldDefaults((prev) => prev.map((f, j) => j === i ? { ...f, value: e.target.value } : f))}
-                      placeholder={fd.key ? `value for ${fd.key}` : "value"}
+                      placeholder={fd.key ? t("pages.agentEdit.valueFor", { key: fd.key }) : t("pages.agentEdit.value")}
                       style={{ ...inputStyle, flex: 1, fontSize: "0.8rem" }}
                     />
                   )}
                   {confirmDeleteDefault === i ? (
                     <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                       <button data-testid={`agent-field-default-delete-confirm-${i}`} type="button" onClick={() => { setFieldDefaults((prev) => prev.filter((_, j) => j !== i)); setConfirmDeleteDefault(null); }}
-                        style={{ fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer" }}>Sure?</button>
+                        style={{ fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer" }}>{t("pages.agentEdit.sure")}</button>
                       <button data-testid={`agent-field-default-delete-cancel-${i}`} type="button" onClick={() => setConfirmDeleteDefault(null)}
-                        style={{ fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer" }}>No</button>
+                        style={{ fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer" }}>{t("pages.agentEdit.no")}</button>
                     </span>
                   ) : (
                     <button
@@ -683,43 +685,43 @@ export default function AgentDetailPage() {
               onClick={() => setFieldDefaults((prev) => [...prev, { key: "", value: "" }])}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Plus style={{ width: "0.75rem", height: "0.75rem" }} /> Add default
+              <Plus style={{ width: "0.75rem", height: "0.75rem" }} /> {t("pages.agentEdit.addDefault")}
             </button>
           </div>
         </div>
 
         {/* Autonomy */}
         <div>
-          <p style={labelStyle}>Autonomy</p>
+          <p style={labelStyle}>{t("pages.agentEdit.autonomy")}</p>
           <div className="space-y-2">
-            <Radio checked={autonomy === "draft"} onChange={() => setAutonomy("draft")} label="Draft & Review" description="— goes to curation queue" />
-            <Radio checked={autonomy === "full"} onChange={() => setAutonomy("full")} label="Full Autonomy" description="— publishes directly" />
+            <Radio checked={autonomy === "draft"} onChange={() => setAutonomy("draft")} label={t("pages.agentEdit.draftReview")} description={t("pages.agentEdit.draftReviewDesc")} />
+            <Radio checked={autonomy === "full"} onChange={() => setAutonomy("full")} label={t("pages.agentEdit.fullAutonomy")} description={t("pages.agentEdit.fullAutonomyDesc")} />
           </div>
         </div>
 
         {/* Schedule */}
         <div className="rounded-lg border border-border p-4 space-y-3">
-          <Checkbox checked={scheduleEnabled} onChange={(v) => setScheduleEnabled(v)} label="Enable schedule" />
+          <Checkbox checked={scheduleEnabled} onChange={(v) => setScheduleEnabled(v)} label={t("pages.agentEdit.enableSchedule")} />
           {scheduleEnabled && (
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label style={labelStyle}>Frequency</label>
+                <label style={labelStyle}>{t("pages.agentEdit.frequency")}</label>
                 <CustomSelect
                   options={[
-                    { value: "daily", label: "Daily" },
-                    { value: "weekly", label: "Weekly" },
-                    { value: "manual", label: "Manual" },
+                    { value: "daily", label: t("pages.agentEdit.daily") },
+                    { value: "weekly", label: t("pages.agentEdit.weekly") },
+                    { value: "manual", label: t("pages.agentEdit.manual") },
                   ]}
                   value={frequency}
                   onChange={(v) => setFrequency(v as "daily" | "weekly" | "manual" | "cron")}
                 />
               </div>
               <div>
-                <label style={labelStyle}>Time</label>
+                <label style={labelStyle}>{t("pages.agentEdit.time")}</label>
                 <CustomTimeInput value={time} onChange={setTime} />
               </div>
               <div>
-                <label style={labelStyle}>Max per run</label>
+                <label style={labelStyle}>{t("pages.agentEdit.maxPerRun")}</label>
                 <input
                   data-testid="agent-max-per-run"
                   type="number"
@@ -741,19 +743,18 @@ export default function AgentDetailPage() {
           <div className="rounded-lg border border-border p-4 space-y-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Output language
+                {t("pages.agentEdit.outputLanguage")}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Which language this agent writes in. Defaults to the site
-                default ({siteLocales.defaultLocale.toUpperCase()}).
+                {t("pages.agentEdit.outputLanguageHint", { locale: siteLocales.defaultLocale.toUpperCase() })}{" "}
                 {siteLocales.autoTranslate
-                  ? " Auto-translate is ON — when a default-locale draft is approved, the other locales are filled in automatically."
-                  : " Auto-translate is OFF in site settings — only this locale will be created."}
+                  ? t("pages.agentEdit.autoTranslateOn")
+                  : t("pages.agentEdit.autoTranslateOff")}
               </p>
             </div>
             <CustomSelect
               options={[
-                { value: "", label: `Site default (${siteLocales.defaultLocale.toUpperCase()})` },
+                { value: "", label: t("pages.agentEdit.siteDefault", { locale: siteLocales.defaultLocale.toUpperCase() }) },
                 ...siteLocales.locales.map((l) => ({ value: l, label: l.toUpperCase() })),
               ]}
               value={agentLocale}
@@ -768,16 +769,15 @@ export default function AgentDetailPage() {
         <div className="rounded-lg border border-border p-4 space-y-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Cost guards (USD)
+              {t("pages.agentEdit.costGuards")}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Optional caps per period. Leave blank for no limit. Hitting a cap
-              blocks both manual and scheduled runs until the period resets.
+              {t("pages.agentEdit.costGuardsHint")}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label style={labelStyle}>Daily</label>
+              <label style={labelStyle}>{t("pages.agentEdit.daily")}</label>
               <input
                 data-testid="agent-daily-budget"
                 type="number"
@@ -790,7 +790,7 @@ export default function AgentDetailPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Weekly</label>
+              <label style={labelStyle}>{t("pages.agentEdit.weekly")}</label>
               <input
                 data-testid="agent-weekly-budget"
                 type="number"
@@ -803,7 +803,7 @@ export default function AgentDetailPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Monthly</label>
+              <label style={labelStyle}>{t("pages.agentEdit.monthly")}</label>
               <input
                 data-testid="agent-monthly-budget"
                 type="number"
@@ -819,7 +819,7 @@ export default function AgentDetailPage() {
         </div>
 
         {/* Active toggle */}
-        <Checkbox checked={active} onChange={(v) => setActive(v)} label="Agent is active" />
+        <Checkbox checked={active} onChange={(v) => setActive(v)} label={t("pages.agentEdit.agentIsActive")} />
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
@@ -829,14 +829,14 @@ export default function AgentDetailPage() {
       {!readOnly && (
         <div className="mt-8 pt-6 border-t border-border space-y-3">
           <p style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", margin: 0 }}>
-            Run agent now
+            {t("pages.agentEdit.runAgentNow")}
           </p>
           <textarea
             data-testid="agent-run-prompt"
             value={runPrompt}
             onChange={(e) => setRunPrompt(e.target.value)}
             rows={2}
-            placeholder="Describe what to generate, e.g. &quot;Write an article about rotator cuff injuries for athletes&quot;"
+            placeholder={t("pages.agentEdit.runPromptPlaceholder")}
             style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", resize: "vertical", boxSizing: "border-box" }}
           />
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -848,12 +848,12 @@ export default function AgentDetailPage() {
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
             >
               {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              {running ? "Running…" : "Run now"}
+              {running ? t("pages.agentEdit.running") : t("pages.agentEdit.runNow")}
             </button>
             {runResult && (
               <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "hsl(142 71% 45%)" }}>
                 <CheckCircle style={{ width: "14px", height: "14px" }} />
-                &ldquo;{runResult.title}&rdquo; added to Curation Queue
+                {t("pages.agentEdit.addedToQueue", { title: runResult.title })}
               </span>
             )}
             {runError && <span style={{ fontSize: "0.8rem", color: "var(--destructive)" }}>{runError}</span>}
@@ -871,7 +871,7 @@ export default function AgentDetailPage() {
             className="flex items-center gap-1.5 text-sm text-destructive hover:opacity-80 transition-opacity"
           >
             <Trash2 className="w-4 h-4" />
-            Delete agent
+            {t("pages.agentEdit.deleteAgent")}
           </button>
         </div>
       )}
@@ -900,10 +900,9 @@ export default function AgentDetailPage() {
               width: "90%",
             }}
           >
-            <p className="font-semibold text-foreground mb-2">Delete agent?</p>
+            <p className="font-semibold text-foreground mb-2">{t("pages.agentEdit.deleteAgentQ")}</p>
             <p className="text-sm text-muted-foreground mb-4">
-              This action cannot be undone. The agent &ldquo;{name}&rdquo; and
-              all its configuration will be permanently deleted.
+              {t("pages.agentEdit.deleteBody", { name })}
             </p>
             <div className="flex gap-2 justify-end">
               <button
@@ -912,7 +911,7 @@ export default function AgentDetailPage() {
                 onClick={() => setShowDelete(false)}
                 className="px-4 py-2 text-sm rounded-md border border-border bg-transparent hover:bg-secondary transition-colors"
               >
-                Cancel
+                {t("pages.agentEdit.cancel")}
               </button>
               <button
                 data-testid="agent-delete-confirm"
@@ -921,7 +920,7 @@ export default function AgentDetailPage() {
                 disabled={deleting}
                 className="px-4 py-2 text-sm rounded-md bg-destructive text-white hover:opacity-90 transition-opacity disabled:opacity-60"
               >
-                {deleting ? "Deleting..." : "Delete"}
+                {deleting ? t("pages.agentEdit.deleting") : t("pages.agentEdit.delete")}
               </button>
             </div>
           </div>
@@ -945,6 +944,7 @@ function FieldAutocomplete({
   onChange: (val: string) => void;
   style?: React.CSSProperties;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -993,7 +993,7 @@ function FieldAutocomplete({
           if (e.key === "Escape") { setOpen(false); }
           if (e.key === "Enter") { e.preventDefault(); onChange(query); setOpen(false); }
         }}
-        placeholder="field name"
+        placeholder={t("pages.agentEdit.fieldName")}
         style={{
           width: "100%",
           padding: "0.5rem 0.75rem",

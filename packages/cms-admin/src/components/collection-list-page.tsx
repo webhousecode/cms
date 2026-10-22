@@ -11,6 +11,7 @@ import { useCapabilities } from "@/hooks/use-capabilities";
 import { ImportWizard } from "@/components/import-wizard";
 import { usePermissions } from "@/hooks/use-permissions";
 import { Upload } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface FieldConfig {
   name: string;
@@ -50,6 +51,7 @@ export function CollectionListPage({
   collection, collectionLabel, titleField, fields, initialDocs,
   readOnly, urlPrefix, urlPattern, localeStrategy, schemaEnabled, defaultLocale, siteLocales,
 }: Props) {
+  const t = useT();
   const can = usePermissions();
   const canUse = useCapabilities();
   const storageKey = `cms-view-${collection}`;
@@ -92,7 +94,7 @@ export function CollectionListPage({
                     border: "none", cursor: "pointer", color: view === v ? "var(--foreground)" : "var(--muted-foreground)",
                     display: "flex", alignItems: "center",
                   }}
-                  title={v === "grid" ? "Grid view" : "List view"}
+                  title={v === "grid" ? t("misc.collectionListPage.gridView") : t("misc.collectionListPage.listView")}
                 >
                   {v === "grid" ? <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} /> : <List style={{ width: "0.875rem", height: "0.875rem" }} />}
                 </button>
@@ -110,7 +112,7 @@ export function CollectionListPage({
                       cursor: "pointer", whiteSpace: "nowrap",
                     }}>
                       <Edit2 style={{ width: 14, height: 14 }} />
-                      Edit schema
+                      {t("misc.collectionListPage.editSchema")}
                     </button>
                   </Link>
                 )}
@@ -122,7 +124,7 @@ export function CollectionListPage({
                     cursor: "pointer", whiteSpace: "nowrap",
                   }}>
                     <Upload style={{ width: 14, height: 14 }} />
-                    Import
+                    {t("misc.collectionListPage.import")}
                   </button>
                 )}
                 {canUse("ai") && <GenerateDocumentButton collection={collection} collectionLabel={collectionLabel} />}

@@ -8,16 +8,17 @@ import { cn } from "@/lib/utils";
 import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
+import { useT } from "@/lib/i18n-context";
 
 type RunState = "idle" | "running" | "done" | "error";
 type FixState = { loading: boolean; suggestion?: string | null; reason?: string; confidence?: string; applied?: boolean; error?: string };
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
   const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (secs < 60) return `${secs} seconds`;
-  if (secs < 3600) return `${Math.floor(secs / 60)} minutes`;
-  if (secs < 86400) return `${Math.floor(secs / 3600)} hours`;
-  return `${Math.floor(secs / 86400)} days`;
+  if (secs < 60) return t("tools.linkChecker.seconds", { n: secs });
+  if (secs < 3600) return t("tools.linkChecker.minutes", { n: Math.floor(secs / 60) });
+  if (secs < 86400) return t("tools.linkChecker.hours", { n: Math.floor(secs / 3600) });
+  return t("tools.linkChecker.days", { n: Math.floor(secs / 86400) });
 }
 
 function statusIcon(status: LinkResult["status"]) {
@@ -34,18 +35,19 @@ function statusIcon(status: LinkResult["status"]) {
   return <XCircle style={{ width: "0.875rem", height: "0.875rem", color: "#f87171", flexShrink: 0 }} />;
 }
 
-function statusLabel(r: LinkResult) {
-  if (r.status === "ok") return r.httpStatus ? `${r.httpStatus} OK` : "OK";
+function statusLabel(r: LinkResult, t: (key: string, vars?: Record<string, string | number>) => string) {
+  if (r.status === "ok") return r.httpStatus ? t("tools.linkChecker.statusOkCode", { code: r.httpStatus }) : t("tools.linkChecker.statusOk");
   if (r.status === "redirect") return `${r.httpStatus} → ${r.redirectTo}`;
-  if (r.status === "broken") return r.httpStatus ? `${r.httpStatus} Broken` : r.error ?? "Not found";
-  if (r.status === "skipped") return "Ikke en adresse der kan tjekkes";
-  if (r.status === "schemeless") return r.error ?? "Mangler https://";
-  if (r.status === "unverified") return r.error ?? "Ikke verificeret";
-  if (r.status === "dangerous") return r.error ?? "Kan køre kode";
-  return r.error ?? "Error";
+  if (r.status === "broken") return r.httpStatus ? t("tools.linkChecker.statusBrokenCode", { code: r.httpStatus }) : r.error ?? t("tools.linkChecker.statusNotFound");
+  if (r.status === "skipped") return t("tools.linkChecker.statusSkipped");
+  if (r.status === "schemeless") return r.error ?? t("tools.linkChecker.statusSchemeless");
+  if (r.status === "unverified") return r.error ?? t("tools.linkChecker.statusUnverified");
+  if (r.status === "dangerous") return r.error ?? t("tools.linkChecker.statusDangerous");
+  return r.error ?? t("tools.linkChecker.statusError");
 }
 
 function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: string) => void }) {
+  const t = useT();
   const [fix, setFix] = useState<FixState>({ loading: false });
 
   async function getSuggestion() {
@@ -66,7 +68,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
       const data = await res.json();
       setFix({ loading: false, suggestion: data.suggestion, reason: data.reason, confidence: data.confidence });
     } catch {
-      setFix({ loading: false, error: "Failed to get suggestion" });
+      setFix({ loading: false, error: t("tools.linkChecker.suggestFailed") });
     }
   }
 
@@ -94,14 +96,14 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
       setFix((s) => ({ ...s, loading: false, applied: true }));
       onFixed(fix.suggestion!);
     } catch {
-      setFix((s) => ({ ...s, loading: false, error: "Failed to apply fix" }));
+      setFix((s) => ({ ...s, loading: false, error: t("tools.linkChecker.applyFailed") }));
     }
   }
 
   if (fix.applied) {
     return (
       <span className="flex items-center gap-1 text-xs text-green-400 font-mono">
-        <Check style={{ width: "0.75rem", height: "0.75rem" }} /> Fixed
+        <Check style={{ width: "0.75rem", height: "0.75rem" }} /> {t("tools.linkChecker.fixed")}
       </span>
     );
   }
@@ -116,7 +118,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
                 {fix.suggestion}
               </span>
               {fix.confidence === "high" && (
-                <span className="text-[9px] px-1 py-px rounded bg-green-500/10 text-green-400">high</span>
+                <span className="text-[9px] px-1 py-px rounded bg-green-500/10 text-green-400">{t("tools.linkChecker.high")}</span>
               )}
             </div>
             <div className="text-[10px] text-muted-foreground">{fix.reason}</div>
@@ -129,7 +131,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
                 className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
               >
                 {fix.loading ? <Loader2 style={{ width: "0.6rem", height: "0.6rem", animation: "spin 1s linear infinite" }} /> : <Check style={{ width: "0.6rem", height: "0.6rem" }} />}
-                Apply
+                {t("tools.linkChecker.apply")}
               </button>
               <button
                 type="button"
@@ -142,7 +144,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
             </div>
           </>
         ) : (
-          <span className="text-[11px] text-muted-foreground">{fix.reason ?? "No suggestion"}</span>
+          <span className="text-[11px] text-muted-foreground">{fix.reason ?? t("tools.linkChecker.noSuggestion")}</span>
         )}
         {fix.error && <span className="text-[11px] text-red-400">{fix.error}</span>}
       </div>
@@ -162,12 +164,13 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
       ) : (
         <Wrench style={{ width: "0.7rem", height: "0.7rem" }} />
       )}
-      Fix
+      {t("tools.linkChecker.fix")}
     </button>
   );
 }
 
 export default function LinkCheckerPage() {
+  const t = useT();
   const siteRole = useSiteRole();
   const readOnly = siteRole === null || siteRole === "viewer";
   const [state, setState] = useState<RunState>("idle");
@@ -334,33 +337,33 @@ export default function LinkCheckerPage() {
         actions={<>
           {state === "done" && needsAttention.length > 0 && (
             <ActionButton variant="secondary" onClick={exportReport} icon={<Download style={{ width: 14, height: 14 }} />}>
-              Export JSON
+              {t("tools.linkChecker.exportJson")}
             </ActionButton>
           )}
           {state === "running" ? (
             <ActionButton variant="secondary" onClick={stop}>
-              Stop
+              {t("tools.linkChecker.stop")}
             </ActionButton>
           ) : (
             <ActionButton variant="primary" onClick={runCheck} icon={<Play style={{ width: 14, height: 14 }} />}>
-              Run Check
+              {t("tools.linkChecker.runCheck")}
             </ActionButton>
           )}
         </>}
       >
-        <ActionBarBreadcrumb items={["Tools", "Link Checker"]} />
+        <ActionBarBreadcrumb items={[t("tools.common.tools"), t("tools.linkChecker.title")]} />
       </ActionBar>
 
       <div className="p-6 max-w-5xl">
         {state === "done" && (
           <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 1rem", fontFamily: "monospace" }}>
-            {results.length} checked · {broken.length} broken links · {brokenImages.length} broken images · {redirects.length} redirects
+            {t("tools.linkChecker.summary", { checked: results.length, broken: broken.length, images: brokenImages.length, redirects: redirects.length })}
           </p>
         )}
         {/* Last-run notice */}
         {checkedAt && state !== "running" && (
           <p className="text-xs text-muted-foreground mb-4 font-mono">
-            Last checked: {new Date(checkedAt).toLocaleString()} &nbsp;·&nbsp; It has been {timeAgo(checkedAt)} since your last link check.
+            {t("tools.linkChecker.lastChecked", { date: new Date(checkedAt).toLocaleString(), ago: timeAgo(checkedAt, t) })}
           </p>
         )}
 
@@ -368,12 +371,12 @@ export default function LinkCheckerPage() {
         {state === "idle" && results.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-4 py-24 text-muted-foreground">
             <Link2 style={{ width: "3rem", height: "3rem", opacity: 0.2 }} />
-            <p className="text-sm">Checks all links and images across every richtext and image field.</p>
-            <p className="text-xs opacity-60">Internal links verify the target document exists. Internal images verify the file exists on disk. External URLs send a HEAD request.</p>
+            <p className="text-sm">{t("tools.linkChecker.idleIntro")}</p>
+            <p className="text-xs opacity-60">{t("tools.linkChecker.idleHint")}</p>
             <button data-testid="link-checker-start" type="button" onClick={runCheck}
               className="mt-2 flex items-center gap-2 text-sm px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
               <Play style={{ width: "0.875rem", height: "0.875rem" }} />
-              Run check
+              {t("tools.linkChecker.runCheckLower")}
             </button>
           </div>
         )}
@@ -384,7 +387,7 @@ export default function LinkCheckerPage() {
             <div className="flex items-center gap-3 mb-2">
               <Loader2 style={{ width: "1rem", height: "1rem", animation: "spin 1s linear infinite", color: "var(--primary)" }} />
               <span className="text-sm text-muted-foreground">
-                Checking {checked} / {total || "?"} links…
+                {t("tools.linkChecker.checking", { checked, total: total || "?" })}
               </span>
             </div>
             {total > 0 && (
@@ -399,12 +402,12 @@ export default function LinkCheckerPage() {
         {(state === "running" || state === "done") && results.length > 0 && (
           <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
             {[
-              { key: "broken" as const, label: "Broken Links", count: broken.length, icon: <XCircle style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
-              { key: "broken-images" as const, label: "Broken Images", count: brokenImages.length, icon: <ImageOff style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
-              { key: "attention" as const, label: "Se efter", count: attention.length, icon: <AlertTriangle style={{ width: "1rem", height: "1rem", color: "var(--status-warning)" }} /> },
-              { key: "redirect" as const, label: "Redirects", count: redirects.length, icon: <ArrowRight style={{ width: "1rem", height: "1rem", color: "var(--status-warning)" }} /> },
-              { key: "ok" as const, label: "OK", count: ok.length, icon: <CheckCircle style={{ width: "1rem", height: "1rem", color: "#4ade80" }} /> },
-              { key: "all" as const, label: "All", count: results.length, icon: <Link2 style={{ width: "1rem", height: "1rem", color: "var(--muted-foreground)" }} /> },
+              { key: "broken" as const, label: t("tools.linkChecker.brokenLinks"), count: broken.length, icon: <XCircle style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
+              { key: "broken-images" as const, label: t("tools.linkChecker.brokenImages"), count: brokenImages.length, icon: <ImageOff style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
+              { key: "attention" as const, label: t("tools.linkChecker.attention"), count: attention.length, icon: <AlertTriangle style={{ width: "1rem", height: "1rem", color: "var(--status-warning)" }} /> },
+              { key: "redirect" as const, label: t("tools.linkChecker.redirects"), count: redirects.length, icon: <ArrowRight style={{ width: "1rem", height: "1rem", color: "var(--status-warning)" }} /> },
+              { key: "ok" as const, label: t("tools.linkChecker.ok"), count: ok.length, icon: <CheckCircle style={{ width: "1rem", height: "1rem", color: "#4ade80" }} /> },
+              { key: "all" as const, label: t("tools.linkChecker.all"), count: results.length, icon: <Link2 style={{ width: "1rem", height: "1rem", color: "var(--muted-foreground)" }} /> },
             ].map(({ key, label, count, icon }) => (
               <button
                 key={key}
@@ -433,8 +436,8 @@ export default function LinkCheckerPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--muted)" }}>
-                  {["icon", "URL / Image", "Item", "Field", "Status", "Fix"].map((h) => (
-                    <th key={h} style={{ padding: "0.5rem 0.875rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h === "icon" ? "" : h}</th>
+                  {["icon", "thUrl", "thItem", "thField", "thStatus", "thFix"].map((h) => (
+                    <th key={h} style={{ padding: "0.5rem 0.875rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h === "icon" ? "" : t(`tools.linkChecker.${h}`)}</th>
                   ))}
                 </tr>
               </thead>
@@ -499,7 +502,7 @@ export default function LinkCheckerPage() {
                           r.status === "skipped" && "bg-muted text-muted-foreground",
                         )}
                       >
-                        {statusLabel(r)}
+                        {statusLabel(r, t)}
                       </span>
                     </td>
                     <td style={{ padding: "0.5rem 0.875rem" }}>
@@ -525,8 +528,8 @@ export default function LinkCheckerPage() {
         {state === "done" && needsAttention.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
             <CheckCircle style={{ width: "2rem", height: "2rem", color: "#4ade80" }} />
-            <p className="text-sm font-medium text-foreground">All links and images are healthy</p>
-            <p className="text-xs">Checked {results.length} items · {new Date(checkedAt!).toLocaleString()}</p>
+            <p className="text-sm font-medium text-foreground">{t("tools.linkChecker.allHealthy")}</p>
+            <p className="text-xs">{t("tools.linkChecker.checkedItems", { n: results.length, date: new Date(checkedAt!).toLocaleString() })}</p>
           </div>
         )}
       </div>

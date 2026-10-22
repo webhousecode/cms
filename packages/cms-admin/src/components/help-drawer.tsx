@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useBrand } from "@/lib/brand-context";
+import { useT } from "@/lib/i18n-context";
 import {
   HelpCircle, X, BookOpen, Wrench, Activity, Mail,
   MessageCircle, Keyboard, ExternalLink, Bot,
@@ -15,59 +16,59 @@ import {
 const ICON_SIZE = { width: "1rem", height: "1rem" };
 
 const HELP_LINKS = [
-  { label: "Documentation", icon: <BookOpen style={ICON_SIZE} />, href: "https://docs.webhouse.app" },
-  { label: "Troubleshooting", icon: <Wrench style={ICON_SIZE} />, href: "https://docs.webhouse.app/docs/troubleshooting" },
-  { label: "System status", icon: <Activity style={ICON_SIZE} />, href: "https://status.webhouse.app" },
-  { label: "Contact support", icon: <Mail style={ICON_SIZE} />, href: "mailto:cms@webhouse.dk" },
+  { testid: "documentation", label: "shell.helpDrawer.links.documentation", icon: <BookOpen style={ICON_SIZE} />, href: "https://docs.webhouse.app" },
+  { testid: "troubleshooting", label: "shell.helpDrawer.links.troubleshooting", icon: <Wrench style={ICON_SIZE} />, href: "https://docs.webhouse.app/docs/troubleshooting" },
+  { testid: "system-status", label: "shell.helpDrawer.links.systemStatus", icon: <Activity style={ICON_SIZE} />, href: "https://status.webhouse.app" },
+  { testid: "contact-support", label: "shell.helpDrawer.links.contactSupport", icon: <Mail style={ICON_SIZE} />, href: "mailto:cms@webhouse.dk" },
 ];
 
 const SHORTCUT_GROUPS = [
   {
-    label: "Chat with Your Site",
+    label: "shell.helpDrawer.shortcutGroups.chatWithYourSite",
     shortcuts: [
-      { keys: "⌃ ⇧ C", label: "Toggle Chat / Admin mode" },
-      { keys: "/", label: "Focus chat input" },
-      { keys: "⌘ ⇧ N", label: "New conversation" },
+      { keys: "⌃ ⇧ C", label: "shell.helpDrawer.shortcuts.toggleChatAdminMode" },
+      { keys: "/", label: "shell.helpDrawer.shortcuts.focusChatInput" },
+      { keys: "⌘ ⇧ N", label: "shell.helpDrawer.shortcuts.newConversation" },
     ],
   },
   {
-    label: "General",
+    label: "shell.helpDrawer.shortcutGroups.general",
     shortcuts: [
-      { keys: "⌘ K", label: "Command palette" },
-      { keys: "h", label: "Help & Support" },
-      { keys: "p", label: "Preview site" },
-      { keys: "d", label: "Deploy site" },
-      { keys: "t", label: "New tab" },
-      { keys: "c", label: "Close tab" },
-      { keys: "⌘ ⇧ ←", label: "Previous tab" },
-      { keys: "⌘ ⇧ →", label: "Next tab" },
+      { keys: "⌘ K", label: "shell.helpDrawer.shortcuts.commandPalette" },
+      { keys: "h", label: "shell.helpDrawer.shortcuts.helpSupport" },
+      { keys: "p", label: "shell.helpDrawer.shortcuts.previewSite" },
+      { keys: "d", label: "shell.helpDrawer.shortcuts.deploySite" },
+      { keys: "t", label: "shell.helpDrawer.shortcuts.newTab" },
+      { keys: "c", label: "shell.helpDrawer.shortcuts.closeTab" },
+      { keys: "⌘ ⇧ ←", label: "shell.helpDrawer.shortcuts.previousTab" },
+      { keys: "⌘ ⇧ →", label: "shell.helpDrawer.shortcuts.nextTab" },
     ],
   },
   {
-    label: "Document Editor",
+    label: "shell.helpDrawer.shortcutGroups.documentEditor",
     shortcuts: [
-      { keys: "⌘ S", label: "Save document" },
-      { keys: "⌘ ⇧ P", label: "Publish" },
+      { keys: "⌘ S", label: "shell.helpDrawer.shortcuts.saveDocument" },
+      { keys: "⌘ ⇧ P", label: "shell.helpDrawer.shortcuts.publish" },
     ],
   },
   {
-    label: "Collection List",
+    label: "shell.helpDrawer.shortcutGroups.collectionList",
     shortcuts: [
-      { keys: "n", label: "New item" },
-      { keys: "g", label: "Generate with AI" },
+      { keys: "n", label: "shell.helpDrawer.shortcuts.newItem" },
+      { keys: "g", label: "shell.helpDrawer.shortcuts.generateWithAi" },
     ],
   },
   {
-    label: "Rich Text Editor",
+    label: "shell.helpDrawer.shortcutGroups.richTextEditor",
     shortcuts: [
-      { keys: "⌘ B", label: "Bold" },
-      { keys: "⌘ I", label: "Italic" },
-      { keys: "⌘ U", label: "Underline" },
-      { keys: "⌘ ⇧ X", label: "Strikethrough" },
-      { keys: "⌘ ⇧ 7", label: "Ordered list" },
-      { keys: "⌘ ⇧ 8", label: "Bullet list" },
-      { keys: "⌘ ⇧ B", label: "Blockquote" },
-      { keys: "⌘ ⇧ E", label: "Code block" },
+      { keys: "⌘ B", label: "shell.helpDrawer.shortcuts.bold" },
+      { keys: "⌘ I", label: "shell.helpDrawer.shortcuts.italic" },
+      { keys: "⌘ U", label: "shell.helpDrawer.shortcuts.underline" },
+      { keys: "⌘ ⇧ X", label: "shell.helpDrawer.shortcuts.strikethrough" },
+      { keys: "⌘ ⇧ 7", label: "shell.helpDrawer.shortcuts.orderedList" },
+      { keys: "⌘ ⇧ 8", label: "shell.helpDrawer.shortcuts.bulletList" },
+      { keys: "⌘ ⇧ B", label: "shell.helpDrawer.shortcuts.blockquote" },
+      { keys: "⌘ ⇧ E", label: "shell.helpDrawer.shortcuts.codeBlock" },
     ],
   },
 ];
@@ -75,6 +76,7 @@ const SHORTCUT_GROUPS = [
 type DrawerPage = "help" | "shortcuts" | "ai-tools";
 
 export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: boolean; onClose: () => void; initialPage?: DrawerPage }) {
+  const t = useT();
   const [page, setPage] = useState<DrawerPage>(initialPage);
   const brand = useBrand();
   const dot = brand.name.lastIndexOf(".");
@@ -105,7 +107,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "0.75rem 1.25rem 0",
           }}>
-            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Help & Support</span>
+            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>{t("shell.helpDrawer.title")}</span>
             <button
               data-testid="help-close-button"
               type="button"
@@ -117,9 +119,9 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
           </div>
           <div style={{ display: "flex", gap: "0.25rem", padding: "0.5rem 1rem" }}>
             {([
-              { id: "help" as const, label: "Help", icon: <HelpCircle style={{ width: "0.8rem", height: "0.8rem" }} /> },
-              { id: "shortcuts" as const, label: "Shortcuts", icon: <Keyboard style={{ width: "0.8rem", height: "0.8rem" }} /> },
-              { id: "ai-tools" as const, label: "AI Chat", icon: <Bot style={{ width: "0.8rem", height: "0.8rem" }} /> },
+              { id: "help" as const, label: t("shell.helpDrawer.tabHelp"), icon: <HelpCircle style={{ width: "0.8rem", height: "0.8rem" }} /> },
+              { id: "shortcuts" as const, label: t("shell.helpDrawer.tabShortcuts"), icon: <Keyboard style={{ width: "0.8rem", height: "0.8rem" }} /> },
+              { id: "ai-tools" as const, label: t("shell.helpDrawer.tabAiChat"), icon: <Bot style={{ width: "0.8rem", height: "0.8rem" }} /> },
             ]).map((tab) => (
               <button
                 data-testid={`help-tab-${tab.id}`}
@@ -173,16 +175,17 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
 /* ─── Help page ──────────────────────────────────────────────── */
 
 function HelpPage() {
+  const t = useT();
   return (
     <>
       <div style={{ marginBottom: "2rem" }}>
-        <p style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "0.25rem" }}>Need help with your project?</p>
-        <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>Start with our docs or community.</p>
+        <p style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "0.25rem" }}>{t("shell.helpDrawer.needHelp")}</p>
+        <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>{t("shell.helpDrawer.startWithDocs")}</p>
 
         <div style={{ borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden" }}>
           {HELP_LINKS.map((link, i) => (
             <a
-              data-testid={`help-link-${link.label.toLowerCase().replace(" ", "-")}`}
+              data-testid={`help-link-${link.testid}`}
               key={link.label}
               href={link.href}
               target="_blank"
@@ -197,7 +200,7 @@ function HelpPage() {
               className="hover:bg-accent/50"
             >
               <span style={{ color: "var(--muted-foreground)" }}>{link.icon}</span>
-              <span style={{ flex: 1 }}>{link.label}</span>
+              <span style={{ flex: 1 }}>{t(link.label)}</span>
               <ExternalLink style={{ width: "0.7rem", height: "0.7rem", color: "var(--muted-foreground)" }} />
             </a>
           ))}
@@ -205,9 +208,9 @@ function HelpPage() {
       </div>
 
       <div>
-        <p style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "0.25rem" }}>Community</p>
+        <p style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "0.25rem" }}>{t("shell.helpDrawer.community")}</p>
         <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-          Join our Discord to get support, report bugs, or discuss features. Many questions are answered in minutes.
+          {t("shell.helpDrawer.communityText")}
         </p>
         <a
           data-testid="help-discord-link"
@@ -222,7 +225,7 @@ function HelpPage() {
           }}
         >
           <MessageCircle style={{ width: "1rem", height: "1rem" }} />
-          Join us on Discord
+          {t("shell.helpDrawer.joinDiscord")}
         </a>
       </div>
     </>
@@ -232,6 +235,7 @@ function HelpPage() {
 /* ─── Shortcuts page ─────────────────────────────────────────── */
 
 function ShortcutsPage() {
+  const t = useT();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {SHORTCUT_GROUPS.map((group) => (
@@ -241,7 +245,7 @@ function ShortcutsPage() {
             letterSpacing: "0.08em", color: "var(--muted-foreground)",
             marginBottom: "0.75rem",
           }}>
-            {group.label}
+            {t(group.label)}
           </p>
           <div style={{
             borderRadius: "10px", border: "1px solid var(--border)",
@@ -256,7 +260,7 @@ function ShortcutsPage() {
                   borderTop: i > 0 ? "1px solid var(--border)" : "none",
                 }}
               >
-                <span style={{ fontSize: "0.85rem" }}>{s.label}</span>
+                <span style={{ fontSize: "0.85rem" }}>{t(s.label)}</span>
                 <div style={{ display: "flex", gap: "0.3rem" }}>
                   {s.keys.split(" ").map((k, j) => (
                     <kbd key={j} style={{
@@ -285,127 +289,130 @@ function ShortcutsPage() {
 
 const AI_TOOL_GROUPS = [
   {
-    label: "Content",
+    label: "shell.helpDrawer.toolGroups.content",
     tools: [
-      { icon: BarChart3, name: "Site overview", desc: "Collections, doc counts, settings" },
-      { icon: Search, name: "Search content", desc: "Full-text search across all documents" },
-      { icon: FileText, name: "List / read docs", desc: "Browse collections, read full documents" },
-      { icon: Pencil, name: "Create / edit", desc: "Create, update, publish, unpublish docs" },
-      { icon: Copy, name: "Clone document", desc: "Duplicate any document as draft" },
-      { icon: Sparkles, name: "Generate content", desc: "AI-write or rewrite any field" },
-      { icon: Pencil, name: "Inline edit form", desc: "Edit specific fields directly in chat" },
-      { icon: Send, name: "Bulk publish", desc: "Publish all drafts at once" },
-      { icon: Pencil, name: "Bulk update", desc: "Update a field across many docs" },
-      { icon: FileText, name: "List drafts", desc: "All unpublished documents across collections" },
-      { icon: Layers, name: "Get schema", desc: "Inspect collection fields and block definitions" },
-      { icon: Trash2, name: "Restore from trash", desc: "Recover a trashed document" },
+      { icon: BarChart3, name: "shell.helpDrawer.tools.siteOverview.name", desc: "shell.helpDrawer.tools.siteOverview.desc" },
+      { icon: Search, name: "shell.helpDrawer.tools.searchContent.name", desc: "shell.helpDrawer.tools.searchContent.desc" },
+      { icon: FileText, name: "shell.helpDrawer.tools.listReadDocs.name", desc: "shell.helpDrawer.tools.listReadDocs.desc" },
+      { icon: Pencil, name: "shell.helpDrawer.tools.createEdit.name", desc: "shell.helpDrawer.tools.createEdit.desc" },
+      { icon: Copy, name: "shell.helpDrawer.tools.cloneDocument.name", desc: "shell.helpDrawer.tools.cloneDocument.desc" },
+      { icon: Sparkles, name: "shell.helpDrawer.tools.generateContent.name", desc: "shell.helpDrawer.tools.generateContent.desc" },
+      { icon: Pencil, name: "shell.helpDrawer.tools.inlineEditForm.name", desc: "shell.helpDrawer.tools.inlineEditForm.desc" },
+      { icon: Send, name: "shell.helpDrawer.tools.bulkPublish.name", desc: "shell.helpDrawer.tools.bulkPublish.desc" },
+      { icon: Pencil, name: "shell.helpDrawer.tools.bulkUpdate.name", desc: "shell.helpDrawer.tools.bulkUpdate.desc" },
+      { icon: FileText, name: "shell.helpDrawer.tools.listDrafts.name", desc: "shell.helpDrawer.tools.listDrafts.desc" },
+      { icon: Layers, name: "shell.helpDrawer.tools.getSchema.name", desc: "shell.helpDrawer.tools.getSchema.desc" },
+      { icon: Trash2, name: "shell.helpDrawer.tools.restoreFromTrash.name", desc: "shell.helpDrawer.tools.restoreFromTrash.desc" },
     ],
   },
   {
-    label: "Media",
+    label: "shell.helpDrawer.toolGroups.media",
     tools: [
-      { icon: Image, name: "Search media", desc: "Find images by AI captions, tags, filename" },
-      { icon: Image, name: "List media", desc: "Browse all files with AI analysis data" },
-      { icon: Image, name: "Upload", desc: "Upload images via + button or drag & drop" },
+      { icon: Image, name: "shell.helpDrawer.tools.searchMedia.name", desc: "shell.helpDrawer.tools.searchMedia.desc" },
+      { icon: Image, name: "shell.helpDrawer.tools.listMedia.name", desc: "shell.helpDrawer.tools.listMedia.desc" },
+      { icon: Image, name: "shell.helpDrawer.tools.upload.name", desc: "shell.helpDrawer.tools.upload.desc" },
     ],
   },
   {
-    label: "AI Agents",
+    label: "shell.helpDrawer.toolGroups.aiAgents",
     tools: [
-      { icon: Bot, name: "List agents", desc: "View all configured AI agents" },
-      { icon: Bot, name: "Create agent", desc: "Set up a new copywriter, SEO, or custom agent" },
-      { icon: Sparkles, name: "Run agent", desc: "Execute an agent with a prompt" },
-      { icon: FileText, name: "Curation queue", desc: "Review, approve, or reject AI content" },
-      { icon: CheckCircle2, name: "Approve queue item", desc: "Publish an AI-generated draft from curation" },
-      { icon: XCircle, name: "Reject queue item", desc: "Discard or send back an AI-generated draft" },
-      { icon: Bot, name: "Agent templates", desc: "Start from a template, save new ones" },
-      { icon: BarChart3, name: "Agent feedback", desc: "Accept / reject stats per agent" },
-      { icon: Shield, name: "Agent budget", desc: "Set token or cost ceilings per agent" },
-      { icon: Globe, name: "Agent locale", desc: "Lock an agent to a specific language" },
+      { icon: Bot, name: "shell.helpDrawer.tools.listAgents.name", desc: "shell.helpDrawer.tools.listAgents.desc" },
+      { icon: Bot, name: "shell.helpDrawer.tools.createAgent.name", desc: "shell.helpDrawer.tools.createAgent.desc" },
+      { icon: Sparkles, name: "shell.helpDrawer.tools.runAgent.name", desc: "shell.helpDrawer.tools.runAgent.desc" },
+      { icon: FileText, name: "shell.helpDrawer.tools.curationQueue.name", desc: "shell.helpDrawer.tools.curationQueue.desc" },
+      { icon: CheckCircle2, name: "shell.helpDrawer.tools.approveQueueItem.name", desc: "shell.helpDrawer.tools.approveQueueItem.desc" },
+      { icon: XCircle, name: "shell.helpDrawer.tools.rejectQueueItem.name", desc: "shell.helpDrawer.tools.rejectQueueItem.desc" },
+      { icon: Bot, name: "shell.helpDrawer.tools.agentTemplates.name", desc: "shell.helpDrawer.tools.agentTemplates.desc" },
+      { icon: BarChart3, name: "shell.helpDrawer.tools.agentFeedback.name", desc: "shell.helpDrawer.tools.agentFeedback.desc" },
+      { icon: Shield, name: "shell.helpDrawer.tools.agentBudget.name", desc: "shell.helpDrawer.tools.agentBudget.desc" },
+      { icon: Globe, name: "shell.helpDrawer.tools.agentLocale.name", desc: "shell.helpDrawer.tools.agentLocale.desc" },
     ],
   },
   {
-    label: "Workflows",
+    label: "shell.helpDrawer.toolGroups.workflows",
     tools: [
-      { icon: Workflow, name: "List workflows", desc: "View multi-step agent chains" },
-      { icon: Workflow, name: "Create workflow", desc: "Chain agents into a pipeline" },
-      { icon: Zap, name: "Run workflow", desc: "Execute a workflow on a document" },
-      { icon: Trash2, name: "Delete workflow", desc: "Remove a workflow definition" },
+      { icon: Workflow, name: "shell.helpDrawer.tools.listWorkflows.name", desc: "shell.helpDrawer.tools.listWorkflows.desc" },
+      { icon: Workflow, name: "shell.helpDrawer.tools.createWorkflow.name", desc: "shell.helpDrawer.tools.createWorkflow.desc" },
+      { icon: Zap, name: "shell.helpDrawer.tools.runWorkflow.name", desc: "shell.helpDrawer.tools.runWorkflow.desc" },
+      { icon: Trash2, name: "shell.helpDrawer.tools.deleteWorkflow.name", desc: "shell.helpDrawer.tools.deleteWorkflow.desc" },
     ],
   },
   {
-    label: "Forms",
+    label: "shell.helpDrawer.toolGroups.forms",
     tools: [
-      { icon: ClipboardList, name: "List submissions", desc: "All form submissions per form" },
-      { icon: FileText, name: "Read submission", desc: "Read a specific form submission" },
-      { icon: BarChart3, name: "Form stats", desc: "Submission counts and conversion data" },
+      { icon: ClipboardList, name: "shell.helpDrawer.tools.listSubmissions.name", desc: "shell.helpDrawer.tools.listSubmissions.desc" },
+      { icon: FileText, name: "shell.helpDrawer.tools.readSubmission.name", desc: "shell.helpDrawer.tools.readSubmission.desc" },
+      { icon: BarChart3, name: "shell.helpDrawer.tools.formStats.name", desc: "shell.helpDrawer.tools.formStats.desc" },
     ],
   },
   {
-    label: "SEO & Quality",
+    label: "shell.helpDrawer.toolGroups.seoQuality",
     tools: [
-      { icon: Gauge, name: "Run Lighthouse", desc: "Mobile + desktop performance audit" },
-      { icon: Gauge, name: "Lighthouse scores", desc: "Latest scores for every page" },
-      { icon: Clock, name: "Lighthouse history", desc: "Scores over time" },
+      { icon: Gauge, name: "shell.helpDrawer.tools.runLighthouse.name", desc: "shell.helpDrawer.tools.runLighthouse.desc" },
+      { icon: Gauge, name: "shell.helpDrawer.tools.lighthouseScores.name", desc: "shell.helpDrawer.tools.lighthouseScores.desc" },
+      { icon: Clock, name: "shell.helpDrawer.tools.lighthouseHistory.name", desc: "shell.helpDrawer.tools.lighthouseHistory.desc" },
     ],
   },
   {
-    label: "Translation",
+    label: "shell.helpDrawer.toolGroups.translation",
     tools: [
-      { icon: Languages, name: "Translate document", desc: "AI-translate one document to a locale" },
-      { icon: Languages, name: "Translate site", desc: "AI-translate every document to a locale" },
+      { icon: Languages, name: "shell.helpDrawer.tools.translateDocument.name", desc: "shell.helpDrawer.tools.translateDocument.desc" },
+      { icon: Languages, name: "shell.helpDrawer.tools.translateSite.name", desc: "shell.helpDrawer.tools.translateSite.desc" },
     ],
   },
   {
-    label: "Interactives",
+    label: "shell.helpDrawer.toolGroups.interactives",
     tools: [
-      { icon: Sparkles, name: "Generate interactive", desc: "AI-build a custom HTML widget" },
-      { icon: Image, name: "Enable image generation", desc: "Turn AI image gen on/off per site" },
+      { icon: Sparkles, name: "shell.helpDrawer.tools.generateInteractive.name", desc: "shell.helpDrawer.tools.generateInteractive.desc" },
+      { icon: Image, name: "shell.helpDrawer.tools.enableImageGeneration.name", desc: "shell.helpDrawer.tools.enableImageGeneration.desc" },
     ],
   },
   {
-    label: "Memory & Web",
+    label: "shell.helpDrawer.toolGroups.memoryWeb",
     tools: [
-      { icon: Brain, name: "Search memories", desc: "Search chat's long-term memory" },
-      { icon: Brain, name: "Add memory", desc: "Save a fact or preference for future chats" },
-      { icon: Trash2, name: "Forget memory", desc: "Remove a stored memory" },
-      { icon: Globe, name: "Web search", desc: "Live web search via Brave or Tavily" },
-      { icon: Globe, name: "Web fetch", desc: "Fetch and read any URL in the conversation" },
+      { icon: Brain, name: "shell.helpDrawer.tools.searchMemories.name", desc: "shell.helpDrawer.tools.searchMemories.desc" },
+      { icon: Brain, name: "shell.helpDrawer.tools.addMemory.name", desc: "shell.helpDrawer.tools.addMemory.desc" },
+      { icon: Trash2, name: "shell.helpDrawer.tools.forgetMemory.name", desc: "shell.helpDrawer.tools.forgetMemory.desc" },
+      { icon: Globe, name: "shell.helpDrawer.tools.webSearch.name", desc: "shell.helpDrawer.tools.webSearch.desc" },
+      { icon: Globe, name: "shell.helpDrawer.tools.webFetch.name", desc: "shell.helpDrawer.tools.webFetch.desc" },
     ],
   },
   {
-    label: "Operations",
+    label: "shell.helpDrawer.toolGroups.operations",
     tools: [
-      { icon: Send, name: "Deploy", desc: "Deploy site to configured provider" },
-      { icon: Settings, name: "Build site", desc: "Rebuild static pages" },
-      { icon: Shield, name: "Backup", desc: "Create a backup right now" },
-      { icon: Activity, name: "Link checker", desc: "Check for broken links" },
-      { icon: Settings, name: "Site settings", desc: "View and update configuration" },
-      { icon: Clock, name: "Deploy history", desc: "View recent deployments" },
+      { icon: Send, name: "shell.helpDrawer.tools.deploy.name", desc: "shell.helpDrawer.tools.deploy.desc" },
+      { icon: Settings, name: "shell.helpDrawer.tools.buildSite.name", desc: "shell.helpDrawer.tools.buildSite.desc" },
+      { icon: Shield, name: "shell.helpDrawer.tools.backup.name", desc: "shell.helpDrawer.tools.backup.desc" },
+      { icon: Activity, name: "shell.helpDrawer.tools.linkChecker.name", desc: "shell.helpDrawer.tools.linkChecker.desc" },
+      { icon: Settings, name: "shell.helpDrawer.tools.siteSettings.name", desc: "shell.helpDrawer.tools.siteSettings.desc" },
+      { icon: Clock, name: "shell.helpDrawer.tools.deployHistory.name", desc: "shell.helpDrawer.tools.deployHistory.desc" },
     ],
   },
   {
-    label: "Scheduling & History",
+    label: "shell.helpDrawer.toolGroups.schedulingHistory",
     tools: [
-      { icon: Clock, name: "Schedule publish", desc: "Set future publish/unpublish date" },
-      { icon: Clock, name: "Calendar", desc: "View scheduled publishes/unpublishes" },
-      { icon: Clock, name: "Revisions", desc: "View document change history" },
-      { icon: Trash2, name: "Trash", desc: "List trashed docs, restore them" },
-      { icon: BarChart3, name: "Content stats", desc: "Word counts, AI ratio, activity" },
+      { icon: Clock, name: "shell.helpDrawer.tools.schedulePublish.name", desc: "shell.helpDrawer.tools.schedulePublish.desc" },
+      { icon: Clock, name: "shell.helpDrawer.tools.calendar.name", desc: "shell.helpDrawer.tools.calendar.desc" },
+      { icon: Clock, name: "shell.helpDrawer.tools.revisions.name", desc: "shell.helpDrawer.tools.revisions.desc" },
+      { icon: Trash2, name: "shell.helpDrawer.tools.trash.name", desc: "shell.helpDrawer.tools.trash.desc" },
+      { icon: BarChart3, name: "shell.helpDrawer.tools.contentStats.name", desc: "shell.helpDrawer.tools.contentStats.desc" },
     ],
   },
 ];
 
 function AiToolsPage() {
+  const t = useT();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
       <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
-        Switch to <strong>Chat</strong> mode to use these tools. Ask in natural language — the AI picks the right tool automatically.
+        {t("shell.helpDrawer.aiToolsIntro", { chat: "\u0000" }).split("\u0000").map((part, i) => (
+          <span key={i}>{i > 0 && <strong>{t("shell.helpDrawer.chat")}</strong>}{part}</span>
+        ))}
       </p>
       {AI_TOOL_GROUPS.map((group) => (
         <div key={group.label}>
           <div style={{ fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
-            {group.label}
+            {t(group.label)}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
             {group.tools.map((tool) => (
@@ -415,8 +422,8 @@ function AiToolsPage() {
               >
                 <tool.icon style={{ width: "14px", height: "14px", color: "var(--primary)", flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontSize: "0.8rem", fontWeight: 500 }}>{tool.name}</div>
-                  <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>{tool.desc}</div>
+                  <div style={{ fontSize: "0.8rem", fontWeight: 500 }}>{t(tool.name)}</div>
+                  <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>{t(tool.desc)}</div>
                 </div>
               </div>
             ))}
@@ -430,6 +437,7 @@ function AiToolsPage() {
 /* ─── Help button (for header) ───────────────────────────────── */
 
 export function HelpButton() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState<DrawerPage>("help");
 
@@ -469,7 +477,7 @@ export function HelpButton() {
           padding: 0,
         }}
         className="hover:border-foreground hover:text-foreground transition-colors"
-        title="Help & Support (?)"
+        title={t("shell.helpDrawer.buttonTitle")}
       >
         <HelpCircle style={{ width: "0.95rem", height: "0.95rem" }} />
       </button>

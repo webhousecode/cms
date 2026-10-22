@@ -23,15 +23,17 @@ import { SeoPanel } from "./seo-panel";
 import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
 import { useCapabilities } from "@/hooks/use-capabilities";
 import { LOCALE_LABELS } from "@/lib/locale";
+import { useT } from "@/lib/i18n-context";
 
 // Fallback to env vars for backwards compatibility — overridden by props from server
 const PREVIEW_SITE_URL_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "";
 const PREVIEW_IN_IFRAME_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_IN_IFRAME === "true";
 
 /* ─── Custom confirm dialog ────────────────────────────────── */
-function ConfirmDialog({ message, confirmLabel = "Delete", onConfirm, onCancel }: {
+function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: {
   message: string; confirmLabel?: string; onConfirm: () => void; onCancel: () => void;
 }) {
+  const t = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
     document.addEventListener("keydown", onKey);
@@ -58,12 +60,12 @@ function ConfirmDialog({ message, confirmLabel = "Delete", onConfirm, onCancel }
             padding: "0.4rem 0.875rem", borderRadius: "6px",
             border: "1px solid var(--border)", background: "transparent",
             color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer",
-          }}>Cancel</button>
+          }}>{t("editor.documentEditor.cancel")}</button>
           <button data-testid="confirm-dialog-confirm" type="button" onClick={onConfirm} style={{
             padding: "0.4rem 0.875rem", borderRadius: "6px",
             border: "none", background: "var(--destructive)",
             color: "#fff", fontSize: "0.8rem", cursor: "pointer",
-          }}>{confirmLabel}</button>
+          }}>{confirmLabel ?? t("editor.documentEditor.delete")}</button>
         </div>
       </div>
     </div>
@@ -84,6 +86,7 @@ function RichtextCollapsible({ field, value, onChange, locked, blocksConfig, def
   fieldMeta?: Record<string, unknown>;
   onToggleLock: () => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(defaultOpen);
 
   // Load persisted state after hydration
@@ -123,7 +126,7 @@ function RichtextCollapsible({ field, value, onChange, locked, blocksConfig, def
           fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase",
           letterSpacing: "0.05em", padding: "0.1rem 0.4rem", borderRadius: "4px",
           background: "var(--primary)", color: "var(--primary-foreground)", flexShrink: 0,
-        }}>Text</span>
+        }}>{t("editor.documentEditor.textBadge")}</span>
         <span style={{ flex: 1, fontSize: "0.85rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {open ? (field.label ?? field.name) : (previewShort || (field.label ?? field.name))}
         </span>
@@ -134,8 +137,8 @@ function RichtextCollapsible({ field, value, onChange, locked, blocksConfig, def
           opacity: locked ? 1 : 0.45, cursor: "pointer", fontFamily: "monospace",
         }}>
           {locked
-            ? <><Lock style={{ width: "0.7rem", height: "0.7rem" }} /> Lock</>
-            : <><LockOpen style={{ width: "0.7rem", height: "0.7rem" }} /> Lock</>
+            ? <><Lock style={{ width: "0.7rem", height: "0.7rem" }} /> {t("editor.documentEditor.lock")}</>
+            : <><LockOpen style={{ width: "0.7rem", height: "0.7rem" }} /> {t("editor.documentEditor.lock")}</>
           }
         </span>
       </div>
@@ -170,6 +173,7 @@ function CreateTranslationDialog({
   onClose: () => void;
   onCreated: (slug: string) => void;
 }) {
+  const t = useT();
   const availableLocales = locales.filter(l => !existingLocales.includes(l));
   const [targetLocale, setTargetLocale] = useState(availableLocales[0] ?? locales[0] ?? "");
   const [newSlug, setNewSlug] = useState(`${originalSlug}-${availableLocales[0] ?? locales[0] ?? "xx"}`);
@@ -189,7 +193,7 @@ function CreateTranslationDialog({
   };
 
   async function create() {
-    if (!newSlug.trim()) { setError("Slug is required"); return; }
+    if (!newSlug.trim()) { setError(t("editor.documentEditor.slugRequired")); return; }
     setCreating(true);
     setError("");
 
@@ -201,8 +205,8 @@ function CreateTranslationDialog({
         body: JSON.stringify({ targetLocale }),
       });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: "Translation failed" }));
-        setError(body.error ?? "AI translation failed");
+        const body = await res.json().catch(() => ({ error: t("editor.documentEditor.translationFailed") }));
+        setError(body.error ?? t("editor.documentEditor.aiTranslationFailed"));
         setCreating(false);
         return;
       }
@@ -222,7 +226,7 @@ function CreateTranslationDialog({
       }),
     });
     if (!res.ok) {
-      setError("Failed to create — slug may already exist");
+      setError(t("editor.documentEditor.createFailedSlugExists"));
       setCreating(false);
       return;
     }
@@ -257,10 +261,10 @@ function CreateTranslationDialog({
       onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.5rem", minWidth: "360px", maxWidth: "460px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column", gap: "1rem" }}>
-        <h3 style={{ fontWeight: 600, fontSize: "0.9rem", margin: 0 }}>Add translation</h3>
+        <h3 style={{ fontWeight: 600, fontSize: "0.9rem", margin: 0 }}>{t("editor.documentEditor.addTranslation")}</h3>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-          <label style={{ fontSize: "0.7rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Target locale</label>
+          <label style={{ fontSize: "0.7rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>{t("editor.documentEditor.targetLocale")}</label>
           <CustomSelect
             options={availableLocales.map(l => ({ value: l, label: l.toUpperCase() }))}
             value={targetLocale}
@@ -271,7 +275,7 @@ function CreateTranslationDialog({
 
         {!useAi && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            <label style={{ fontSize: "0.7rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Slug for translation</label>
+            <label style={{ fontSize: "0.7rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>{t("editor.documentEditor.slugForTranslation")}</label>
             <input
               data-testid="create-translation-slug-input"
               type="text"
@@ -280,7 +284,7 @@ function CreateTranslationDialog({
               style={{ padding: "0.4rem 0.625rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.85rem", fontFamily: "monospace", outline: "none" }}
             />
             <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Linked to: <code style={{ fontSize: "0.7rem" }}>{originalSlug}</code>
+              {t("editor.documentEditor.linkedTo")} <code style={{ fontSize: "0.7rem" }}>{originalSlug}</code>
             </p>
           </div>
         )}
@@ -295,22 +299,22 @@ function CreateTranslationDialog({
           />
           <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "var(--foreground)" }}>
             <Sparkles size={13} style={{ color: "rgb(234 179 8)" }} />
-            Translate with AI
+            {t("editor.documentEditor.translateWithAi")}
           </span>
         </label>
         {useAi && (
           <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: "-0.5rem 0 0 1.5rem" }}>
-            AI will translate all text fields from the source document into {LOCALE_LABELS[targetLocale] ?? targetLocale}.
+            {t("editor.documentEditor.aiWillTranslate", { language: LOCALE_LABELS[targetLocale] ?? targetLocale })}
           </p>
         )}
 
         {error && <p style={{ fontSize: "0.75rem", color: "var(--destructive)", margin: 0 }}>{error}</p>}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-          <button data-testid="create-translation-cancel" type="button" onClick={onClose} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
+          <button data-testid="create-translation-cancel" type="button" onClick={onClose} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>{t("editor.documentEditor.cancel")}</button>
           <button data-testid="create-translation-confirm" type="button" onClick={create} disabled={creating} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", cursor: creating ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
             {creating && <Loader2 size={14} className="animate-spin" />}
-            {creating ? (useAi ? "Translating…" : "Creating…") : (useAi ? "Translate & create" : "Create translation")}
+            {creating ? (useAi ? t("editor.documentEditor.translating") : t("editor.documentEditor.creating")) : (useAi ? t("editor.documentEditor.translateAndCreate") : t("editor.documentEditor.createTranslation"))}
           </button>
         </div>
       </div>
@@ -319,7 +323,7 @@ function CreateTranslationDialog({
 }
 
 /* ─── Schedule button ──────────────────────────────────────── */
-function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLabel = "Schedule", popoverLabel = "Auto-publish at", color = "rgb(234 179 8)" }: {
+function ScheduleButton({ publishAt, onSchedule, label: labelProp, defaultLabel: defaultLabelProp, popoverLabel: popoverLabelProp, color = "rgb(234 179 8)" }: {
   publishAt?: string;
   onSchedule: (iso: string | undefined) => void;
   label?: string;
@@ -327,6 +331,10 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
   popoverLabel?: string;
   color?: string;
 }) {
+  const t = useT();
+  const label = labelProp ?? t("editor.documentEditor.scheduled");
+  const defaultLabel = defaultLabelProp ?? t("editor.documentEditor.schedule");
+  const popoverLabel = popoverLabelProp ?? t("editor.documentEditor.autoPublishAt");
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(() => {
     if (!publishAt) return "";
@@ -392,7 +400,7 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
               }}
               style={{ flex: 1, padding: "0.35rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", cursor: "pointer" }}
             >
-              Set
+              {t("editor.documentEditor.set")}
             </button>
             {publishAt && (
               <button
@@ -401,7 +409,7 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
                 onClick={() => { onSchedule(undefined); setValue(""); setOpen(false); }}
                 style={{ padding: "0.35rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.8rem", cursor: "pointer" }}
               >
-                Clear
+                {t("editor.documentEditor.clear")}
               </button>
             )}
           </div>
@@ -491,6 +499,7 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
   onRestore: (doc: unknown) => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState<number | null>(null);
@@ -527,13 +536,13 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
       display: "flex", flexDirection: "column",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
-        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Revision history</span>
+        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>{t("editor.documentEditor.revisionHistory")}</span>
         <button data-testid="revision-panel-close" type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "0.5rem 0" }}>
-        {loading && <p style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Loading…</p>}
+        {loading && <p style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("editor.documentEditor.loading")}</p>}
         {!loading && revisions.length === 0 && (
-          <p style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>No revisions yet. They are saved on each update.</p>
+          <p style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("editor.documentEditor.noRevisions")}</p>
         )}
         {revisions.map((rev, idx) => {
           const isOpen = expanded === idx;
@@ -551,7 +560,7 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
                     {new Date(rev.savedAt).toLocaleString()}
                   </p>
                   <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.15rem" }}>
-                    {rev.status} · {changedFields.length} changed field{changedFields.length !== 1 ? "s" : ""}
+                    {t(changedFields.length === 1 ? "editor.documentEditor.changedFieldsOne" : "editor.documentEditor.changedFieldsOther", { status: rev.status, count: changedFields.length })}
                   </p>
                   {changedFields.length > 0 && (
                     <button
@@ -560,7 +569,7 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
                       onClick={() => setExpanded(isOpen ? null : idx)}
                       style={{ fontSize: "0.65rem", color: "var(--primary)", background: "transparent", border: "none", cursor: "pointer", padding: 0, marginTop: "0.2rem" }}
                     >
-                      {isOpen ? "Hide diff" : "Show diff"}
+                      {isOpen ? t("editor.documentEditor.hideDiff") : t("editor.documentEditor.showDiff")}
                     </button>
                   )}
                 </div>
@@ -575,7 +584,7 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
                     background: "transparent", color: "var(--foreground)", whiteSpace: "nowrap", flexShrink: 0,
                   }}
                 >
-                  {restoring === idx ? "…" : "Restore"}
+                  {restoring === idx ? "…" : t("editor.documentEditor.restore")}
                 </button>
               </div>
               {isOpen && changedFields.length > 0 && (
@@ -628,6 +637,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
   labelStyle: React.CSSProperties;
   valueStyle: React.CSSProperties;
 }) {
+  const t = useT();
   const [linking, setLinking] = useState(false);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<Array<{ slug: string; locale?: string; title: string }>>([]);
@@ -663,7 +673,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
       );
     } catch {
       setResults([]);
-      setLinkError("Failed to search documents");
+      setLinkError(t("editor.documentEditor.searchFailed"));
     }
   }
 
@@ -684,7 +694,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
         }),
       ]);
       if (!r1.ok || !r2.ok) {
-        setLinkError("Failed to link documents — please try again");
+        setLinkError(t("editor.documentEditor.linkFailed"));
         return;
       }
       const updated = { ...doc, translationGroup: newGroupId } as any;
@@ -693,17 +703,17 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
       setSearch("");
       setResults([]);
     } catch {
-      setLinkError("Failed to link documents — please try again");
+      setLinkError(t("editor.documentEditor.linkFailed"));
     }
   }
 
   return (
     <div>
-      <p style={labelStyle}>Translation group</p>
+      <p style={labelStyle}>{t("editor.documentEditor.translationGroup")}</p>
       {groupId ? (
         <p style={valueStyle} title={groupId}>{groupId.slice(0, 8)}…</p>
       ) : (
-        <p style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.7rem" }}>Not linked</p>
+        <p style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.7rem" }}>{t("editor.documentEditor.notLinked")}</p>
       )}
       {!linking ? (
         <button
@@ -717,7 +727,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
             display: "flex", alignItems: "center", gap: "0.3rem",
           }}
         >
-          <Languages size={11} /> Link to translation
+          <Languages size={11} /> {t("editor.documentEditor.linkToTranslation")}
         </button>
       ) : (
         <div style={{ marginTop: "0.4rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
@@ -726,7 +736,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); searchDocs(e.target.value); }}
-            placeholder="Search by title or slug…"
+            placeholder={t("editor.documentEditor.searchByTitleOrSlug")}
             autoFocus
             style={{
               padding: "0.3rem 0.5rem", borderRadius: "5px",
@@ -761,7 +771,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
               color: "var(--muted-foreground)", fontSize: "0.65rem", cursor: "pointer",
             }}
           >
-            Cancel
+            {t("editor.documentEditor.cancel")}
           </button>
           {linkError && <p style={{ color: "var(--destructive)", fontSize: "0.65rem", margin: 0 }}>{linkError}</p>}
         </div>
@@ -777,6 +787,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
   onClose: () => void;
   onSaved: (updated: DocSnapshot) => void;
 }) {
+  const t = useT();
   const router = useRouter();
   const [slug, setSlug] = useState(doc.slug);
   const [saving, setSaving] = useState(false);
@@ -799,12 +810,12 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
   }
 
   function validateSlug(value: string): string {
-    if (!value.trim()) return "Slug cannot be empty";
-    if (/[A-Z]/.test(value)) return "Slug must be lowercase";
-    if (/\s/.test(value)) return "Slug cannot contain spaces";
-    if (/[^a-z0-9-]/.test(value)) return "Only letters a–z, numbers and hyphens allowed";
-    if (/^-|-$/.test(value)) return "Slug cannot start or end with a hyphen";
-    if (/--/.test(value)) return "Slug cannot contain consecutive hyphens";
+    if (!value.trim()) return t("editor.documentEditor.slugEmpty");
+    if (/[A-Z]/.test(value)) return t("editor.documentEditor.slugLowercase");
+    if (/\s/.test(value)) return t("editor.documentEditor.slugNoSpaces");
+    if (/[^a-z0-9-]/.test(value)) return t("editor.documentEditor.slugAllowedChars");
+    if (/^-|-$/.test(value)) return t("editor.documentEditor.slugHyphenEdge");
+    if (/--/.test(value)) return t("editor.documentEditor.slugDoubleHyphen");
     return "";
   }
 
@@ -829,7 +840,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
       fetch("/api/preview-build", { method: "POST" }).catch(() => {});
     } else {
       const body = await res.json().catch(() => ({})) as { error?: string };
-      setError(body.error ?? "Failed to save");
+      setError(body.error ?? t("editor.documentEditor.saveFailedGeneric"));
     }
     setSaving(false);
   }
@@ -857,25 +868,25 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
       display: "flex", flexDirection: "column",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
-        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Properties</span>
+        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>{t("editor.documentEditor.properties")}</span>
         <button data-testid="properties-panel-close" type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         {/* ID */}
         <div>
-          <p style={labelStyle}>ID</p>
+          <p style={labelStyle}>{t("editor.documentEditor.id")}</p>
           <p
             data-testid="properties-id-copy"
             style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.72rem", cursor: "pointer" }}
-            title="Click to copy"
+            title={t("editor.documentEditor.clickToCopy")}
             onClick={() => { navigator.clipboard.writeText(doc.id); }}
           >{doc.id}</p>
         </div>
 
         {/* Slug — editable */}
         <div>
-          <p style={labelStyle}>Slug</p>
+          <p style={labelStyle}>{t("editor.documentEditor.slug")}</p>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input
               data-testid="properties-slug-input"
@@ -907,7 +918,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
                   flexShrink: 0,
                 }}
               >
-                {saving ? "…" : "Save"}
+                {saving ? "…" : t("editor.documentEditor.save")}
               </button>
             )}
           </div>
@@ -916,7 +927,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
           )}
           {error && <p style={{ fontSize: "0.72rem", color: "var(--destructive)", marginTop: "0.25rem" }}>{error}</p>}
           <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", marginTop: "0.3rem" }}>
-            Lowercase letters, numbers and hyphens only
+            {t("editor.documentEditor.slugHint")}
           </p>
           {/* Update slug from title button */}
           {(() => {
@@ -934,9 +945,9 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
                   color: "var(--muted-foreground)", fontSize: "0.68rem", cursor: "pointer",
                   display: "flex", alignItems: "center", gap: "0.3rem",
                 }}
-                title={`Set slug to: ${suggested}`}
+                title={t("editor.documentEditor.setSlugTo", { slug: suggested })}
               >
-                ↻ Update from title
+                {t("editor.documentEditor.updateFromTitle")}
               </button>
             );
           })()}
@@ -944,21 +955,21 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
 
         {/* Status */}
         <div>
-          <p style={labelStyle}>Status</p>
+          <p style={labelStyle}>{t("editor.documentEditor.status")}</p>
           <p style={valueStyle}>{doc.status}</p>
         </div>
 
         {/* Collection */}
         <div>
-          <p style={labelStyle}>Collection</p>
+          <p style={labelStyle}>{t("editor.documentEditor.collection")}</p>
           <p style={valueStyle}>{collection}</p>
         </div>
 
         {/* Locale — force change */}
         {locales.length > 0 && (
           <div>
-            <p style={labelStyle}>Locale</p>
-            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0.4rem" }}>Change locale</p>
+            <p style={labelStyle}>{t("editor.documentEditor.locale")}</p>
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0.4rem" }}>{t("editor.documentEditor.changeLocale")}</p>
             <select
               data-testid="properties-locale-select"
               value={docLocale}
@@ -977,11 +988,11 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
                   } else {
                     // Revert UI to previous locale
                     setDocLocale(doc.locale ?? "");
-                    toast.error("Failed to update locale");
+                    toast.error(t("editor.documentEditor.updateLocaleFailed"));
                   }
                 } catch {
                   setDocLocale(doc.locale ?? "");
-                  toast.error("Failed to update locale");
+                  toast.error(t("editor.documentEditor.updateLocaleFailed"));
                 }
               }}
               style={{
@@ -991,7 +1002,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
                 outline: "none", cursor: "pointer",
               }}
             >
-              <option value="">No locale</option>
+              <option value="">{t("editor.documentEditor.noLocale")}</option>
               {locales.map(l => (
                 <option key={l} value={l}>{l.toUpperCase()} — {LOCALE_LABELS[l] ?? l}</option>
               ))}
@@ -1005,13 +1016,13 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
         {/* Scheduled */}
         {doc.publishAt && (
           <div>
-            <p style={labelStyle}>Scheduled publish</p>
+            <p style={labelStyle}>{t("editor.documentEditor.scheduledPublish")}</p>
             <p style={valueStyle}>{doc.publishAt.replace("T", " ").slice(0, 16)}</p>
           </div>
         )}
         {doc.unpublishAt && (
           <div>
-            <p style={labelStyle}>Scheduled expiry</p>
+            <p style={labelStyle}>{t("editor.documentEditor.scheduledExpiry")}</p>
             <p style={{ ...valueStyle, color: "rgb(239 68 68)" }}>{doc.unpublishAt.replace("T", " ").slice(0, 16)}</p>
           </div>
         )}
@@ -1019,11 +1030,11 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
         {/* Dates */}
         <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           <div>
-            <p style={labelStyle}>Created</p>
+            <p style={labelStyle}>{t("editor.documentEditor.created")}</p>
             <p style={valueStyle}>{new Date(doc.createdAt).toLocaleString()}</p>
           </div>
           <div>
-            <p style={labelStyle}>Last updated</p>
+            <p style={labelStyle}>{t("editor.documentEditor.lastUpdated")}</p>
             <p style={valueStyle}>{new Date(doc.updatedAt).toLocaleString()}</p>
           </div>
         </div>
@@ -1086,6 +1097,7 @@ function cacheSet(key: string, value: DocSnapshot) {
 }
 
 export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations: initialTranslations = [], siblingData: initialSiblingData, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false, siteId, inlineEditEnabled = false, canEditContent = false }: Props) {
+  const t = useT();
   const PREVIEW_SITE_URL = (previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT).replace(/\/$/, "");
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
 
@@ -1204,7 +1216,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const retranslateSourceSlug =
     (locale || defaultLocale) === defaultLocale
       ? doc.slug
-      : (translations.find((t) => t.locale === defaultLocale)?.slug ?? null);
+      : (translations.find((tr) => tr.locale === defaultLocale)?.slug ?? null);
   const runRetranslate = async (targetLocale: string) => {
     if (!retranslateSourceSlug) return;
     setRetranslateConfirm(null);
@@ -1215,15 +1227,15 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ targetLocale }) },
       );
       if (res.ok) {
-        toast.success(`Re-translated ${LOCALE_LABELS[targetLocale] ?? targetLocale.toUpperCase()} from source`);
+        toast.success(t("editor.documentEditor.retranslated", { language: LOCALE_LABELS[targetLocale] ?? targetLocale.toUpperCase() }));
         router.refresh();
         window.dispatchEvent(new Event("cms:content-changed"));
       } else {
         const body = await res.json().catch(() => ({}));
-        toast.error(body?.error ?? "Re-translation failed");
+        toast.error(body?.error ?? t("editor.documentEditor.retranslateFailed"));
       }
     } catch {
-      toast.error("Re-translation failed");
+      toast.error(t("editor.documentEditor.retranslateFailed"));
     } finally {
       setRetranslatingLocale(null);
     }
@@ -1297,8 +1309,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: "Save failed" }));
-      toast.error("Save failed", { description: err.error ?? `Server returned ${res.status}` });
+      const err = await res.json().catch(() => ({ error: t("editor.documentEditor.saveFailed") }));
+      toast.error(t("editor.documentEditor.saveFailed"), { description: err.error ?? t("editor.documentEditor.serverReturned", { status: res.status }) });
       setSaving(false);
       savingRef.current = false;
       return;
@@ -1315,24 +1327,24 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       setSavedAt(new Date());
       startTransition(() => router.refresh());
       if (nextStatus === "published" && doc.status !== "published") {
-        toast.success("Published", { description: doc.slug });
+        toast.success(t("editor.documentEditor.publishedToast"), { description: doc.slug });
       } else if (nextStatus === "draft" && doc.status === "published") {
-        toast.info("Unpublished", { description: doc.slug });
+        toast.info(t("editor.documentEditor.unpublishedToast"), { description: doc.slug });
       } else {
-        toast.success("Document saved");
+        toast.success(t("editor.documentEditor.documentSaved"));
       }
       // Auto-rebuild static sites (no previewUrl = static site with build.ts)
       if (!PREVIEW_SITE_URL) {
         fetch("/api/preview-build", { method: "POST" })
           .then((r) => r.json())
           .then((d: { ok?: boolean }) => {
-            if (d.ok) toast.success("Site rebuilt", { description: "Preview updated" });
+            if (d.ok) toast.success(t("editor.documentEditor.siteRebuilt"), { description: t("editor.documentEditor.previewUpdated") });
           })
           .catch(() => {});
       }
       // Show deploy progress toast
       if (deployTriggered) {
-        const deployToastId = toast.loading("Deploying...", { description: "Building and pushing to live site" });
+        const deployToastId = toast.loading(t("editor.documentEditor.deploying"), { description: t("editor.documentEditor.deployingDescription") });
         // Clear any previous poll
         if (deployPollRef.current) clearInterval(deployPollRef.current);
         if (deployPollTimeout.current) clearTimeout(deployPollTimeout.current);
@@ -1346,10 +1358,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             if (new Date(latest.timestamp).getTime() < Date.now() - 30000) return;
             if (latest.status === "success") {
               if (deployPollRef.current) clearInterval(deployPollRef.current);
-              toast.success("Deployed", { id: deployToastId, description: latest.url ?? "Site is live" });
+              toast.success(t("editor.documentEditor.deployed"), { id: deployToastId, description: latest.url ?? t("editor.documentEditor.siteIsLive") });
             } else if (latest.status === "error") {
               if (deployPollRef.current) clearInterval(deployPollRef.current);
-              toast.error("Deploy failed", { id: deployToastId, description: latest.error ?? "Check deploy log" });
+              toast.error(t("editor.documentEditor.deployFailed"), { id: deployToastId, description: latest.error ?? t("editor.documentEditor.checkDeployLog") });
             }
           } catch { /* ignore poll errors */ }
         }, 2000);
@@ -1366,14 +1378,14 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     try {
       const res = await fetch(`/api/cms/${collection}/${doc.slug}`, { method: "DELETE" });
       if (!res.ok) {
-        toast.error("Failed to move to trash", { description: `Server returned ${res.status}` });
+        toast.error(t("editor.documentEditor.trashFailed"), { description: t("editor.documentEditor.serverReturned", { status: res.status }) });
         return;
       }
-      toast("Moved to trash", { description: doc.slug });
+      toast(t("editor.documentEditor.movedToTrash"), { description: doc.slug });
       router.push(`/admin/content/${collection}`);
       router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
     } catch {
-      toast.error("Failed to move to trash");
+      toast.error(t("editor.documentEditor.trashFailed"));
     }
   }
 
@@ -1435,7 +1447,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     if (PREVIEW_SITE_URL) {
       const url = `${PREVIEW_SITE_URL}${pagePath}`;
       if (PREVIEW_IN_IFRAME) {
-        openTab(previewPath(url), `Preview: ${doc.slug}`, true);
+        openTab(previewPath(url), t("editor.documentEditor.previewTab", { slug: doc.slug }), true);
       } else {
         window.open(url, "_blank", "noopener,noreferrer");
       }
@@ -1446,7 +1458,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         if (res.ok) {
           const { url: baseUrl } = await res.json() as { url: string };
           const url = `${baseUrl}${pagePath}`;
-          openTab(previewPath(url), `Preview: ${doc.slug}`, true);
+          openTab(previewPath(url), t("editor.documentEditor.previewTab", { slug: doc.slug }), true);
         }
       } catch { /* ignore */ }
     }
@@ -1475,7 +1487,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     });
     if (res.ok) {
       const cloned = (await res.json()) as { slug: string };
-      toast.success("Document cloned", { description: cloned.slug });
+      toast.success(t("editor.documentEditor.documentCloned"), { description: cloned.slug });
       router.push(`/admin/content/${collection}/${cloned.slug}`);
       router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
     }
@@ -1517,7 +1529,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <div className="flex items-center gap-2">
           {savedAt && !dirty && (
             <span className="text-xs text-muted-foreground">
-              Saved {savedAt.toLocaleTimeString()}
+              {t("editor.documentEditor.savedAt", { time: savedAt.toLocaleTimeString() })}
             </span>
           )}
           <span
@@ -1541,7 +1553,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 data-testid="locale-selector-button"
                 type="button"
                 onClick={() => translations.length > 0 ? setLocaleOpen(o => !o) : undefined}
-                title={translations.length > 0 ? "Switch between translations" : locale ? `Document language: ${locale.toUpperCase()}` : "No locale set — use Properties to assign"}
+                title={translations.length > 0 ? t("editor.documentEditor.switchTranslations") : locale ? t("editor.documentEditor.documentLanguage", { locale: locale.toUpperCase() }) : t("editor.documentEditor.noLocaleSet")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.2rem 0.5rem", borderRadius: "6px",
@@ -1552,7 +1564,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 }}
               >
                 <Languages style={{ width: "0.8rem", height: "0.8rem" }} />
-                {locale ? locale.toUpperCase() : "No locale"}
+                {locale ? locale.toUpperCase() : t("editor.documentEditor.noLocale")}
                 {translations.length > 0 && <span style={{ fontSize: "0.6rem", opacity: 0.5 }}>▾</span>}
               </button>
               {localeOpen && translations.length > 0 && (
@@ -1567,13 +1579,13 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                     padding: "0.4rem 0.75rem", fontSize: "0.8rem", fontFamily: "monospace",
                     background: "var(--accent)", color: "var(--foreground)", fontWeight: 600,
                   }}>
-                    {(locale || defaultLocale || "").toUpperCase()} — current
+                    {t("editor.documentEditor.currentLocale", { locale: (locale || defaultLocale || "").toUpperCase() })}
                   </div>
                   {/* Sibling translations */}
-                  {translations.map(t => (
+                  {translations.map(tr => (
                     <Link
-                      key={t.slug}
-                      href={`/admin/content/${collection}/${t.slug}`}
+                      key={tr.slug}
+                      href={`/admin/content/${collection}/${tr.slug}`}
                       onClick={() => setLocaleOpen(false)}
                       style={{
                         display: "flex", alignItems: "center", gap: "0.4rem",
@@ -1583,10 +1595,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                       }}
                       className="hover:bg-accent"
                     >
-                      <span style={{ fontWeight: 600 }}>{(t.locale ?? "?").toUpperCase()}</span>
+                      <span style={{ fontWeight: 600 }}>{(tr.locale ?? "?").toUpperCase()}</span>
                       <span style={{
                         width: "6px", height: "6px", borderRadius: "50%", marginLeft: "auto",
-                        backgroundColor: t.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
+                        backgroundColor: tr.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
                       }} />
                     </Link>
                   ))}
@@ -1602,10 +1614,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               onClick={cloneDoc}
               disabled={cloning}
               className="text-muted-foreground hover:text-foreground gap-1.5"
-              title="Clone item"
+              title={t("editor.documentEditor.cloneItem")}
             >
               <Copy className="w-3.5 h-3.5" />
-              {cloning ? "Cloning…" : "Clone"}
+              {cloning ? t("editor.documentEditor.cloning") : t("editor.documentEditor.clone")}
             </Button>
           )}
 
@@ -1615,10 +1627,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               size="sm"
               onClick={() => setGenerateOpen(true)}
               className="gap-1.5 text-muted-foreground hover:text-foreground"
-              title="Generate all fields with AI"
+              title={t("editor.documentEditor.generateAllTitle")}
             >
               <Wand2 className="w-3.5 h-3.5" />
-              Generate
+              {t("editor.documentEditor.generate")}
             </Button>
           )}
 
@@ -1628,10 +1640,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               size="sm"
               onClick={() => { setAiPanelOpen((o) => !o); if (historyOpen) setHistoryOpen(false); }}
               className={aiPanelOpen ? "gap-1.5 text-primary" : "gap-1.5 text-muted-foreground hover:text-foreground"}
-              title="AI Assistant"
+              title={t("editor.documentEditor.aiAssistant")}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              AI
+              {t("editor.documentEditor.ai")}
             </Button>
           )}
 
@@ -1640,10 +1652,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             size="sm"
             onClick={() => { setSeoPanelOpen((o) => !o); if (historyOpen) setHistoryOpen(false); if (aiPanelOpen) setAiPanelOpen(false); if (propertiesOpen) setPropertiesOpen(false); }}
             className={seoPanelOpen ? "gap-1.5 text-primary" : "gap-1.5 text-muted-foreground hover:text-foreground"}
-            title="SEO settings"
+            title={t("editor.documentEditor.seoSettings")}
           >
             <SearchIcon className="w-3.5 h-3.5" />
-            SEO
+            {t("editor.documentEditor.seo")}
           </Button>
 
           <Button
@@ -1651,10 +1663,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             size="sm"
             onClick={() => { setHistoryOpen((o) => !o); if (aiPanelOpen) setAiPanelOpen(false); if (propertiesOpen) setPropertiesOpen(false); if (seoPanelOpen) setSeoPanelOpen(false); }}
             className="text-muted-foreground hover:text-foreground gap-1.5"
-            title="Revision history"
+            title={t("editor.documentEditor.revisionHistory")}
           >
             <History className="w-3.5 h-3.5" />
-            History
+            {t("editor.documentEditor.history")}
           </Button>
 
           <Button
@@ -1662,7 +1674,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             size="icon"
             onClick={() => { setPropertiesOpen((o) => !o); if (historyOpen) setHistoryOpen(false); if (aiPanelOpen) setAiPanelOpen(false); }}
             className={propertiesOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"}
-            title="Document properties (slug, ID, dates)"
+            title={t("editor.documentEditor.documentProperties")}
           >
             <Settings2 className="w-4 h-4" />
           </Button>
@@ -1673,7 +1685,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               size="icon"
               onClick={() => setConfirmTrash(true)}
               className="text-muted-foreground hover:text-destructive"
-              title="Move to trash"
+              title={t("editor.documentEditor.moveToTrash")}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -1685,7 +1697,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               size="icon"
               onClick={openPreview}
               className="text-muted-foreground hover:text-foreground"
-              title="Preview"
+              title={t("editor.documentEditor.preview")}
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -1698,10 +1710,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               onClick={openLiveEdit}
               className="gap-1.5"
               data-testid="live-edit-button"
-              title="Rediger teksten direkte på det færdige website"
+              title={t("editor.documentEditor.liveEditTitle")}
             >
               <SquarePen className="w-3.5 h-3.5" />
-              Redigér live
+              {t("editor.documentEditor.liveEdit")}
             </Button>
           )}
 
@@ -1727,9 +1739,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                       }
                       setSaving(false);
                     }}
-                    label="Expires"
-                    defaultLabel="Set expiry"
-                    popoverLabel="Auto-unpublish at"
+                    label={t("editor.documentEditor.expires")}
+                    defaultLabel={t("editor.documentEditor.setExpiry")}
+                    popoverLabel={t("editor.documentEditor.autoUnpublishAt")}
                     color="rgb(239 68 68)"
                   />
                   <Button
@@ -1738,10 +1750,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                     onClick={() => save("draft")}
                     disabled={saving}
                     className="gap-1.5"
-                    title="Revert to draft (unpublish)"
+                    title={t("editor.documentEditor.revertToDraft")}
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    Unpublish
+                    {t("editor.documentEditor.unpublish")}
                   </Button>
                 </>
               ) : (
@@ -1771,10 +1783,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                     onClick={() => save("published")}
                     disabled={saving}
                     className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
-                    title="Save and publish immediately"
+                    title={t("editor.documentEditor.saveAndPublish")}
                   >
                     <Globe className="w-3.5 h-3.5" />
-                    Publish
+                    {t("editor.documentEditor.publish")}
                   </Button>
                 </>
               )}
@@ -1786,16 +1798,16 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 disabled={saving || !dirty}
                 className="gap-1.5"
                 data-testid="btn-save"
-                title={dirty ? "Save changes (⌘S)" : "No unsaved changes"}
+                title={dirty ? t("editor.documentEditor.saveChanges") : t("editor.documentEditor.noUnsavedChanges")}
               >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                {saving ? "Saving…" : "Save"}
+                {saving ? t("editor.documentEditor.saving") : t("editor.documentEditor.save")}
               </Button>
             </>
           )}
           {readOnly && (
             <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-muted font-mono">
-              Read only
+              {t("editor.documentEditor.readOnly")}
             </span>
           )}
         </div>
@@ -1805,14 +1817,14 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         <Link
           href={backHref ?? `/admin/content/${collection}`}
           className="text-muted-foreground hover:text-foreground transition-colors"
-          title={`Back to ${backHref === "/admin/curation" ? "Curation Queue" : collection}`}
+          title={t("editor.documentEditor.backTo", { target: backHref === "/admin/curation" ? t("editor.documentEditor.curationQueue") : collection })}
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <ActionBarBreadcrumb items={[backHref === "/admin/curation" ? "curation" : collection, doc.slug]} />
         {isCurrentDocHomepage && (
           <span
-            title="This document is served at /"
+            title={t("editor.documentEditor.servedAtRoot")}
             style={{
               display: "inline-flex", alignItems: "center", gap: "0.25rem",
               fontSize: "0.65rem", fontWeight: 600, padding: "0.1rem 0.45rem",
@@ -1823,12 +1835,12 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             }}
           >
             <HomeIcon style={{ width: "0.7rem", height: "0.7rem" }} />
-            Homepage
+            {t("editor.documentEditor.homepage")}
           </span>
         )}
         {dirty && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-status-warning/10 text-status-warning font-mono">
-            unsaved
+            {t("editor.documentEditor.unsaved")}
           </span>
         )}
       </ActionBar>
@@ -1845,14 +1857,14 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           position: "sticky", top: "calc(var(--cms-chrome-top, 84px) + 48px)", zIndex: 20,
         }}>
           <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Translations
+            {t("editor.documentEditor.translations")}
           </span>
-          {translations.map(t => {
-              const canRetranslate = !readOnly && !!retranslateSourceSlug && !!t.locale && t.locale !== defaultLocale;
+          {translations.map(tr => {
+              const canRetranslate = !readOnly && !!retranslateSourceSlug && !!tr.locale && tr.locale !== defaultLocale;
               return (
-              <div key={t.slug} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+              <div key={tr.slug} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
               <Link
-                href={`/admin/content/${collection}/${t.slug}`}
+                href={`/admin/content/${collection}/${tr.slug}`}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.15rem 0.5rem", borderRadius: "4px",
@@ -1861,45 +1873,45 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   background: "var(--card)", textDecoration: "none",
                 }}
               >
-                {t.locale && <span style={{ fontWeight: 600 }}>{t.locale.toUpperCase()}</span>}
-                <span style={{ color: t.locale ? "var(--muted-foreground)" : "var(--foreground)" }}>{t.slug}</span>
+                {tr.locale && <span style={{ fontWeight: 600 }}>{tr.locale.toUpperCase()}</span>}
+                <span style={{ color: tr.locale ? "var(--muted-foreground)" : "var(--foreground)" }}>{tr.slug}</span>
                 <span style={{
                   width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0,
-                  backgroundColor: t.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
+                  backgroundColor: tr.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
                 }} />
               </Link>
-              {canRetranslate && (retranslateConfirm === t.locale ? (
+              {canRetranslate && (retranslateConfirm === tr.locale ? (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
-                  <span style={{ fontSize: "0.62rem", color: "var(--muted-foreground)", fontWeight: 500 }}>Re-translate?</span>
+                  <span style={{ fontSize: "0.62rem", color: "var(--muted-foreground)", fontWeight: 500 }}>{t("editor.documentEditor.retranslateConfirm")}</span>
                   <button
-                    data-testid={`retranslate-yes-${t.locale}`}
+                    data-testid={`retranslate-yes-${tr.locale}`}
                     type="button"
-                    onClick={() => runRetranslate(t.locale!)}
+                    onClick={() => runRetranslate(tr.locale!)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", cursor: "pointer", lineHeight: 1 }}
-                  >Yes</button>
+                  >{t("editor.documentEditor.yes")}</button>
                   <button
-                    data-testid={`retranslate-no-${t.locale}`}
+                    data-testid={`retranslate-no-${tr.locale}`}
                     type="button"
                     onClick={() => setRetranslateConfirm(null)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
-                  >No</button>
+                  >{t("editor.documentEditor.no")}</button>
                 </span>
               ) : (
                 <button
-                  data-testid={`retranslate-${t.locale}`}
+                  data-testid={`retranslate-${tr.locale}`}
                   type="button"
-                  title={`Re-translate ${t.locale?.toUpperCase()} from ${LOCALE_LABELS[defaultLocale] ?? defaultLocale}`}
-                  onClick={() => setRetranslateConfirm(t.locale!)}
-                  disabled={retranslatingLocale === t.locale}
+                  title={t("editor.documentEditor.retranslateTitle", { locale: tr.locale?.toUpperCase() ?? "", language: LOCALE_LABELS[defaultLocale] ?? defaultLocale })}
+                  onClick={() => setRetranslateConfirm(tr.locale!)}
+                  disabled={retranslatingLocale === tr.locale}
                   style={{
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
                     width: "22px", height: "22px", borderRadius: "4px",
                     border: "1px solid var(--border)", background: "var(--card)",
-                    color: "var(--muted-foreground)", cursor: retranslatingLocale === t.locale ? "wait" : "pointer",
+                    color: "var(--muted-foreground)", cursor: retranslatingLocale === tr.locale ? "wait" : "pointer",
                     padding: 0,
                   }}
                 >
-                  {retranslatingLocale === t.locale
+                  {retranslatingLocale === tr.locale
                     ? <Loader2 size={11} className="animate-spin" />
                     : <RefreshCw size={11} />}
                 </button>
@@ -1912,7 +1924,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               data-testid="side-by-side-toggle"
               type="button"
               onClick={() => setSideBySide(!sideBySide)}
-              title="Show source document side-by-side"
+              title={t("editor.documentEditor.sideBySideTitle")}
               style={{
                 display: "inline-flex", alignItems: "center", gap: "0.3rem",
                 padding: "0.15rem 0.5rem", borderRadius: "4px",
@@ -1924,12 +1936,12 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               }}
             >
               <Languages size={11} />
-              Side-by-side
+              {t("editor.documentEditor.sideBySide")}
             </button>
           )}
           {(() => {
             // Any doc in a translation group can create new translations (equal partners)
-            const existingLocs = [locale || defaultLocale || null, ...translations.map(t => t.locale)];
+            const existingLocs = [locale || defaultLocale || null, ...translations.map(tr => tr.locale)];
             const available = (locales ?? []).filter(l => !existingLocs.includes(l));
             return available.length > 0 ? (
               <button
@@ -1944,7 +1956,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   background: "transparent", cursor: "pointer",
                 }}
               >
-                + Add translation
+                {t("editor.documentEditor.addTranslationButton")}
               </button>
             ) : null;
           })()}
@@ -2001,20 +2013,20 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         <div style={sideBySide && sourceDoc ? { flex: "0 0 50%", maxWidth: "50%" } : undefined}>
         <div className="doc-editor-body space-y-10">
           <div className="flex gap-6 text-xs text-muted-foreground font-mono pb-8 border-b border-border flex-wrap">
-            <span>Created {formatDate(doc.createdAt)}</span>
-            <span>Updated {formatDate(doc.updatedAt)}</span>
+            <span>{t("editor.documentEditor.createdAt", { date: formatDate(doc.createdAt) })}</span>
+            <span>{t("editor.documentEditor.updatedAt", { date: formatDate(doc.updatedAt) })}</span>
             <span
               data-testid="document-id-copy"
-              title="Click to copy document ID"
+              title={t("editor.documentEditor.clickToCopyId")}
               onClick={() => { navigator.clipboard.writeText(doc.id); }}
               style={{ cursor: "pointer", opacity: 0.5 }}
               className="hover:opacity-100"
             >
-              ID: {doc.id.slice(0, 8)}…
+              {t("editor.documentEditor.idShort", { id: doc.id.slice(0, 8) })}
             </span>
             {translationGroup && (
-              <span title={`Translation group: ${translationGroup}`}>
-                Group: {translationGroup.slice(0, 8)}…
+              <span title={t("editor.documentEditor.translationGroupTitle", { group: translationGroup })}>
+                {t("editor.documentEditor.groupShort", { group: translationGroup.slice(0, 8) })}
               </span>
             )}
           </div>
@@ -2075,7 +2087,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   <button
                     data-testid="field-lock-button"
                     type="button"
-                    title={isLocked ? "AI locked — click to unlock" : "Click to AI lock this field"}
+                    title={isLocked ? t("editor.documentEditor.aiLockedTitle") : t("editor.documentEditor.aiLockTitle")}
                     onClick={() => {
                       const currentMeta = (doc.data["_fieldMeta"] as Record<string, unknown> | undefined) ?? {};
                       const newMeta = { ...currentMeta };
@@ -2103,8 +2115,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                     onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = isLocked ? "1" : "0.45"; }}
                   >
                     {isLocked
-                      ? <><Lock style={{ width: "0.7rem", height: "0.7rem" }} /> AI locked</>
-                      : <><LockOpen style={{ width: "0.7rem", height: "0.7rem" }} /> Lock</>
+                      ? <><Lock style={{ width: "0.7rem", height: "0.7rem" }} /> {t("editor.documentEditor.aiLocked")}</>
+                      : <><LockOpen style={{ width: "0.7rem", height: "0.7rem" }} /> {t("editor.documentEditor.lock")}</>
                     }
                   </button>
                   {isReadTime && readTimeBodyField && (
@@ -2114,14 +2126,14 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                       onClick={() => {
                         const body = doc.data[readTimeBodyField.name];
                         if (typeof body !== "string" || !body.trim()) {
-                          toast.error("No body content to measure");
+                          toast.error(t("editor.documentEditor.noBodyContent"));
                           return;
                         }
                         const mins = computeReadingMinutes(body);
                         if (mins <= 0) return;
                         // Match field type: number → number, anything else → "N min read"
                         updateField(field.name, field.type === "number" ? mins : `${mins} min read`);
-                        toast.success(`Read time: ${mins} min`);
+                        toast.success(t("editor.documentEditor.readTime", { mins }));
                       }}
                       style={{
                         fontSize: "0.65rem", fontFamily: "monospace", letterSpacing: "0.05em",
@@ -2138,7 +2150,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                         (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)";
                       }}
                     >
-                      Suggest
+                      {t("editor.documentEditor.suggest")}
                     </button>
                   )}
                 </div>
@@ -2159,8 +2171,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
       {confirmTrash && (
         <ConfirmDialog
-          message={`Move "${doc.slug}" to trash? You can restore it from the Trash section.`}
-          confirmLabel="Move to trash"
+          message={t("editor.documentEditor.moveToTrashConfirm", { slug: doc.slug })}
+          confirmLabel={t("editor.documentEditor.moveToTrash")}
           onConfirm={() => { setConfirmTrash(false); deleteDoc(); }}
           onCancel={() => setConfirmTrash(false)}
         />
@@ -2247,7 +2259,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           sourceDocId={initialDoc.id}
           translationGroupId={translationGroup || undefined}
           locales={locales}
-          existingLocales={[locale || defaultLocale || null, ...translations.map(t => t.locale)]}
+          existingLocales={[locale || defaultLocale || null, ...translations.map(tr => tr.locale)]}
           defaultLocale={defaultLocale ?? "en"}
           onClose={() => setCreateTranslationOpen(false)}
           onCreated={(slug) => {

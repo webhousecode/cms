@@ -1,1 +1,32 @@
-{}
+{
+  "dashboardStats": {
+    "loadFailed": "Failed to load dashboard stats.",
+    "eyebrow": "Dashboard",
+    "title": "Content Overview",
+    "published": "{count} published",
+    "draft": "{count} draft",
+    "scheduledEyebrow": "scheduled",
+    "scheduledTitle": "Scheduled Content",
+    "more": "+{count} more",
+    "noScheduled": "No upcoming scheduled content",
+    "mediaEyebrow": "media",
+    "mediaTitle": "Media Library",
+    "mediaHint": "Images, videos, audio, files",
+    "intsEyebrow": "interactives",
+    "intsTitle": "Interactives",
+    "intsHint": "Charts, demos, calculators",
+    "seoEyebrow": "seo",
+    "seoTitle": "SEO Health",
+    "optimized": "{count} optimized",
+    "needAttention": "{count} need attention",
+    "keywordCoverage": "keyword coverage ({count} tracked)",
+    "visibilityEyebrow": "visibility",
+    "visibilityTitle": "Visibility",
+    "seo": "SEO",
+    "geo": "GEO",
+    "visibilityHint": "Search engines + AI platforms"
+  },
+  "siteIntroCard": {
+    "loadingPreview": "Loading preview..."
+  }
+}

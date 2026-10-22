@@ -6,6 +6,7 @@ import { StepConfigure } from "./step-configure";
 import { StepConnect } from "./step-connect";
 import { StepDeploy } from "./step-deploy";
 import { WizardProgress } from "./wizard-progress";
+import { useT } from "@/lib/i18n-context";
 
 export interface WizardState {
   step: 1 | 2 | 3 | 4;
@@ -19,13 +20,14 @@ export interface WizardState {
 }
 
 const STEPS = [
-  { num: 1, label: "Template" },
-  { num: 2, label: "Configure" },
-  { num: 3, label: "Connect" },
-  { num: 4, label: "Deploy" },
+  { num: 1, label: "misc.deployWizard.steps.template" },
+  { num: 2, label: "misc.deployWizard.steps.configure" },
+  { num: 3, label: "misc.deployWizard.steps.connect" },
+  { num: 4, label: "misc.deployWizard.steps.deploy" },
 ] as const;
 
 export function DeployWizard() {
+  const t = useT();
   const [state, setState] = useState<WizardState>({
     step: 1,
     template: null,
@@ -51,7 +53,7 @@ export function DeployWizard() {
 
   return (
     <div style={{ maxWidth: "48rem" }}>
-      <WizardProgress steps={STEPS} current={state.step} />
+      <WizardProgress steps={STEPS.map((s) => ({ ...s, label: t(s.label) }))} current={state.step} />
 
       <div style={{ marginTop: "2rem" }}>
         {state.step === 1 && (
@@ -106,7 +108,7 @@ export function DeployWizard() {
               opacity: state.step === 1 ? 0.5 : 1,
             }}
           >
-            Back
+            {t("misc.deployWizard.back")}
           </button>
 
           <button
@@ -124,7 +126,7 @@ export function DeployWizard() {
               cursor: canNext ? "pointer" : "not-allowed",
             }}
           >
-            {state.step === 3 ? "Deploy" : "Next"}
+            {state.step === 3 ? t("misc.deployWizard.deploy") : t("misc.deployWizard.next")}
           </button>
         </div>
       )}

@@ -1,8 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback, type ReactNode } from "react";
 import { Eye, RefreshCw, FileText, Globe, Bot, Rss, Shield, ExternalLink } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
+import { useT } from "@/lib/i18n-context";
+
+/** Renders a translated sentence whose {placeholders} are React nodes. */
+function withParts(text: string, parts: Record<string, ReactNode>): ReactNode[] {
+  return text.split(/(\{\w+\})/).map((p, i) => {
+    const m = p.match(/^\{(\w+)\}$/);
+    return <Fragment key={i}>{m && m[1] in parts ? parts[m[1]] : p}</Fragment>;
+  });
+}
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -56,6 +65,7 @@ const lbl: React.CSSProperties = {
 // ── Component ────────────────────────────────────────────────
 
 export default function VisibilityPage() {
+  const t = useT();
   const [data, setData] = useState<OverviewData | null>(null);
   const [health, setHealth] = useState<BuildHealth | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,25 +118,25 @@ export default function VisibilityPage() {
         actions={
           <ActionButton onClick={fetchData} disabled={loading}>
             <RefreshCw style={{ width: 14, height: 14, animation: loading ? "spin 1s linear infinite" : undefined }} />
-            Refresh
+            {t("tools.visibility.refresh")}
           </ActionButton>
         }
       >
-        <ActionBarBreadcrumb items={["Tools", "Visibility"]} />
+        <ActionBarBreadcrumb items={[t("tools.common.tools"), t("tools.visibility.title")]} />
       </ActionBar>
 
       <div style={{ padding: "2rem", maxWidth: "72rem" }}>
         {loading && !data ? (
-          <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>Loading…</div>
+          <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>{t("tools.visibility.loading")}</div>
         ) : !data ? (
-          <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>Failed to load data</div>
+          <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>{t("tools.visibility.loadFailed")}</div>
         ) : (
           <>
             {/* KPI Cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
               {/* Visibility Score */}
               <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-                <p style={lbl}>Visibility Score</p>
+                <p style={lbl}>{t("tools.visibility.visibilityScore")}</p>
                 <p style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "monospace", color: scoreColor(combinedScore), margin: 0 }}>
                   {combinedScore}
                 </p>
@@ -134,13 +144,13 @@ export default function VisibilityPage() {
                   <div style={{ height: "100%", width: `${combinedScore}%`, background: scoreColor(combinedScore), borderRadius: 2, transition: "width 0.3s" }} />
                 </div>
                 <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0" }}>
-                  Combined SEO + GEO
+                  {t("tools.visibility.combined")}
                 </p>
               </div>
 
               {/* SEO Score */}
               <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-                <p style={lbl}>SEO Score</p>
+                <p style={lbl}>{t("tools.visibility.seoScore")}</p>
                 <p style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "monospace", color: scoreColor(data.avgScore), margin: 0 }}>
                   {data.avgScore}
                 </p>
@@ -148,13 +158,13 @@ export default function VisibilityPage() {
                   <div style={{ height: "100%", width: `${data.avgScore}%`, background: scoreColor(data.avgScore), borderRadius: 2, transition: "width 0.3s" }} />
                 </div>
                 <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0" }}>
-                  Search engines
+                  {t("tools.visibility.searchEngines")}
                 </p>
               </div>
 
               {/* GEO Score */}
               <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-                <p style={lbl}>GEO Score</p>
+                <p style={lbl}>{t("tools.visibility.geoScore")}</p>
                 <p style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "monospace", color: scoreColor(data.avgGeoScore), margin: 0 }}>
                   {data.avgGeoScore}
                 </p>
@@ -162,29 +172,29 @@ export default function VisibilityPage() {
                   <div style={{ height: "100%", width: `${data.avgGeoScore}%`, background: scoreColor(data.avgGeoScore), borderRadius: 2, transition: "width 0.3s" }} />
                 </div>
                 <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0" }}>
-                  AI platforms
+                  {t("tools.visibility.aiPlatforms")}
                 </p>
               </div>
 
               {/* Documents */}
               <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-                <p style={lbl}>Documents</p>
+                <p style={lbl}>{t("tools.visibility.documents")}</p>
                 <p style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "monospace", color: "var(--foreground)", margin: 0 }}>
                   {data.total}
                 </p>
                 <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0" }}>
-                  {data.optimized} optimized ({data.total > 0 ? Math.round((data.optimized / data.total) * 100) : 0}%)
+                  {t("tools.visibility.optimizedPct", { n: data.optimized, pct: data.total > 0 ? Math.round((data.optimized / data.total) * 100) : 0 })}
                 </p>
               </div>
 
               {/* Issues */}
               <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-                <p style={lbl}>Issues</p>
+                <p style={lbl}>{t("tools.visibility.issues")}</p>
                 <p style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "monospace", color: (data.issues.missingTitle + data.issues.missingDesc + data.issues.missingOg) > 0 ? "#f87171" : "#4ade80", margin: 0 }}>
                   {data.issues.missingTitle + data.issues.missingDesc + data.issues.missingOg}
                 </p>
                 <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0" }}>
-                  Missing meta fields
+                  {t("tools.visibility.missingMeta")}
                 </p>
               </div>
             </div>
@@ -205,7 +215,7 @@ export default function VisibilityPage() {
                     marginBottom: "-1px",
                   }}
                 >
-                  {tab === "overview" ? "Overview" : tab === "documents" ? "Documents" : "Build Output"}
+                  {tab === "overview" ? t("tools.visibility.tabOverview") : tab === "documents" ? t("tools.visibility.documents") : t("tools.visibility.tabBuild")}
                 </button>
               ))}
             </div>
@@ -216,18 +226,18 @@ export default function VisibilityPage() {
 
 {/* Issue Breakdown */}
                 <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-                  <p style={{ ...lbl, marginBottom: "0.75rem" }}>Issue Breakdown</p>
+                  <p style={{ ...lbl, marginBottom: "0.75rem" }}>{t("tools.visibility.issueBreakdown")}</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    <IssueRow icon="🔴" label="Missing meta title" count={data.issues.missingTitle} total={data.total} />
-                    <IssueRow icon="🔴" label="Missing meta description" count={data.issues.missingDesc} total={data.total} />
-                    <IssueRow icon="🟡" label="Missing social image (OG)" count={data.issues.missingOg} total={data.total} />
-                    <IssueRow icon="🟢" label="Fully optimized" count={data.optimized} total={data.total} />
+                    <IssueRow icon="🔴" label={t("tools.visibility.missingTitle")} count={data.issues.missingTitle} total={data.total} />
+                    <IssueRow icon="🔴" label={t("tools.visibility.missingDesc")} count={data.issues.missingDesc} total={data.total} />
+                    <IssueRow icon="🟡" label={t("tools.visibility.missingOg")} count={data.issues.missingOg} total={data.total} />
+                    <IssueRow icon="🟢" label={t("tools.visibility.fullyOptimized")} count={data.optimized} total={data.total} />
                   </div>
                 </div>
 
                 {/* Score Distribution */}
                 <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-                  <p style={{ ...lbl, marginBottom: "0.75rem" }}>Score Distribution</p>
+                  <p style={{ ...lbl, marginBottom: "0.75rem" }}>{t("tools.visibility.scoreDistribution")}</p>
                   <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-end", height: 80 }}>
                     {[
                       { label: "0-29", docs: data.documents.filter((d) => d.score < 30) },
@@ -260,13 +270,13 @@ export default function VisibilityPage() {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                      <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>Document</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>SEO</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>GEO</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>Title</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>Desc</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>OG</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>Keywords</th>
+                      <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>{t("tools.seo.thDocument")}</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>{t("tools.visibility.thSeo")}</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>{t("tools.visibility.thGeo")}</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>{t("tools.seo.thTitle")}</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>{t("tools.seo.thDesc")}</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>{t("tools.seo.thOg")}</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>{t("tools.seo.thKeywords")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -309,20 +319,21 @@ export default function VisibilityPage() {
             {activeTab === "build" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
 <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
-                  Files generated by the build pipeline for search engines and AI platforms.
+                  {t("tools.visibility.buildIntro")}
                 </p>
-                <BuildItem icon={<Shield style={{ width: 16, height: 16 }} />} name="robots.txt" desc="AI crawler access rules" status={health?.robotsTxt} />
-                <BuildItem icon={<Globe style={{ width: 16, height: 16 }} />} name="sitemap.xml" desc="Search engine page index" status={health?.sitemapXml} />
-                <BuildItem icon={<FileText style={{ width: 16, height: 16 }} />} name="llms.txt" desc="AI agent discovery index" status={health?.llmsTxt} />
-                <BuildItem icon={<FileText style={{ width: 16, height: 16 }} />} name="llms-full.txt" desc="Full content for AI consumption" status={health?.llmsFullTxt} />
-                <BuildItem icon={<Rss style={{ width: 16, height: 16 }} />} name="feed.xml" desc="RSS feed for syndication" status={health?.feedXml} />
-                <BuildItem icon={<Bot style={{ width: 16, height: 16 }} />} name=".well-known/ai-plugin.json" desc="MCP plugin manifest" status={health?.aiPlugin} />
+                <BuildItem icon={<Shield style={{ width: 16, height: 16 }} />} name="robots.txt" desc={t("tools.visibility.descRobots")} status={health?.robotsTxt} />
+                <BuildItem icon={<Globe style={{ width: 16, height: 16 }} />} name="sitemap.xml" desc={t("tools.visibility.descSitemap")} status={health?.sitemapXml} />
+                <BuildItem icon={<FileText style={{ width: 16, height: 16 }} />} name="llms.txt" desc={t("tools.visibility.descLlms")} status={health?.llmsTxt} />
+                <BuildItem icon={<FileText style={{ width: 16, height: 16 }} />} name="llms-full.txt" desc={t("tools.visibility.descLlmsFull")} status={health?.llmsFullTxt} />
+                <BuildItem icon={<Rss style={{ width: 16, height: 16 }} />} name="feed.xml" desc={t("tools.visibility.descFeed")} status={health?.feedXml} />
+                <BuildItem icon={<Bot style={{ width: 16, height: 16 }} />} name=".well-known/ai-plugin.json" desc={t("tools.visibility.descPlugin")} status={health?.aiPlugin} />
 
                 <div style={{ marginTop: "1rem", padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-                  <p style={{ ...lbl, marginBottom: "0.5rem" }}>Per-Page Markdown Endpoints</p>
+                  <p style={{ ...lbl, marginBottom: "0.5rem" }}>{t("tools.visibility.mdEndpoints")}</p>
                   <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-                    Every page has a <code style={{ fontSize: "0.7rem", padding: "0.1rem 0.3rem", borderRadius: "3px", background: "var(--secondary)" }}>.md</code> version at the same URL path.
-                    AI platforms can fetch clean markdown instead of parsing HTML.
+                    {withParts(t("tools.visibility.mdEndpointsHint"), {
+                      md: <code style={{ fontSize: "0.7rem", padding: "0.1rem 0.3rem", borderRadius: "3px", background: "var(--secondary)" }}>.md</code>,
+                    })}
                   </p>
                 </div>
               </div>
@@ -352,6 +363,7 @@ function IssueRow({ icon, label, count, total }: { icon: string; label: string; 
 }
 
 function BuildItem({ icon, name, desc, status }: { icon: React.ReactNode; name: string; desc: string; status?: boolean }) {
+  const t = useT();
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: "0.75rem",
@@ -366,9 +378,9 @@ function BuildItem({ icon, name, desc, status }: { icon: React.ReactNode; name: 
       {status === undefined ? (
         <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>—</span>
       ) : status ? (
-        <span style={{ fontSize: "0.65rem", color: "#4ade80", fontWeight: 600 }}>✓ Live</span>
+        <span style={{ fontSize: "0.65rem", color: "#4ade80", fontWeight: 600 }}>{t("tools.visibility.live")}</span>
       ) : (
-        <span style={{ fontSize: "0.65rem", color: "#f87171", fontWeight: 600 }}>✗ Not found</span>
+        <span style={{ fontSize: "0.65rem", color: "#f87171", fontWeight: 600 }}>{t("tools.visibility.notFound")}</span>
       )}
     </div>
   );

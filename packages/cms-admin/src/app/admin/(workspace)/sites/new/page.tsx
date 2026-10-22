@@ -6,6 +6,7 @@ import { Github, HardDrive, FolderOpen, Globe } from "lucide-react";
 import { WpMigrationPanel } from "@/components/settings/wp-migration-panel";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Checkbox } from "@/components/ui/checkbox-styled";
+import { useT } from "@/lib/i18n-context";
 
 /* ─── Types ───────────────────────────────────────────────── */
 
@@ -39,6 +40,7 @@ function getCookie(name: string): string | null {
 /* ─── Page ────────────────────────────────────────────────── */
 
 export default function NewSitePage() {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -149,13 +151,13 @@ export default function NewSitePage() {
             body: JSON.stringify({ folderPath: data.path }),
           });
           const scanData = await scanRes.json() as { error?: string; siteName?: string; configPath?: string; contentDir?: string; collections?: string[]; hasDist?: boolean };
-          if (!scanRes.ok) { setError(scanData.error ?? "Import failed"); return; }
+          if (!scanRes.ok) { setError(scanData.error ?? t("pages.siteNew.importFailed")); return; }
           if (scanData.siteName) setName(scanData.siteName);
           if (scanData.configPath) setConfigPath(scanData.configPath);
           if (scanData.contentDir) setFsContentDir(scanData.contentDir);
           setImportResult({ collections: scanData.collections ?? [], hasDist: scanData.hasDist ?? false });
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Import failed");
+          setError(err instanceof Error ? err.message : t("pages.siteNew.importFailed"));
         } finally {
           setImporting(false);
         }
@@ -166,7 +168,7 @@ export default function NewSitePage() {
   async function handleImport() {
     setError("");
     setImportResult(null);
-    if (!importPath.trim()) { setError("Enter a folder path"); return; }
+    if (!importPath.trim()) { setError(t("pages.siteNew.enterFolderPath")); return; }
     setImporting(true);
     try {
       const res = await fetch("/api/cms/registry/import", {
@@ -176,7 +178,7 @@ export default function NewSitePage() {
       });
       const data = await res.json() as { error?: string; siteName?: string; configPath?: string; contentDir?: string; collections?: string[]; hasDist?: boolean };
       if (!res.ok) {
-        setError(data.error ?? "Import failed");
+        setError(data.error ?? t("pages.siteNew.importFailed"));
         return;
       }
       // Auto-fill form fields
@@ -185,7 +187,7 @@ export default function NewSitePage() {
       if (data.contentDir) setFsContentDir(data.contentDir);
       setImportResult({ collections: data.collections ?? [], hasDist: data.hasDist ?? false });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed");
+      setError(err instanceof Error ? err.message : t("pages.siteNew.importFailed"));
     } finally {
       setImporting(false);
     }
@@ -198,18 +200,18 @@ export default function NewSitePage() {
   async function handleCreate() {
     setError("");
     const id = siteId();
-    if (!name.trim()) { setError("Site name is required"); return; }
+    if (!name.trim()) { setError(t("pages.siteNew.siteNameRequired")); return; }
 
     const orgId = getCookie("cms-active-org") ?? "";
     if (adapter === "migrate") return; // Migration handled by WpMigrationPanel
     const site: SiteEntry = { id, name: name.trim(), adapter, configPath: "", previewUrl: previewUrl || undefined };
 
     if (adapter === "github") {
-      if (!ghSelectedAccount) { setError("Select a GitHub account"); return; }
+      if (!ghSelectedAccount) { setError(t("pages.siteNew.selectGithubAccount")); return; }
       let repoName = ghSelectedRepo;
 
       if (ghCreateNew) {
-        if (!ghNewRepoName.trim()) { setError("Enter a repository name"); return; }
+        if (!ghNewRepoName.trim()) { setError(t("pages.siteNew.enterRepoName")); return; }
         setSaving(true);
         try {
           const createRes = await fetch("/api/github", {
@@ -224,7 +226,7 @@ export default function NewSitePage() {
           });
           if (!createRes.ok) {
             const d = await createRes.json().catch(() => ({}));
-            setError(d.error ?? "Failed to create repository");
+            setError(d.error ?? t("pages.siteNew.createRepoFailed"));
             setSaving(false);
             return;
           }
@@ -232,12 +234,12 @@ export default function NewSitePage() {
           repoName = created.repo.name;
           setBranch(created.repo.defaultBranch);
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Failed to create repository");
+          setError(err instanceof Error ? err.message : t("pages.siteNew.createRepoFailed"));
           setSaving(false);
           return;
         }
       } else {
-        if (!repoName) { setError("Select a repository"); return; }
+        if (!repoName) { setError(t("pages.siteNew.selectRepo")); return; }
       }
 
       site.configPath = `github://${ghSelectedAccount}/${repoName}/cms.config.ts`;
@@ -249,7 +251,7 @@ export default function NewSitePage() {
         token: "oauth",
       };
     } else {
-      if (!configPath.trim()) { setError("Config path is required"); return; }
+      if (!configPath.trim()) { setError(t("pages.siteNew.configPathRequired")); return; }
       site.configPath = configPath.trim();
       site.contentDir = fsContentDir.trim() || undefined;
     }
@@ -263,12 +265,12 @@ export default function NewSitePage() {
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d.error ?? `Failed (${res.status})`);
+        throw new Error(d.error ?? t("pages.siteNew.failedStatus", { status: res.status }));
       }
       window.dispatchEvent(new CustomEvent("cms-registry-change"));
       router.push("/admin/sites");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create site");
+      setError(err instanceof Error ? err.message : t("pages.siteNew.createSiteFailed"));
     } finally {
       setSaving(false);
     }
@@ -301,16 +303,16 @@ export default function NewSitePage() {
   return (
     <div className="p-8 max-w-2xl">
       <div className="mb-8">
-        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Sites</p>
-        <h1 className="text-2xl font-bold text-foreground">New site</h1>
+        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">{t("pages.siteNew.eyebrow")}</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("pages.siteNew.title")}</h1>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {/* Adapter picker */}
           <div style={{ display: "flex", gap: "0.5rem" }}>
             {([
-              { value: "filesystem" as const, label: "Filesystem", icon: HardDrive },
-              { value: "github" as const, label: "GitHub", icon: Github },
+              { value: "filesystem" as const, label: "pages.siteNew.adapterFilesystem", icon: HardDrive },
+              { value: "github" as const, label: "pages.siteNew.adapterGithub", icon: Github },
               // F03: Migrate tab parked — backend done, UI needs redesign
               // { value: "migrate" as const, label: "Migrate", icon: Globe },
             ]).map(({ value, label, icon: Icon }) => (
@@ -328,7 +330,7 @@ export default function NewSitePage() {
                   fontSize: "0.85rem", fontWeight: 500,
                 }}
               >
-                <Icon style={{ width: 16, height: 16 }} /> {label}
+                <Icon style={{ width: 16, height: 16 }} /> {t(label)}
               </button>
             ))}
           </div>
@@ -349,7 +351,7 @@ export default function NewSitePage() {
                   className="hover:bg-accent transition-colors"
                 >
                   <Github style={{ width: 18, height: 18 }} />
-                  Connect GitHub
+                  {t("pages.siteNew.connectGithub")}
                 </button>
               ) : (
                 <>
@@ -362,14 +364,14 @@ export default function NewSitePage() {
                   }}>
                     <span style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
                       <Github style={{ width: 16, height: 16 }} />
-                      Connected as <strong>{ghUser}</strong>
+                      {t("pages.siteNew.connectedAs")} <strong>{ghUser}</strong>
                     </span>
                     <span style={{ display: "flex", gap: "0.75rem" }}>
                       <a data-testid="new-site-manage-github-access" href={`https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_OAUTH_CLIENT_ID ?? ""}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline", cursor: "pointer" }}>
-                        Manage access
+                        {t("pages.siteNew.manageAccess")}
                       </a>
                       <button data-testid="new-site-github-disconnect" type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
-                        Disconnect
+                        {t("pages.siteNew.disconnect")}
                       </button>
                     </span>
                   </div>
@@ -377,8 +379,8 @@ export default function NewSitePage() {
                   {/* New repo / Import existing tabs */}
                   <div style={{ display: "flex", gap: "0.25rem", background: "var(--muted)", borderRadius: "8px", padding: "0.2rem" }}>
                     {([
-                      { value: true, label: "+ New repo" },
-                      { value: false, label: "Import existing" },
+                      { value: true, label: "pages.siteNew.tabNewRepo" },
+                      { value: false, label: "pages.siteNew.tabImportExisting" },
                     ] as const).map(({ value, label }) => (
                       <button
                         data-testid={`new-site-gh-tab-${value ? 'new' : 'existing'}`}
@@ -393,7 +395,7 @@ export default function NewSitePage() {
                           boxShadow: ghCreateNew === value ? "0 1px 3px rgba(0,0,0,0.2)" : "none",
                         }}
                       >
-                        {label}
+                        {t(label)}
                       </button>
                     ))}
                   </div>
@@ -401,7 +403,7 @@ export default function NewSitePage() {
                   {ghCreateNew ? (
                     <>
                       <div>
-                        <label style={labelStyle}>Repository name</label>
+                        <label style={labelStyle}>{t("pages.siteNew.repoName")}</label>
                         <input
                           data-testid="new-site-gh-repo-name"
                           type="text"
@@ -410,16 +412,16 @@ export default function NewSitePage() {
                             setGhNewRepoName(e.target.value);
                             if (!name) setName(e.target.value.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
                           }}
-                          placeholder="my-new-site"
+                          placeholder={t("pages.siteNew.repoNamePlaceholder")}
                           style={{ ...inputStyle, fontFamily: "monospace" }}
                         />
                       </div>
                       <div>
-                        <label style={labelStyle}>Organisation</label>
+                        <label style={labelStyle}>{t("pages.siteNew.organisation")}</label>
                         <CustomSelect
                           options={ghAccounts.map((a) => ({
                             value: a.login,
-                            label: `${a.login} ${a.type === "org" ? "(org)" : "(personal)"}`,
+                            label: `${a.login} ${a.type === "org" ? t("pages.siteNew.orgSuffix") : t("pages.siteNew.personalSuffix")}`,
                           }))}
                           value={ghSelectedAccount}
                           onChange={(v) => setGhSelectedAccount(v)}
@@ -428,30 +430,30 @@ export default function NewSitePage() {
                       <Checkbox
                         checked={ghNewRepoPrivate}
                         onChange={(v) => setGhNewRepoPrivate(v)}
-                        label="Private"
+                        label={t("pages.siteNew.private")}
                       />
                     </>
                   ) : (
                     <>
                       <div>
-                        <label style={labelStyle}>Organisation</label>
+                        <label style={labelStyle}>{t("pages.siteNew.organisation")}</label>
                         <CustomSelect
                           options={ghAccounts.map((a) => ({
                             value: a.login,
-                            label: `${a.login} ${a.type === "org" ? "(org)" : "(personal)"}`,
+                            label: `${a.login} ${a.type === "org" ? t("pages.siteNew.orgSuffix") : t("pages.siteNew.personalSuffix")}`,
                           }))}
                           value={ghSelectedAccount}
                           onChange={(v) => setGhSelectedAccount(v)}
                         />
                       </div>
                       <div>
-                        <label style={labelStyle}>Repository</label>
+                        <label style={labelStyle}>{t("pages.siteNew.repository")}</label>
                         {ghLoadingRepos ? (
-                          <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>Loading repositories...</p>
+                          <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>{t("pages.siteNew.loadingRepos")}</p>
                         ) : (
                           <CustomSelect
                             options={[
-                              { value: "", label: "Select repository..." },
+                              { value: "", label: t("pages.siteNew.selectRepoPlaceholder") },
                               ...ghRepos.map((r) => ({ value: r.name, label: r.name })),
                             ]}
                             value={ghSelectedRepo}
@@ -464,20 +466,20 @@ export default function NewSitePage() {
 
                   {/* Site name */}
                   <div>
-                    <label style={labelStyle}>Site Name</label>
-                    <input data-testid="new-site-name-gh" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
-                    {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>ID: {siteId()}</p>}
+                    <label style={labelStyle}>{t("pages.siteNew.siteName")}</label>
+                    <input data-testid="new-site-name-gh" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("pages.siteNew.siteNamePlaceholder")} style={inputStyle} />
+                    {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{t("pages.siteNew.idLabel", { id: siteId() })}</p>}
                   </div>
 
                   {/* Branch + Content dir */}
                   <div style={{ display: "flex", gap: "0.75rem" }}>
                     <div style={{ flex: 1 }}>
-                      <label style={labelStyle}>Branch</label>
-                      <input data-testid="new-site-branch" type="text" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" style={inputStyle} />
+                      <label style={labelStyle}>{t("pages.siteNew.branch")}</label>
+                      <input data-testid="new-site-branch" type="text" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder={t("pages.siteNew.branchPlaceholder")} style={inputStyle} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <label style={labelStyle}>Content Directory</label>
-                      <input data-testid="new-site-content-dir" type="text" value={contentDir} onChange={(e) => setContentDir(e.target.value)} placeholder="content" style={inputStyle} />
+                      <label style={labelStyle}>{t("pages.siteNew.contentDir")}</label>
+                      <input data-testid="new-site-content-dir" type="text" value={contentDir} onChange={(e) => setContentDir(e.target.value)} placeholder={t("pages.siteNew.contentDirPlaceholder")} style={inputStyle} />
                     </div>
                   </div>
                 </>
@@ -529,7 +531,7 @@ export default function NewSitePage() {
               >
                 <label style={{ ...labelStyle, marginBottom: "0.5rem" }}>
                   <FolderOpen style={{ width: 12, height: 12, display: "inline", verticalAlign: "middle", marginRight: "0.3rem" }} />
-                  Import from folder
+                  {t("pages.siteNew.importFromFolder")}
                 </label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
                   <input
@@ -538,7 +540,7 @@ export default function NewSitePage() {
                     value={importPath}
                     onChange={(e) => setImportPath(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleImport(); }}
-                    placeholder="Drag folder here or paste path"
+                    placeholder={t("pages.siteNew.importPathPlaceholder")}
                     style={{ ...inputStyle, flex: 1, fontFamily: "monospace", fontSize: "0.8rem" }}
                   />
                   {isMac && (
@@ -553,7 +555,7 @@ export default function NewSitePage() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      Browse
+                      {t("pages.siteNew.browse")}
                     </button>
                   )}
                   <button
@@ -570,16 +572,16 @@ export default function NewSitePage() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {importing ? "Scanning..." : "Import"}
+                    {importing ? t("pages.siteNew.scanning") : t("pages.siteNew.import")}
                   </button>
                 </div>
                 <p style={{ margin: "0.35rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-                  {dragging ? "Drop folder here" : "Drag a folder from Finder, browse, or paste a path"}
+                  {dragging ? t("pages.siteNew.dropHere") : t("pages.siteNew.dragHint")}
                 </p>
                 {importResult && (
                   <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
-                    Found {importResult.collections.length} collection{importResult.collections.length !== 1 ? "s" : ""}: {importResult.collections.join(", ")}
-                    {importResult.hasDist && " · dist/ ready"}
+                    {t(importResult.collections.length === 1 ? "pages.siteNew.foundOne" : "pages.siteNew.foundOther", { count: importResult.collections.length, list: importResult.collections.join(", ") })}
+                    {importResult.hasDist && t("pages.siteNew.distReady")}
                   </div>
                 )}
               </div>
@@ -587,22 +589,22 @@ export default function NewSitePage() {
               {/* Divider */}
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                 <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
-                <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>or fill manually</span>
+                <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("pages.siteNew.orFillManually")}</span>
                 <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
               </div>
 
               <div>
-                <label style={labelStyle}>Site Name</label>
-                <input data-testid="new-site-name-fs" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
-                {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>ID: {siteId()}</p>}
+                <label style={labelStyle}>{t("pages.siteNew.siteName")}</label>
+                <input data-testid="new-site-name-fs" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("pages.siteNew.siteNamePlaceholder")} style={inputStyle} />
+                {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{t("pages.siteNew.idLabel", { id: siteId() })}</p>}
               </div>
               <div>
-                <label style={labelStyle}>Config Path (absolute)</label>
-                <input data-testid="new-site-config-path" type="text" value={configPath} onChange={(e) => setConfigPath(e.target.value)} placeholder="/Users/.../cms.config.ts" style={{ ...inputStyle, fontFamily: "monospace", fontSize: "0.8rem" }} />
+                <label style={labelStyle}>{t("pages.siteNew.configPath")}</label>
+                <input data-testid="new-site-config-path" type="text" value={configPath} onChange={(e) => setConfigPath(e.target.value)} placeholder={t("pages.siteNew.configPathPlaceholder")} style={{ ...inputStyle, fontFamily: "monospace", fontSize: "0.8rem" }} />
               </div>
               <div>
-                <label style={labelStyle}>Content Directory (absolute, optional)</label>
-                <input data-testid="new-site-fs-content-dir" type="text" value={fsContentDir} onChange={(e) => setFsContentDir(e.target.value)} placeholder="/Users/.../content" style={{ ...inputStyle, fontFamily: "monospace", fontSize: "0.8rem" }} />
+                <label style={labelStyle}>{t("pages.siteNew.fsContentDir")}</label>
+                <input data-testid="new-site-fs-content-dir" type="text" value={fsContentDir} onChange={(e) => setFsContentDir(e.target.value)} placeholder={t("pages.siteNew.fsContentDirPlaceholder")} style={{ ...inputStyle, fontFamily: "monospace", fontSize: "0.8rem" }} />
               </div>
             </>
           )}
@@ -618,8 +620,8 @@ export default function NewSitePage() {
           {/* Preview URL — only for filesystem/github */}
           {adapter !== "migrate" && (
             <div>
-              <label style={labelStyle}>Preview URL (optional)</label>
-              <input data-testid="new-site-preview-url" type="url" value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)} placeholder="https://my-site.example.com" style={inputStyle} />
+              <label style={labelStyle}>{t("pages.siteNew.previewUrl")}</label>
+              <input data-testid="new-site-preview-url" type="url" value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)} placeholder={t("pages.siteNew.previewUrlPlaceholder")} style={inputStyle} />
             </div>
           )}
 
@@ -645,10 +647,10 @@ export default function NewSitePage() {
                 opacity: saving || (adapter === "github" && !ghConnected) ? 0.5 : 1,
               }}
             >
-              {saving ? "Creating..." : "Create site"}
+              {saving ? t("pages.siteNew.creating") : t("pages.siteNew.createSite")}
             </button>
             <button data-testid="new-site-cancel-button" type="button" onClick={() => router.push("/admin/sites")} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.85rem", cursor: "pointer" }}>
-              Cancel
+              {t("pages.siteNew.cancel")}
             </button>
           </div>
         )}

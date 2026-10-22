@@ -7,8 +7,9 @@
  */
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { Fragment, useEffect, useState, useCallback, useRef, type ReactNode } from "react";
 import { Folder, FileText, Image as ImageIcon, ChevronRight, ChevronDown, ExternalLink, RefreshCw } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface Entry {
   name: string;
@@ -40,7 +41,15 @@ interface Props {
 const HTML_EXT = /\.(html?|svg)$/i;
 const IMG_EXT = /\.(png|jpe?g|gif|webp|avif|ico)$/i;
 
+/** Renders a translated sentence whose {placeholders} are React nodes (code, strong). */
+function withNodes(text: string, nodes: Record<string, ReactNode>): ReactNode {
+  return text.split(/\{(\w+)\}/).map((part, i) =>
+    i % 2 === 1 && part in nodes ? <Fragment key={i}>{nodes[part]}</Fragment> : part,
+  );
+}
+
 export function DeployOutputBrowser({ siteId }: Props) {
+  const t = useT();
   const [stats, setStats] = useState<Stats | null>(null);
   const [rootExists, setRootExists] = useState<boolean | null>(null);
   const [siteHint, setSiteHint] = useState<SiteHint>("unknown");
@@ -118,28 +127,21 @@ export function DeployOutputBrowser({ siteId }: Props) {
   }, [fetchDir]);
 
   if (loading && !stats) {
-    return <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem" }}>Loading deploy output…</div>;
+    return <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem" }}>{t("misc.deployOutput.loading")}</div>;
   }
   if (error) {
-    return <div style={{ color: "var(--destructive)", fontSize: "0.85rem" }}>Browser unavailable: {error}</div>;
+    return <div style={{ color: "var(--destructive)", fontSize: "0.85rem" }}>{t("misc.deployOutput.unavailable", { error })}</div>;
   }
   if (!rootExists) {
     if (siteHint === "icd-only") {
       return (
         <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem", padding: "0.85rem 1rem", border: "1px dashed var(--border)", borderRadius: "6px", lineHeight: 1.55 }}>
           <div style={{ fontWeight: 600, color: "var(--foreground)", marginBottom: "0.4rem" }}>
-            This site is not built by the CMS.
+            {t("misc.deployOutput.icd.title")}
           </div>
-          The site lives as a separate web application that builds and deploys independently
-          (typically Next.js / Bun on Fly.io, shipped via the site repo&apos;s own CI/CD).
-          Content edits you make here propagate live via{" "}
-          <strong>Instant Content Deployment</strong> — a signed webhook that writes the new
-          document to the live site&apos;s volume and revalidates the affected routes
-          (typically &lt;100&nbsp;ms server-side).
+          {withNodes(t("misc.deployOutput.icd.body"), { icd: <strong>{t("misc.deployOutput.icd.name")}</strong> })}
           <div style={{ marginTop: "0.6rem", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
-            There is no <code>deploy/</code> directory because the CMS does not generate the
-            site&apos;s HTML or assets — only its content. Code rebuilds happen via{" "}
-            <code>git push</code> to the site&apos;s own repository.
+            {withNodes(t("misc.deployOutput.icd.noDir"), { dir: <code>deploy/</code>, gitPush: <code>git push</code> })}
           </div>
         </div>
       );
@@ -148,18 +150,22 @@ export function DeployOutputBrowser({ siteId }: Props) {
       return (
         <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem", padding: "0.85rem 1rem", border: "1px dashed var(--border)", borderRadius: "6px", lineHeight: 1.55 }}>
           <div style={{ fontWeight: 600, color: "var(--foreground)", marginBottom: "0.4rem" }}>
-            Builds for this site happen in an ephemeral Fly Machine.
+            {t("misc.deployOutput.ssr.title")}
           </div>
-          The CMS doesn&apos;t produce a local <code>deploy/</code> directory for{" "}
-          <code>fly-ephemeral</code> sites — the build runs in a short-lived VM that pushes a
-          Docker image to GHCR and deploys it directly to the target Fly app. See the{" "}
-          <strong>SSR builds</strong> panel below for the recent build history and live logs.
+          {withNodes(t("misc.deployOutput.ssr.body"), {
+            dir: <code>deploy/</code>,
+            kind: <code>fly-ephemeral</code>,
+            panel: <strong>{t("misc.deployOutput.ssr.panel")}</strong>,
+          })}
         </div>
       );
     }
     return (
       <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem", padding: "0.75rem", border: "1px dashed var(--border)", borderRadius: "6px" }}>
-        No <code>deploy/</code> directory yet. Click <strong>Deploy now</strong> to build the site.
+        {withNodes(t("misc.deployOutput.empty"), {
+          dir: <code>deploy/</code>,
+          deployNow: <strong>{t("misc.deployOutput.deployNow")}</strong>,
+        })}
       </div>
     );
   }
@@ -174,14 +180,14 @@ export function DeployOutputBrowser({ siteId }: Props) {
             fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0.25rem 0",
           }}>
             <span>
-              {stats.totalFiles} files · {stats.htmlPages} HTML · {fmtBytes(stats.totalBytes)}
-              {stats.lastModified && ` · ${fmtRel(stats.lastModified)}`}
+              {t("misc.deployOutput.stats", { files: stats.totalFiles, html: stats.htmlPages, size: fmtBytes(stats.totalBytes) })}
+              {stats.lastModified && ` · ${fmtRel(stats.lastModified, t)}`}
             </span>
-            <button data-testid="deploy-browser-refresh-button" onClick={refresh} title="Refresh"
+            <button data-testid="deploy-browser-refresh-button" onClick={refresh} title={t("misc.deployOutput.refresh")}
               style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.15rem 0.4rem",
                 background: "transparent", border: "1px solid var(--border)", borderRadius: "4px",
                 color: "var(--muted-foreground)", fontSize: "0.65rem", cursor: "pointer" }}>
-              <RefreshCw size={10} /> Refresh
+              <RefreshCw size={10} /> {t("misc.deployOutput.refresh")}
             </button>
           </div>
         )}
@@ -204,7 +210,7 @@ export function DeployOutputBrowser({ siteId }: Props) {
       <div>
         {!selected ? (
           <div style={{ color: "var(--muted-foreground)", fontSize: "0.8rem", padding: "1rem", border: "1px dashed var(--border)", borderRadius: "6px", textAlign: "center" }}>
-            Select a file to preview
+            {t("misc.deployOutput.selectFile")}
           </div>
         ) : (
           <FilePreview key={selected.path} entry={selected} siteId={siteId} iframeRef={previewRef} />
@@ -222,9 +228,10 @@ function TreeNode({ relPath, tree, depth, onToggle, onSelect, selected }: {
   onSelect: (entry: Entry) => void;
   selected: Entry | null;
 }) {
+  const t = useT();
   const node = tree[relPath];
   if (!node) return null;
-  if (node.loading) return <div style={{ paddingLeft: depth * 14, fontSize: "0.7rem", color: "var(--muted-foreground)" }}>Loading…</div>;
+  if (node.loading) return <div style={{ paddingLeft: depth * 14, fontSize: "0.7rem", color: "var(--muted-foreground)" }}>{t("misc.deployOutput.loadingShort")}</div>;
   if (node.error) return <div style={{ paddingLeft: depth * 14, fontSize: "0.7rem", color: "var(--destructive)" }}>{node.error}</div>;
   return (
     <>
@@ -274,6 +281,7 @@ function FilePreview({ entry, siteId, iframeRef }: {
   siteId: string;
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
 }) {
+  const t = useT();
   const fileUrl = `/api/admin/deploy/output/file?site=${encodeURIComponent(siteId)}&path=${encodeURIComponent(entry.path)}`;
   const isHtml = HTML_EXT.test(entry.name) && !entry.name.endsWith(".svg");
   const isImg = IMG_EXT.test(entry.name);
@@ -288,8 +296,8 @@ function FilePreview({ entry, siteId, iframeRef }: {
       try {
         const r = await fetch(fileUrl);
         if (!r.ok) throw new Error(`${r.status}`);
-        const t = await r.text();
-        if (!cancelled) setText(t);
+        const body = await r.text();
+        if (!cancelled) setText(body);
       } catch (e) {
         if (!cancelled) setTextErr(e instanceof Error ? e.message : "failed");
       }
@@ -303,7 +311,7 @@ function FilePreview({ entry, siteId, iframeRef }: {
         <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem" }}>deploy/{entry.path}</code>
         <a data-testid="deploy-browser-open-raw-link" href={fileUrl} target="_blank" rel="noopener noreferrer"
           style={{ display: "inline-flex", alignItems: "center", gap: "0.2rem", color: "var(--primary)", textDecoration: "none" }}>
-          <ExternalLink size={10} /> Open raw
+          <ExternalLink size={10} /> {t("misc.deployOutput.openRaw")}
         </a>
       </div>
       <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", minHeight: "300px", background: "var(--background)" }}>
@@ -316,7 +324,7 @@ function FilePreview({ entry, siteId, iframeRef }: {
         )}
         {!isHtml && !isImg && (
           <pre style={{ margin: 0, padding: "0.75rem", fontSize: "0.7rem", fontFamily: "var(--font-mono)", overflow: "auto", maxHeight: "480px", whiteSpace: "pre", color: "var(--foreground)" }}>
-            {textErr ? `Error: ${textErr}` : text ?? "Loading…"}
+            {textErr ? t("misc.deployOutput.error", { error: textErr }) : text ?? t("misc.deployOutput.loadingShort")}
           </pre>
         )}
       </div>
@@ -329,10 +337,10 @@ function fmtBytes(n: number): string {
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} kB`;
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
-function fmtRel(iso: string): string {
+function fmtRel(iso: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
   const elapsed = Date.now() - new Date(iso).getTime();
-  if (elapsed < 60_000) return "just now";
-  if (elapsed < 3_600_000) return `${Math.floor(elapsed / 60_000)}m ago`;
-  if (elapsed < 86_400_000) return `${Math.floor(elapsed / 3_600_000)}h ago`;
-  return `${Math.floor(elapsed / 86_400_000)}d ago`;
+  if (elapsed < 60_000) return t("misc.deployOutput.rel.justNow");
+  if (elapsed < 3_600_000) return t("misc.deployOutput.rel.minutes", { n: Math.floor(elapsed / 60_000) });
+  if (elapsed < 86_400_000) return t("misc.deployOutput.rel.hours", { n: Math.floor(elapsed / 3_600_000) });
+  return t("misc.deployOutput.rel.days", { n: Math.floor(elapsed / 86_400_000) });
 }

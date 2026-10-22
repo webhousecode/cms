@@ -10,6 +10,7 @@
 
 import { useEffect, useState } from "react";
 import { startRegistration } from "@simplewebauthn/browser";
+import { useT } from "@/lib/i18n-context";
 
 interface Passkey {
   id: string;
@@ -20,13 +21,14 @@ interface Passkey {
   backedUp: boolean;
 }
 
-function formatDate(iso?: string): string {
-  if (!iso) return "never";
+function formatDate(iso: string | undefined, never: string): string {
+  if (!iso) return never;
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
 export function PasskeysPanel() {
+  const t = useT();
   const [passkeys, setPasskeys] = useState<Passkey[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -41,7 +43,7 @@ export function PasskeysPanel() {
       const data = (await res.json()) as { passkeys?: Passkey[] };
       setPasskeys(data.passkeys ?? []);
     } catch {
-      setError("Could not load passkeys");
+      setError(t("settings.passkeys.loadError"));
     } finally {
       setLoading(false);
     }
@@ -59,7 +61,7 @@ export function PasskeysPanel() {
         credentials: "same-origin",
       });
       const options = await optsRes.json();
-      if (!optsRes.ok) throw new Error((options as { error?: string }).error ?? "Failed to start registration");
+      if (!optsRes.ok) throw new Error((options as { error?: string }).error ?? t("settings.passkeys.startFailed"));
 
       const attestation = await startRegistration({ optionsJSON: options });
 
@@ -79,12 +81,12 @@ export function PasskeysPanel() {
         body: JSON.stringify({ response: attestation, name: defaultName }),
       });
       const data = (await verifyRes.json()) as { error?: string };
-      if (!verifyRes.ok) throw new Error(data.error ?? "Registration failed");
-      setStatus("✓ Passkey added");
+      if (!verifyRes.ok) throw new Error(data.error ?? t("settings.passkeys.registrationFailed"));
+      setStatus(t("settings.passkeys.added"));
       setTimeout(() => setStatus(""), 2000);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration cancelled");
+      setError(err instanceof Error ? err.message : t("settings.passkeys.registrationCancelled"));
     } finally {
       setAdding(false);
     }
@@ -99,12 +101,12 @@ export function PasskeysPanel() {
       });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
-        throw new Error(data.error ?? "Remove failed");
+        throw new Error(data.error ?? t("settings.passkeys.removeFailed"));
       }
       setConfirmId(null);
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Remove failed");
+      setError(err instanceof Error ? err.message : t("settings.passkeys.removeFailed"));
     }
   }
 
@@ -116,21 +118,21 @@ export function PasskeysPanel() {
             className="text-muted-foreground dark:text-white"
             style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}
           >
-            Passkeys
+            {t("settings.passkeys.heading")}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Sign in with FaceID, TouchID, Windows Hello, or a hardware security key — no password needed.
+            {t("settings.passkeys.description")}
           </p>
         </div>
         <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
-          {passkeys.length} REGISTERED
+          {t("settings.passkeys.registeredCount", { count: passkeys.length })}
         </span>
       </div>
 
       {loading ? (
-        <p className="text-xs text-muted-foreground">Loading…</p>
+        <p className="text-xs text-muted-foreground">{t("settings.common.loading")}</p>
       ) : passkeys.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No passkeys yet. Add one to enable passwordless login.</p>
+        <p className="text-xs text-muted-foreground">{t("settings.passkeys.empty")}</p>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.4rem" }}>
           {passkeys.map((p) => (
@@ -147,27 +149,27 @@ export function PasskeysPanel() {
                 <div>
                   <div style={{ fontWeight: 500 }}>{p.name}</div>
                   <div style={{ color: "var(--muted-foreground)", fontSize: "0.68rem" }}>
-                    Added {formatDate(p.createdAt)} · Last used {formatDate(p.lastUsedAt)}
+                    {t("settings.passkeys.addedLastUsed", { added: formatDate(p.createdAt, t("settings.passkeys.never")), lastUsed: formatDate(p.lastUsedAt, t("settings.passkeys.never")) })}
                   </div>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                 {confirmId === p.id ? (
                   <>
-                    <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                    <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("settings.common.removeConfirm")}</span>
                     <button
                       data-testid={`passkey-remove-yes-${p.id}`}
                       onClick={() => handleRemove(p.id)}
                       style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
                     >
-                      Yes
+                      {t("settings.common.yes")}
                     </button>
                     <button
                       data-testid={`passkey-remove-no-${p.id}`}
                       onClick={() => setConfirmId(null)}
                       style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
                     >
-                      No
+                      {t("settings.common.no")}
                     </button>
                   </>
                 ) : (
@@ -193,7 +195,7 @@ export function PasskeysPanel() {
         className="text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors cursor-pointer"
         style={{ cursor: adding ? "wait" : "pointer" }}
       >
-        {adding ? "Waiting for device…" : "+ Add passkey"}
+        {adding ? t("settings.passkeys.waiting") : t("settings.passkeys.add")}
       </button>
 
       {status && <p className="text-xs" style={{ color: "hsl(140 60% 45%)" }}>{status}</p>}

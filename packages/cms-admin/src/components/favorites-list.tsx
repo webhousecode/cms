@@ -7,6 +7,7 @@ import { useFavorites } from "@/lib/hooks/use-favorites";
 import type { Favorite } from "@/lib/user-state";
 import { PreviewThumb } from "@/components/preview-thumb";
 import { useHeaderData } from "@/lib/header-data-context";
+import { useT } from "@/lib/i18n-context";
 
 type ViewMode = "list" | "grid";
 type SortKey = "label" | "type" | "addedAt";
@@ -21,14 +22,15 @@ const TYPE_ICONS: Record<string, React.ElementType> = {
 };
 
 const TYPE_LABELS: Record<string, string> = {
-  document: "Document",
-  collection: "Collection",
-  page: "Page",
-  tool: "Tool",
-  interactive: "Interactive",
+  document: "shell.favoritesList.typeDocument",
+  collection: "shell.favoritesList.typeCollection",
+  page: "shell.favoritesList.typePage",
+  tool: "shell.favoritesList.typeTool",
+  interactive: "shell.favoritesList.typeInteractive",
 };
 
 export function FavoritesList() {
+  const t = useT();
   const { favorites, remove } = useFavorites();
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("addedAt");
@@ -106,8 +108,8 @@ export function FavoritesList() {
     return (
       <div style={{ textAlign: "center", padding: "5rem 0", color: "var(--muted-foreground)" }}>
         <Heart style={{ width: 48, height: 48, margin: "0 auto 1rem", opacity: 0.3 }} />
-        <p style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>No favorites yet</p>
-        <p style={{ fontSize: "0.875rem" }}>Click the heart icon on any page or document to add it here.</p>
+        <p style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>{t("shell.favoritesList.empty")}</p>
+        <p style={{ fontSize: "0.875rem" }}>{t("shell.favoritesList.emptyHint")}</p>
       </div>
     );
   }
@@ -124,7 +126,7 @@ export function FavoritesList() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search favorites…"
+            placeholder={t("shell.favoritesList.search")}
             style={{
               width: "100%", padding: "0.45rem 0.625rem 0.45rem 2rem", borderRadius: "7px",
               border: "1px solid var(--border)", background: "var(--background)",
@@ -147,23 +149,23 @@ export function FavoritesList() {
               cursor: "pointer",
             }}
           >
-            All ({favorites.length})
+            {t("shell.favoritesList.allCount", { count: favorites.length })}
           </button>
-          {types.map((t) => (
+          {types.map((ty) => (
             <button
-              data-testid={`favorites-filter-${t}`}
-              key={t}
+              data-testid={`favorites-filter-${ty}`}
+              key={ty}
               type="button"
-              onClick={() => setTypeFilter(t)}
+              onClick={() => setTypeFilter(ty)}
               style={{
                 padding: "0.35rem 0.65rem", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 500,
                 border: "1px solid var(--border)",
-                background: typeFilter === t ? "var(--primary)" : "transparent",
-                color: typeFilter === t ? "var(--primary-foreground)" : "var(--muted-foreground)",
+                background: typeFilter === ty ? "var(--primary)" : "transparent",
+                color: typeFilter === ty ? "var(--primary-foreground)" : "var(--muted-foreground)",
                 cursor: "pointer", textTransform: "capitalize",
               }}
             >
-              {TYPE_LABELS[t] ?? t} ({typeCounts[t]})
+              {TYPE_LABELS[ty] ? t(TYPE_LABELS[ty]) : ty} ({typeCounts[ty]})
             </button>
           ))}
         </div>
@@ -181,7 +183,7 @@ export function FavoritesList() {
                 border: "none", cursor: "pointer", color: view === v ? "var(--foreground)" : "var(--muted-foreground)",
                 display: "flex", alignItems: "center",
               }}
-              title={v === "grid" ? "Grid view" : "List view"}
+              title={v === "grid" ? t("shell.favoritesList.gridView") : t("shell.favoritesList.listView")}
             >
               {v === "grid"
                 ? <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} />
@@ -193,7 +195,7 @@ export function FavoritesList() {
 
       {filtered.length === 0 && (
         <div style={{ textAlign: "center", padding: "3rem 0", color: "var(--muted-foreground)", fontSize: "0.85rem" }}>
-          No favorites match your search.
+          {t("shell.favoritesList.noMatch")}
         </div>
       )}
 
@@ -203,9 +205,9 @@ export function FavoritesList() {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
             <thead>
               <tr>
-                <SortTh label="Title" sk="label" />
-                <SortTh label="Type" sk="type" width="8rem" />
-                <SortTh label="Added" sk="addedAt" width="10rem" />
+                <SortTh label={t("shell.favoritesList.colTitle")} sk="label" />
+                <SortTh label={t("shell.favoritesList.colType")} sk="type" width="8rem" />
+                <SortTh label={t("shell.favoritesList.colAdded")} sk="addedAt" width="10rem" />
                 <th style={{ ...thStyle, width: "2.5rem" }} />
               </tr>
             </thead>
@@ -239,7 +241,7 @@ export function FavoritesList() {
                         background: "var(--muted)", color: "var(--muted-foreground)",
                         textTransform: "capitalize", fontWeight: 500,
                       }}>
-                        {TYPE_LABELS[fav.type] ?? fav.type}
+                        {TYPE_LABELS[fav.type] ? t(TYPE_LABELS[fav.type]) : fav.type}
                       </span>
                     </td>
                     <td style={{ padding: "0.625rem 0.75rem", whiteSpace: "nowrap", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
@@ -250,7 +252,7 @@ export function FavoritesList() {
                         data-testid={`favorites-remove-${fav.id}`}
                         type="button"
                         onClick={() => remove(fav.path)}
-                        title="Remove from favorites"
+                        title={t("shell.favoritesList.remove")}
                         style={{
                           background: "none", border: "none", padding: "0.3rem",
                           color: "var(--muted-foreground)", cursor: "pointer",
@@ -321,7 +323,7 @@ export function FavoritesList() {
                         background: "var(--muted)", color: "var(--muted-foreground)",
                         textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.03em",
                       }}>
-                        {TYPE_LABELS[fav.type] ?? fav.type}
+                        {TYPE_LABELS[fav.type] ? t(TYPE_LABELS[fav.type]) : fav.type}
                       </span>
                     </div>
                     <p style={{
@@ -339,7 +341,7 @@ export function FavoritesList() {
                       {fav.path}
                     </p>
                     <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: "0.5rem 0 0" }}>
-                      Added {new Date(fav.addedAt).toLocaleDateString("da-DK", { day: "2-digit", month: "short" })}
+                      {t("shell.favoritesList.addedOn", { date: new Date(fav.addedAt).toLocaleDateString("da-DK", { day: "2-digit", month: "short" }) })}
                     </p>
                   </div>
                 </Link>
@@ -347,7 +349,7 @@ export function FavoritesList() {
                   data-testid={`favorites-remove-grid-${fav.id}`}
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); remove(fav.path); }}
-                  title="Remove from favorites"
+                  title={t("shell.favoritesList.remove")}
                   style={{
                     position: "absolute", top: "0.5rem", right: "0.5rem",
                     background: "var(--card)", border: "1px solid var(--border)",

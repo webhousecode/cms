@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LayoutGrid, List, Bot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CloneAgentButton } from "@/components/clone-agent-button";
+import { useT } from "@/lib/i18n-context";
 
 interface Agent {
   id: string;
@@ -17,17 +18,18 @@ interface Agent {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  copywriter: "Content Writer",
-  seo: "SEO",
-  translator: "Translator",
-  refresher: "Content Refresher",
-  custom: "Custom",
+  copywriter: "agents.agentsList.roleCopywriter",
+  seo: "agents.agentsList.roleSeo",
+  translator: "agents.agentsList.roleTranslator",
+  refresher: "agents.agentsList.roleRefresher",
+  custom: "agents.agentsList.roleCustom",
 };
 
 type View = "grid" | "list";
 type Filter = "all" | "active" | "inactive";
 
 export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: boolean }) {
+  const t = useT();
   const [view, setView] = useState<View>("grid");
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -60,8 +62,8 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
     return (
       <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
         <Bot className="w-12 h-12 mx-auto mb-4 opacity-20" />
-        <p className="text-lg font-medium mb-2">No agents yet</p>
-        <p className="text-sm mb-6">Create your first AI agent to generate content automatically.</p>
+        <p className="text-lg font-medium mb-2">{t("agents.agentsList.emptyTitle")}</p>
+        <p className="text-sm mb-6">{t("agents.agentsList.emptyBody")}</p>
       </div>
     );
   }
@@ -73,9 +75,9 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
         {/* Status filter */}
         <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
           {([
-            { value: "all" as Filter, label: `All (${agents.length})` },
-            { value: "active" as Filter, label: `Active (${activeCount})` },
-            { value: "inactive" as Filter, label: `Inactive (${inactiveCount})` },
+            { value: "all" as Filter, label: t("agents.agentsList.filterAll", { count: agents.length }) },
+            { value: "active" as Filter, label: t("agents.agentsList.filterActive", { count: activeCount }) },
+            { value: "inactive" as Filter, label: t("agents.agentsList.filterInactive", { count: inactiveCount }) },
           ]).map((f) => (
             <button
               data-testid={`agent-filter-${f.value}`}
@@ -96,7 +98,7 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
             type="button"
             onClick={() => toggleView("grid")}
             className={`p-1.5 rounded-md transition-colors ${view === "grid" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            title="Grid view"
+            title={t("agents.agentsList.gridView")}
           >
             <LayoutGrid className="w-3.5 h-3.5" />
           </button>
@@ -105,7 +107,7 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
             type="button"
             onClick={() => toggleView("list")}
             className={`p-1.5 rounded-md transition-colors ${view === "list" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            title="List view"
+            title={t("agents.agentsList.listView")}
           >
             <List className="w-3.5 h-3.5" />
           </button>
@@ -130,17 +132,16 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
                     <span className={`w-2 h-2 rounded-full ${agent.active ? "bg-green-500" : "bg-gray-400"}`} />
                     <span className="font-semibold text-foreground group-hover:text-primary transition-colors">{agent.name}</span>
                   </div>
-                  <Badge variant="secondary">{ROLE_LABELS[agent.role] ?? agent.role}</Badge>
+                  <Badge variant="secondary">{ROLE_LABELS[agent.role] ? t(ROLE_LABELS[agent.role]) : agent.role}</Badge>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
                   <p>
-                    {agent.stats.totalGenerated} generated
-                    {agent.stats.totalGenerated > 0 && <> &middot; {approvalRate}% approval</>}
+                    {t("agents.agentsList.generated", { count: agent.stats.totalGenerated })}
+                    {agent.stats.totalGenerated > 0 && <>{t("agents.agentsList.approvalSuffix", { rate: approvalRate })}</>}
                   </p>
                   {agent.schedule.enabled && (
                     <p>
-                      {agent.schedule.frequency === "daily" ? "Daily" : agent.schedule.frequency === "weekly" ? "Weekly" : "Manual"}{" "}
-                      at {agent.schedule.time}
+                      {t("agents.agentsList.scheduleAt", { frequency: agent.schedule.frequency === "daily" ? t("agents.agentsList.daily") : agent.schedule.frequency === "weekly" ? t("agents.agentsList.weekly") : t("agents.agentsList.manual"), time: agent.schedule.time })}
                     </p>
                   )}
                 </div>
@@ -170,14 +171,14 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
               >
                 <span className={`w-2 h-2 rounded-full shrink-0 ${agent.active ? "bg-green-500" : "bg-gray-400"}`} />
                 <span className="font-medium text-foreground group-hover:text-primary transition-colors min-w-[160px]">{agent.name}</span>
-                <Badge variant="secondary" className="shrink-0">{ROLE_LABELS[agent.role] ?? agent.role}</Badge>
+                <Badge variant="secondary" className="shrink-0">{ROLE_LABELS[agent.role] ? t(ROLE_LABELS[agent.role]) : agent.role}</Badge>
                 <span className="text-xs text-muted-foreground ml-auto whitespace-nowrap">
-                  {agent.stats.totalGenerated} generated
-                  {agent.stats.totalGenerated > 0 && <> &middot; {approvalRate}%</>}
+                  {t("agents.agentsList.generated", { count: agent.stats.totalGenerated })}
+                  {agent.stats.totalGenerated > 0 && <>{" \u00b7 "}{approvalRate}%</>}
                 </span>
                 {agent.schedule.enabled && (
                   <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {agent.schedule.frequency === "daily" ? "Daily" : agent.schedule.frequency === "weekly" ? "Weekly" : "Manual"}{" "}
+                    {agent.schedule.frequency === "daily" ? t("agents.agentsList.daily") : agent.schedule.frequency === "weekly" ? t("agents.agentsList.weekly") : t("agents.agentsList.manual")}{" "}
                     {agent.schedule.time}
                   </span>
                 )}

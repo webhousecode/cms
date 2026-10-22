@@ -13,6 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
+import { useT } from "@/lib/i18n-context";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,15 +74,15 @@ function formatCost(usd: number): string {
   return `$${usd.toFixed(2)}`;
 }
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("tools.backup.justNow");
+  if (mins < 60) return t("tools.backup.minsAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t("tools.backup.hoursAgo", { n: hours });
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return t("tools.backup.daysAgo", { n: days });
 }
 
 function getCurrentMonthRange(): { dateFrom: string; dateTo: string } {
@@ -94,6 +95,7 @@ function getCurrentMonthRange(): { dateFrom: string; dateTo: string } {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function PerformancePage() {
+  const t = useT();
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [agents, setAgents] = useState<AgentStats[]>([]);
   const [costs, setCosts] = useState<CostSummary | null>(null);
@@ -135,19 +137,19 @@ export default function PerformancePage() {
     <ActionBar helpArticleId="performance-intro"
       actions={
         <ActionButton variant="primary" onClick={fetchAll} disabled={loading} icon={<RefreshCw style={{ width: 14, height: 14 }} className={loading ? "animate-spin" : ""} />}>
-          Refresh
+          {t("tools.performance.refresh")}
         </ActionButton>
       }
     >
-      <ActionBarBreadcrumb items={["Tools", "AI Analytics"]} /></ActionBar>
+      <ActionBarBreadcrumb items={[t("tools.common.tools"), t("tools.performance.title")]} /></ActionBar>
     <div className="p-8 max-w-6xl">
 
       {!hasData && !loading ? (
         <div className="rounded-xl border border-border p-8 text-center text-muted-foreground">
           <BarChart2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
-          <p>No analytics data yet.</p>
+          <p>{t("tools.performance.noData")}</p>
           <p className="text-sm mt-2">
-            Run an agent to start collecting performance metrics.
+            {t("tools.performance.noDataHint")}
           </p>
         </div>
       ) : (
@@ -156,26 +158,26 @@ export default function PerformancePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               icon={<Activity className="w-4 h-4" />}
-              label="Runs this month"
+              label={t("tools.performance.runsThisMonth")}
               value={String(costs?.runCount ?? 0)}
             />
             <StatCard
               icon={<DollarSign className="w-4 h-4" />}
-              label="Cost this month"
+              label={t("tools.performance.costThisMonth")}
               value={formatCost(costs?.totalCostUsd ?? 0)}
             />
             <StatCard
               icon={<Zap className="w-4 h-4" />}
-              label="Avg cost / run"
+              label={t("tools.performance.avgCostPerRun")}
               value={formatCost(costs?.avgCostPerRun ?? 0)}
             />
             <StatCard
               icon={<Users className="w-4 h-4" />}
-              label="AI acceptance"
+              label={t("tools.performance.aiAcceptance")}
               value={`${(ratio?.aiAcceptanceRate ?? 100).toFixed(0)}%`}
               subtitle={
                 ratio && ratio.totalEdits > 0
-                  ? `${ratio.aiEdits} AI / ${ratio.humanEdits} human edits`
+                  ? t("tools.performance.aiHumanEdits", { ai: ratio.aiEdits, human: ratio.humanEdits })
                   : undefined
               }
             />
@@ -185,26 +187,26 @@ export default function PerformancePage() {
           {ratio && ratio.totalEdits > 0 && (
             <div className="rounded-xl border border-border p-5">
               <h2 className="font-semibold text-foreground mb-4">
-                AI vs Human Content
+                {t("tools.performance.aiVsHuman")}
               </h2>
 
               {/* Four-up number grid so curators see the actual counts,
                   not just the bar. */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
                 <div className="rounded-lg border border-border p-3">
-                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">Total edits</p>
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">{t("tools.performance.totalEdits")}</p>
                   <p className="text-xl font-semibold">{ratio.totalEdits}</p>
                 </div>
                 <div className="rounded-lg border border-border p-3">
-                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">AI fields</p>
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">{t("tools.performance.aiFields")}</p>
                   <p className="text-xl font-semibold text-primary">{ratio.aiEdits}</p>
                 </div>
                 <div className="rounded-lg border border-border p-3">
-                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">Human edits</p>
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">{t("tools.performance.humanEdits")}</p>
                   <p className="text-xl font-semibold">{ratio.humanEdits}</p>
                 </div>
                 <div className="rounded-lg border border-border p-3">
-                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">AI accepted as-is</p>
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">{t("tools.performance.aiAccepted")}</p>
                   <p className={`text-xl font-semibold ${ratio.aiAcceptanceRate >= 80 ? "text-green-500" : ratio.aiAcceptanceRate >= 50 ? "text-status-warning" : "text-red-500"}`}>
                     {ratio.aiAcceptanceRate.toFixed(0)}%
                   </p>
@@ -215,10 +217,10 @@ export default function PerformancePage() {
                 <div>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-muted-foreground">
-                      AI generated ({ratio.aiEdits})
+                      {t("tools.performance.aiGenerated", { n: ratio.aiEdits })}
                     </span>
                     <span className="text-muted-foreground">
-                      Human ({ratio.humanEdits})
+                      {t("tools.performance.human", { n: ratio.humanEdits })}
                     </span>
                   </div>
                   <div className="h-3 rounded-full bg-secondary overflow-hidden flex">
@@ -243,8 +245,8 @@ export default function PerformancePage() {
                 {ratio.aiEdits > 0 && (
                   <p className="text-xs text-muted-foreground">
                     {ratio.aiModifiedByHuman > 0
-                      ? `${ratio.aiModifiedByHuman} of ${ratio.aiEdits} AI-generated fields were edited by curators (${((ratio.aiModifiedByHuman / ratio.aiEdits) * 100).toFixed(0)}%). Higher acceptance = less curator rework needed.`
-                      : `All ${ratio.aiEdits} AI-generated fields were accepted without curator changes.`}
+                      ? t("tools.performance.modifiedByHuman", { modified: ratio.aiModifiedByHuman, total: ratio.aiEdits, pct: ((ratio.aiModifiedByHuman / ratio.aiEdits) * 100).toFixed(0) })
+                      : t("tools.performance.allAccepted", { n: ratio.aiEdits })}
                   </p>
                 )}
               </div>
@@ -255,32 +257,32 @@ export default function PerformancePage() {
           {agents.length > 0 && (
             <div className="rounded-xl border border-border p-5">
               <h2 className="font-semibold text-foreground mb-4">
-                Agent Leaderboard
+                {t("tools.performance.leaderboard")}
               </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left">
                       <th className="pb-2 font-medium text-muted-foreground">
-                        Agent
+                        {t("tools.performance.thAgent")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        Runs
+                        {t("tools.performance.thRuns")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        Documents
+                        {t("tools.performance.thDocuments")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        Cost
+                        {t("tools.performance.thCost")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        Avg time
+                        {t("tools.performance.thAvgTime")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        Success
+                        {t("tools.performance.thSuccess")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        Last run
+                        {t("tools.performance.thLastRun")}
                       </th>
                     </tr>
                   </thead>
@@ -317,7 +319,7 @@ export default function PerformancePage() {
                           </span>
                         </td>
                         <td className="py-2.5 text-right text-muted-foreground">
-                          {a.lastRunAt ? timeAgo(a.lastRunAt) : "Never"}
+                          {a.lastRunAt ? timeAgo(a.lastRunAt, t) : t("tools.performance.never")}
                         </td>
                       </tr>
                     ))}
@@ -331,7 +333,7 @@ export default function PerformancePage() {
           {costs && Object.keys(costs.costByModel).length > 0 && (
             <div className="rounded-xl border border-border p-5">
               <h2 className="font-semibold text-foreground mb-4">
-                Cost by Model (this month)
+                {t("tools.performance.costByModel")}
               </h2>
               <div className="space-y-2">
                 {Object.entries(costs.costByModel)
@@ -366,7 +368,7 @@ export default function PerformancePage() {
           {costs && Object.keys(costs.costByCollection ?? {}).length > 0 && (
             <div className="rounded-xl border border-border p-5">
               <h2 className="font-semibold text-foreground mb-4">
-                Cost by Collection (this month)
+                {t("tools.performance.costByCollection")}
               </h2>
               <div className="space-y-2">
                 {Object.entries(costs.costByCollection)
@@ -400,11 +402,11 @@ export default function PerformancePage() {
           {/* ── Run history ───────────────────────────────────────── */}
           <div className="rounded-xl border border-border p-5">
             <h2 className="font-semibold text-foreground mb-4">
-              Recent Runs (last 50)
+              {t("tools.performance.recentRuns")}
             </h2>
             {runs.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No runs recorded yet.
+                {t("tools.performance.noRuns")}
               </p>
             ) : (
               <div className="overflow-x-auto">
@@ -412,28 +414,28 @@ export default function PerformancePage() {
                   <thead>
                     <tr className="border-b border-border text-left">
                       <th className="pb-2 font-medium text-muted-foreground">
-                        Status
+                        {t("tools.performance.thStatus")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground">
-                        Agent
+                        {t("tools.performance.thAgent")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground">
-                        Collection
+                        {t("tools.performance.thCollection")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground">
-                        Model
+                        {t("tools.performance.thModel")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        Tokens
+                        {t("tools.performance.thTokens")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        Cost
+                        {t("tools.performance.thCost")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        Duration
+                        {t("tools.performance.thDuration")}
                       </th>
                       <th className="pb-2 font-medium text-muted-foreground text-right">
-                        When
+                        {t("tools.performance.thWhen")}
                       </th>
                     </tr>
                   </thead>
@@ -469,7 +471,7 @@ export default function PerformancePage() {
                           {formatDuration(run.durationMs)}
                         </td>
                         <td className="py-2 text-right text-muted-foreground">
-                          {timeAgo(run.timestamp)}
+                          {timeAgo(run.timestamp, t)}
                         </td>
                       </tr>
                     ))}

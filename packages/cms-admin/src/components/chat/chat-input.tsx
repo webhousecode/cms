@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Send, Plus, ImageIcon, Loader2, X } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 type FileCategory = "image" | "document" | "html" | "data";
 
@@ -67,6 +68,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMessage, children }: ChatInputProps) {
+  const t = useT();
   const [value, setValue] = useState("");
   const [uploads, setUploads] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -116,7 +118,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
     const rejected = fileList.filter((f) => !isAllowedFile(f));
     if (rejected.length > 0) {
       const names = rejected.map((f) => f.name).join(", ");
-      setRejectedMsg(`Unsupported: ${names}`);
+      setRejectedMsg(names);
       setTimeout(() => setRejectedMsg(null), 5000);
     }
     const allowed = fileList.filter((f) => isAllowedFile(f));
@@ -346,7 +348,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder={placeholder ?? "How can I help you today?"}
+          placeholder={placeholder ?? t("chat.chatInput.placeholder")}
           rows={2}
           className="chat-textarea"
           style={{
@@ -371,7 +373,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
             data-testid="chat-upload-button"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || uploading}
-            title="Upload files"
+            title={t("chat.chatInput.uploadFiles")}
             style={{
               width: "32px",
               height: "32px",
@@ -444,7 +446,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
           justifyContent: "center",
         }}
       >
-        <span>Press Enter to send, Shift+Enter for new line{dragOver ? " — Drop to upload" : ""}</span>
+        <span>{dragOver ? t("chat.chatInput.hintDrop") : t("chat.chatInput.hint")}</span>
         {children && <span style={{ marginLeft: "auto" }}>{children}</span>}
       </div>
       {rejectedMsg && (
@@ -460,7 +462,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
             color: "var(--destructive)",
           }}
         >
-          {rejectedMsg}. Supported: images, PDF, Word, CSV, Markdown, TXT, HTML.
+          {t("chat.chatInput.unsupported", { names: rejectedMsg })}
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ScheduledCalendar } from "./calendar-client";
+import { useT } from "@/lib/i18n-context";
 
 interface ScheduledEvent {
   id: string;
@@ -21,6 +22,7 @@ interface ScheduledData {
 }
 
 export function ScheduledPageClient() {
+  const t = useT();
   const [data, setData] = useState<ScheduledData | null>(null);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export function ScheduledPageClient() {
   if (!data) {
     return (
       <div style={{ padding: "2rem", color: "var(--muted-foreground)", fontSize: "0.875rem" }}>
-        Loading calendar...
+        {t("tools.scheduled.loadingCalendar")}
       </div>
     );
   }

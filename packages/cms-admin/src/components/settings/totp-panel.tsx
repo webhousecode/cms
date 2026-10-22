@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n-context";
 
 interface Status {
   enabled: boolean;
@@ -23,6 +24,7 @@ interface Status {
 }
 
 export function TotpPanel() {
+  const t = useT();
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState("");
 
@@ -44,7 +46,7 @@ export function TotpPanel() {
       const data = (await res.json()) as Status;
       setStatus(data);
     } catch {
-      setError("Could not load status");
+      setError(t("settings.totp.loadError"));
     }
   }
 
@@ -56,12 +58,12 @@ export function TotpPanel() {
     try {
       const res = await fetch("/api/auth/totp/enroll/start", { method: "POST", credentials: "same-origin" });
       const data = (await res.json()) as { qrDataUrl?: string; secret?: string; error?: string };
-      if (!res.ok || !data.qrDataUrl) throw new Error(data.error ?? "Failed");
+      if (!res.ok || !data.qrDataUrl) throw new Error(data.error ?? t("settings.totp.failed"));
       setQrDataUrl(data.qrDataUrl);
       setSecret(data.secret ?? "");
       setEnrolling(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(err instanceof Error ? err.message : t("settings.totp.failed"));
     } finally {
       setBusy(false);
     }
@@ -78,7 +80,7 @@ export function TotpPanel() {
         body: JSON.stringify({ code: enrollCode }),
       });
       const data = (await res.json()) as { ok?: boolean; backupCodes?: string[]; error?: string };
-      if (!res.ok || !data.backupCodes) throw new Error(data.error ?? "Verification failed");
+      if (!res.ok || !data.backupCodes) throw new Error(data.error ?? t("settings.totp.verificationFailed"));
       setBackupCodes(data.backupCodes);
       setEnrolling(false);
       setQrDataUrl("");
@@ -86,7 +88,7 @@ export function TotpPanel() {
       setEnrollCode("");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(err instanceof Error ? err.message : t("settings.totp.failed"));
     } finally {
       setBusy(false);
     }
@@ -103,12 +105,12 @@ export function TotpPanel() {
         body: JSON.stringify({ code: disableCode }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Failed");
+      if (!res.ok) throw new Error(data.error ?? t("settings.totp.failed"));
       setConfirmDisable(false);
       setDisableCode("");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed");
+      setError(err instanceof Error ? err.message : t("settings.totp.failed"));
     } finally {
       setBusy(false);
     }
@@ -122,14 +124,14 @@ export function TotpPanel() {
             className="text-muted-foreground dark:text-white"
             style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}
           >
-            Authenticator app
+            {t("settings.totp.heading")}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Use Microsoft Authenticator, Google Authenticator, Authy, 1Password, or any other RFC 6238 app for two-factor sign-in.
+            {t("settings.totp.description")}
           </p>
         </div>
         <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
-          {status?.enabled ? "ENABLED" : "DISABLED"}
+          {status?.enabled ? t("settings.totp.enabled") : t("settings.totp.disabled")}
         </span>
       </div>
 
@@ -137,10 +139,10 @@ export function TotpPanel() {
       {backupCodes && (
         <div style={{ padding: "0.75rem", border: "1px solid color-mix(in srgb, var(--status-warning) 30%, transparent)", borderRadius: "6px", background: "color-mix(in srgb, var(--status-warning) 5%, transparent)" }}>
           <p style={{ fontSize: "0.75rem", fontWeight: 600, margin: "0 0 0.5rem", color: "var(--status-warning)" }}>
-            Save these backup codes
+            {t("settings.totp.saveCodesTitle")}
           </p>
           <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: "0 0 0.75rem" }}>
-            Each code works once. Use them if you lose access to your authenticator app. They will not be shown again.
+            {t("settings.totp.saveCodesHint")}
           </p>
           <pre style={{
             fontFamily: "ui-monospace, monospace", fontSize: "0.85rem", margin: 0,
@@ -158,7 +160,7 @@ export function TotpPanel() {
               background: "transparent", color: "var(--foreground)", cursor: "pointer",
             }}
           >
-            I've saved them
+            {t("settings.totp.savedThem")}
           </button>
         </div>
       )}
@@ -167,13 +169,13 @@ export function TotpPanel() {
       {enrolling && (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem" }}>
           <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0, textAlign: "center" }}>
-            Scan with your authenticator app, then enter the 6-digit code below.
+            {t("settings.totp.scanHint")}
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qrDataUrl} alt="TOTP QR" style={{ width: "180px", height: "180px", background: "#fff", borderRadius: "6px" }} />
+          <img src={qrDataUrl} alt={t("settings.totp.qrAlt")} style={{ width: "180px", height: "180px", background: "#fff", borderRadius: "6px" }} />
           {secret && (
             <details style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-              <summary style={{ cursor: "pointer" }}>Can&apos;t scan? Enter manually</summary>
+              <summary style={{ cursor: "pointer" }}>{t("settings.totp.cantScan")}</summary>
               <code style={{ display: "block", marginTop: "0.4rem", padding: "0.4rem", background: "var(--muted)", borderRadius: "4px", wordBreak: "break-all" }}>
                 {secret}
               </code>
@@ -203,7 +205,7 @@ export function TotpPanel() {
                 fontWeight: 600, cursor: busy ? "wait" : "pointer",
               }}
             >
-              {busy ? "..." : "Verify & enable"}
+              {busy ? "..." : t("settings.totp.verifyEnable")}
             </button>
             <button
               data-testid="totp-enroll-cancel-button"
@@ -214,7 +216,7 @@ export function TotpPanel() {
                 color: "var(--foreground)", cursor: "pointer",
               }}
             >
-              Cancel
+              {t("settings.common.cancel")}
             </button>
           </div>
         </div>
@@ -226,9 +228,9 @@ export function TotpPanel() {
           {status.enabled ? (
             <div className="space-y-2">
               <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                Added {status.createdAt ? new Date(status.createdAt).toLocaleDateString() : ""}
-                {status.lastUsedAt && ` · last used ${new Date(status.lastUsedAt).toLocaleDateString()}`}
-                {" · "}{status.backupCodesRemaining ?? 0} backup codes left
+                {t("settings.totp.added", { date: status.createdAt ? new Date(status.createdAt).toLocaleDateString() : "" })}
+                {status.lastUsedAt && ` · ${t("settings.totp.lastUsed", { date: new Date(status.lastUsedAt).toLocaleDateString() })}`}
+                {" · "}{t("settings.totp.backupCodesLeft", { count: status.backupCodesRemaining ?? 0 })}
               </p>
               {confirmDisable ? (
                 <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
@@ -238,7 +240,7 @@ export function TotpPanel() {
                     inputMode="numeric"
                     value={disableCode}
                     onChange={(e) => setDisableCode(e.target.value)}
-                    placeholder="Current code"
+                    placeholder={t("settings.totp.currentCode")}
                     style={{
                       padding: "0.35rem 0.6rem", borderRadius: "5px",
                       border: "1px solid var(--border)", background: "var(--background)",
@@ -255,7 +257,7 @@ export function TotpPanel() {
                       cursor: busy ? "wait" : "pointer",
                     }}
                   >
-                    {busy ? "..." : "Disable"}
+                    {busy ? "..." : t("settings.totp.disable")}
                   </button>
                   <button
                     data-testid="totp-disable-cancel-button"
@@ -266,7 +268,7 @@ export function TotpPanel() {
                       color: "var(--foreground)", cursor: "pointer",
                     }}
                   >
-                    Cancel
+                    {t("settings.common.cancel")}
                   </button>
                 </div>
               ) : (
@@ -275,7 +277,7 @@ export function TotpPanel() {
                   onClick={() => setConfirmDisable(true)}
                   className="text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors cursor-pointer"
                 >
-                  Disable
+                  {t("settings.totp.disable")}
                 </button>
               )}
             </div>
@@ -286,7 +288,7 @@ export function TotpPanel() {
               disabled={busy}
               className="text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors cursor-pointer"
             >
-              {busy ? "..." : "Add new app"}
+              {busy ? "..." : t("settings.totp.addApp")}
             </button>
           )}
         </>

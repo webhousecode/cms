@@ -49,10 +49,12 @@ const STATUS_DOT: Record<string, { color: string; title: string }> = {
 };
 import { useTabs } from "@/lib/tabs-context";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n-context";
 
 const TAB_MAX_WIDTH = 180;
 
 export function TabBar() {
+  const t = useT();
   const { tabs, activeId, openTab, closeTab, closeAllTabs, switchTab } = useTabs();
   const [showCloseAll, setShowCloseAll] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -106,11 +108,11 @@ export function TabBar() {
       const tag = (document.activeElement?.tagName ?? "").toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
       e.preventDefault();
-      openTab("/admin", "Dashboard", true);
+      openTab("/admin", t("shell.sidebar.dashboard"), true);
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [openTab]);
+  }, [openTab, t]);
 
   if (tabs.length === 0) return null;
 
@@ -217,7 +219,7 @@ export function TabBar() {
                 padding: 0,
               }}
               className="opacity-0 group-hover:opacity-100 hover:!bg-accent hover:!text-foreground transition-opacity"
-              title="Close tab (⌥W)"
+              title={t("shell.tabBar.closeTab")}
             >
               <X style={{ width: "10px", height: "10px" }} />
             </button>
@@ -229,7 +231,7 @@ export function TabBar() {
       <button
         data-testid="tab-new-button"
         type="button"
-        onClick={() => openTab("/admin", "Dashboard", true)}
+        onClick={() => openTab("/admin", t("shell.sidebar.dashboard"), true)}
         style={{
           flexShrink: 0,
           width: "36px",
@@ -244,7 +246,7 @@ export function TabBar() {
           color: "var(--muted-foreground)",
         }}
         className="hover:bg-accent/40 hover:text-foreground transition-colors"
-        title="New tab (⌘click any link)"
+        title={t("shell.tabBar.newTab")}
       >
         <Plus style={{ width: "14px", height: "14px" }} />
       </button>
@@ -269,9 +271,9 @@ export function TabBar() {
             whiteSpace: "nowrap",
             lineHeight: 1.4,
           }}
-          title="Close all tabs"
+          title={t("shell.tabBar.closeAllTabs")}
         >
-          Close all
+          {t("shell.tabBar.closeAll")}
         </button>
       )}
 
@@ -285,12 +287,12 @@ export function TabBar() {
             <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
               <AlertTriangle style={{ width: "18px", height: "18px", color: "var(--destructive)", flexShrink: 0, marginTop: "1px" }} />
               <p style={{ fontSize: "0.9rem", color: "var(--foreground)", margin: 0 }}>
-                Close all {tabs.length} tabs? All open documents will be closed and you'll return to Dashboard.
+                {t("shell.tabBar.confirmCloseAll", { count: tabs.length })}
               </p>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-              <button data-testid="tab-close-all-cancel" type="button" onClick={() => setConfirmOpen(false)} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
-              <button data-testid="tab-close-all-confirm" type="button" onClick={() => { setConfirmOpen(false); closeAllTabs(); }} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>Close all</button>
+              <button data-testid="tab-close-all-cancel" type="button" onClick={() => setConfirmOpen(false)} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>{t("shell.tabBar.cancel")}</button>
+              <button data-testid="tab-close-all-confirm" type="button" onClick={() => { setConfirmOpen(false); closeAllTabs(); }} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>{t("shell.tabBar.closeAll")}</button>
             </div>
           </div>
         </div>

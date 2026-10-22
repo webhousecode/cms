@@ -6,6 +6,7 @@ import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { TabTitle } from "@/lib/tabs-context";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomDateInput } from "@/components/ui/custom-date-input";
+import { useT } from "@/lib/i18n-context";
 
 type LogLayer = "audit" | "server" | "client";
 type LogLevel = "info" | "warn" | "error";
@@ -51,19 +52,20 @@ const LEVEL_ICONS: Record<LogLevel, typeof Info> = {
   error: AlertCircle,
 };
 
-function formatTime(iso: string): string {
+function formatTime(iso: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
   const d = new Date(iso);
   const today = new Date();
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const isToday = d.toDateString() === today.toDateString();
   const isYesterday = d.toDateString() === yesterday.toDateString();
   const time = d.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  if (isToday) return `i dag ${time}`;
-  if (isYesterday) return `i går ${time}`;
+  if (isToday) return t("tools.log.today", { time });
+  if (isYesterday) return t("tools.log.yesterday", { time });
   return d.toLocaleString("da-DK", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
-function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+function FilterChip({ label, testLabel, onRemove }: { label: string; testLabel: string; onRemove: () => void }) {
+  const t = useT();
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: "0.3rem",
@@ -76,9 +78,9 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
       {label}
       <button
         type="button"
-        data-testid={`filter-chip-remove-${label.toLowerCase().replace(/\s+/g, '-')}`}
+        data-testid={`filter-chip-remove-${testLabel.toLowerCase().replace(/\s+/g, '-')}`}
         onClick={onRemove}
-        aria-label={`Remove ${label} filter`}
+        aria-label={t("tools.log.removeFilter", { label })}
         style={{
           display: "inline-flex", alignItems: "center",
           background: "transparent", border: "none",
@@ -150,6 +152,7 @@ interface LogStats {
 }
 
 export default function EventLogPage() {
+  const t = useT();
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<LogStats | null>(null);
@@ -216,7 +219,7 @@ export default function EventLogPage() {
 
   return (
     <div data-testid="log-root">
-      <TabTitle value="Event Log" />
+      <TabTitle value={t("tools.log.title")} />
       <ActionBar
         actions={
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -235,13 +238,13 @@ export default function EventLogPage() {
               }}
             >
               <RefreshCw className={loading ? "animate-spin" : ""} style={{ width: 13, height: 13 }} />
-              Refresh
+              {t("tools.log.refresh")}
             </button>
             <button
               type="button"
               data-testid="log-export-csv-button"
               onClick={() => exportLog("csv")}
-              title="Export filtered events as CSV (for GDPR data requests)"
+              title={t("tools.log.exportCsvTitle")}
               style={{
                 height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
                 padding: "0 0.75rem", borderRadius: 6,
@@ -251,13 +254,13 @@ export default function EventLogPage() {
               }}
             >
               <Download style={{ width: 13, height: 13 }} />
-              CSV
+              {t("tools.log.csv")}
             </button>
             <button
               type="button"
               data-testid="log-export-json-button"
               onClick={() => exportLog("json")}
-              title="Export filtered events as JSON"
+              title={t("tools.log.exportJsonTitle")}
               style={{
                 height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
                 padding: "0 0.75rem", borderRadius: 6,
@@ -267,12 +270,12 @@ export default function EventLogPage() {
               }}
             >
               <Download style={{ width: 13, height: 13 }} />
-              JSON
+              {t("tools.log.json")}
             </button>
           </div>
         }
       >
-        <ActionBarBreadcrumb items={["Event Log"]} />
+        <ActionBarBreadcrumb items={[t("tools.log.title")]} />
       </ActionBar>
 
       <div style={{ padding: "2rem", maxWidth: "72rem" }}>
@@ -283,32 +286,33 @@ export default function EventLogPage() {
           gap: "0.75rem",
           marginBottom: "1.5rem",
         }}>
-          <StatCard icon={Activity} label="Total activities" value={stats?.total ?? 0} sublabel="Total" />
-          <StatCard icon={Clock} label="Last 24 hours" value={stats?.events24h ?? 0} sublabel="Sidste 24 timer" />
-          <StatCard icon={Users} label="Active users" value={stats?.activeUsers24h ?? 0} sublabel="Sidste 24 timer" />
-          <StatCard icon={AlertOctagon} label="Errors" value={stats?.errors24h ?? 0} sublabel="Sidste 24 timer" tone={stats && stats.errors24h > 0 ? "error" : "default"} />
+          <StatCard icon={Activity} label={t("tools.log.statTotal")} value={stats?.total ?? 0} sublabel={t("tools.log.statTotalSub")} />
+          <StatCard icon={Clock} label={t("tools.log.stat24h")} value={stats?.events24h ?? 0} sublabel={t("tools.log.last24h")} />
+          <StatCard icon={Users} label={t("tools.log.statUsers")} value={stats?.activeUsers24h ?? 0} sublabel={t("tools.log.last24h")} />
+          <StatCard icon={AlertOctagon} label={t("tools.log.statErrors")} value={stats?.errors24h ?? 0} sublabel={t("tools.log.last24h")} tone={stats && stats.errors24h > 0 ? "error" : "default"} />
         </div>
 
         {/* Filtered count line + active filter chips */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", margin: "0 0 1.25rem", minHeight: 22 }}>
           <span style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>
-            {total} event{total === 1 ? "" : "s"} match current filters
+            {total === 1 ? t("tools.log.matchOne", { n: total }) : t("tools.log.matchOther", { n: total })}
           </span>
           {level !== "all" && (
-            <FilterChip label={`Level: ${level}`} onRemove={() => setLevel("all")} />
+            <FilterChip label={t("tools.log.chipLevel", { value: t(`tools.log.level.${level}`) })} testLabel={`Level: ${level}`} onRemove={() => setLevel("all")} />
           )}
           {actionFilter && (
-            <FilterChip label={`Action: ${actionFilter}`} onRemove={() => setActionFilter("")} />
+            <FilterChip label={t("tools.log.chipAction", { value: actionFilter })} testLabel={`Action: ${actionFilter}`} onRemove={() => setActionFilter("")} />
           )}
           {dateFrom && (
-            <FilterChip label={`From: ${dateFrom}`} onRemove={() => setDateFrom("")} />
+            <FilterChip label={t("tools.log.chipFrom", { value: dateFrom })} testLabel={`From: ${dateFrom}`} onRemove={() => setDateFrom("")} />
           )}
           {dateTo && (
-            <FilterChip label={`To: ${dateTo}`} onRemove={() => setDateTo("")} />
+            <FilterChip label={t("tools.log.chipTo", { value: dateTo })} testLabel={`To: ${dateTo}`} onRemove={() => setDateTo("")} />
           )}
           {layers.size < 3 && (
             <FilterChip
-              label={`Layers: ${Array.from(layers).join(", ")}`}
+              label={t("tools.log.chipLayers", { value: Array.from(layers).map((x) => t(`tools.log.layer.${x}`)).join(", ") })}
+              testLabel={`Layers: ${Array.from(layers).join(", ")}`}
               onRemove={() => setLayers(new Set(["audit", "server", "client"]))}
             />
           )}
@@ -329,7 +333,7 @@ export default function EventLogPage() {
                 textDecoration: "underline", padding: 0,
               }}
             >
-              Clear all
+              {t("tools.log.clearAll")}
             </button>
           )}
         </div>
@@ -364,7 +368,7 @@ export default function EventLogPage() {
                 }}
               >
                 <Icon style={{ width: 12, height: 12 }} />
-                {l}
+                {t(`tools.log.layer.${l}`)}
               </button>
             );
           })}
@@ -372,10 +376,10 @@ export default function EventLogPage() {
             value={level}
             onChange={(v) => setLevel(v as LogLevel | "all")}
             options={[
-              { value: "all", label: "All levels" },
-              { value: "info", label: "Info" },
-              { value: "warn", label: "Warn" },
-              { value: "error", label: "Error" },
+              { value: "all", label: t("tools.log.level.all") },
+              { value: "info", label: t("tools.log.level.info") },
+              { value: "warn", label: t("tools.log.level.warn") },
+              { value: "error", label: t("tools.log.level.error") },
             ]}
             style={{ height: 28, fontSize: "0.72rem", minWidth: 130 }}
           />
@@ -384,7 +388,7 @@ export default function EventLogPage() {
             data-testid="filter-action-input"
             value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value)}
-            placeholder="Filter action (e.g. document.)"
+            placeholder={t("tools.log.actionPlaceholder")}
             style={{
               height: 28,
               padding: "0 0.6rem", borderRadius: 6,
@@ -410,7 +414,7 @@ export default function EventLogPage() {
               fontSize: "0.78rem",
               textAlign: "left",
             }}>
-              No events match the current filters.
+              {t("tools.log.noEvents")}
             </div>
           )}
           {entries.map((e) => {
@@ -432,10 +436,10 @@ export default function EventLogPage() {
                   alignItems: "center",
                 }}
               >
-                <span style={{ color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatTime(e.timestamp)}</span>
+                <span style={{ color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatTime(e.timestamp, t)}</span>
                 <LevelIcon style={{ width: 13, height: 13, color: LEVEL_COLORS[e.level] }} />
                 <LayerIcon style={{ width: 13, height: 13, color: "var(--muted-foreground)" }} />
-                <span style={{ color: "var(--muted-foreground)", fontSize: "0.62rem", textTransform: "uppercase" }}>{e.layer}</span>
+                <span style={{ color: "var(--muted-foreground)", fontSize: "0.62rem", textTransform: "uppercase" }}>{t(`tools.log.layer.${e.layer}`)}</span>
                 <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   <span style={{ color: "var(--foreground)" }}>{formatAction(e)}</span>
                   {e.error?.message && (
@@ -461,11 +465,11 @@ export default function EventLogPage() {
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span>
-                Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
+                {t("tools.log.showing", { from: (page - 1) * pageSize + 1, to: Math.min(page * pageSize, total), total })}
               </span>
               <span>•</span>
               <label>
-                Per page:
+                {t("tools.log.perPage")}
                 <select
                   value={pageSize}
                   data-testid="log-page-size-select"
@@ -499,10 +503,10 @@ export default function EventLogPage() {
                   opacity: page === 1 ? 0.5 : 1,
                 }}
               >
-                Previous
+                {t("tools.log.previous")}
               </button>
               <span style={{ padding: "0 0.5rem" }}>
-                Page {page} of {Math.max(1, Math.ceil(total / pageSize))}
+                {t("tools.log.pageOf", { page, pages: Math.max(1, Math.ceil(total / pageSize)) })}
               </span>
               <button
                 type="button"
@@ -518,7 +522,7 @@ export default function EventLogPage() {
                   opacity: page * pageSize >= total ? 0.5 : 1,
                 }}
               >
-                Next
+                {t("tools.log.next")}
               </button>
             </div>
           </div>

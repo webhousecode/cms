@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, X, Plus, Trash2, Loader2, Check } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   collection: string;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function SchemaDriftBanner({ collection, collectionName, fields }: Props) {
+  const t = useT();
   const storageKey = `drift-dismissed:${collection}`;
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -44,11 +46,11 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
         setAddResult(data);
         setTimeout(() => { sessionStorage.setItem(storageKey, "1"); setDismissed(true); }, 4000);
       } else {
-        setAddError(data.error ?? "Add to schema failed");
+        setAddError(data.error ?? t("schema.schemaDriftBanner.addFailed"));
         setConfirmAdd(false);
       }
     } catch (e) {
-      setAddError(e instanceof Error ? e.message : "Add to schema failed");
+      setAddError(e instanceof Error ? e.message : t("schema.schemaDriftBanner.addFailed"));
       setConfirmAdd(false);
     }
     setAdding(false);
@@ -68,11 +70,11 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
         setRemoveResult(data);
         setTimeout(() => { sessionStorage.setItem(storageKey, "1"); setDismissed(true); }, 3000);
       } else {
-        setRemoveError(data.error ?? "Remove failed");
+        setRemoveError(data.error ?? t("schema.schemaDriftBanner.removeFailed"));
         setConfirmRemove(false);
       }
     } catch (e) {
-      setRemoveError(e instanceof Error ? e.message : "Remove failed");
+      setRemoveError(e instanceof Error ? e.message : t("schema.schemaDriftBanner.removeFailed"));
       setConfirmRemove(false);
     }
     setRemoving(false);
@@ -87,7 +89,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
         fontSize: "0.8rem", color: "var(--foreground)",
       }}>
         <Check style={{ width: 16, height: 16, color: "#4ade80", flexShrink: 0 }} />
-        Added {addResult.addedFields.length} field{addResult.addedFields.length > 1 ? "s" : ""} to the schema. Reloading&hellip;
+        {(addResult.addedFields.length > 1 ? t("schema.schemaDriftBanner.addedOther", { count: addResult.addedFields.length }) : t("schema.schemaDriftBanner.addedOne", { count: addResult.addedFields.length }))}
       </div>
     );
   }
@@ -101,7 +103,10 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
         fontSize: "0.8rem", color: "var(--foreground)",
       }}>
         <Check style={{ width: 16, height: 16, color: "#4ade80", flexShrink: 0 }} />
-        Removed {fields.length} orphaned field{fields.length > 1 ? "s" : ""} from {removeResult.fixed} document{removeResult.fixed !== 1 ? "s" : ""}.
+        {t(
+          `schema.schemaDriftBanner.removed${fields.length > 1 ? "Fields" : "Field"}${removeResult.fixed !== 1 ? "Docs" : "Doc"}`,
+          { count: fields.length, docs: removeResult.fixed },
+        )}
       </div>
     );
   }
@@ -120,16 +125,16 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
       <AlertTriangle style={{ width: 18, height: 18, color: "var(--brand)", flexShrink: 0, marginTop: 2 }} />
       <div style={{ flex: 1, fontSize: "0.8rem", lineHeight: 1.5 }}>
         <p style={{ margin: 0, fontWeight: 600, color: "var(--foreground)" }}>
-          Schema drift detected in &ldquo;{collection}&rdquo;
+          {t("schema.schemaDriftBanner.title", { collection })}
         </p>
         <p style={{ margin: "0.25rem 0 0", color: "var(--muted-foreground)" }}>
-          {fields.length} field{fields.length > 1 ? "s" : ""} found in content but not in schema:{" "}
+          {(fields.length > 1 ? t("schema.schemaDriftBanner.foundOther", { count: fields.length }) : t("schema.schemaDriftBanner.foundOne", { count: fields.length }))}{" "}
           <span style={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
             {fields.join(", ")}
           </span>
         </p>
         <p style={{ margin: "0.25rem 0 0", color: "var(--muted-foreground)", fontSize: "0.72rem" }}>
-          These fields exist in your content files but are invisible in the editor.
+          {t("schema.schemaDriftBanner.invisible")}
         </p>
         {(addError || removeError) && (
           <p style={{ margin: "0.25rem 0 0", color: "#f87171", fontSize: "0.72rem" }}>{addError || removeError}</p>
@@ -149,7 +154,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                 fontSize: "0.75rem", fontWeight: 600,
               }}
             >
-              <Plus style={{ width: 12, height: 12 }} /> Add to schema
+              <Plus style={{ width: 12, height: 12 }} /> {t("schema.schemaDriftBanner.addToSchema")}
             </button>
           )}
 
@@ -157,7 +162,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
           {confirmAdd && (
             <>
               <span style={{ fontSize: "0.72rem", color: "var(--foreground)", fontWeight: 500 }}>
-                Add {fields.length} field{fields.length > 1 ? "s" : ""} to cms.config.ts?
+                {(fields.length > 1 ? t("schema.schemaDriftBanner.confirmAddOther", { count: fields.length }) : t("schema.schemaDriftBanner.confirmAddOne", { count: fields.length }))}
               </span>
               <button
                 data-testid="schema-drift-confirm-add-yes"
@@ -170,7 +175,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                 }}
               >
                 {adding && <Loader2 style={{ width: 10, height: 10 }} className="animate-spin" />}
-                Yes
+                {t("schema.schemaDriftBanner.yes")}
               </button>
               <button
                 data-testid="schema-drift-confirm-add-no"
@@ -182,7 +187,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                   color: "var(--foreground)", cursor: "pointer",
                 }}
               >
-                No
+                {t("schema.schemaDriftBanner.no")}
               </button>
             </>
           )}
@@ -201,7 +206,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                 fontSize: "0.72rem", fontWeight: 500,
               }}
             >
-              <Trash2 style={{ width: 11, height: 11 }} /> Remove from content
+              <Trash2 style={{ width: 11, height: 11 }} /> {t("schema.schemaDriftBanner.removeFromContent")}
             </button>
           )}
 
@@ -209,7 +214,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
           {confirmRemove && (
             <>
               <span style={{ fontSize: "0.72rem", color: "var(--destructive)", fontWeight: 500 }}>
-                Remove {fields.length} field{fields.length > 1 ? "s" : ""} from all documents?
+                {(fields.length > 1 ? t("schema.schemaDriftBanner.confirmRemoveOther", { count: fields.length }) : t("schema.schemaDriftBanner.confirmRemoveOne", { count: fields.length }))}
               </span>
               <button
                 data-testid="schema-drift-confirm-remove-yes"
@@ -222,7 +227,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                 }}
               >
                 {removing && <Loader2 style={{ width: 10, height: 10 }} className="animate-spin" />}
-                Yes
+                {t("schema.schemaDriftBanner.yes")}
               </button>
               <button
                 data-testid="schema-drift-confirm-remove-no"
@@ -234,7 +239,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                   color: "var(--foreground)", cursor: "pointer",
                 }}
               >
-                No
+                {t("schema.schemaDriftBanner.no")}
               </button>
             </>
           )}
@@ -244,7 +249,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
         data-testid="schema-drift-dismiss"
         type="button"
         onClick={() => { sessionStorage.setItem(storageKey, "1"); setDismissed(true); }}
-        title="Dismiss for this session"
+        title={t("schema.schemaDriftBanner.dismiss")}
         style={{
           background: "none", border: "none", cursor: "pointer",
           color: "var(--muted-foreground)", padding: 2, flexShrink: 0,

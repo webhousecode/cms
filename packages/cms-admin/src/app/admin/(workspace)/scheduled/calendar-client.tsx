@@ -7,6 +7,7 @@ import { TabTitle } from "@/lib/tabs-context";
 import { PageHeader } from "@/components/page-header";
 import { dkDag, dkKlokke, dkUrMinut } from "@/lib/dansk-tid";
 import { buildMonthGrid } from "@broberg/ui-controls-core";
+import { useT } from "@/lib/i18n-context";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -88,6 +89,7 @@ function isSameDay(a: string, b: string): boolean {
 /* ─── Component ──────────────────────────────────────────────── */
 
 export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { events: ScheduledEvent[]; calendarToken: string; orgId: string; siteId: string }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const [scrollToNow, setScrollToNow] = useState(0); // increment to trigger scroll
   const today = new Date();
@@ -154,12 +156,12 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
 
   return (
     <>
-      <TabTitle value="Calendar" />
+      <TabTitle value={t("tools.calendar.title")} />
 <div className="p-8" style={{ maxWidth: "1200px" }}>
         {/* Title */}
         <div style={{ marginBottom: "-17px" }}>
-          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
-          <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
+          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">{t("tools.calendar.schedule")}</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("tools.calendar.title")}</h1>
         </div>
 
         {/* View selector + Subscribe — centered */}
@@ -174,7 +176,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
                 onClick={() => setView(v)}
                 className={`px-3 py-1 text-xs rounded-md transition-colors capitalize ${view === v ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
               >
-                {v}
+                {t(`tools.calendar.view.${v}`)}
               </button>
             ))}
           </div>
@@ -196,11 +198,11 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
                   window.location.href = `webcal://${host}${feedPath}`;
                 }
               }}
-              title="Subscribe to calendar feed"
+              title={t("tools.calendar.subscribeTitle")}
               className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Calendar className="w-3.5 h-3.5" />}
-              {copied ? "Copied" : "Subscribe"}
+              {copied ? t("tools.calendar.copied") : t("tools.calendar.subscribe")}
             </button>
           </div>
           </div>
@@ -210,17 +212,17 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-foreground" style={{ minWidth: "220px" }}>
             {view === "day"
-              ? (() => { const d = new Date(selectedDate); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; })()
+              ? (() => { const d = new Date(selectedDate); return t("tools.calendar.dayTitle", { day: d.getDate(), month: t(`tools.calendar.months.${MONTHS[d.getMonth()]}`), year: d.getFullYear() }); })()
               : view === "year"
                 ? `${year}`
-                : `${MONTHS[month]} ${year}`}
+                : t("tools.calendar.monthTitle", { month: t(`tools.calendar.months.${MONTHS[month]}`), year })}
           </h2>
           <div className="flex items-center gap-0.5">
             <button data-testid="calendar-button-prev" type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button data-testid="calendar-button-today" type="button" onClick={goToday} className="px-3 py-1 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors text-muted-foreground">
-              Today
+              {t("tools.calendar.today")}
             </button>
             <button data-testid="calendar-button-3" type="button" onClick={() => navigate(1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
               <ChevronRight className="w-4 h-4" />
@@ -281,6 +283,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
   year: number; month: number; todayKey: string; selectedDate: string;
   eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
 }) {
+  const t = useT();
   const cells = maanedsGitter(year, month);
 
   return (
@@ -289,7 +292,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
       <div className="grid grid-cols-7 mb-1">
         {WEEKDAYS.map((d) => (
           <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-2">
-            {d}
+            {t(`tools.calendar.weekdays.${d}`)}
           </div>
         ))}
       </div>
@@ -322,7 +325,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
                     <div
                       key={evt.id}
                       className="truncate rounded px-1 py-px"
-                      title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${evt.subtitle} · ${dkKlokke(evt.date)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
+                      title={`${evt.type === "publish" ? t("tools.calendar.publish") : t("tools.calendar.unpublish")}: ${evt.title}\n${evt.subtitle} · ${dkKlokke(evt.date)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
                       style={{
                         fontSize: "0.6rem",
                         lineHeight: "1.1rem",
@@ -336,7 +339,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
                   ))}
                   {dayEvents.length > 3 && (
                     <p style={{ fontSize: "0.55rem", color: "var(--muted-foreground)", paddingLeft: "0.25rem" }}>
-                      +{dayEvents.length - 3} more
+                      {t("tools.calendar.more", { n: dayEvents.length - 3 })}
                     </p>
                   )}
                 </div>
@@ -360,6 +363,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
   eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
   scrollToNow?: number;
 }) {
+  const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [nowMinutes, setNowMinutes] = useState(() => {
     const n = new Date();
@@ -464,7 +468,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
       {/* Header: week number + day columns — sticky */}
       <div style={{ display: "grid", gridTemplateColumns: "3rem repeat(7, 1fr)", position: "sticky", top: 0, zIndex: 30, background: "var(--card)", borderBottom: "1px solid var(--border)" }}>
         <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0.5rem 0", textAlign: "center", fontFamily: "monospace" }}>
-          W{weekNum}
+          {t("tools.calendar.weekShort", { n: weekNum })}
         </div>
         {days.map((day) => {
           const isToday = day.key === todayKey;
@@ -482,7 +486,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
               }}
               className="hover:bg-secondary/50 transition-colors"
             >
-              <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textTransform: "uppercase" }}>{day.label} </span>
+              <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textTransform: "uppercase" }}>{t(`tools.calendar.weekdays.${day.label}`)} </span>
               <span
                 style={{
                   fontSize: "0.8rem",
@@ -585,7 +589,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
                       textDecoration: "none",
                       zIndex: 10,
                     }}
-                    title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${dkKlokke(evt.date)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
+                    title={`${evt.type === "publish" ? t("tools.calendar.publish") : t("tools.calendar.unpublish")}: ${evt.title}\n${dkKlokke(evt.date)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
                   >
                     {dkKlokke(evt.date)} {evt.title}
                   </Link>
@@ -630,13 +634,14 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
 function DayView({ selectedDate, eventsMap }: {
   selectedDate: string; eventsMap: Map<string, ScheduledEvent[]>;
 }) {
+  const t = useT();
   const dayEvents = eventsMap.get(selectedDate) ?? [];
 
   if (dayEvents.length === 0) {
     return (
       <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
         <Calendar className="w-10 h-10 mx-auto mb-3 opacity-20" />
-        <p className="text-sm">No events on this day.</p>
+        <p className="text-sm">{t("tools.calendar.noEventsDay")}</p>
       </div>
     );
   }
@@ -666,7 +671,7 @@ function DayView({ selectedDate, eventsMap }: {
                 className="text-[10px] px-1.5 py-0.5 rounded border shrink-0"
                 style={{ color, borderColor: `color-mix(in srgb, ${color} 30%, transparent)` }}
               >
-                {evt.type === "publish" ? "Publish" : "Unpublish"}
+                {evt.type === "publish" ? t("tools.calendar.publish") : t("tools.calendar.unpublish")}
               </span>
             </div>
           </Link>
@@ -683,6 +688,7 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
   eventsMap: Map<string, ScheduledEvent[]>;
   onSelectMonth: (month: number) => void;
 }) {
+  const t = useT();
   return (
     <div className="grid grid-cols-3 gap-4">
       {MONTHS.map((monthName, m) => {
@@ -706,14 +712,14 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
             className="text-left p-3 rounded-lg border border-border hover:border-primary/30 hover:bg-secondary/30 transition-all"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold">{monthName}</span>
+              <span className="text-sm font-semibold">{t(`tools.calendar.months.${monthName}`)}</span>
               {monthEventCount > 0 && (
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{monthEventCount}</span>
               )}
             </div>
             <div className="grid grid-cols-7 gap-px">
-              {["M","T","W","T","F","S","S"].map((d, i) => (
-                <span key={i} className="text-center text-[8px] text-muted-foreground">{d}</span>
+              {WEEKDAYS.map((d, i) => (
+                <span key={i} className="text-center text-[8px] text-muted-foreground">{t(`tools.calendar.weekdayLetters.${d}`)}</span>
               ))}
               {cells.map((cell, i) => {
                 const hasEvents = (eventsMap.get(cell.key) ?? []).length > 0;
@@ -747,6 +753,7 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
 
 function CalendarSidebar({ events, todayKey, colColorMap }: { events: ScheduledEvent[]; todayKey: string; colColorMap: Map<string, string> }) {
   // Collection counts — only future events (compare with current time, not just date)
+  const t = useT();
   const now = new Date().toISOString().slice(0, 19);
   const futureEvents = events.filter((e) => e.date > now);
   const collectionDocs = new Map<string, Set<string>>();
@@ -778,7 +785,7 @@ function CalendarSidebar({ events, todayKey, colColorMap }: { events: ScheduledE
   return (
     <div style={{ width: "140px", flexShrink: 0, paddingTop: "0.25rem" }}>
       {/* Collections */}
-      <p style={sectionLabel}>Collections</p>
+      <p style={sectionLabel}>{t("tools.calendar.collections")}</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "1.25rem" }}>
         {colEntries.map(([name, count]) => (
           <div key={name} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
@@ -788,18 +795,18 @@ function CalendarSidebar({ events, todayKey, colColorMap }: { events: ScheduledE
           </div>
         ))}
         {colEntries.length === 0 && (
-          <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>No events</span>
+          <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>{t("tools.calendar.noEvents")}</span>
         )}
       </div>
 
       {/* Event types */}
-      <p style={sectionLabel}>Event Types</p>
+      <p style={sectionLabel}>{t("tools.calendar.eventTypes")}</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "1.25rem" }}>
         {(Object.entries(EVENT_COLORS) as [EventType, string][]).map(([type, color]) => (
           <div key={type} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: color }} />
             <span style={{ fontSize: "0.75rem" }}>
-              {type === "publish" ? "Publish" : type === "unpublish" ? "Expiry" : type === "backup" ? "Backup" : "Link Check"}
+              {type === "publish" ? t("tools.calendar.publish") : type === "unpublish" ? t("tools.calendar.expiry") : type === "backup" ? t("tools.calendar.backup") : t("tools.calendar.linkCheck")}
             </span>
           </div>
         ))}
@@ -807,13 +814,13 @@ function CalendarSidebar({ events, todayKey, colColorMap }: { events: ScheduledE
 
       {/* Stats */}
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
-        <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Upcoming</p>
+        <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>{t("tools.calendar.upcoming")}</p>
         <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{futureDocIds.size}</p>
-        <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>items pending</p>
+        <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>{t("tools.calendar.itemsPending")}</p>
 
-        <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Today</p>
+        <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>{t("tools.calendar.todayLabel")}</p>
         <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{todayDocIds.size}</p>
-        <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>items scheduled</p>
+        <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>{t("tools.calendar.itemsScheduled")}</p>
       </div>
     </div>
   );

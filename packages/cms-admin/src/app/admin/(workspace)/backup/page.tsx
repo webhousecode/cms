@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { HardDrive, Download, Trash2, RotateCcw, Plus, Clock, FileArchive, Cloud } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
+import { useT } from "@/lib/i18n-context";
 
 interface Snapshot {
   id: string;
@@ -31,18 +32,19 @@ function formatDate(iso: string): string {
     " " + d.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
 }
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("tools.backup.justNow");
+  if (mins < 60) return t("tools.backup.minsAgo", { n: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return t("tools.backup.hoursAgo", { n: hrs });
   const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+  return t("tools.backup.daysAgo", { n: days });
 }
 
 export default function BackupPage() {
+  const t = useT();
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -98,7 +100,7 @@ export default function BackupPage() {
       const res = await fetch(`/api/admin/backups/${id}`, { method: "POST" });
       const data = await res.json() as { restored: number; error?: string };
       if (data.error) {
-        alert(`Restore failed: ${data.error}`);
+        alert(t("tools.backup.restoreFailed", { error: data.error }));
       }
       await fetchSnapshots();
     } finally {
@@ -109,7 +111,7 @@ export default function BackupPage() {
 
   return (
     <div data-testid="backup-root">
-      <TabTitle value="Backup" />
+      <TabTitle value={t("tools.backup.title")} />
       <ActionBar helpArticleId="backup-intro"
         actions={
           <ActionButton
@@ -118,16 +120,16 @@ export default function BackupPage() {
             disabled={creating}
             icon={<Plus style={{ width: 14, height: 14 }} />}
           >
-            {creating ? "Creating..." : "Create Backup"}
+            {creating ? t("tools.backup.creating") : t("tools.backup.create")}
           </ActionButton>
         }
       >
-        <ActionBarBreadcrumb items={["Tools", "Backup"]} /></ActionBar>
+        <ActionBarBreadcrumb items={[t("tools.common.tools"), t("tools.backup.title")]} /></ActionBar>
 
       <div style={{ padding: "2rem 2.5rem", maxWidth: 900 }}>
 
       {loading ? (
-        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Loading...</p>
+        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>{t("tools.common.loading")}</p>
       ) : snapshots.length === 0 ? (
         <div style={{
           border: "1px dashed var(--border)", borderRadius: "0.5rem",
@@ -135,7 +137,7 @@ export default function BackupPage() {
         }}>
           <HardDrive style={{ width: 40, height: 40, margin: "0 auto 1rem", color: "var(--muted-foreground)", opacity: 0.5 }} />
           <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem", margin: 0 }}>
-            No backups yet. Create your first backup to protect your content.
+            {t("tools.backup.empty")}
           </p>
         </div>
       ) : (
@@ -164,7 +166,7 @@ export default function BackupPage() {
                         : "color-mix(in srgb, rgb(74 222 128) 15%, transparent)",
                       color: snap.trigger === "scheduled" ? "rgb(96 165 250)" : "rgb(74 222 128)",
                     }}>
-                      {snap.trigger}
+                      {snap.trigger === "scheduled" ? t("tools.backup.triggerScheduled") : t("tools.backup.triggerManual")}
                     </span>
                     {snap.cloudProvider && (
                       <span style={{
@@ -183,7 +185,7 @@ export default function BackupPage() {
                         background: "color-mix(in srgb, var(--muted-foreground) 10%, transparent)",
                         color: "var(--muted-foreground)",
                       }}>
-                        local
+                        {t("tools.backup.local")}
                       </span>
                     )}
                     {snap.cloudError && (
@@ -192,7 +194,7 @@ export default function BackupPage() {
                         background: "color-mix(in srgb, rgb(251 191 36) 15%, transparent)",
                         color: "rgb(251 191 36)",
                       }} title={snap.cloudError}>
-                        cloud failed
+                        {t("tools.backup.cloudFailed")}
                       </span>
                     )}
                     {snap.status === "failed" && (
@@ -201,18 +203,18 @@ export default function BackupPage() {
                         background: "color-mix(in srgb, var(--destructive) 15%, transparent)",
                         color: "var(--destructive)",
                       }}>
-                        failed
+                        {t("tools.backup.failed")}
                       </span>
                     )}
                   </div>
                   <div style={{ display: "flex", gap: "1rem", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
                     <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                       <Clock style={{ width: 12, height: 12 }} />
-                      {timeAgo(snap.timestamp)}
+                      {timeAgo(snap.timestamp, t)}
                     </span>
-                    <span>{snap.documentCount} documents</span>
+                    <span>{t("tools.backup.documents", { n: snap.documentCount })}</span>
                     <span>{formatBytes(snap.sizeBytes)}</span>
-                    <span>{Object.keys(snap.collections).length} collections</span>
+                    <span>{t("tools.backup.collections", { n: Object.keys(snap.collections).length })}</span>
                   </div>
                 </div>
 
@@ -223,7 +225,7 @@ export default function BackupPage() {
                     data-testid="backup-download-link"
                     href={`/api/admin/backups/${snap.id}`}
                     download
-                    title="Download zip"
+                    title={t("tools.backup.downloadZip")}
                     style={{
                       display: "flex", alignItems: "center", padding: "0.35rem",
                       borderRadius: "0.25rem", color: "var(--muted-foreground)",
@@ -238,23 +240,23 @@ export default function BackupPage() {
                   {confirmRestore === snap.id ? (
                     <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                       <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>
-                        {restoring === snap.id ? "Restoring..." : "Restore?"}
+                        {restoring === snap.id ? t("tools.backup.restoring") : t("tools.backup.restoreConfirm")}
                       </span>
                       <button data-testid="backup-restore-confirm-yes" type="button" onClick={() => handleRestore(snap.id)} disabled={restoring === snap.id}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                           border: "none", background: "var(--destructive)", color: "#fff",
-                          cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                          cursor: "pointer", lineHeight: 1 }}>{t("tools.common.yes")}</button>
                       <button data-testid="backup-restore-confirm-no" type="button" onClick={() => setConfirmRestore(null)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                           border: "1px solid var(--border)", background: "transparent",
-                          color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                          color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("tools.common.no")}</button>
                     </span>
                   ) : (
                     <button
                       data-testid="backup-restore-button"
                       type="button"
                       onClick={() => setConfirmRestore(snap.id)}
-                      title="Restore from this backup"
+                      title={t("tools.backup.restoreTitle")}
                       style={{
                         display: "flex", alignItems: "center", padding: "0.35rem",
                         background: "none", border: "none", borderRadius: "0.25rem",
@@ -270,22 +272,22 @@ export default function BackupPage() {
                   {/* Delete */}
                   {confirmDelete === snap.id ? (
                     <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("tools.common.removeConfirm")}</span>
                       <button data-testid="backup-delete-confirm-yes" type="button" onClick={() => handleDelete(snap.id)} disabled={deleting === snap.id}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                           border: "none", background: "var(--destructive)", color: "#fff",
-                          cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                          cursor: "pointer", lineHeight: 1 }}>{t("tools.common.yes")}</button>
                       <button data-testid="backup-delete-confirm-no" type="button" onClick={() => setConfirmDelete(null)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                           border: "1px solid var(--border)", background: "transparent",
-                          color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                          color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("tools.common.no")}</button>
                     </span>
                   ) : (
                     <button
                       data-testid="backup-delete-button"
                       type="button"
                       onClick={() => setConfirmDelete(snap.id)}
-                      title="Delete this backup"
+                      title={t("tools.backup.deleteTitle")}
                       style={{
                         display: "flex", alignItems: "center", padding: "0.35rem",
                         background: "none", border: "none", borderRadius: "0.25rem",

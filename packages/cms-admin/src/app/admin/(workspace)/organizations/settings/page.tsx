@@ -7,6 +7,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { CapabilitiesSettingsPanel } from "@/components/settings/capabilities-settings-panel";
 import { ExternalLink } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 // Placeholders must name a model this CMS can actually run — every AI call is
 // pinned to the Mistral (EU/GDPR) provider and there is no Anthropic adapter.
 // The Claude ids that used to sit here are how two sites ended up with a stored
@@ -29,6 +30,15 @@ interface Registry {
 function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : null;
+}
+
+/** Renders a translated sentence whose <b>…</b> / <code>…</code> parts carry markup. */
+function renderMarked(text: string, boldStyle: React.CSSProperties | undefined, codeStyle: React.CSSProperties) {
+  return text.split(/(<b>.*?<\/b>|<code>.*?<\/code>)/).map((part, i) => {
+    if (part.startsWith("<b>")) return <strong key={i} style={boldStyle}>{part.slice(3, -4)}</strong>;
+    if (part.startsWith("<code>")) return <code key={i} style={codeStyle}>{part.slice(6, -7)}</code>;
+    return part;
+  });
 }
 
 type OrgTab = "general" | "deploy" | "ai" | "email" | "automation" | "features";
@@ -110,6 +120,7 @@ const CREDS_DEFAULTS: OrgCreds = {
 };
 
 export default function OrgSettingsPage() {
+  const t = useT();
   const brand = useBrand();
   const router = useRouter();
   const [registry, setRegistry] = useState<Registry | null>(null);
@@ -227,7 +238,7 @@ export default function OrgSettingsPage() {
   if (!loaded) {
     return (
       <div style={{ padding: "4rem 2rem" }}>
-        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Loading...</p>
+        <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>{t("pages.orgSettings.loading")}</p>
       </div>
     );
   }
@@ -235,7 +246,7 @@ export default function OrgSettingsPage() {
   if (!activeOrg) {
     return (
       <div style={{ padding: "4rem 2rem" }}>
-        <p style={{ color: "var(--muted-foreground)" }}>Organization not found.</p>
+        <p style={{ color: "var(--muted-foreground)" }}>{t("pages.orgSettings.notFound")}</p>
       </div>
     );
   }
@@ -254,14 +265,14 @@ export default function OrgSettingsPage() {
         padding: "0.1rem 0.4rem", borderRadius: "4px",
         background: "color-mix(in srgb, var(--primary) 10%, transparent)",
         color: "var(--primary)",
-      }}>configured</span>
+      }}>{t("pages.orgSettings.configured")}</span>
     );
   };
 
-  const tabStyle = (t: OrgTab): React.CSSProperties => ({
+  const tabStyle = (tb: OrgTab): React.CSSProperties => ({
     padding: "0.5rem 0.75rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
-    border: "none", borderBottom: tab === t ? "2px solid var(--primary)" : "2px solid transparent",
-    background: "transparent", color: tab === t ? "var(--foreground)" : "var(--muted-foreground)",
+    border: "none", borderBottom: tab === tb ? "2px solid var(--primary)" : "2px solid transparent",
+    background: "transparent", color: tab === tb ? "var(--foreground)" : "var(--muted-foreground)",
     transition: "all 0.15s",
   });
 
@@ -276,21 +287,21 @@ export default function OrgSettingsPage() {
     <div className="p-8 max-w-3xl">
       {/* Header */}
       <div className="mb-2">
-        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Organization Settings</p>
+        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">{t("pages.orgSettings.eyebrow")}</p>
         <h1 className="text-2xl font-bold text-foreground">{activeOrg.name}</h1>
         <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-          Organization configuration and shared credentials
+          {t("pages.orgSettings.subtitle")}
         </p>
       </div>
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "0", borderBottom: "1px solid var(--border)", marginTop: "1.5rem", marginBottom: "1.5rem" }}>
-        <button data-testid="org-settings-tab-general" type="button" style={tabStyle("general")} onClick={() => setTab("general")}>General</button>
-        <button data-testid="org-settings-tab-deploy" type="button" style={tabStyle("deploy")} onClick={() => setTab("deploy")}>Deploy</button>
-        <button data-testid="org-settings-tab-ai" type="button" style={tabStyle("ai")} onClick={() => setTab("ai")}>AI</button>
-        <button data-testid="org-settings-tab-email" type="button" style={tabStyle("email")} onClick={() => setTab("email")}>Email</button>
-        <button data-testid="org-settings-tab-automation" type="button" style={tabStyle("automation")} onClick={() => setTab("automation")}>Automation</button>
-        <button data-testid="org-settings-tab-features" type="button" style={tabStyle("features")} onClick={() => setTab("features")}>Features</button>
+        <button data-testid="org-settings-tab-general" type="button" style={tabStyle("general")} onClick={() => setTab("general")}>{t("pages.orgSettings.tabGeneral")}</button>
+        <button data-testid="org-settings-tab-deploy" type="button" style={tabStyle("deploy")} onClick={() => setTab("deploy")}>{t("pages.orgSettings.tabDeploy")}</button>
+        <button data-testid="org-settings-tab-ai" type="button" style={tabStyle("ai")} onClick={() => setTab("ai")}>{t("pages.orgSettings.tabAi")}</button>
+        <button data-testid="org-settings-tab-email" type="button" style={tabStyle("email")} onClick={() => setTab("email")}>{t("pages.orgSettings.tabEmail")}</button>
+        <button data-testid="org-settings-tab-automation" type="button" style={tabStyle("automation")} onClick={() => setTab("automation")}>{t("pages.orgSettings.tabAutomation")}</button>
+        <button data-testid="org-settings-tab-features" type="button" style={tabStyle("features")} onClick={() => setTab("features")}>{t("pages.orgSettings.tabFeatures")}</button>
       </div>
 
       {/* ── Save button (shared across all non-general tabs) ── */}
@@ -298,7 +309,7 @@ export default function OrgSettingsPage() {
         <div style={{ display: "flex", justifyContent: "flex-end", position: "sticky", top: "0.5rem", zIndex: 10, marginBottom: "1rem" }}>
           <button data-testid="org-settings-save-creds" type="button" onClick={handleSaveCreds} disabled={credsSaving}
             style={{ padding: "0.45rem 1rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", fontWeight: 600, cursor: credsSaving ? "wait" : "pointer" }}>
-            {credsSaving ? "Saving..." : credsSaved ? "Saved" : "Save"}
+            {credsSaving ? t("pages.orgSettings.saving") : credsSaved ? t("pages.orgSettings.saved") : t("pages.orgSettings.save")}
           </button>
         </div>
       )}
@@ -306,7 +317,7 @@ export default function OrgSettingsPage() {
       {/* Shared description for non-general tabs */}
       {tab !== "general" && (
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "1.5rem", lineHeight: 1.5 }}>
-          Shared across all sites in <strong>{activeOrg.name}</strong>. Each site can override in its own Site Settings.
+          {renderMarked(t("pages.orgSettings.sharedDesc", { name: activeOrg.name }), undefined, {})}
         </p>
       )}
 
@@ -315,7 +326,7 @@ export default function OrgSettingsPage() {
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Fly.io API Token</label>{configuredBadge(creds.deployApiToken)}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.flyToken")}</label>{configuredBadge(creds.deployApiToken)}</span>
               <a data-testid="deploy-flyio-docs-link" href="https://fly.io/dashboard" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>fly.io/dashboard <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
@@ -323,42 +334,42 @@ export default function OrgSettingsPage() {
               placeholder="FlyV1 ..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Fly.io Organization</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.flyOrg")}</label>
             <input data-testid="deploy-flyio-org" type="text" value={creds.deployFlyOrg} onChange={(e) => setCreds((c) => ({ ...c, deployFlyOrg: e.target.value }))}
-              placeholder="Auto-detect from token" style={credInputStyle} />
+              placeholder={t("pages.orgSettings.flyOrgPlaceholder")} style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>GitHub Personal Access Token</label>{configuredBadge(creds.deployGitHubToken)}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.githubPat")}</label>{configuredBadge(creds.deployGitHubToken)}</span>
               <a data-testid="deploy-github-token-link" href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Create token <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.createToken")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="deploy-github-token" type="password" value={creds.deployGitHubToken} onChange={(e) => setCreds((c) => ({ ...c, deployGitHubToken: e.target.value }))}
               placeholder="ghp_..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Vercel Deploy Hook</label>{configuredBadge(creds.deployVercelHookUrl)}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.vercelHook")}</label>{configuredBadge(creds.deployVercelHookUrl)}</span>
               <a data-testid="deploy-vercel-docs-link" href="https://vercel.com/docs/deploy-hooks" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.docs")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="deploy-vercel-hook-url" type="url" value={creds.deployVercelHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployVercelHookUrl: e.target.value }))}
               placeholder="https://api.vercel.com/v1/integrations/deploy/..." style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Netlify Build Hook</label>{configuredBadge(creds.deployNetlifyHookUrl)}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.netlifyHook")}</label>{configuredBadge(creds.deployNetlifyHookUrl)}</span>
               <a data-testid="deploy-netlify-docs-link" href="https://docs.netlify.com/configure-builds/build-hooks/" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.docs")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="deploy-netlify-hook-url" type="url" value={creds.deployNetlifyHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployNetlifyHookUrl: e.target.value }))}
               placeholder="https://api.netlify.com/build_hooks/..." style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Cloudflare Pages Deploy Hook</label>{configuredBadge(creds.deployCloudflareHookUrl)}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.cloudflareHook")}</label>{configuredBadge(creds.deployCloudflareHookUrl)}</span>
               <a data-testid="deploy-cloudflare-docs-link" href="https://developers.cloudflare.com/pages/configuration/deploy-hooks/" target="_blank" rel="noopener noreferrer"
-                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.docs")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="deploy-cloudflare-hook-url" type="url" value={creds.deployCloudflareHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployCloudflareHookUrl: e.target.value }))}
               placeholder="https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/..." style={credInputStyle} />
@@ -370,31 +381,31 @@ export default function OrgSettingsPage() {
       {tab === "ai" && (
         <>
           {/* API Keys */}
-          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>API Keys</h2>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>{t("pages.orgSettings.apiKeys")}</h2>
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Anthropic API Key</label>{configuredBadge(creds.aiAnthropicApiKey)}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.anthropicKey")}</label>{configuredBadge(creds.aiAnthropicApiKey)}</span>
                 <a data-testid="ai-anthropic-key-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-anthropic-api-key" type="password" value={creds.aiAnthropicApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiAnthropicApiKey: e.target.value }))}
                 placeholder="sk-ant-..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>OpenAI API Key</label>{configuredBadge(creds.aiOpenaiApiKey)}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.openaiKey")}</label>{configuredBadge(creds.aiOpenaiApiKey)}</span>
                 <a data-testid="ai-openai-key-link" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-openai-api-key" type="password" value={creds.aiOpenaiApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiOpenaiApiKey: e.target.value }))}
                 placeholder="sk-..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Google Gemini API Key</label>{configuredBadge(creds.aiGeminiApiKey)}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.geminiKey")}</label>{configuredBadge(creds.aiGeminiApiKey)}</span>
                 <a data-testid="ai-gemini-key-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-gemini-api-key" type="password" value={creds.aiGeminiApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiGeminiApiKey: e.target.value }))}
                 placeholder="AI..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
@@ -402,7 +413,7 @@ export default function OrgSettingsPage() {
           </div>
 
           {/* Web Search */}
-          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>Web Search</h2>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>{t("pages.orgSettings.webSearch")}</h2>
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", gap: "0.5rem" }}>
               {(["brave", "tavily"] as const).map((p) => (
@@ -416,18 +427,18 @@ export default function OrgSettingsPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Brave Search API Key</label>{configuredBadge(creds.aiBraveApiKey)}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.braveKey")}</label>{configuredBadge(creds.aiBraveApiKey)}</span>
                 <a data-testid="ai-brave-key-link" href="https://brave.com/search/api/" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-brave-api-key" type="password" value={creds.aiBraveApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiBraveApiKey: e.target.value }))}
                 placeholder="BSA..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Tavily API Key</label>{configuredBadge(creds.aiTavilyApiKey)}</span>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.tavilyKey")}</label>{configuredBadge(creds.aiTavilyApiKey)}</span>
                 <a data-testid="ai-tavily-key-link" href="https://tavily.com/" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-tavily-api-key" type="password" value={creds.aiTavilyApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiTavilyApiKey: e.target.value }))}
                 placeholder="tvly-..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
@@ -435,28 +446,28 @@ export default function OrgSettingsPage() {
           </div>
 
           {/* Model Defaults */}
-          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>Model Defaults</h2>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>{t("pages.orgSettings.modelDefaults")}</h2>
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Content writing model</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.contentModel")}</label>
                 <input data-testid="ai-content-model" type="text" value={creds.aiContentModel} onChange={(e) => setCreds((c) => ({ ...c, aiContentModel: e.target.value }))}
                   placeholder={DEFAULTS.content} style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.maxTokens")}</label>
                 <input data-testid="ai-content-max-tokens" type="number" value={creds.aiContentMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiContentMaxTokens: parseInt(e.target.value) || 0 }))}
                   placeholder="4096" style={credInputStyle} />
               </div>
             </div>
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Interactives model</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.interactivesModel")}</label>
                 <input data-testid="ai-interactives-model" type="text" value={creds.aiInteractivesModel} onChange={(e) => setCreds((c) => ({ ...c, aiInteractivesModel: e.target.value }))}
                   placeholder={DEFAULTS.code} style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.maxTokens")}</label>
                 <input data-testid="ai-interactives-max-tokens" type="number" value={creds.aiInteractivesMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiInteractivesMaxTokens: parseInt(e.target.value) || 0 }))}
                   placeholder="16384" style={credInputStyle} />
               </div>
@@ -464,17 +475,17 @@ export default function OrgSettingsPage() {
 
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Chat model</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.chatModel")}</label>
                 <input data-testid="ai-chat-model" type="text" value={creds.aiChatModel} onChange={(e) => setCreds((c) => ({ ...c, aiChatModel: e.target.value }))}
                   placeholder={DEFAULTS.code} style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.maxTokens")}</label>
                 <input data-testid="ai-chat-max-tokens" type="number" value={creds.aiChatMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiChatMaxTokens: parseInt(e.target.value) || 0 }))}
                   placeholder="8192" style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Tool iterations</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.toolIterations")}</label>
                 <input data-testid="ai-chat-max-tool-iterations" type="number" value={creds.aiChatMaxToolIterations || ""} onChange={(e) => setCreds((c) => ({ ...c, aiChatMaxToolIterations: parseInt(e.target.value) || 0 }))}
                   placeholder="25" style={credInputStyle} />
               </div>
@@ -482,19 +493,19 @@ export default function OrgSettingsPage() {
 
             {/* AI Image Analysis */}
             <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", marginTop: "0.25rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Image Analysis — batch overwrite</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.imageOverwrite")}</label>
               <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0.5rem" }}>
-                Default for all sites in this org. Sites can override.
+                {t("pages.orgSettings.imageOverwriteHint")}
               </p>
               <select data-testid="ai-image-overwrite"
                 value={creds.aiImageOverwrite}
                 onChange={(e) => setCreds((c) => ({ ...c, aiImageOverwrite: e.target.value }))}
                 style={{ ...credInputStyle, fontFamily: "inherit", cursor: "pointer" }}
               >
-                <option value="">Inherit default (ask)</option>
-                <option value="ask">Ask each time</option>
-                <option value="skip">Skip already analyzed</option>
-                <option value="overwrite">Always re-analyze</option>
+                <option value="">{t("pages.orgSettings.optInherit")}</option>
+                <option value="ask">{t("pages.orgSettings.optAsk")}</option>
+                <option value="skip">{t("pages.orgSettings.optSkip")}</option>
+                <option value="overwrite">{t("pages.orgSettings.optOverwrite")}</option>
               </select>
             </div>
           </div>
@@ -506,7 +517,7 @@ export default function OrgSettingsPage() {
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Resend API Key</label>{configuredBadge(creds.resendApiKey)}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.resendKey")}</label>{configuredBadge(creds.resendApiKey)}</span>
               <a data-testid="email-resend-link" href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>resend.com <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
@@ -514,29 +525,29 @@ export default function OrgSettingsPage() {
               placeholder="re_..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Sender email address</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.senderEmail")}</label>
             <input data-testid="email-from-address" type="email" value={creds.emailFrom} onChange={(e) => setCreds((c) => ({ ...c, emailFrom: e.target.value }))}
               placeholder="noreply@example.com" style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Sender display name</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.senderName")}</label>
             <input data-testid="email-from-name" type="text" value={creds.emailFromName} onChange={(e) => setCreds((c) => ({ ...c, emailFromName: e.target.value }))}
               placeholder={brand.name} style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", gap: "1rem" }}>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Accent color (hex)</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.accent1")}</label>
               <input data-testid="email-accent-color" type="text" value={creds.emailAccentColor} onChange={(e) => setCreds((c) => ({ ...c, emailAccentColor: e.target.value }))}
                 placeholder="#F7BB2E" style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Accent color 2 (hex)</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.accent2")}</label>
               <input data-testid="email-accent-color-2" type="text" value={creds.emailAccentColor2} onChange={(e) => setCreds((c) => ({ ...c, emailAccentColor2: e.target.value }))}
                 placeholder="#f59e0b" style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Footer name ("Sent by …")</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.footerName")}</label>
             <input data-testid="email-footer-name" type="text" value={creds.emailFooterName} onChange={(e) => setCreds((c) => ({ ...c, emailFooterName: e.target.value }))}
               placeholder={brand.name} style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
@@ -546,36 +557,36 @@ export default function OrgSettingsPage() {
       {/* ── Automation tab ────────────────────────────────────── */}
       {tab === "automation" && (
         <>
-          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>Backup Defaults</h2>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>{t("pages.orgSettings.backupDefaults")}</h2>
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Backup schedule</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.backupSchedule")}</label>
                 <CustomSelect data-testid="automation-backup-schedule" value={creds.backupSchedule || "off"} onChange={(v) => setCreds((c) => ({ ...c, backupSchedule: v }))}
-                  options={[{ value: "off", label: "Off" }, { value: "daily", label: "Daily" }, { value: "weekly", label: "Weekly" }]} />
+                  options={[{ value: "off", label: t("pages.orgSettings.off") }, { value: "daily", label: t("pages.orgSettings.daily") }, { value: "weekly", label: t("pages.orgSettings.weekly") }]} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Backup time</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.backupTime")}</label>
                 <CustomTimeInput data-testid="automation-backup-time" value={creds.backupTime} onChange={(v) => setCreds((c) => ({ ...c, backupTime: v }))} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Retention (days)</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.retention")}</label>
                 <input data-testid="automation-backup-retention" type="number" value={creds.backupRetentionDays || ""} onChange={(e) => setCreds((c) => ({ ...c, backupRetentionDays: parseInt(e.target.value) || 0 }))}
                   placeholder="30" style={credInputStyle} />
               </div>
             </div>
           </div>
 
-          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>Link Checker Defaults</h2>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.75rem" }}>{t("pages.orgSettings.linkCheckerDefaults")}</h2>
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Link check schedule</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.linkCheckSchedule")}</label>
                 <CustomSelect data-testid="automation-link-check-schedule" value={creds.linkCheckSchedule || "off"} onChange={(v) => setCreds((c) => ({ ...c, linkCheckSchedule: v }))}
-                  options={[{ value: "off", label: "Off" }, { value: "daily", label: "Daily" }, { value: "weekly", label: "Weekly" }]} />
+                  options={[{ value: "off", label: t("pages.orgSettings.off") }, { value: "daily", label: t("pages.orgSettings.daily") }, { value: "weekly", label: t("pages.orgSettings.weekly") }]} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Link check time</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.linkCheckTime")}</label>
                 <CustomTimeInput data-testid="automation-link-check-time" value={creds.linkCheckTime} onChange={(v) => setCreds((c) => ({ ...c, linkCheckTime: v }))} />
               </div>
             </div>
@@ -587,8 +598,7 @@ export default function OrgSettingsPage() {
       {tab === "features" && (
         <div style={{ maxWidth: "32rem" }} data-testid="org-settings-panel-features">
           <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem" }}>
-            Set feature capabilities for the whole organization. Each site inherits these as
-            defaults and can override individual features in its own Site Settings → Features.
+            {t("pages.orgSettings.featuresIntro")}
           </p>
           <CapabilitiesSettingsPanel endpoint="/api/admin/org-settings" selfSave />
         </div>
@@ -598,14 +608,14 @@ export default function OrgSettingsPage() {
 
       {/* Organization details */}
       <div>
-        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Organization details</h2>
+        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>{t("pages.orgSettings.orgDetails")}</h2>
         <div style={{
           background: "var(--card)", border: "1px solid var(--border)",
           borderRadius: "10px", overflow: "hidden",
         }}>
           {/* Name */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)" }}>
-            <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>Organization name</label>
+            <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>{t("pages.orgSettings.orgName")}</label>
             <input data-testid="general-org-name"
               type="text"
               value={orgName}
@@ -615,22 +625,22 @@ export default function OrgSettingsPage() {
           </div>
           {/* Slug */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)" }}>
-            <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>Organization slug</label>
+            <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>{t("pages.orgSettings.orgSlug")}</label>
             <div style={{ ...inputStyle, maxWidth: "320px", background: "var(--muted)", color: "var(--muted-foreground)", cursor: "default" }}>
               {activeOrgId}
             </div>
           </div>
           {/* Type */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)" }}>
-            <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>Type</label>
+            <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>{t("pages.orgNew.typeLabel")}</label>
             <div style={{ maxWidth: "320px", width: "100%" }}>
               <CustomSelect data-testid="general-org-type"
                 options={[
-                  { value: "agency", label: "Agency" },
-                  { value: "company", label: "Company" },
-                  { value: "personal", label: "Personal" },
-                  { value: "freelancer", label: "Freelancer" },
-                  { value: "nonprofit", label: "Non-profit" },
+                  { value: "agency", label: t("pages.orgNew.typeAgency") },
+                  { value: "company", label: t("pages.orgNew.typeCompany") },
+                  { value: "personal", label: t("pages.orgNew.typePersonal") },
+                  { value: "freelancer", label: t("pages.orgNew.typeFreelancer") },
+                  { value: "nonprofit", label: t("pages.orgNew.typeNonprofit") },
                 ]}
                 value={orgType}
                 onChange={(v) => setOrgType(v)}
@@ -639,13 +649,13 @@ export default function OrgSettingsPage() {
           </div>
           {/* Plan */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem" }}>
-            <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>Plan</label>
+            <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>{t("pages.orgNew.planLabel")}</label>
             <div style={{ maxWidth: "320px", width: "100%" }}>
               <CustomSelect data-testid="general-org-plan"
                 options={[
-                  { value: "free", label: "Free — $0/month" },
-                  { value: "pro", label: "Pro — $25/month" },
-                  { value: "team", label: "Team — $599/month" },
+                  { value: "free", label: t("pages.orgNew.planFree") },
+                  { value: "pro", label: t("pages.orgNew.planPro") },
+                  { value: "team", label: t("pages.orgNew.planTeam") },
                 ]}
                 value={orgPlan}
                 onChange={(v) => setOrgPlan(v)}
@@ -663,7 +673,7 @@ export default function OrgSettingsPage() {
               color: "var(--muted-foreground)", fontSize: "0.8rem", cursor: "pointer",
             }}
           >
-            Cancel
+            {t("pages.orgNew.cancel")}
           </button>
           <button data-testid="general-save"
             type="button"
@@ -675,16 +685,16 @@ export default function OrgSettingsPage() {
               fontSize: "0.8rem", fontWeight: 600, cursor: saving ? "wait" : "pointer",
             }}
           >
-            {saving ? "Saving..." : saved ? "Saved" : "Save"}
+            {saving ? t("pages.orgSettings.saving") : saved ? t("pages.orgSettings.saved") : t("pages.orgSettings.save")}
           </button>
         </div>
       </div>
 
       {/* Sites in this org */}
       <div style={{ marginTop: "2.5rem" }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem" }}>Sites</h2>
+        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem" }}>{t("pages.orgSettings.sites")}</h2>
         <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-          {activeOrg.sites.length} site{activeOrg.sites.length !== 1 ? "s" : ""} in this organization
+          {activeOrg.sites.length === 1 ? t("pages.orgSettings.siteCountOne", { count: activeOrg.sites.length }) : t("pages.orgSettings.siteCountOther", { count: activeOrg.sites.length })}
         </p>
         {activeOrg.sites.length > 0 && (
           <div style={{
@@ -710,16 +720,16 @@ export default function OrgSettingsPage() {
 
       {/* Danger zone */}
       <div style={{ marginTop: "2.5rem" }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--destructive)" }}>Danger zone</h2>
+        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--destructive)" }}>{t("pages.orgSettings.dangerZone")}</h2>
         <div style={{
           background: "var(--card)", border: "1px solid color-mix(in srgb, var(--destructive) 30%, var(--border))",
           borderRadius: "10px", padding: "1.25rem",
         }}>
           <p style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.25rem" }}>
-            Deleting this organization will also remove its sites
+            {t("pages.orgSettings.deleteWarnTitle")}
           </p>
           <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
-            Make sure you have made a backup of your projects if you want to keep your data.
+            {t("pages.orgSettings.deleteWarnBody")}
           </p>
           <button data-testid="general-delete-org"
             type="button"
@@ -730,7 +740,7 @@ export default function OrgSettingsPage() {
               fontSize: "0.8rem", fontWeight: 500, cursor: "pointer",
             }}
           >
-            Delete organization
+            {t("pages.orgSettings.deleteOrg")}
           </button>
         </div>
       </div>
@@ -748,23 +758,23 @@ export default function OrgSettingsPage() {
             boxShadow: "0 8px 40px rgba(0,0,0,0.5)", width: "min(440px, 90vw)", padding: "1.5rem",
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-              <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>Delete organization</h3>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>{t("pages.orgSettings.deleteOrg")}</h3>
               <button data-testid="delete-org-close" type="button" onClick={() => { setShowDeleteDialog(false); setDeleteConfirm(""); }}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.25rem" }}>×</button>
             </div>
 
             <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginBottom: "0.5rem", lineHeight: 1.5 }}>
-              This action <strong style={{ color: "var(--foreground)" }}>cannot</strong> be undone. This will permanently delete the <strong style={{ color: "var(--foreground)" }}>{activeOrg.name}</strong> organization and remove all of its sites.
+              {renderMarked(t("pages.orgSettings.deleteDialogBody", { name: activeOrg.name }), { color: "var(--foreground)" }, {})}
             </p>
 
             <p style={{ fontSize: "0.8rem", marginBottom: "0.5rem", marginTop: "1rem" }}>
-              Type <code style={{ background: "var(--muted)", padding: "0.15rem 0.4rem", borderRadius: "4px", fontSize: "0.75rem", fontFamily: "monospace" }}>{deleteCode}</code> to confirm.
+              {renderMarked(t("pages.orgSettings.typeToConfirm", { code: deleteCode }), undefined, { background: "var(--muted)", padding: "0.15rem 0.4rem", borderRadius: "4px", fontSize: "0.75rem", fontFamily: "monospace" })}
             </p>
             <input data-testid="delete-org-confirm-input"
               type="text"
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
-              placeholder="Enter the string above"
+              placeholder={t("pages.orgSettings.confirmPlaceholder")}
               autoFocus
               style={{
                 width: "100%", padding: "0.5rem 0.6rem", borderRadius: "6px",
@@ -800,7 +810,7 @@ export default function OrgSettingsPage() {
                 cursor: deleteConfirm === deleteCode && !deleting ? "pointer" : "not-allowed",
               }}
             >
-              {deleting ? "Deleting..." : "I understand, delete this organization"}
+              {deleting ? t("pages.orgSettings.deleting") : t("pages.orgSettings.confirmDelete")}
             </button>
           </div>
         </div>

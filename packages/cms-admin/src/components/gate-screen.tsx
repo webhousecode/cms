@@ -4,6 +4,7 @@ import { BrandLogo } from "@/components/brand-logo";
 
 import { useEffect } from "react";
 import { Github, AlertTriangle } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 /**
  * Full-page branded gate screen — same visual style as login/invite pages.
@@ -66,15 +67,16 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 /** Gate: User has no team membership on any site */
 export function NoAccessGate() {
+  const t = useT();
   return (
     <Shell>
       <div style={{ textAlign: "center" }}>
         <h1 style={{ margin: "0 0 12px", fontSize: "20px", fontWeight: 700, color: "#fafafa" }}>
-          No access
+          {t("shell.gateScreen.noAccess")}
         </h1>
         <p style={{ margin: "0 0 20px", fontSize: "14px", color: "hsl(0 0% 50%)", lineHeight: 1.6 }}>
-          You don&apos;t have access to any sites yet.<br />
-          Ask an administrator to invite you.
+          {t("shell.gateScreen.noSitesYet")}<br />
+          {t("shell.gateScreen.askAdmin")}
         </p>
         <a
           data-testid="gate-sign-out-link"
@@ -85,7 +87,7 @@ export function NoAccessGate() {
             textDecoration: "none",
           }}
         >
-          Sign out
+          {t("shell.gateScreen.signOut")}
         </a>
       </div>
     </Shell>
@@ -94,14 +96,15 @@ export function NoAccessGate() {
 
 /** Gate: GitHub-backed site requires OAuth token */
 export function ConnectGitHubGate({ message, showButton = true }: { message?: string; showButton?: boolean } = {}) {
+  const t = useT();
   return (
     <Shell>
       <div style={{ textAlign: "center" }}>
         <h1 style={{ margin: "0 0 12px", fontSize: "20px", fontWeight: 700, color: "#fafafa" }}>
-          {showButton ? "Connect GitHub" : "Waiting for setup"}
+          {showButton ? t("shell.gateScreen.connectGithub") : t("shell.gateScreen.waitingForSetup")}
         </h1>
         <p style={{ margin: "0 0 24px", fontSize: "14px", color: "hsl(0 0% 50%)", lineHeight: 1.6 }}>
-          {message ?? <>This site stores content on GitHub.<br />Connect your account to continue.</>}
+          {message ?? <>{t("shell.gateScreen.storesOnGithub")}<br />{t("shell.gateScreen.connectToContinue")}</>}
         </p>
         {showButton && (
           <a
@@ -121,7 +124,7 @@ export function ConnectGitHubGate({ message, showButton = true }: { message?: st
             }}
           >
             <Github style={{ width: 16, height: 16 }} />
-            Connect GitHub
+            {t("shell.gateScreen.connectGithub")}
           </a>
         )}
       </div>
@@ -131,6 +134,7 @@ export function ConnectGitHubGate({ message, showButton = true }: { message?: st
 
 /** Gate: Redirect user to a site they have access to (sets cookies client-side) */
 export function GitHubErrorGate({ message }: { message: string }) {
+  const t = useT();
   const isRateLimit = message.includes("403");
   const isBadToken = message.includes("401") || message.includes("bad token");
 
@@ -144,13 +148,13 @@ export function GitHubErrorGate({ message }: { message: string }) {
       <div style={{ textAlign: "center", maxWidth: "420px" }}>
         <AlertTriangle style={{ width: "2.5rem", height: "2.5rem", color: "rgb(234 179 8)", margin: "0 auto 1rem" }} />
         <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-          {isRateLimit ? "GitHub API Rate Limited" : isBadToken ? "GitHub Token Expired" : "GitHub Connection Error"}
+          {isRateLimit ? t("shell.gateScreen.rateLimited") : isBadToken ? t("shell.gateScreen.tokenExpired") : t("shell.gateScreen.connectionError")}
         </h1>
         <p style={{ fontSize: "0.85rem", color: "hsl(0 0% 55%)", lineHeight: 1.6, marginBottom: "1.5rem" }}>
           {isRateLimit
-            ? "Too many requests to GitHub API. This resets automatically within a few minutes. You can switch to a local site in the meantime."
+            ? t("shell.gateScreen.rateLimitedHint")
             : isBadToken
-            ? "The GitHub access token has expired or been revoked. Reconnect GitHub in Site Settings, or switch to another site."
+            ? t("shell.gateScreen.tokenExpiredHint")
             : message}
         </p>
         <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
@@ -164,7 +168,7 @@ export function GitHubErrorGate({ message }: { message: string }) {
               border: "none", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer",
             }}
           >
-            Switch to local site
+            {t("shell.gateScreen.switchToLocal")}
           </button>
           <button
             data-testid="gate-retry-button"
@@ -176,7 +180,7 @@ export function GitHubErrorGate({ message }: { message: string }) {
               border: "1px solid hsl(0 0% 25%)", fontSize: "0.85rem", cursor: "pointer",
             }}
           >
-            Retry
+            {t("shell.gateScreen.retry")}
           </button>
         </div>
       </div>
@@ -190,6 +194,7 @@ export function GitHubErrorGate({ message }: { message: string }) {
  * rest of the CMS remains fully usable while they fix the config.
  */
 export function SiteConfigErrorGate({ siteName, errors }: { siteName: string; errors: string }) {
+  const t = useT();
   function switchSite() {
     // Clear site/org cookies — next navigation will fall back to registry defaults
     document.cookie = "cms-active-site=;path=/;max-age=0;samesite=lax";
@@ -202,12 +207,14 @@ export function SiteConfigErrorGate({ siteName, errors }: { siteName: string; er
       <div style={{ textAlign: "center" }}>
         <AlertTriangle style={{ width: "2.5rem", height: "2.5rem", color: "rgb(239 68 68)", margin: "0 auto 1rem" }} />
         <h1 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.4rem", color: "#fafafa" }}>
-          Site config error
+          {t("shell.gateScreen.configError")}
         </h1>
         <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 55%)", lineHeight: 1.5, marginBottom: "0.75rem" }}>
-          <strong style={{ color: "hsl(0 0% 75%)" }}>&quot;{siteName}&quot;</strong> has an invalid{" "}
-          <code style={{ fontSize: "0.75rem" }}>cms.config.ts</code> and cannot load.
-          Fix the config below, then switch back to this site.
+          {t("shell.gateScreen.configErrorText", { site: "\u0001", file: "\u0002" }).split(/(\u0001|\u0002)/).map((part, i) =>
+            part === "\u0001" ? <strong key={i} style={{ color: "hsl(0 0% 75%)" }}>{`"${siteName}"`}</strong>
+            : part === "\u0002" ? <code key={i} style={{ fontSize: "0.75rem" }}>cms.config.ts</code>
+            : <span key={i}>{part}</span>
+          )}
         </p>
         <pre style={{
           textAlign: "left", fontSize: "0.65rem", lineHeight: 1.6,
@@ -228,7 +235,7 @@ export function SiteConfigErrorGate({ siteName, errors }: { siteName: string; er
             border: "none", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer",
           }}
         >
-          Switch to another site
+          {t("shell.gateScreen.switchToAnother")}
         </button>
       </div>
     </Shell>
@@ -236,6 +243,7 @@ export function SiteConfigErrorGate({ siteName, errors }: { siteName: string; er
 }
 
 export function SiteRedirectGate({ siteId, orgId }: { siteId: string; orgId: string }) {
+  const t = useT();
   useEffect(() => {
     document.cookie = `cms-active-site=${encodeURIComponent(siteId)};path=/;max-age=31536000;samesite=lax`;
     document.cookie = `cms-active-org=${encodeURIComponent(orgId)};path=/;max-age=31536000;samesite=lax`;
@@ -246,7 +254,7 @@ export function SiteRedirectGate({ siteId, orgId }: { siteId: string; orgId: str
     <Shell>
       <div style={{ textAlign: "center" }}>
         <p style={{ margin: 0, fontSize: "14px", color: "hsl(0 0% 50%)" }}>
-          Redirecting to your site…
+          {t("shell.gateScreen.redirecting")}
         </p>
       </div>
     </Shell>

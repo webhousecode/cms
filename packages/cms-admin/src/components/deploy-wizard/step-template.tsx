@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2, Globe } from "lucide-react";
 import { TemplateCard } from "./template-card";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { useT } from "@/lib/i18n-context";
 
 interface Template {
   id: string;
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export function StepTemplate({ selected, onSelect }: Props) {
+  const t = useT();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [sites, setSites] = useState<OrgSite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,26 +58,26 @@ export function StepTemplate({ selected, onSelect }: Props) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem", color: "var(--muted-foreground)" }}>
         <Loader2 className="animate-spin" style={{ width: 20, height: 20, marginRight: "0.5rem" }} />
-        Loading...
+        {t("misc.deployWizard.template.loading")}
       </div>
     );
   }
 
-  const withContent = templates.filter((t) => t.hasContent);
-  const boilerplates = templates.filter((t) => !t.hasContent);
+  const withContent = templates.filter((tpl) => tpl.hasContent);
+  const boilerplates = templates.filter((tpl) => !tpl.hasContent);
 
   return (
     <div>
-      <SectionHeading>What do you want to deploy?</SectionHeading>
+      <SectionHeading>{t("misc.deployWizard.template.title")}</SectionHeading>
       <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.5rem" }}>
-        Deploy an existing site from your CMS, or start fresh with a template.
+        {t("misc.deployWizard.template.intro")}
       </p>
 
       {/* ── Existing sites ── */}
       {sites.length > 0 && (
         <>
           <h3 style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
-            Your Sites
+            {t("misc.deployWizard.template.yourSites")}
           </h3>
           <div style={{
             display: "grid",
@@ -117,23 +119,23 @@ export function StepTemplate({ selected, onSelect }: Props) {
 
       {/* ── Templates ── */}
       <h3 style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
-        Templates
+        {t("misc.deployWizard.template.templates")}
       </h3>
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
         gap: "1rem",
       }}>
-        {withContent.map((t) => (
+        {withContent.map((tpl) => (
           <TemplateCard
-            key={t.id}
-            id={t.id}
-            name={t.name}
-            description={t.description}
-            tags={t.tags}
-            screenshotUrl={t.screenshotUrl}
-            selected={selected === t.id}
-            onClick={() => onSelect(t.id)}
+            key={tpl.id}
+            id={tpl.id}
+            name={tpl.name}
+            description={tpl.description}
+            tags={tpl.tags}
+            screenshotUrl={tpl.screenshotUrl}
+            selected={selected === tpl.id}
+            onClick={() => onSelect(tpl.id)}
           />
         ))}
       </div>
@@ -141,23 +143,23 @@ export function StepTemplate({ selected, onSelect }: Props) {
       {boilerplates.length > 0 && (
         <>
           <h3 style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "2rem", marginBottom: "0.75rem" }}>
-            Starter Boilerplates
+            {t("misc.deployWizard.template.boilerplates")}
           </h3>
           <div style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
             gap: "1rem",
           }}>
-            {boilerplates.map((t) => (
+            {boilerplates.map((tpl) => (
               <TemplateCard
-                key={t.id}
-                id={t.id}
-                name={t.name}
-                description={t.description}
-                tags={t.tags}
-                screenshotUrl={t.screenshotUrl}
-                selected={selected === t.id}
-                onClick={() => onSelect(t.id)}
+                key={tpl.id}
+                id={tpl.id}
+                name={tpl.name}
+                description={tpl.description}
+                tags={tpl.tags}
+                screenshotUrl={tpl.screenshotUrl}
+                selected={selected === tpl.id}
+                onClick={() => onSelect(tpl.id)}
               />
             ))}
           </div>

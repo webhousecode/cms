@@ -5,6 +5,7 @@ import { BrandLogo } from "@/components/brand-logo";
 
 import { useState, FormEvent } from "react";
 import { Suspense } from "react";
+import { useT } from "@/lib/i18n-context";
 
 /* ── Shared input style (matches login page) ── */
 const inputStyle: React.CSSProperties = {
@@ -33,17 +34,17 @@ const fieldGap: React.CSSProperties = {
 
 /* ── Card-select for site type ── */
 const siteTypes = [
-  { value: "blog", label: "Blog / Docs", icon: "📝" },
-  { value: "portfolio", label: "Portfolio", icon: "🎨" },
-  { value: "business", label: "Business site", icon: "🏢" },
-  { value: "ecommerce", label: "E-commerce", icon: "🛒" },
-  { value: "other", label: "Something else", icon: "✨" },
+  { value: "blog", label: "auth.signup.typeBlog", icon: "📝" },
+  { value: "portfolio", label: "auth.signup.typePortfolio", icon: "🎨" },
+  { value: "business", label: "auth.signup.typeBusiness", icon: "🏢" },
+  { value: "ecommerce", label: "auth.signup.typeEcommerce", icon: "🛒" },
+  { value: "other", label: "auth.signup.typeOther", icon: "✨" },
 ];
 
 const experienceLevels = [
-  { value: "non-technical", label: "Non-technical" },
-  { value: "somewhat", label: "Somewhat technical" },
-  { value: "developer", label: "Developer" },
+  { value: "non-technical", label: "auth.signup.expNonTechnical" },
+  { value: "somewhat", label: "auth.signup.expSomewhat" },
+  { value: "developer", label: "auth.signup.expDeveloper" },
 ];
 
 function focusGold(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -55,6 +56,7 @@ function blurReset(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) 
 
 function SignupForm() {
   const brand = useBrand();
+  const t = useT();
   const [step, setStep] = useState<1 | 2 | "done">(1);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -132,7 +134,7 @@ function SignupForm() {
             <BrandLogo variant="wordmark" light={false} style={{ height: "28px", width: "auto" }} />
             {step !== "done" && (
               <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>
-                {step === 1 ? "Create your account" : "Personalize your AI"}
+                {step === 1 ? t("auth.signup.step1Title") : t("auth.signup.step2Title")}
               </p>
             )}
           </div>
@@ -156,7 +158,7 @@ function SignupForm() {
           {step === 1 && (
             <form data-testid="signup-step1-form" onSubmit={handleStep1} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
               <div style={fieldGap}>
-                <label style={labelStyle}>Email</label>
+                <label style={labelStyle}>{t("auth.signup.email")}</label>
                 <input
                   data-testid="signup-email-input"
                   type="email"
@@ -164,7 +166,7 @@ function SignupForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoFocus
-                  placeholder="you@company.com"
+                  placeholder={t("auth.signup.emailPlaceholder")}
                   style={inputStyle}
                   onFocus={focusGold}
                   onBlur={blurReset}
@@ -172,7 +174,7 @@ function SignupForm() {
               </div>
 
               <div style={fieldGap}>
-                <label style={labelStyle}>Password</label>
+                <label style={labelStyle}>{t("auth.signup.password")}</label>
                 <input
                   data-testid="signup-password-input"
                   type="password"
@@ -180,7 +182,7 @@ function SignupForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={8}
-                  placeholder="Min. 8 characters"
+                  placeholder={t("auth.signup.passwordPlaceholder")}
                   style={inputStyle}
                   onFocus={focusGold}
                   onBlur={blurReset}
@@ -188,14 +190,14 @@ function SignupForm() {
               </div>
 
               <div style={fieldGap}>
-                <label style={labelStyle}>Project name</label>
+                <label style={labelStyle}>{t("auth.signup.projectName")}</label>
                 <input
                   data-testid="signup-project-input"
                   type="text"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
                   required
-                  placeholder="My portfolio, Acme blog..."
+                  placeholder={t("auth.signup.projectNamePlaceholder")}
                   style={inputStyle}
                   onFocus={focusGold}
                   onBlur={blurReset}
@@ -213,12 +215,12 @@ function SignupForm() {
                 cursor: "pointer",
                 marginTop: "0.25rem",
               }}>
-                Continue
+                {t("auth.signup.continue")}
               </button>
 
               <p style={{ textAlign: "center", fontSize: "0.8rem", color: "hsl(0 0% 45%)", margin: 0 }}>
-                Already have an account?{" "}
-                <a data-testid="signup-login-link" href="/login" style={{ color: "var(--brand-on-dark)", textDecoration: "none" }}>Sign in</a>
+                {t("auth.signup.haveAccount")}{" "}
+                <a data-testid="signup-login-link" href="/login" style={{ color: "var(--brand-on-dark)", textDecoration: "none" }}>{t("auth.signup.signIn")}</a>
               </p>
             </form>
           )}
@@ -228,24 +230,24 @@ function SignupForm() {
             <form data-testid="signup-step2-form" onSubmit={handleStep2} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {/* Site type — card select */}
               <div style={fieldGap}>
-                <label style={labelStyle}>What are you building?</label>
+                <label style={labelStyle}>{t("auth.signup.whatBuilding")}</label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-                  {siteTypes.map((t) => (
+                  {siteTypes.map((st) => (
                     <button
-                      data-testid={`signup-site-type-${t.value}`}
-                      key={t.value}
+                      data-testid={`signup-site-type-${st.value}`}
+                      key={st.value}
                       type="button"
-                      onClick={() => setSiteType(t.value)}
+                      onClick={() => setSiteType(st.value)}
                       style={{
                         padding: "0.5rem 0.6rem",
                         borderRadius: "8px",
-                        border: siteType === t.value
+                        border: siteType === st.value
                           ? "1px solid var(--brand-strong)"
                           : "1px solid hsl(0 0% 20%)",
-                        background: siteType === t.value
+                        background: siteType === st.value
                           ? "color-mix(in srgb, var(--brand-strong) 8%, transparent)"
                           : "hsl(0 0% 10%)",
-                        color: siteType === t.value ? "var(--brand-on-dark-soft)" : "hsl(0 0% 70%)",
+                        color: siteType === st.value ? "var(--brand-on-dark-soft)" : "hsl(0 0% 70%)",
                         fontSize: "0.8rem",
                         cursor: "pointer",
                         display: "flex",
@@ -255,7 +257,7 @@ function SignupForm() {
                         textAlign: "left",
                       }}
                     >
-                      <span>{t.icon}</span> {t.label}
+                      <span>{st.icon}</span> {t(st.label)}
                     </button>
                   ))}
                 </div>
@@ -263,7 +265,7 @@ function SignupForm() {
 
               {/* Experience level — pill selector */}
               <div style={fieldGap}>
-                <label style={labelStyle}>How technical are you?</label>
+                <label style={labelStyle}>{t("auth.signup.howTechnical")}</label>
                 <div style={{ display: "flex", gap: "6px" }}>
                   {experienceLevels.map((l) => (
                     <button
@@ -288,7 +290,7 @@ function SignupForm() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      {l.label}
+                      {t(l.label)}
                     </button>
                   ))}
                 </div>
@@ -297,14 +299,14 @@ function SignupForm() {
               {/* Freeform description */}
               <div style={fieldGap}>
                 <label style={labelStyle}>
-                  Describe your site in a sentence{" "}
-                  <span style={{ color: "hsl(0 0% 35%)" }}>(optional)</span>
+                  {t("auth.signup.describe")}{" "}
+                  <span style={{ color: "hsl(0 0% 35%)" }}>{t("auth.signup.optional")}</span>
                 </label>
                 <textarea
                   data-testid="signup-description-input"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="A photography portfolio with a blog and contact page"
+                  placeholder={t("auth.signup.describePlaceholder")}
                   rows={2}
                   style={{
                     ...inputStyle,
@@ -315,7 +317,7 @@ function SignupForm() {
                   onBlur={blurReset as unknown as React.FocusEventHandler<HTMLTextAreaElement>}
                 />
                 <p style={{ fontSize: "0.7rem", color: "hsl(0 0% 35%)", margin: 0, lineHeight: 1.4 }}>
-                  This becomes the seed prompt for your AI — it will generate your schema and initial content from this.
+                  {t("auth.signup.describeHint")}
                 </p>
               </div>
 
@@ -334,7 +336,7 @@ function SignupForm() {
                     cursor: "pointer",
                   }}
                 >
-                  Back
+                  {t("auth.signup.back")}
                 </button>
                 <button data-testid="signup-step2-submit" type="submit" style={{
                   flex: 1,
@@ -347,7 +349,7 @@ function SignupForm() {
                   fontWeight: 600,
                   cursor: "pointer",
                 }}>
-                  Create account
+                  {t("auth.signup.createAccount")}
                 </button>
               </div>
             </form>
@@ -370,12 +372,12 @@ function SignupForm() {
                 ✓
               </div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fafafa", marginBottom: "0.5rem" }}>
-                You&apos;re on the list
+                {t("auth.signup.onTheList")}
               </h2>
               <p style={{ fontSize: "0.85rem", color: "hsl(0 0% 50%)", lineHeight: 1.6, marginBottom: "1.25rem" }}>
-                {brand.name} is in active development. We&apos;ll notify you at{" "}
-                <span style={{ color: "var(--brand-on-dark)" }}>{email}</span>{" "}
-                when your account is ready.
+                {t("auth.signup.doneBody", { brand: brand.name }).split("{email}")[0]}
+                <span style={{ color: "var(--brand-on-dark)" }}>{email}</span>
+                {t("auth.signup.doneBody", { brand: brand.name }).split("{email}")[1]}
               </p>
               <a
                 data-testid="signup-home-link"
@@ -390,7 +392,7 @@ function SignupForm() {
                   fontSize: "0.85rem",
                 }}
               >
-                ← Back to home
+                {t("auth.signup.backHome")}
               </a>
             </div>
           )}

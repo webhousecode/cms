@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   value: string;
@@ -56,8 +57,8 @@ function parseYmdLocal(s: string): Date | null {
 }
 
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "january", "february", "march", "april", "may", "june",
+  "july", "august", "september", "october", "november", "december",
 ];
 
 export function CustomDateInput({
@@ -69,6 +70,7 @@ export function CustomDateInput({
   max,
   style,
 }: Props) {
+  const t = useT();
   const [draft, setDraft] = useState(value);
   const [focused, setFocused] = useState(false);
   const [open, setOpen] = useState(false);
@@ -196,7 +198,7 @@ export function CustomDateInput({
             setOpen((v) => !v);
           }}
           disabled={disabled}
-          aria-label="Open calendar"
+          aria-label={t("common.dateInput.openCalendar")}
           style={{
             position: "absolute",
             right: "0.4rem",
@@ -217,7 +219,7 @@ export function CustomDateInput({
       </div>
       {showError && (
         <span style={{ fontSize: "0.7rem", color: "var(--destructive)", lineHeight: 1.2 }}>
-          Use YYYY-MM-DD
+          {t("common.dateInput.formatHint")}
         </span>
       )}
       {open && !disabled && (
@@ -243,25 +245,25 @@ export function CustomDateInput({
               type="button"
               onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
               style={navBtnStyle}
-              aria-label="Previous month"
+              aria-label={t("common.dateInput.previousMonth")}
             >
               <ChevronLeft style={{ width: "0.8rem", height: "0.8rem" }} />
             </button>
             <span style={{ fontSize: "0.8rem", fontWeight: 500 }}>
-              {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
+              {t(`common.dateInput.months.${MONTHS[cursor.getMonth()]}`)} {cursor.getFullYear()}
             </span>
             <button
               data-testid="custom-date-next-month"
               type="button"
               onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
               style={navBtnStyle}
-              aria-label="Next month"
+              aria-label={t("common.dateInput.nextMonth")}
             >
               <ChevronRight style={{ width: "0.8rem", height: "0.8rem" }} />
             </button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
-            {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+            {t("common.dateInput.weekdayInitials").split(" ").map((d, i) => (
               <div
                 key={i}
                 style={{
@@ -318,7 +320,7 @@ export function CustomDateInput({
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem" }}>
             <button data-testid="custom-date-today" type="button" onClick={() => pickDate(new Date())} style={footBtnStyle}>
-              Today
+              {t("common.dateInput.today")}
             </button>
             {value && (
               <button
@@ -331,7 +333,7 @@ export function CustomDateInput({
                 }}
                 style={footBtnStyle}
               >
-                Clear
+                {t("common.dateInput.clear")}
               </button>
             )}
           </div>

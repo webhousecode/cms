@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { Fragment, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { Rocket, Check, Loader2, ExternalLink, AlertCircle, Copy } from "lucide-react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import type { WizardState } from "./deploy-wizard";
+import { useT } from "@/lib/i18n-context";
 
 interface ProgressEvent {
   step: string;
@@ -15,20 +16,28 @@ interface ProgressEvent {
 }
 
 const STEPS = [
-  { key: "init", label: "Validating" },
-  { key: "create-app", label: "Creating app" },
-  { key: "set-secrets", label: "Setting secrets" },
-  { key: "create-machine", label: "Deploying container" },
-  { key: "wait-healthy", label: "Starting" },
-  { key: "allocate-ip", label: "Allocating IPs" },
-  { key: "done", label: "Live" },
+  { key: "init", label: "misc.deployWizard.deployStep.steps.init" },
+  { key: "create-app", label: "misc.deployWizard.deployStep.steps.createApp" },
+  { key: "set-secrets", label: "misc.deployWizard.deployStep.steps.setSecrets" },
+  { key: "create-machine", label: "misc.deployWizard.deployStep.steps.createMachine" },
+  { key: "wait-healthy", label: "misc.deployWizard.deployStep.steps.waitHealthy" },
+  { key: "allocate-ip", label: "misc.deployWizard.deployStep.steps.allocateIp" },
+  { key: "done", label: "misc.deployWizard.deployStep.steps.done" },
 ];
+
+/** Renders a translated sentence whose {placeholders} are React nodes. */
+function withNodes(text: string, nodes: Record<string, ReactNode>): ReactNode {
+  return text.split(/\{(\w+)\}/).map((part, i) =>
+    i % 2 === 1 && part in nodes ? <Fragment key={i}>{nodes[part]}</Fragment> : part,
+  );
+}
 
 interface Props {
   state: WizardState;
 }
 
 export function StepDeploy({ state }: Props) {
+  const t = useT();
   const [deploying, setDeploying] = useState(false);
   const [events, setEvents] = useState<ProgressEvent[]>([]);
   const [currentEvent, setCurrentEvent] = useState<ProgressEvent | null>(null);
@@ -61,7 +70,7 @@ export function StepDeploy({ state }: Props) {
       });
 
       if (!res.ok || !res.body) {
-        const text = await res.text().catch(() => "Deploy failed");
+        const text = await res.text().catch(() => t("misc.deployWizard.deployStep.failed"));
         setCurrentEvent({ step: "error", message: text, progress: 100, status: "error" });
         setDeploying(false);
         return;
@@ -116,7 +125,7 @@ export function StepDeploy({ state }: Props) {
 
   return (
     <div>
-      <SectionHeading>Deploying to Fly.io</SectionHeading>
+      <SectionHeading>{t("misc.deployWizard.deployStep.title")}</SectionHeading>
 
       {/* Progress bar */}
       <div style={{
@@ -172,7 +181,7 @@ export function StepDeploy({ state }: Props) {
                 fontWeight: isActive ? 500 : 400,
                 color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
               }}>
-                {step.label}
+                {t(step.label)}
               </span>
             </div>
           );
@@ -190,7 +199,7 @@ export function StepDeploy({ state }: Props) {
         border: "1px solid var(--border)",
         minHeight: "1.5rem",
       }}>
-        {currentEvent?.message ?? "Initializing..."}
+        {currentEvent?.message ?? t("misc.deployWizard.deployStep.initializing")}
       </div>
 
       {/* Error */}
@@ -207,7 +216,7 @@ export function StepDeploy({ state }: Props) {
         }}>
           <AlertCircle style={{ width: 16, height: 16, color: "var(--destructive)", flexShrink: 0, marginTop: "0.1rem" }} />
           <span style={{ fontSize: "0.75rem", color: "var(--destructive)", lineHeight: 1.4 }}>
-            {currentEvent?.error ?? "Deploy failed"}
+            {currentEvent?.error ?? t("misc.deployWizard.deployStep.failed")}
           </span>
         </div>
       )}
@@ -247,14 +256,16 @@ export function StepDeploy({ state }: Props) {
             border: "1px solid var(--border)",
           }}>
             <p style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
-              Admin credentials (save these!)
+              {t("misc.deployWizard.deployStep.credentials")}
             </p>
             <div style={{ fontSize: "0.78rem", fontFamily: "monospace", lineHeight: 1.8 }}>
-              <div>Email: {state.adminEmail || "admin@webhouse.app"}</div>
-              <div>Password: <em style={{ color: "var(--muted-foreground)" }}>check Fly.io secrets</em></div>
+              <div>{t("misc.deployWizard.deployStep.email", { email: state.adminEmail || "admin@webhouse.app" })}</div>
+              <div>{withNodes(t("misc.deployWizard.deployStep.password"), { hint: <em style={{ color: "var(--muted-foreground)" }}>{t("misc.deployWizard.deployStep.passwordHint")}</em> })}</div>
             </div>
             <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", marginTop: "0.5rem" }}>
-              Run <code style={{ fontSize: "0.65rem", padding: "1px 3px", borderRadius: 3, background: "var(--background)" }}>fly secrets list -a {state.appName}</code> to see the generated password.
+              {withNodes(t("misc.deployWizard.deployStep.runHint"), {
+                command: <code style={{ fontSize: "0.65rem", padding: "1px 3px", borderRadius: 3, background: "var(--background)" }}>fly secrets list -a {state.appName}</code>,
+              })}
             </p>
           </div>
         </div>

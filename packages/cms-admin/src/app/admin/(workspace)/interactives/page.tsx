@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n-context";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface InteractiveMeta {
@@ -56,6 +57,7 @@ function formatDate(iso: string): string {
 
 /* ─── Page ───────────────────────────────────────────────────── */
 export default function InteractivesPage() {
+  const t = useT();
   const router = useRouter();
   const siteRole = useSiteRole();
   const readOnly = siteRole === null || siteRole === "viewer";
@@ -104,9 +106,9 @@ export default function InteractivesPage() {
       fd.append("file", file);
       try {
         await fetch("/api/interactives", { method: "POST", body: fd });
-        toast.success("Interactive uploaded", { description: file.name });
+        toast.success(t("pages.interactivesList.uploaded"), { description: file.name });
       } catch {
-        toast.error("Upload failed");
+        toast.error(t("pages.interactivesList.uploadFailed"));
       }
     }
     await loadItems();
@@ -334,7 +336,7 @@ export default function InteractivesPage() {
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors"
             >
               <Sparkles style={{ width: "0.875rem", height: "0.875rem" }} />
-              Create with AI
+              {t("pages.interactivesList.createWithAi")}
             </button>
           )}
 
@@ -352,12 +354,12 @@ export default function InteractivesPage() {
               )}
             >
               <Upload style={{ width: "0.875rem", height: "0.875rem" }} />
-              {uploading ? "Uploading…" : "Upload"}
+              {uploading ? t("pages.interactivesList.uploading") : t("pages.interactivesList.upload")}
             </button>
           )}
         </>}
       >
-        <ActionBarBreadcrumb items={["Interactives"]} /></ActionBar>
+        <ActionBarBreadcrumb items={[t("pages.interactivesList.breadcrumb")]} /></ActionBar>
 
       <input
         data-testid="interactives-file-input"
@@ -379,15 +381,15 @@ export default function InteractivesPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search…"
+              placeholder={t("pages.interactivesList.searchPlaceholder")}
               style={{ width: "100%", paddingLeft: "2rem", paddingRight: "0.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", fontSize: "0.8rem", color: "var(--foreground)", outline: "none", boxSizing: "border-box" }}
             />
           </div>
           <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
             {([
-              { value: "all" as const, label: "All", count: counts.all, color: "var(--muted-foreground)" },
-              { value: "published" as const, label: "Published", count: counts.published, color: "rgb(74 222 128)" },
-              { value: "draft" as const, label: "Draft", count: counts.draft, color: "rgb(234 179 8)" },
+              { value: "all" as const, label: t("pages.interactivesList.filterAll"), count: counts.all, color: "var(--muted-foreground)" },
+              { value: "published" as const, label: t("pages.interactivesList.filterPublished"), count: counts.published, color: "rgb(74 222 128)" },
+              { value: "draft" as const, label: t("pages.interactivesList.filterDraft"), count: counts.draft, color: "rgb(234 179 8)" },
             ] as const).filter((o) => o.value === "all" || o.count > 0).map((opt) => (
               <button
                 data-testid={`interactives-status-filter-${opt.value}`}
@@ -412,14 +414,14 @@ export default function InteractivesPage() {
 
       {/* Content */}
       {loading ? (
-        <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Loading…</div>
+        <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)", fontSize: "0.875rem" }}>{t("pages.interactivesList.loading")}</div>
       ) : filtered.length === 0 ? (
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1rem", padding: "4rem 2rem", color: "var(--muted-foreground)" }}>
           <Zap style={{ width: "2.5rem", height: "2.5rem", opacity: 0.3 }} />
-          <p style={{ fontSize: "0.875rem" }}>{query ? `No interactives matching "${query}"` : "No interactives yet"}</p>
+          <p style={{ fontSize: "0.875rem" }}>{query ? t("pages.interactivesList.noMatches", { query }) : t("pages.interactivesList.empty")}</p>
           {!query && (
             <button data-testid="interactives-empty-upload-button" type="button" onClick={() => inputRef.current?.click()} style={{ fontSize: "0.8rem", padding: "0.5rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer" }}>
-              Upload HTML files or drag &amp; drop
+              {t("pages.interactivesList.emptyUpload")}
             </button>
           )}
         </div>
@@ -468,14 +470,14 @@ export default function InteractivesPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
             <thead>
               <tr>
-                {([["Name", "name"], ["Status", "status"], ["Size", "size"], ["Updated", "updatedAt"]] as const).map(([label, sk]) => (
+                {([["pages.interactivesList.colName", "name"], ["pages.interactivesList.colStatus", "status"], ["pages.interactivesList.colSize", "size"], ["pages.interactivesList.colUpdated", "updatedAt"]] as const).map(([labelKey, sk]) => (
                   <th key={sk} style={thStyle}>
                     <button data-testid="interactives-list-sort-button"
                       type="button"
                       onClick={() => toggleSort(sk)}
                       style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", color: sortKey === sk ? "var(--foreground)" : "inherit", fontWeight: sortKey === sk ? 600 : 500 }}
                     >
-                      {label}
+                      {t(labelKey)}
                       <ArrowUpDown style={{ width: "0.65rem", height: "0.65rem", opacity: sortKey === sk ? 1 : 0.4 }} />
                     </button>
                   </th>
@@ -533,16 +535,16 @@ export default function InteractivesPage() {
             <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
               <AlertTriangle style={{ width: "1.25rem", height: "1.25rem", color: "rgb(239 68 68)", flexShrink: 0, marginTop: "1px" }} />
               <div>
-                <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>Move to trash?</p>
+                <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("pages.interactivesList.trashConfirmTitle")}</p>
                 <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace", wordBreak: "break-all", marginTop: "0.2rem" }}>{confirmTrash.name}</p>
               </div>
             </div>
             <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-              This interactive will be moved to trash. You can restore it later.
+              {t("pages.interactivesList.trashConfirmBody")}
             </p>
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-              <Button variant="outline" size="sm" onClick={() => setConfirmTrash(null)}>Cancel</Button>
-              <Button variant="destructive" size="sm" onClick={trashItem}>Move to trash</Button>
+              <Button variant="outline" size="sm" onClick={() => setConfirmTrash(null)}>{t("pages.interactivesList.cancel")}</Button>
+              <Button variant="destructive" size="sm" onClick={trashItem}>{t("pages.interactivesList.moveToTrash")}</Button>
             </div>
           </div>
         </div>
@@ -558,10 +560,10 @@ export default function InteractivesPage() {
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", maxWidth: "520px", width: "90%", display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <Sparkles style={{ width: "1.125rem", height: "1.125rem", color: "var(--primary)" }} />
-              <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Create Interactive with AI</span>
+              <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>{t("pages.interactivesList.aiTitle")}</span>
             </div>
             <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Describe the interactive component you want. AI will generate a complete standalone HTML file.
+              {t("pages.interactivesList.aiDescription")}
             </p>
             <textarea
               data-testid="interactives-ai-prompt-textarea"
@@ -569,7 +571,7 @@ export default function InteractivesPage() {
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAiGenerate(); }}
-              placeholder="e.g. A bar chart showing monthly sales data with animated bars and hover tooltips..."
+              placeholder={t("pages.interactivesList.aiPlaceholder")}
               disabled={aiGenerating}
               rows={4}
               style={{
@@ -583,36 +585,36 @@ export default function InteractivesPage() {
             {!aiGenerating && !aiPrompt && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
                 {[
-                  "Animated pie chart with 4 categories",
-                  "Interactive quiz with 5 questions",
-                  "Pricing calculator with sliders",
-                  "Timeline of events with scroll animation",
-                ].map((s) => (
+                  { id: "Animated pie chart with 4 categories", key: "pages.interactivesList.suggestionPie" },
+                  { id: "Interactive quiz with 5 questions", key: "pages.interactivesList.suggestionQuiz" },
+                  { id: "Pricing calculator with sliders", key: "pages.interactivesList.suggestionPricing" },
+                  { id: "Timeline of events with scroll animation", key: "pages.interactivesList.suggestionTimeline" },
+                ].map(({ id, key }) => (
                   <button
-                    data-testid={`interactives-ai-suggestion-${s.replace(/\s+/g, '-').toLowerCase()}`}
-                    key={s}
+                    data-testid={`interactives-ai-suggestion-${id.replace(/\s+/g, '-').toLowerCase()}`}
+                    key={id}
                     type="button"
-                    onClick={() => { setAiPrompt(s); aiTextareaRef.current?.focus(); }}
+                    onClick={() => { setAiPrompt(t(key)); aiTextareaRef.current?.focus(); }}
                     style={{
                       fontSize: "0.7rem", padding: "0.3rem 0.5rem", borderRadius: "6px",
                       border: "1px solid var(--border)", background: "var(--background)",
                       color: "var(--muted-foreground)", cursor: "pointer",
                     }}
                   >
-                    {s}
+                    {t(key)}
                   </button>
                 ))}
               </div>
             )}
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
               <Button variant="outline" size="sm" onClick={() => { setAiModalOpen(false); setAiPrompt(""); }} disabled={aiGenerating}>
-                Cancel
+                {t("pages.interactivesList.cancel")}
               </Button>
               <Button size="sm" onClick={handleAiGenerate} disabled={!aiPrompt.trim() || aiGenerating}>
                 {aiGenerating ? (
-                  <><Loader2 style={{ width: "0.75rem", height: "0.75rem", marginRight: "0.375rem" }} className="animate-spin" /> Generating…</>
+                  <><Loader2 style={{ width: "0.75rem", height: "0.75rem", marginRight: "0.375rem" }} className="animate-spin" /> {t("pages.interactivesList.generating")}</>
                 ) : (
-                  <><Sparkles style={{ width: "0.75rem", height: "0.75rem", marginRight: "0.375rem" }} /> Generate</>
+                  <><Sparkles style={{ width: "0.75rem", height: "0.75rem", marginRight: "0.375rem" }} /> {t("pages.interactivesList.generate")}</>
                 )}
               </Button>
             </div>
@@ -628,6 +630,7 @@ export default function InteractivesPage() {
 /* ─── Sub-components ─────────────────────────────────────────── */
 
 function StatusBadge({ status }: { status?: string }) {
+  const t = useT();
   if (!status) return null;
   return (
     <span style={{
@@ -641,7 +644,7 @@ function StatusBadge({ status }: { status?: string }) {
       textTransform: "uppercase",
       letterSpacing: "0.03em",
     }}>
-      {status}
+      {status === "published" ? t("pages.interactivesList.statusPublished") : status === "draft" ? t("pages.interactivesList.statusDraft") : status}
     </span>
   );
 }
@@ -663,6 +666,7 @@ function ActionsMenu({ item, onEdit, onTogglePublish, onClone, onTrash }: {
 function ItemDropdown({ item, onEdit, onTogglePublish, onClone, onTrash }: {
   item: InteractiveMeta; onEdit: () => void; onTogglePublish: () => void; onClone: () => void; onTrash: () => void;
 }) {
+  const t = useT();
   async function downloadItem() {
     try {
       const res = await fetch(`/api/interactives/${item.id}`);
@@ -688,27 +692,27 @@ function ItemDropdown({ item, onEdit, onTogglePublish, onClone, onTrash }: {
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={onEdit}>
           <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
-          Edit
+          {t("pages.interactivesList.edit")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onTogglePublish}>
           {item.status === "published" ? (
-            <><Globe className="mr-2 h-4 w-4 text-muted-foreground" />Unpublish</>
+            <><Globe className="mr-2 h-4 w-4 text-muted-foreground" />{t("pages.interactivesList.unpublish")}</>
           ) : (
-            <><Globe className="mr-2 h-4 w-4 text-muted-foreground" />Publish</>
+            <><Globe className="mr-2 h-4 w-4 text-muted-foreground" />{t("pages.interactivesList.publish")}</>
           )}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onClone}>
           <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
-          Clone
+          {t("pages.interactivesList.clone")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={downloadItem}>
           <Download className="mr-2 h-4 w-4 text-muted-foreground" />
-          Download
+          {t("pages.interactivesList.download")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onTrash} className="text-destructive focus:text-destructive">
           <Trash2 className="mr-2 h-4 w-4" />
-          Move to trash
+          {t("pages.interactivesList.moveToTrash")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

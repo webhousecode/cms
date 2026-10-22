@@ -9,14 +9,15 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { CustomRangeSlider } from "@/components/ui/custom-range-slider";
 import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
+import { useT } from "@/lib/i18n-context";
 
 const ROLES = [
-  { value: "copywriter", label: "Content Writer" },
-  { value: "seo", label: "SEO" },
-  { value: "geo", label: "GEO Optimizer" },
-  { value: "translator", label: "Translator" },
-  { value: "refresher", label: "Content Refresher" },
-  { value: "custom", label: "Custom" },
+  { value: "copywriter", labelKey: "pages.agentEdit.roles.copywriter" },
+  { value: "seo", labelKey: "pages.agentEdit.roles.seo" },
+  { value: "geo", labelKey: "pages.agentEdit.roles.geo" },
+  { value: "translator", labelKey: "pages.agentEdit.roles.translator" },
+  { value: "refresher", labelKey: "pages.agentEdit.roles.refresher" },
+  { value: "custom", labelKey: "pages.agentEdit.roles.custom" },
 ] as const;
 
 const labelStyle: React.CSSProperties = {
@@ -40,6 +41,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function NewAgentPage() {
+  const t = useT();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -93,7 +95,7 @@ export default function NewAgentPage() {
         // cards in the Templates tab. Find it in either pool and pre-fill.
         const wantedId = searchParams.get("template");
         if (wantedId) {
-          const found = [...local, ...market].find((t: AgentTemplate) => t.id === wantedId);
+          const found = [...local, ...market].find((tpl: AgentTemplate) => tpl.id === wantedId);
           if (found) applyTemplate(found);
         }
       })
@@ -135,7 +137,7 @@ export default function NewAgentPage() {
       });
       const data = await res.json();
       if (!res.ok || !data.config) {
-        setAiError(data.error ?? "Failed to generate agent");
+        setAiError(data.error ?? t("pages.agentNew.failedGenerate"));
         return;
       }
       const c = data.config;
@@ -162,7 +164,7 @@ export default function NewAgentPage() {
       setFormFilled(true);
       setFormCollapsed(false);
     } catch {
-      setAiError("Network error");
+      setAiError(t("pages.agentEdit.networkError"));
     } finally {
       setAiLoading(false);
     }
@@ -187,7 +189,7 @@ export default function NewAgentPage() {
       if (data.prompt) setSystemPrompt(data.prompt);
       else if (data.error) setError(data.error);
     } catch {
-      setError("Failed to generate prompt");
+      setError(t("pages.agentEdit.failedGeneratePrompt"));
     }
     setGenerating(false);
   }
@@ -195,7 +197,7 @@ export default function NewAgentPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      setError("Agent name is required");
+      setError(t("pages.agentNew.nameRequired"));
       return;
     }
     setSaving(true);
@@ -219,13 +221,13 @@ export default function NewAgentPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to create agent");
+        setError(data.error ?? t("pages.agentNew.failedCreate"));
         setSaving(false);
         return;
       }
       router.push(`/admin/agents/${data.id}`);
     } catch {
-      setError("Network error");
+      setError(t("pages.agentEdit.networkError"));
       setSaving(false);
     }
   }
@@ -234,9 +236,9 @@ export default function NewAgentPage() {
     <div className="p-8 max-w-2xl">
       <div className="mb-8">
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
-          Agents
+          {t("pages.agentNew.agents")}
         </p>
-        <h1 className="text-2xl font-bold text-foreground">New Agent</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("pages.agentNew.newAgent")}</h1>
       </div>
 
       {/* ── AI describe-to-create panel ─────────────────────────── */}
@@ -253,7 +255,7 @@ export default function NewAgentPage() {
         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.875rem 1rem 0.75rem" }}>
           <Sparkles style={{ width: "15px", height: "15px", color: "var(--primary)", flexShrink: 0 }} />
           <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--foreground)", flex: 1 }}>
-            Describe your agent
+            {t("pages.agentNew.describeAgent")}
           </span>
           {formFilled && (
             <button
@@ -262,7 +264,7 @@ export default function NewAgentPage() {
               onClick={() => setFormCollapsed((v) => !v)}
               style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.72rem", color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
             >
-              {formCollapsed ? "Show form" : "Hide form"}
+              {formCollapsed ? t("pages.agentNew.showForm") : t("pages.agentNew.hideForm")}
               <ChevronDown style={{ width: "12px", height: "12px", transform: formCollapsed ? "rotate(-90deg)" : "none", transition: "transform 150ms" }} />
             </button>
           )}
@@ -277,7 +279,7 @@ export default function NewAgentPage() {
             onChange={(e) => setDescription(e.target.value)}
             onKeyDown={handleDescribeKey}
             rows={3}
-            placeholder={"e.g. \"An agent that writes evidence-based physiotherapy articles in Danish, academic tone, can search the web, runs every Monday at 7am\""}
+            placeholder={t("pages.agentNew.describePlaceholder")}
             style={{
               width: "100%",
               padding: "0.625rem 0.75rem",
@@ -309,14 +311,14 @@ export default function NewAgentPage() {
               }}
             >
               {aiLoading
-                ? <><Loader2 style={{ width: "13px", height: "13px" }} className="animate-spin" /> Generating…</>
-                : <><Send style={{ width: "13px", height: "13px" }} /> Generate agent</>
+                ? <><Loader2 style={{ width: "13px", height: "13px" }} className="animate-spin" /> {t("pages.agentNew.generating")}</>
+                : <><Send style={{ width: "13px", height: "13px" }} /> {t("pages.agentNew.generateAgent")}</>
               }
             </button>
             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>⌘ Enter</span>
             {formFilled && !aiLoading && (
               <span style={{ fontSize: "0.72rem", color: "hsl(142 71% 45%)", marginLeft: "auto" }}>
-                ✓ Form filled — review and save below
+                {t("pages.agentNew.formFilled")}
               </span>
             )}
           </div>
@@ -333,7 +335,7 @@ export default function NewAgentPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
             <BookOpen style={{ width: "14px", height: "14px", color: "var(--muted-foreground)" }} />
             <span style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>
-              Start from a template
+              {t("pages.agentNew.startFromTemplate")}
             </span>
           </div>
 
@@ -341,15 +343,15 @@ export default function NewAgentPage() {
             <div style={{ marginBottom: "1rem" }}>
               <p style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
                 <HardDrive style={{ width: "10px", height: "10px" }} />
-                YOUR ORG ({localTemplates.length})
+                {t("pages.agentNew.yourOrg", { count: localTemplates.length })}
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.625rem" }}>
-                {localTemplates.map((t) => (
+                {localTemplates.map((tpl) => (
                   <button
-                    data-testid={`agent-template-local-${t.id}`}
-                    key={t.id}
+                    data-testid={`agent-template-local-${tpl.id}`}
+                    key={tpl.id}
                     type="button"
-                    onClick={() => applyTemplate(t)}
+                    onClick={() => applyTemplate(tpl)}
                     style={{
                       textAlign: "left", padding: "0.75rem 0.875rem", borderRadius: "8px",
                       border: "1px solid var(--border)", background: "var(--card)",
@@ -358,10 +360,10 @@ export default function NewAgentPage() {
                     className="hover:border-primary hover:bg-primary/5"
                   >
                     <p style={{ fontSize: "0.85rem", fontWeight: 600, margin: 0, marginBottom: "0.2rem" }}>
-                      {t.icon ? `${t.icon} ` : ""}{t.name}
+                      {tpl.icon ? `${tpl.icon} ` : ""}{tpl.name}
                     </p>
                     <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0, lineHeight: 1.4 }}>
-                      {t.description || "Local template"}
+                      {tpl.description || t("pages.agentNew.localTemplate")}
                     </p>
                   </button>
                 ))}
@@ -373,15 +375,15 @@ export default function NewAgentPage() {
             <div style={{ marginBottom: "1rem" }}>
               <p style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
                 <Globe style={{ width: "10px", height: "10px" }} />
-                MARKETPLACE ({marketplaceTemplates.length})
+                {t("pages.agentNew.marketplace", { count: marketplaceTemplates.length })}
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.625rem" }}>
-                {marketplaceTemplates.map((t) => (
+                {marketplaceTemplates.map((tpl) => (
                   <button
-                    data-testid={`agent-template-marketplace-${t.id}`}
-                    key={t.id}
+                    data-testid={`agent-template-marketplace-${tpl.id}`}
+                    key={tpl.id}
                     type="button"
-                    onClick={() => applyTemplate(t)}
+                    onClick={() => applyTemplate(tpl)}
                     style={{
                       textAlign: "left", padding: "0.75rem 0.875rem", borderRadius: "8px",
                       border: "1px solid var(--border)", background: "var(--card)",
@@ -390,14 +392,14 @@ export default function NewAgentPage() {
                     className="hover:border-primary hover:bg-primary/5"
                   >
                     <p style={{ fontSize: "0.85rem", fontWeight: 600, margin: 0, marginBottom: "0.2rem" }}>
-                      {t.icon ? `${t.icon} ` : ""}{t.name}
+                      {tpl.icon ? `${tpl.icon} ` : ""}{tpl.name}
                     </p>
                     <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0, lineHeight: 1.4 }}>
-                      {t.description || "Marketplace template"}
+                      {tpl.description || t("pages.agentNew.marketplaceTemplate")}
                     </p>
-                    {t.category && (
+                    {tpl.category && (
                       <span style={{ display: "inline-block", marginTop: "0.4rem", fontSize: "0.6rem", padding: "0.1rem 0.4rem", background: "var(--secondary)", color: "var(--secondary-foreground)", borderRadius: "9999px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                        {t.category}
+                        {tpl.category}
                       </span>
                     )}
                   </button>
@@ -408,7 +410,7 @@ export default function NewAgentPage() {
 
           {marketplaceError && (
             <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontStyle: "italic" }}>
-              Marketplace unavailable — {marketplaceError}
+              {t("pages.agentNew.marketplaceUnavailable", { error: marketplaceError })}
             </p>
           )}
         </div>
@@ -419,22 +421,22 @@ export default function NewAgentPage() {
       <form data-testid="agent-form" id="agent-form-anchor" onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
-          <label style={labelStyle}>Agent Name</label>
+          <label style={labelStyle}>{t("pages.agentEdit.agentName")}</label>
           <input
             data-testid="agent-form-name-input"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Blog Writer"
+            placeholder={t("pages.agentNew.namePlaceholder")}
             style={inputStyle}
           />
         </div>
 
         {/* Role */}
         <div>
-          <label style={labelStyle}>Role</label>
+          <label style={labelStyle}>{t("pages.agentEdit.role")}</label>
           <CustomSelect
-            options={ROLES.map((r) => ({ value: r.value, label: r.label }))}
+            options={ROLES.map((r) => ({ value: r.value, label: t(r.labelKey) }))}
             value={role}
             onChange={setRole}
           />
@@ -444,7 +446,7 @@ export default function NewAgentPage() {
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label style={{ ...labelStyle, marginBottom: 0 }}>
-              System Prompt
+              {t("pages.agentEdit.systemPrompt")}
             </label>
             <button
               data-testid="agent-generate-prompt-button"
@@ -458,7 +460,7 @@ export default function NewAgentPage() {
               ) : (
                 <Sparkles className="w-3 h-3" />
               )}
-              Auto-generate
+              {t("pages.agentEdit.autoGenerate")}
             </button>
           </div>
           <textarea
@@ -466,32 +468,32 @@ export default function NewAgentPage() {
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             rows={6}
-            placeholder="Describe the agent's role, tone and constraints..."
+            placeholder={t("pages.agentNew.promptPlaceholder")}
             style={{ ...inputStyle, resize: "vertical" }}
           />
         </div>
 
         {/* Behavior sliders */}
         <div className="rounded-lg border border-border p-4 space-y-4">
-          <p style={{ ...labelStyle, marginBottom: 0 }}>Behavior</p>
+          <p style={{ ...labelStyle, marginBottom: 0 }}>{t("pages.agentEdit.behavior")}</p>
           <SliderField
-            label="Creativity"
-            leftLabel="Factual"
-            rightLabel="Creative"
+            label={t("pages.agentEdit.creativity")}
+            leftLabel={t("pages.agentEdit.factual")}
+            rightLabel={t("pages.agentEdit.creative")}
             value={temperature}
             onChange={setTemperature}
           />
           <SliderField
-            label="Formality"
-            leftLabel="Casual"
-            rightLabel="Academic"
+            label={t("pages.agentEdit.formality")}
+            leftLabel={t("pages.agentEdit.casual")}
+            rightLabel={t("pages.agentEdit.academic")}
             value={formality}
             onChange={setFormality}
           />
           <SliderField
-            label="Verbosity"
-            leftLabel="Concise"
-            rightLabel="Detailed"
+            label={t("pages.agentEdit.verbosity")}
+            leftLabel={t("pages.agentEdit.concise")}
+            rightLabel={t("pages.agentEdit.detailed")}
             value={verbosity}
             onChange={setVerbosity}
           />
@@ -499,45 +501,45 @@ export default function NewAgentPage() {
 
         {/* Tools */}
         <div>
-          <p style={labelStyle}>Tools</p>
+          <p style={labelStyle}>{t("pages.agentEdit.tools")}</p>
           <div className="space-y-2">
-            <Checkbox checked={webSearch} onChange={(v) => setWebSearch(v)} label="Web search" />
-            <Checkbox checked={internalDatabase} onChange={(v) => setInternalDatabase(v)} label="Internal database" />
+            <Checkbox checked={webSearch} onChange={(v) => setWebSearch(v)} label={t("pages.agentEdit.webSearch")} />
+            <Checkbox checked={internalDatabase} onChange={(v) => setInternalDatabase(v)} label={t("pages.agentEdit.internalDatabase")} />
           </div>
         </div>
 
         {/* Autonomy */}
         <div>
-          <p style={labelStyle}>Autonomy</p>
+          <p style={labelStyle}>{t("pages.agentEdit.autonomy")}</p>
           <div className="space-y-2">
-            <Radio checked={autonomy === "draft"} onChange={() => setAutonomy("draft")} label="Draft & Review" description="— AI drafts go to the curation queue" />
-            <Radio checked={autonomy === "full"} onChange={() => setAutonomy("full")} label="Full Autonomy" description="— Publishes directly (requires >95% approval & 20+ items)" />
+            <Radio checked={autonomy === "draft"} onChange={() => setAutonomy("draft")} label={t("pages.agentEdit.draftReview")} description={t("pages.agentNew.draftReviewDesc")} />
+            <Radio checked={autonomy === "full"} onChange={() => setAutonomy("full")} label={t("pages.agentEdit.fullAutonomy")} description={t("pages.agentNew.fullAutonomyDesc")} />
           </div>
         </div>
 
         {/* Schedule */}
         <div className="rounded-lg border border-border p-4 space-y-3">
-          <Checkbox checked={scheduleEnabled} onChange={(v) => setScheduleEnabled(v)} label="Enable schedule" />
+          <Checkbox checked={scheduleEnabled} onChange={(v) => setScheduleEnabled(v)} label={t("pages.agentEdit.enableSchedule")} />
           {scheduleEnabled && (
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label style={labelStyle}>Frequency</label>
+                <label style={labelStyle}>{t("pages.agentEdit.frequency")}</label>
                 <CustomSelect
                   options={[
-                    { value: "daily", label: "Daily" },
-                    { value: "weekly", label: "Weekly" },
-                    { value: "manual", label: "Manual" },
+                    { value: "daily", label: t("pages.agentEdit.daily") },
+                    { value: "weekly", label: t("pages.agentEdit.weekly") },
+                    { value: "manual", label: t("pages.agentEdit.manual") },
                   ]}
                   value={frequency}
                   onChange={(v) => setFrequency(v as "daily" | "weekly" | "manual")}
                 />
               </div>
               <div>
-                <label style={labelStyle}>Time</label>
+                <label style={labelStyle}>{t("pages.agentEdit.time")}</label>
                 <CustomTimeInput value={time} onChange={setTime} />
               </div>
               <div>
-                <label style={labelStyle}>Max per run</label>
+                <label style={labelStyle}>{t("pages.agentEdit.maxPerRun")}</label>
                 <input
                   data-testid="agent-form-max-per-run-input"
                   type="number"
@@ -553,7 +555,7 @@ export default function NewAgentPage() {
         </div>
 
         {/* Active toggle */}
-        <Checkbox checked={active} onChange={(v) => setActive(v)} label="Agent is active" />
+        <Checkbox checked={active} onChange={(v) => setActive(v)} label={t("pages.agentEdit.agentIsActive")} />
 
         {error && (
           <p className="text-sm text-destructive">{error}</p>
@@ -568,7 +570,7 @@ export default function NewAgentPage() {
           {saving ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : null}
-          {saving ? "Creating..." : "Create Agent"}
+          {saving ? t("pages.agentNew.creating") : t("pages.agentNew.createAgent")}
         </button>
       </form>
       )}

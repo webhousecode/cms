@@ -10,6 +10,7 @@
  */
 
 import { use, useEffect, useState } from "react";
+import { useT } from "@/lib/i18n-context";
 
 interface QrStatusResponse {
   status: "pending" | "approved" | "claimed" | "rejected" | "expired";
@@ -17,6 +18,7 @@ interface QrStatusResponse {
 }
 
 export default function ApproveQrPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = useT();
   const { id } = use(params);
   const [status, setStatus] = useState<QrStatusResponse["status"]>("pending");
   const [busy, setBusy] = useState(false);
@@ -27,8 +29,8 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
     fetch(`/api/auth/qr/status/${id}`)
       .then((r) => r.json())
       .then((d: QrStatusResponse) => setStatus(d.status))
-      .catch(() => setError("Could not load session"));
-  }, [id]);
+      .catch(() => setError(t("tools.approveQr.loadFailed")));
+  }, [id, t]);
 
   async function decide(reject: boolean) {
     setBusy(true);
@@ -42,12 +44,12 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
       });
       const data = (await res.json()) as { ok?: boolean; status?: typeof status; error?: string };
       if (!res.ok) {
-        setError(data.error ?? "Failed");
+        setError(data.error ?? t("tools.approveQr.failed"));
       } else if (data.status) {
         setStatus(data.status);
       }
     } catch {
-      setError("Network error");
+      setError(t("tools.approveQr.networkError"));
     } finally {
       setBusy(false);
     }
@@ -57,10 +59,9 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
   if (status === "pending") {
     body = (
       <>
-        <h1 style={{ fontSize: "1.1rem", fontWeight: 600, margin: "0 0 0.5rem" }}>Approve sign-in?</h1>
+        <h1 style={{ fontSize: "1.1rem", fontWeight: 600, margin: "0 0 0.5rem" }}>{t("tools.approveQr.title")}</h1>
         <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", margin: "0 0 1.5rem" }}>
-          Another device is requesting access to your CMS account using this QR code.
-          Approve only if you scanned it yourself.
+          {t("tools.approveQr.body")}
         </p>
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
           <button
@@ -73,7 +74,7 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
               fontSize: "0.9rem", fontWeight: 600, cursor: busy ? "wait" : "pointer",
             }}
           >
-            {busy ? "..." : "Approve"}
+            {busy ? "..." : t("tools.approveQr.approve")}
           </button>
           <button
             data-testid="qr-reject-button"
@@ -85,7 +86,7 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
               color: "var(--foreground)", fontSize: "0.9rem", cursor: busy ? "wait" : "pointer",
             }}
           >
-            Reject
+            {t("tools.approveQr.reject")}
           </button>
         </div>
       </>
@@ -94,9 +95,9 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
     body = (
       <>
         <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>✓</div>
-        <h1 style={{ fontSize: "1.1rem", fontWeight: 600, margin: "0 0 0.5rem" }}>Signed in</h1>
+        <h1 style={{ fontSize: "1.1rem", fontWeight: 600, margin: "0 0 0.5rem" }}>{t("tools.approveQr.signedIn")}</h1>
         <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", margin: 0 }}>
-          You can close this tab — the other device is now signed in.
+          {t("tools.approveQr.signedInBody")}
         </p>
       </>
     );
@@ -104,16 +105,16 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
     body = (
       <>
         <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>✗</div>
-        <h1 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>Sign-in rejected</h1>
+        <h1 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>{t("tools.approveQr.rejected")}</h1>
       </>
     );
   } else {
     body = (
       <>
         <div style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>⏰</div>
-        <h1 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>Session expired</h1>
+        <h1 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>{t("tools.approveQr.expired")}</h1>
         <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", margin: "0.5rem 0 0" }}>
-          Generate a new QR code on the login page.
+          {t("tools.approveQr.expiredBody")}
         </p>
       </>
     );

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Rocket, X, Check, Loader2, ExternalLink, AlertCircle } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface DeployModalProps {
   open: boolean;
@@ -28,13 +29,14 @@ interface ProgressEvent {
 }
 
 const STEPS = [
-  { key: "init", label: "Initializing" },
-  { key: "build", label: "Building & optimizing" },
-  { key: "push", label: "Pushing to provider" },
-  { key: "done", label: "Live" },
+  { key: "init", label: "misc.deployModal.step.init" },
+  { key: "build", label: "misc.deployModal.step.build" },
+  { key: "push", label: "misc.deployModal.step.push" },
+  { key: "done", label: "misc.deployModal.step.done" },
 ];
 
 export function DeployModal({ open, onClose, configured, providerLabel, appName, productionUrl, deployOnSave }: DeployModalProps) {
+  const t = useT();
   const [deploying, setDeploying] = useState(false);
   const [events, setEvents] = useState<ProgressEvent[]>([]);
   const [currentEvent, setCurrentEvent] = useState<ProgressEvent | null>(null);
@@ -67,7 +69,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
       });
 
       if (!res.ok || !res.body) {
-        setCurrentEvent({ step: "error", message: `Deploy failed: ${res.status}`, progress: 100, status: "error" });
+        setCurrentEvent({ step: "error", message: t("misc.deployModal.failedStatus", { status: res.status }), progress: 100, status: "error" });
         setDeploying(false);
         return;
       }
@@ -145,7 +147,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Rocket style={{ width: "1.1rem", height: "1.1rem", color: "var(--primary)" }} />
             <h2 style={{ fontSize: "1rem", fontWeight: 600, margin: 0 }}>
-              {deploying || isDone || isError ? "Deploying" : "Deploy Site"}
+              {deploying || isDone || isError ? t("misc.deployModal.deploying") : t("misc.deployModal.title")}
             </h2>
           </div>
           <button
@@ -173,10 +175,10 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
                 {providerLabel}{appName ? ` — ${appName}` : ""}
               </div>
               <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.75rem", color: "var(--muted-foreground)", lineHeight: 1.8 }}>
-                <li>Build static pages from content</li>
-                <li>Generate sitemap, robots.txt, llms.txt, RSS feed</li>
-                <li>Optimize SEO (OpenGraph, JSON-LD, meta tags)</li>
-                <li>Push to {providerLabel}</li>
+                <li>{t("misc.deployModal.list.build")}</li>
+                <li>{t("misc.deployModal.list.generate")}</li>
+                <li>{t("misc.deployModal.list.seo")}</li>
+                <li>{t("misc.deployModal.list.push", { provider: providerLabel ?? "" })}</li>
               </ul>
             </div>
 
@@ -192,7 +194,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
               }}
             >
               <Rocket style={{ width: "0.9rem", height: "0.9rem" }} />
-              Deploy now
+              {t("misc.deployModal.deployNow")}
             </button>
 
             <label style={{
@@ -210,7 +212,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
                 style={{ accentColor: "var(--primary)" }}
               />
               <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
-                Don't show this dialog — deploy immediately
+                {t("misc.deployModal.skipDialog")}
               </span>
             </label>
           </>
@@ -264,7 +266,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
                       fontWeight: isActive ? 500 : 400,
                       color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
                     }}>
-                      {step.label}
+                      {t(step.label)}
                     </span>
                   </div>
                 );
@@ -279,7 +281,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
               border: "1px solid var(--border)",
               minHeight: "1.5rem",
             }}>
-              {currentEvent?.message ?? "Waiting..."}
+              {currentEvent?.message ?? t("misc.deployModal.waiting")}
             </div>
 
             {/* Error */}
@@ -292,7 +294,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
               }}>
                 <AlertCircle style={{ width: "0.85rem", height: "0.85rem", color: "var(--destructive)", flexShrink: 0, marginTop: "0.1rem" }} />
                 <span style={{ fontSize: "0.72rem", color: "var(--destructive)", lineHeight: 1.4 }}>
-                  {currentEvent?.error ?? "Deploy failed"}
+                  {currentEvent?.error ?? t("misc.deployModal.failed")}
                 </span>
               </div>
             )}
@@ -331,7 +333,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
                   fontSize: "0.8rem", cursor: "pointer",
                 }}
               >
-                Close
+                {t("misc.deployModal.close")}
               </button>
             )}
           </>

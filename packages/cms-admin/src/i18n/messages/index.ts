@@ -18,6 +18,8 @@ import en_agents from "./en/agents.json";
 import en_chat from "./en/chat.json";
 import en_schema from "./en/schema.json";
 import en_misc from "./en/misc.json";
+import en_integrations from "./en/integrations.json";
+import en_tools from "./en/tools.json";
 import da_account from "./da/account.json";
 import da_common from "./da/common.json";
 import da_shell from "./da/shell.json";
@@ -31,6 +33,8 @@ import da_agents from "./da/agents.json";
 import da_chat from "./da/chat.json";
 import da_schema from "./da/schema.json";
 import da_misc from "./da/misc.json";
+import da_integrations from "./da/integrations.json";
+import da_tools from "./da/tools.json";
 
 export const en: Dict = {
   account: en_account,
@@ -46,6 +50,8 @@ export const en: Dict = {
   chat: en_chat,
   schema: en_schema,
   misc: en_misc,
+  integrations: en_integrations,
+  tools: en_tools,
 };
 export const da: Dict = {
   account: da_account,
@@ -61,4 +67,6 @@ export const da: Dict = {
   chat: da_chat,
   schema: da_schema,
   misc: da_misc,
+  integrations: da_integrations,
+  tools: da_tools,
 };

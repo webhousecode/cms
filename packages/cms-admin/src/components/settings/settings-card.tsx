@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode, type InputHTMLAttributes } from "react";
 import { Copy, Check } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 /** Settings card — rounded border container for grouping fields */
 export function SettingsCard({ children }: { children: ReactNode }) {
@@ -26,6 +27,7 @@ export function SettingsInput({ label, description, copiable, ...inputProps }: {
   description?: string;
   copiable?: boolean;
 } & InputHTMLAttributes<HTMLInputElement>) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
 
   function handleCopy() {
@@ -64,7 +66,7 @@ export function SettingsInput({ label, description, copiable, ...inputProps }: {
             data-testid="settings-input-copy-button"
             type="button"
             onClick={handleCopy}
-            title="Copy to clipboard"
+            title={t("settings.settingsCard.copyToClipboard")}
             style={{
               position: "absolute",
               right: "0.5rem",

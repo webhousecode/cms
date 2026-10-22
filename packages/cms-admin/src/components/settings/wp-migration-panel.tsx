@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Globe, ArrowRight, Check, AlertTriangle, Loader2, FolderOpen, FileText, Image } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface WpProbeResult {
   url: string;
@@ -34,7 +35,16 @@ interface MigrationResult {
 
 type Step = "url" | "review" | "migrating" | "done";
 
+/** Renders a translated sentence whose {placeholders} are React nodes (e.g. <strong>). */
+function fillNodes(template: string, nodes: Record<string, React.ReactNode>): React.ReactNode[] {
+  return template.split(/(\{\w+\})/).map((part, i) => {
+    const m = /^\{(\w+)\}$/.exec(part);
+    return m && m[1] in nodes ? <Fragment key={i}>{nodes[m[1]]}</Fragment> : part;
+  });
+}
+
 export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onComplete?: (siteId: string) => void }) {
+  const t = useT();
   const [step, setStep] = useState<Step>("url");
   const [url, setUrl] = useState("");
   const [siteName, setSiteName] = useState("");
@@ -62,7 +72,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
       setSiteName(data.siteTitle || new URL(data.url).hostname);
       setStep("review");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Probe failed");
+      setError(err instanceof Error ? err.message : t("integrations.wpMigration.probeFailed"));
     } finally {
       setProbing(false);
     }
@@ -87,7 +97,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
       setStep("done");
       window.dispatchEvent(new Event("cms:content-changed"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Migration failed");
+      setError(err instanceof Error ? err.message : t("integrations.wpMigration.migrationFailed"));
       setStep("review");
     } finally {
       setMigrating(false);
@@ -119,10 +129,10 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
             <Globe style={{ width: 18, height: 18, color: "var(--brand)" }} />
-            <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>WordPress URL</h3>
+            <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>{t("integrations.wpMigration.urlHeading")}</h3>
           </div>
           <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
-            Enter the URL of any WordPress site. We'll detect the REST API, theme, page builder, and inventory all content.
+            {t("integrations.wpMigration.urlIntro")}
           </p>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input
@@ -154,9 +164,9 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
               }}
             >
               {probing ? (
-                <><Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> Probing...</>
+                <><Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> {t("integrations.wpMigration.probing")}</>
               ) : (
-                <>Probe <ArrowRight style={{ width: 14, height: 14 }} /></>
+                <>{t("integrations.wpMigration.probe")} <ArrowRight style={{ width: 14, height: 14 }} /></>
               )}
             </button>
           </div>
@@ -182,29 +192,29 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
             fontSize: "0.78rem", marginBottom: "1rem",
             padding: "0.75rem", borderRadius: 6, background: "var(--muted)",
           }}>
-            <div>Theme: <strong>{probe.theme.name}</strong></div>
-            <div>Builder: <strong>{probe.pageBuilder}</strong></div>
-            <div>WordPress: <strong>{probe.wordpressVersion ?? "Unknown"}</strong></div>
-            <div>REST API: <strong style={{ color: probe.restApiAvailable ? "#22c55e" : "#ef4444" }}>
-              {probe.restApiAvailable ? "Available" : "Not available"}
+            <div>{t("integrations.wpMigration.theme")} <strong>{probe.theme.name}</strong></div>
+            <div>{t("integrations.wpMigration.builder")} <strong>{probe.pageBuilder}</strong></div>
+            <div>{t("integrations.wpMigration.wordpress")} <strong>{probe.wordpressVersion ?? t("integrations.wpMigration.unknown")}</strong></div>
+            <div>{t("integrations.wpMigration.restApi")} <strong style={{ color: probe.restApiAvailable ? "#22c55e" : "#ef4444" }}>
+              {probe.restApiAvailable ? t("integrations.wpMigration.available") : t("integrations.wpMigration.notAvailable")}
             </strong></div>
-            {probe.language && <div>Language: <strong>{probe.language}</strong></div>}
+            {probe.language && <div>{t("integrations.wpMigration.language")} <strong>{probe.language}</strong></div>}
           </div>
 
           {/* Content inventory */}
           <div style={{ fontSize: "0.78rem", marginBottom: "1rem" }}>
-            <div style={{ fontWeight: 600, marginBottom: "0.4rem" }}>Content ({totalContent} items)</div>
+            <div style={{ fontWeight: 600, marginBottom: "0.4rem" }}>{t("integrations.wpMigration.contentItems", { total: totalContent })}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem" }}>
               {probe.contentCounts.posts > 0 && (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <FileText style={{ width: 13, height: 13, color: "var(--muted-foreground)" }} />
-                  {probe.contentCounts.posts} Posts → <code style={codeStyle}>posts</code>
+                  {t("integrations.wpMigration.postsTo", { n: probe.contentCounts.posts })} <code style={codeStyle}>posts</code>
                 </div>
               )}
               {probe.contentCounts.pages > 0 && (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <FolderOpen style={{ width: 13, height: 13, color: "var(--muted-foreground)" }} />
-                  {probe.contentCounts.pages} Pages → <code style={codeStyle}>pages</code>
+                  {t("integrations.wpMigration.pagesTo", { n: probe.contentCounts.pages })} <code style={codeStyle}>pages</code>
                 </div>
               )}
               {probe.contentCounts.customPostTypes.map((cpt) => (
@@ -216,7 +226,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
               {probe.contentCounts.media > 0 && (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <Image style={{ width: 13, height: 13, color: "var(--muted-foreground)" }} />
-                  {probe.contentCounts.media} Media files
+                  {t("integrations.wpMigration.mediaFiles", { n: probe.contentCounts.media })}
                 </div>
               )}
             </div>
@@ -225,7 +235,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
           {/* Site name */}
           <div style={{ marginBottom: "1rem" }}>
             <label style={{ fontSize: "0.72rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>
-              Site name
+              {t("integrations.wpMigration.siteName")}
             </label>
             <input
               type="text"
@@ -247,13 +257,13 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
               fontSize: "0.78rem", color: "#ef4444",
             }}>
               <AlertTriangle style={{ width: 14, height: 14, display: "inline", verticalAlign: "text-bottom", marginRight: 4 }} />
-              REST API is not available. Content cannot be extracted automatically.
+              {t("integrations.wpMigration.restApiMissing")}
             </div>
           )}
 
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <button type="button" data-testid="wp-back-button" onClick={() => setStep("url")} style={btnSecondary}>
-              ← Back
+              ← {t("integrations.wpMigration.back")}
             </button>
             <button
               type="button"
@@ -266,7 +276,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
                 cursor: !probe.restApiAvailable || !siteName.trim() ? "not-allowed" : "pointer",
               }}
             >
-              Migrate {totalContent} items <ArrowRight style={{ width: 14, height: 14 }} />
+              {t("integrations.wpMigration.migrateItems", { total: totalContent })} <ArrowRight style={{ width: 14, height: 14 }} />
             </button>
           </div>
         </div>
@@ -279,9 +289,9 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
           border: "1px solid var(--border)", background: "var(--card)",
         }}>
           <Loader2 style={{ width: 32, height: 32, margin: "0 auto 1rem", color: "var(--brand)", animation: "spin 1s linear infinite" }} />
-          <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>Migrating {probe?.siteTitle ?? "site"}...</div>
+          <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("integrations.wpMigration.migratingSite", { name: probe?.siteTitle ?? t("integrations.wpMigration.siteFallback") })}</div>
           <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-            Extracting content, downloading media, creating collections...
+            {t("integrations.wpMigration.migratingInfo")}
           </div>
         </div>
       )}
@@ -295,21 +305,23 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
             <Check style={{ width: 20, height: 20, color: "#22c55e" }} />
             <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: 0 }}>
-              Migration complete
+              {t("integrations.wpMigration.complete")}
             </h3>
           </div>
 
           <div style={{ fontSize: "0.82rem", marginBottom: "1rem", lineHeight: 1.6 }}>
-            Site <strong>"{result.siteName}"</strong> created with{" "}
-            <strong>{result.documentsImported}</strong> documents and{" "}
-            <strong>{result.mediaDownloaded}</strong> media files across{" "}
-            <strong>{result.collections.length}</strong> collections.
+            {fillNodes(t("integrations.wpMigration.summary"), {
+              name: <strong>"{result.siteName}"</strong>,
+              docs: <strong>{result.documentsImported}</strong>,
+              media: <strong>{result.mediaDownloaded}</strong>,
+              collections: <strong>{result.collections.length}</strong>,
+            })}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", fontSize: "0.78rem", marginBottom: "1rem" }}>
             {result.collections.map((col) => (
               <div key={col.name}>
-                <code style={codeStyle}>{col.name}</code> — {col.count} documents ({col.label})
+                <code style={codeStyle}>{col.name}</code> — {t("integrations.wpMigration.collectionDocs", { n: col.count, label: col.label })}
               </div>
             ))}
           </div>
@@ -328,10 +340,10 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
               }}
               style={btnPrimary}
             >
-              Open site in CMS →
+              {t("integrations.wpMigration.openSite")}
             </button>
             <button type="button" data-testid="wp-another-button" onClick={() => { setStep("url"); setProbe(null); setResult(null); setUrl(""); }} style={btnSecondary}>
-              Migrate another
+              {t("integrations.wpMigration.migrateAnother")}
             </button>
           </div>
         </div>

@@ -11,6 +11,7 @@ import { MobilePairingClient } from "./mobile-pairing/client";
 import { getSiteRole } from "@/lib/require-role";
 import { AccessTokensPanel } from "@/components/settings/access-tokens-panel";
 import { BeamTokensPanel } from "@/components/account/beam-tokens-panel";
+import { getServerT } from "@/i18n/server";
 
 export default async function AccountPage({
   searchParams,
@@ -19,39 +20,40 @@ export default async function AccountPage({
 }) {
   const { tab = "general" } = await searchParams;
   const role = await getSiteRole();
+  const t = await getServerT();
   const isAdmin = role === "admin";
   // F199.4 — with Broberg ID on, password/passkey/TOTP are not ways in any more,
   // so they are not offered as settings either. BID owns those credentials.
   const bid = isBidConfigured();
 
   const tabs = [
-    { id: "general", label: "General" },
-    { id: "security", label: "Security" },
-    { id: "tokens", label: "Access Tokens" },
-    ...(isAdmin ? [{ id: "beam", label: "Beam" }] : []),
-    ...(isAdmin ? [{ id: "mobile", label: "Mobile" }] : []),
+    { id: "general", label: t("tools.account.tabGeneral") },
+    { id: "security", label: t("tools.account.tabSecurity") },
+    { id: "tokens", label: t("tools.account.tabTokens") },
+    ...(isAdmin ? [{ id: "beam", label: t("tools.account.tabBeam") }] : []),
+    ...(isAdmin ? [{ id: "mobile", label: t("tools.account.tabMobile") }] : []),
   ];
 
   return (
     <div data-testid="account-root">
       <ActionBar>
-        <ActionBarBreadcrumb items={["Account"]} />
+        <ActionBarBreadcrumb items={[t("tools.account.title")]} />
       </ActionBar>
       <div className="p-8 max-w-4xl">
 
         {/* Tab strip */}
         <div className="flex gap-1 mb-8 border-b border-border">
-          {tabs.map((t) => (
+          {tabs.map((tb) => (
             <Link
-              key={t.id}
-              href={`/admin/account?tab=${t.id}`}
+              key={tb.id}
+              href={`/admin/account?tab=${tb.id}`}
               className={`px-4 py-2 text-sm font-medium -mb-px transition-colors ${
-                tab === t.id
+                tab === tb.id
                   ? "border-b-2 border-primary text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {t.label}
+              {tb.label}
             </Link>
           ))}
         </div>
@@ -67,9 +69,9 @@ export default async function AccountPage({
         {tab === "security" && (
           <div className="max-w-lg space-y-6">
             <div>
-              <SectionHeading>Security</SectionHeading>
+              <SectionHeading>{t("tools.account.tabSecurity")}</SectionHeading>
               <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
-                Manage your account security settings and authentication methods.
+                {t("tools.account.securityIntro")}
               </p>
             </div>
 
@@ -101,9 +103,9 @@ export default async function AccountPage({
         {tab === "mobile" && isAdmin && (
           <div className="max-w-2xl space-y-6">
             <div>
-              <SectionHeading>Pair mobile device</SectionHeading>
+              <SectionHeading>{t("tools.mobilePairing.title")}</SectionHeading>
               <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
-                Sign in to the webhouse.app mobile app by scanning this QR code with your phone. The QR encodes both the server URL and a one-time pairing token — single-use, 5-minute TTL.
+                {t("tools.account.mobileIntro")}
               </p>
             </div>
             <MobilePairingClient />

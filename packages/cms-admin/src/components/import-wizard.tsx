@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { Fragment, useState, useRef, useCallback, type ReactNode } from "react";
 import { Upload, ArrowRight, ArrowLeft, Check, AlertTriangle, FileSpreadsheet, X, FileUp } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { useT } from "@/lib/i18n-context";
 
 interface FieldConfig {
   name: string;
@@ -32,13 +33,20 @@ interface ImportResult {
   errors: Array<{ row: number; field: string; message: string }>;
 }
 
+/** Renders a translated sentence whose {placeholders} are React nodes. */
+function withNodes(text: string, nodes: Record<string, ReactNode>): ReactNode {
+  return text.split(/\{(\w+)\}/).map((part, i) =>
+    i % 2 === 1 && part in nodes ? <Fragment key={i}>{nodes[part]}</Fragment> : part,
+  );
+}
+
 const TRANSFORMS = [
-  { value: "none", label: "None" },
-  { value: "slugify", label: "Slugify" },
-  { value: "date-iso", label: "Date → ISO" },
-  { value: "split-comma", label: "Split commas → array" },
-  { value: "number", label: "To number" },
-  { value: "boolean", label: "To boolean" },
+  { value: "none", label: "misc.importWizard.transform.none" },
+  { value: "slugify", label: "misc.importWizard.transform.slugify" },
+  { value: "date-iso", label: "misc.importWizard.transform.dateIso" },
+  { value: "split-comma", label: "misc.importWizard.transform.splitComma" },
+  { value: "number", label: "misc.importWizard.transform.number" },
+  { value: "boolean", label: "misc.importWizard.transform.boolean" },
 ];
 
 export function ImportWizard({
@@ -56,6 +64,7 @@ export function ImportWizard({
   onClose: () => void;
   onComplete: () => void;
 }) {
+  const t = useT();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [fileContent, setFileContent] = useState<string>("");
   const [format, setFormat] = useState<string>("");
@@ -109,7 +118,7 @@ export function ImportWizard({
 
       setStep(2);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(err instanceof Error ? err.message : t("misc.importWizard.uploadFailed"));
     } finally {
       setLoading(false);
     }
@@ -137,7 +146,7 @@ export function ImportWizard({
       setPreviewRows(data.rows);
       setStep(3);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Preview failed");
+      setError(err instanceof Error ? err.message : t("misc.importWizard.previewFailed"));
     } finally {
       setLoading(false);
     }
@@ -167,7 +176,7 @@ export function ImportWizard({
       // Notify workspace to refresh
       window.dispatchEvent(new Event("cms:content-changed"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed");
+      setError(err instanceof Error ? err.message : t("misc.importWizard.importFailed"));
     } finally {
       setLoading(false);
     }
@@ -206,10 +215,10 @@ export function ImportWizard({
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <FileSpreadsheet style={{ width: 18, height: 18, color: "var(--brand)" }} />
             <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
-              Import into {collectionLabel}
+              {t("misc.importWizard.title", { collection: collectionLabel })}
             </span>
             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-              Step {step} of 4
+              {t("misc.importWizard.stepOf", { step, total: 4 })}
             </span>
           </div>
           <button data-testid="import-close-button" onClick={onClose} style={{
@@ -266,11 +275,11 @@ export function ImportWizard({
                 <FileUp style={{ width: 28, height: 28, color: dragOver ? "var(--brand)" : "var(--muted-foreground)", margin: "0 auto 0.5rem" }} />
                 <div style={{ fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
                   {hasFile
-                    ? `${fileRef.current?.files?.[0]?.name ?? "File selected"}`
-                    : "Drop file here or click to browse"}
+                    ? `${fileRef.current?.files?.[0]?.name ?? t("misc.importWizard.fileSelected")}`
+                    : t("misc.importWizard.dropHint")}
                 </div>
                 <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-                  CSV, JSON, or Markdown (.md)
+                  {t("misc.importWizard.formats")}
                 </div>
               </div>
               <input
@@ -289,7 +298,7 @@ export function ImportWizard({
                   disabled={loading || !hasFile}
                   style={btnPrimary(loading || !hasFile)}
                 >
-                  {loading ? "Parsing..." : "Upload & Detect"}
+                  {loading ? t("misc.importWizard.parsing") : t("misc.importWizard.uploadDetect")}
                   <ArrowRight style={{ width: 14, height: 14 }} />
                 </button>
               </div>
@@ -300,8 +309,11 @@ export function ImportWizard({
           {step === 2 && (
             <div>
               <p style={{ fontSize: "0.82rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
-                Detected <strong>{rowCount}</strong> rows, <strong>{sourceFields.length}</strong> fields ({format.toUpperCase()}).
-                Map source fields to collection schema.
+                {withNodes(t("misc.importWizard.detected"), {
+                  rows: <strong>{rowCount}</strong>,
+                  fields: <strong>{sourceFields.length}</strong>,
+                  format: format.toUpperCase(),
+                })}
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1rem" }}>
@@ -322,7 +334,7 @@ export function ImportWizard({
                     />
                     <CustomSelect
                       value={m.transform ?? "none"}
-                      options={TRANSFORMS}
+                      options={TRANSFORMS.map((tr) => ({ value: tr.value, label: t(tr.label) }))}
                       onChange={(v) => updateMapping(i, { transform: v })}
                       style={{ width: 130, fontSize: "0.72rem" }}
                     />
@@ -342,15 +354,15 @@ export function ImportWizard({
                 borderRadius: 6, padding: "0.3rem 0.6rem", cursor: "pointer",
                 marginBottom: "1rem",
               }}>
-                + Add mapping
+                {t("misc.importWizard.addMapping")}
               </button>
 
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <button data-testid="import-back-button" onClick={() => setStep(1)} style={btnSecondary()}>
-                  <ArrowLeft style={{ width: 14, height: 14 }} /> Back
+                  <ArrowLeft style={{ width: 14, height: 14 }} /> {t("misc.importWizard.back")}
                 </button>
                 <button data-testid="import-preview-button" onClick={handlePreview} disabled={loading || mappings.length === 0} style={btnPrimary(loading)}>
-                  {loading ? "Previewing..." : "Preview"} <ArrowRight style={{ width: 14, height: 14 }} />
+                  {loading ? t("misc.importWizard.previewing") : t("misc.importWizard.preview")} <ArrowRight style={{ width: 14, height: 14 }} />
                 </button>
               </div>
             </div>
@@ -360,9 +372,9 @@ export function ImportWizard({
           {step === 3 && (
             <div>
               <p style={{ fontSize: "0.82rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
-                <strong>{validRows}</strong> of {previewRows.length} rows valid.
+                {withNodes(t("misc.importWizard.validRows"), { valid: <strong>{validRows}</strong>, total: previewRows.length })}
                 {previewRows.length - validRows > 0 && (
-                  <span style={{ color: "var(--status-warning)" }}> {previewRows.length - validRows} will be skipped.</span>
+                  <span style={{ color: "var(--status-warning)" }}> {t("misc.importWizard.willSkip", { count: previewRows.length - validRows })}</span>
                 )}
               </p>
 
@@ -371,11 +383,11 @@ export function ImportWizard({
                   <thead>
                     <tr style={{ background: "var(--muted)", position: "sticky", top: 0 }}>
                       <th style={th}>#</th>
-                      <th style={th}>Slug</th>
+                      <th style={th}>{t("misc.importWizard.slug")}</th>
                       {mappings.map((m) => (
                         <th key={m.targetField} style={th}>{m.targetField}</th>
                       ))}
-                      <th style={th}>Status</th>
+                      <th style={th}>{t("misc.importWizard.status")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -408,7 +420,7 @@ export function ImportWizard({
 
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <button data-testid="import-preview-back-button" onClick={() => setStep(2)} style={btnSecondary()}>
-                  <ArrowLeft style={{ width: 14, height: 14 }} /> Back
+                  <ArrowLeft style={{ width: 14, height: 14 }} /> {t("misc.importWizard.back")}
                 </button>
                 <button
                   data-testid="import-execute-button"
@@ -416,7 +428,7 @@ export function ImportWizard({
                   disabled={loading || validRows === 0}
                   style={btnPrimary(loading)}
                 >
-                  {loading ? "Importing..." : `Import ${validRows} documents`}
+                  {loading ? t("misc.importWizard.importing") : t("misc.importWizard.importDocs", { count: validRows })}
                 </button>
               </div>
             </div>
@@ -432,25 +444,25 @@ export function ImportWizard({
               }}>
                 <div style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "0.25rem" }}>
                   <Check style={{ width: 16, height: 16, display: "inline", verticalAlign: "text-bottom", color: "#22c55e", marginRight: 4 }} />
-                  Import complete
+                  {t("misc.importWizard.complete")}
                 </div>
                 <div style={{ fontSize: "0.82rem", color: "var(--muted-foreground)" }}>
-                  {result.imported} documents created as drafts · {result.skipped} skipped
-                  {result.errors.length > 0 && ` · ${result.errors.length} errors`}
+                  {t("misc.importWizard.summary", { imported: result.imported, skipped: result.skipped })}
+                  {result.errors.length > 0 && ` · ${t("misc.importWizard.errorCount", { count: result.errors.length })}`}
                 </div>
               </div>
 
               {result.errors.length > 0 && (
                 <div style={{ fontSize: "0.72rem", color: "var(--status-warning)", marginBottom: "1rem" }}>
                   {result.errors.slice(0, 10).map((e, i) => (
-                    <div key={i}>Row {e.row + 1}: {e.field} — {e.message}</div>
+                    <div key={i}>{t("misc.importWizard.rowError", { row: e.row + 1, field: e.field, message: e.message })}</div>
                   ))}
                 </div>
               )}
 
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button data-testid="import-done-button" onClick={() => { onComplete(); onClose(); }} style={btnPrimary(false)}>
-                  Done
+                  {t("misc.importWizard.done")}
                 </button>
               </div>
             </div>

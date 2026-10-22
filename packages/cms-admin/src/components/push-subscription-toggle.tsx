@@ -16,10 +16,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Bell, BellOff, Loader2 } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 type State = "idle" | "loading" | "enabled" | "disabled" | "blocked" | "unsupported" | "no-vapid" | "error";
 
 export function PushSubscriptionToggle(): React.ReactNode {
+  const t = useT();
   const [state, setState] = useState<State>("idle");
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
@@ -129,24 +131,29 @@ export function PushSubscriptionToggle(): React.ReactNode {
   if (state === "unsupported") {
     return (
       <div style={containerStyle}>
-        <div style={headerStyle}><BellOff size={14} /> Browser notifications</div>
-        <div style={descStyle}>Your browser doesn&apos;t support web push (no Notification API or PushManager). Try Chrome/Firefox/Safari 16+.</div>
+        <div style={headerStyle}><BellOff size={14} /> {t("misc.pushToggle.title")}</div>
+        <div style={descStyle}>{t("misc.pushToggle.unsupported")}</div>
       </div>
     );
   }
   if (state === "blocked") {
     return (
       <div style={containerStyle}>
-        <div style={headerStyle}><BellOff size={14} /> Browser notifications</div>
-        <div style={descStyle}>You blocked notifications for this site. To re-enable: click the lock icon in the address bar → Site settings → Notifications → Allow, then reload.</div>
+        <div style={headerStyle}><BellOff size={14} /> {t("misc.pushToggle.title")}</div>
+        <div style={descStyle}>{t("misc.pushToggle.blocked")}</div>
       </div>
     );
   }
   if (state === "no-vapid") {
     return (
       <div style={containerStyle}>
-        <div style={headerStyle}><BellOff size={14} /> Browser notifications</div>
-        <div style={descStyle}>Server is missing VAPID keys. Run <code>npx web-push generate-vapid-keys</code> and set <code>VAPID_PUBLIC_KEY</code>, <code>VAPID_PRIVATE_KEY</code>, and <code>VAPID_SUBJECT</code> as Fly secrets, then redeploy cms-admin.</div>
+        <div style={headerStyle}><BellOff size={14} /> {t("misc.pushToggle.title")}</div>
+        <div style={descStyle}>
+          {t("misc.pushToggle.noVapid").split(/(\{\w+\})/).map((part, i) => {
+            const code = ({ "{cmd}": "npx web-push generate-vapid-keys", "{pub}": "VAPID_PUBLIC_KEY", "{priv}": "VAPID_PRIVATE_KEY", "{subject}": "VAPID_SUBJECT" } as Record<string, string>)[part];
+            return code ? <code key={i}>{code}</code> : part;
+          })}
+        </div>
         {errMsg && <div style={{ ...descStyle, color: "var(--destructive)" }}>{errMsg}</div>}
       </div>
     );
@@ -157,8 +164,8 @@ export function PushSubscriptionToggle(): React.ReactNode {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
         <div style={headerStyle}>
           {state === "enabled" ? <Bell size={14} style={{ color: "var(--primary)" }} /> : <BellOff size={14} />}
-          Browser notifications
-          {state === "enabled" && <span style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", background: "color-mix(in srgb, var(--primary) 20%, transparent)", color: "var(--primary)", borderRadius: "999px" }}>ON</span>}
+          {t("misc.pushToggle.title")}
+          {state === "enabled" && <span style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", background: "color-mix(in srgb, var(--primary) 20%, transparent)", color: "var(--primary)", borderRadius: "999px" }}>{t("misc.pushToggle.on")}</span>}
         </div>
         <button
           data-testid="push-notification-toggle"
@@ -175,11 +182,11 @@ export function PushSubscriptionToggle(): React.ReactNode {
           }}
         >
           {state === "loading" && <Loader2 size={12} className="spin" />}
-          {state === "enabled" ? "Disable" : "Enable"}
+          {state === "enabled" ? t("misc.pushToggle.disable") : t("misc.pushToggle.enable")}
         </button>
       </div>
       <div style={descStyle}>
-        Get a native OS notification when your site finishes deploying — even when this tab is closed.
+        {t("misc.pushToggle.description")}
       </div>
       {errMsg && <div style={{ ...descStyle, color: "var(--destructive)" }}>{errMsg}</div>}
     </div>

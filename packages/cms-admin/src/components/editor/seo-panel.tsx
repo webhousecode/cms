@@ -7,6 +7,7 @@ import { JSON_LD_TEMPLATES, autoFillFields, generateJsonLd, type JsonLdTemplate 
 import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
 import { HelpCard } from "@/components/ui/help-card";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   collection: string;
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) {
+  const t = useT();
   const seo: SeoFields = (doc.data._seo as SeoFields) ?? {};
   const [metaTitle, setMetaTitle] = useState(seo.metaTitle ?? "");
   const [metaDesc, setMetaDesc] = useState(seo.metaDescription ?? "");
@@ -133,13 +135,13 @@ Return ONLY the JSON, no explanation.`,
           setLastOptimized(new Date().toISOString());
           setConfirmReoptimize(false);
           setTimeout(() => onSave(), 500);
-          toast.success("SEO optimized and saved");
+          toast.success(t("editor.seoPanel.optimizedSaved"));
         } catch {
-          toast.error("AI returned invalid JSON");
+          toast.error(t("editor.seoPanel.invalidJson"));
         }
       }
     } catch {
-      toast.error("AI optimization failed");
+      toast.error(t("editor.seoPanel.optimizeFailed"));
     }
     setOptimizing(false);
   }
@@ -172,11 +174,11 @@ Rules:
         if (!keywords.includes(rewriteKeyword.trim().toLowerCase())) {
           setKeywords([...keywords, rewriteKeyword.trim().toLowerCase()]);
         }
-        toast.success(`Rewritten for "${rewriteKeyword.trim()}"`);
+        toast.success(t("editor.seoPanel.rewrittenFor", { keyword: rewriteKeyword.trim() }));
         setRewriteKeyword("");
       }
     } catch {
-      toast.error("Rewrite failed");
+      toast.error(t("editor.seoPanel.rewriteFailed"));
     }
     setRewriting(false);
   }
@@ -205,14 +207,14 @@ Rules:
       {/* Header */}
       <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontWeight: 600, fontSize: "0.85rem" }}>
-          <Search style={{ width: 14, height: 14 }} /> Visibility
+          <Search style={{ width: 14, height: 14 }} /> {t("editor.seoPanel.visibility")}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span title="SEO Score" style={{ fontSize: "0.65rem", fontWeight: 600, fontFamily: "monospace", color: scoreColor }}>
-            SEO {score?.score ?? 0}
+          <span title={t("editor.seoPanel.seoScore")} style={{ fontSize: "0.65rem", fontWeight: 600, fontFamily: "monospace", color: scoreColor }}>
+            {t("editor.seoPanel.seoShort", { score: score?.score ?? 0 })}
           </span>
-          <span title="GEO Score" style={{ fontSize: "0.65rem", fontWeight: 600, fontFamily: "monospace", color: geoColor }}>
-            GEO {geoScore?.score ?? 0}
+          <span title={t("editor.seoPanel.geoScore")} style={{ fontSize: "0.65rem", fontWeight: 600, fontFamily: "monospace", color: geoColor }}>
+            {t("editor.seoPanel.geoShort", { score: geoScore?.score ?? 0 })}
           </span>
           <button data-testid="seo-panel-save" type="button" disabled={saving}
             onClick={async () => {
@@ -232,9 +234,9 @@ Rules:
               transition: "background 0.2s",
               opacity: saving ? 0.7 : 1,
             }}>
-            {saving ? "Saving…" : saved ? "Saved ✓" : "Save"}
+            {saving ? t("editor.seoPanel.saving") : saved ? t("editor.seoPanel.savedCheck") : t("editor.seoPanel.save")}
           </button>
-          <button data-testid="seo-panel-close" type="button" onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>&times;</button>
+          <button data-testid="seo-panel-close" type="button" onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>{"×"}</button>
         </div>
       </div>
 
@@ -243,13 +245,13 @@ Rules:
         {/* Score bars */}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-            <span style={{ fontSize: "0.55rem", color: "var(--muted-foreground)", width: "2rem", textAlign: "right" }}>SEO</span>
+            <span style={{ fontSize: "0.55rem", color: "var(--muted-foreground)", width: "2rem", textAlign: "right" }}>{t("editor.seoPanel.seo")}</span>
             <div style={{ flex: 1, height: 5, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${score?.score ?? 0}%`, background: scoreColor, borderRadius: 3, transition: "width 0.3s" }} />
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-            <span style={{ fontSize: "0.55rem", color: "var(--muted-foreground)", width: "2rem", textAlign: "right" }}>GEO</span>
+            <span style={{ fontSize: "0.55rem", color: "var(--muted-foreground)", width: "2rem", textAlign: "right" }}>{t("editor.seoPanel.geo")}</span>
             <div style={{ flex: 1, height: 5, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${geoScore?.score ?? 0}%`, background: geoColor, borderRadius: 3, transition: "width 0.3s" }} />
             </div>
@@ -260,7 +262,7 @@ Rules:
 
         {/* Meta title */}
         <div>
-          <p style={lbl}>Meta title</p>
+          <p style={lbl}>{t("editor.seoPanel.metaTitle")}</p>
           <input data-testid="seo-meta-title-field" type="text" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder={title} style={input} maxLength={70} />
           <p style={{ fontSize: "0.65rem", color: metaTitle.length > 60 ? "#f87171" : "var(--muted-foreground)", marginTop: "0.2rem", textAlign: "right" }}>
             {metaTitle.length}/60
@@ -269,8 +271,8 @@ Rules:
 
         {/* Meta description */}
         <div>
-          <p style={lbl}>Meta description</p>
-          <textarea data-testid="seo-meta-description-field" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Compelling description for search results..." style={{ ...input, minHeight: 100, resize: "vertical" }} maxLength={200} />
+          <p style={lbl}>{t("editor.seoPanel.metaDescription")}</p>
+          <textarea data-testid="seo-meta-description-field" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder={t("editor.seoPanel.metaDescriptionPlaceholder")} style={{ ...input, minHeight: 100, resize: "vertical" }} maxLength={200} />
           <p style={{ fontSize: "0.65rem", color: metaDesc.length > 160 ? "#f87171" : "var(--muted-foreground)", marginTop: "0.2rem", textAlign: "right" }}>
             {metaDesc.length}/160
           </p>
@@ -278,30 +280,30 @@ Rules:
 
         {/* Keywords */}
         <div>
-          <p style={lbl}>Keywords</p>
+          <p style={lbl}>{t("editor.seoPanel.keywords")}</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: keywords.length > 0 ? "0.375rem" : 0 }}>
             {keywords.map((kw) => (
               <span key={kw} style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "9999px", background: "color-mix(in srgb, var(--brand) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--brand) 25%, transparent)", color: "var(--foreground)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                 {kw}
                 <button data-testid={`seo-keyword-remove-${kw}`} type="button" onClick={() => setKeywords(keywords.filter((k) => k !== kw))}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: 0, fontSize: "0.8rem", lineHeight: 1 }}>&times;</button>
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: 0, fontSize: "0.8rem", lineHeight: 1 }}>{"×"}</button>
               </span>
             ))}
           </div>
           <div style={{ display: "flex", gap: "0.25rem" }}>
             <input data-testid="seo-keyword-field" type="text" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyword(); } }}
-              placeholder="Add keyword..." style={{ ...input, flex: 1 }} />
+              placeholder={t("editor.seoPanel.addKeyword")} style={{ ...input, flex: 1 }} />
           </div>
         </div>
 
         {/* OG Image */}
         <div>
-          <p style={lbl}>Social image (OG)</p>
-          <input data-testid="seo-og-image-field" type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="/uploads/..." style={input} />
+          <p style={lbl}>{t("editor.seoPanel.ogImage")}</p>
+          <input data-testid="seo-og-image-field" type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder={t("editor.seoPanel.ogImagePlaceholder")} style={input} />
           {ogImage && ogImage.startsWith("/uploads/") && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={ogImage} alt="OG preview"
+            <img src={ogImage} alt={t("editor.seoPanel.ogPreview")}
               style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: "4px", marginTop: "0.375rem", border: "1px solid var(--border)" }}
             />
           )}
@@ -311,7 +313,7 @@ Rules:
         {lastOptimized && !confirmReoptimize ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
             <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Optimized: {new Date(lastOptimized).toLocaleDateString()}
+              {t("editor.seoPanel.optimizedOn", { date: new Date(lastOptimized).toLocaleDateString() })}
             </p>
             <button data-testid="seo-reoptimize-trigger" type="button" onClick={() => setConfirmReoptimize(true)}
               style={{
@@ -321,13 +323,13 @@ Rules:
                 color: "var(--foreground)", cursor: "pointer",
                 fontSize: "0.75rem", fontWeight: 500,
               }}>
-              <Sparkles style={{ width: 12, height: 12 }} /> Re-optimize with AI
+              <Sparkles style={{ width: 12, height: 12 }} /> {t("editor.seoPanel.reoptimize")}
             </button>
           </div>
         ) : confirmReoptimize ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
             <p style={{ fontSize: "0.72rem", color: "var(--brand)", margin: 0, fontWeight: 500 }}>
-              This will overwrite existing SEO fields.
+              {t("editor.seoPanel.overwriteWarning")}
             </p>
             <div style={{ display: "flex", gap: "0.375rem" }}>
               <button data-testid="seo-reoptimize-confirm" type="button" onClick={aiOptimize} disabled={optimizing}
@@ -338,7 +340,7 @@ Rules:
                   fontSize: "0.7rem", fontWeight: 600,
                 }}>
                 {optimizing ? <Loader2 style={{ width: 10, height: 10, animation: "spin 1s linear infinite" }} /> : null}
-                Yes, re-optimize
+                {t("editor.seoPanel.confirmReoptimize")}
               </button>
               <button data-testid="seo-reoptimize-cancel" type="button" onClick={() => setConfirmReoptimize(false)}
                 style={{
@@ -346,7 +348,7 @@ Rules:
                   border: "1px solid var(--border)", background: "transparent",
                   color: "var(--foreground)", cursor: "pointer", fontSize: "0.7rem",
                 }}>
-                Cancel
+                {t("editor.seoPanel.cancel")}
               </button>
             </div>
           </div>
@@ -359,13 +361,13 @@ Rules:
               fontSize: "0.8rem", fontWeight: 600,
             }}>
             {optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
-            {optimizing ? "Optimizing..." : "AI Optimize"}
+            {optimizing ? t("editor.seoPanel.optimizing") : t("editor.seoPanel.aiOptimize")}
           </button>
         )}
 
         {/* Rewrite for keyword */}
         <div>
-          <p style={lbl}>Rewrite for keyword</p>
+          <p style={lbl}>{t("editor.seoPanel.rewriteForKeyword")}</p>
           <div style={{ display: "flex", gap: "0.25rem" }}>
             <input
               data-testid="seo-rewrite-keyword-input"
@@ -373,7 +375,7 @@ Rules:
               value={rewriteKeyword}
               onChange={(e) => setRewriteKeyword(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); rewriteForKeyword(); } }}
-              placeholder="Target keyword..."
+              placeholder={t("editor.seoPanel.targetKeyword")}
               style={{ ...input, flex: 1 }}
             />
             <button data-testid="seo-rewrite-button" type="button" onClick={rewriteForKeyword} disabled={rewriting || !rewriteKeyword.trim()}
@@ -386,18 +388,18 @@ Rules:
                 fontSize: "0.7rem", fontWeight: 600, flexShrink: 0,
               }}>
               {rewriting ? <Loader2 style={{ width: 10, height: 10, animation: "spin 1s linear infinite" }} /> : <RefreshCw style={{ width: 10, height: 10 }} />}
-              Rewrite
+              {t("editor.seoPanel.rewrite")}
             </button>
           </div>
           <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", marginTop: "0.2rem" }}>
-            AI rewrites meta title + description to target this keyword
+            {t("editor.seoPanel.rewriteHint")}
           </p>
         </div>
 
         {/* Readability */}
         {readabilityScore !== null && (
           <div>
-            <p style={lbl}>Readability</p>
+            <p style={lbl}>{t("editor.seoPanel.readability")}</p>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span style={{
                 fontSize: "1.1rem", fontWeight: 700, fontFamily: "monospace",
@@ -414,7 +416,7 @@ Rules:
                 </div>
               </div>
               <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)" }}>
-                {readabilityScore >= 60 ? "Easy" : readabilityScore >= 30 ? "Moderate" : "Hard"}
+                {readabilityScore >= 60 ? t("editor.seoPanel.easy") : readabilityScore >= 30 ? t("editor.seoPanel.moderate") : t("editor.seoPanel.hard")}
               </span>
             </div>
           </div>
@@ -424,22 +426,22 @@ Rules:
         <button data-testid="seo-advanced-toggle" type="button" onClick={() => setShowAdvanced(!showAdvanced)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: 0 }}>
           {showAdvanced ? <ChevronUp style={{ width: 12, height: 12 }} /> : <ChevronDown style={{ width: 12, height: 12 }} />}
-          Advanced
+          {t("editor.seoPanel.advanced")}
         </button>
         {showAdvanced && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             <div>
-              <p style={lbl}>Canonical URL</p>
+              <p style={lbl}>{t("editor.seoPanel.canonicalUrl")}</p>
               <input data-testid="seo-canonical-url-input" type="text" value={canonical} onChange={(e) => setCanonical(e.target.value)}
-                placeholder="https://... (default: self)" style={input} />
+                placeholder={t("editor.seoPanel.canonicalPlaceholder")} style={input} />
             </div>
             <div>
-              <p style={lbl}>Robots</p>
+              <p style={lbl}>{t("editor.seoPanel.robots")}</p>
               <CustomSelect
                 value={robots}
                 onChange={setRobots}
                 options={[
-                  { value: "index,follow", label: "index, follow (default)" },
+                  { value: "index,follow", label: t("editor.seoPanel.robotsDefault") },
                   { value: "noindex,follow", label: "noindex, follow" },
                   { value: "noindex,nofollow", label: "noindex, nofollow" },
                 ]}
@@ -449,7 +451,7 @@ Rules:
             {/* JSON-LD Structured Data */}
             <div>
               <p style={{ ...lbl, display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                <Code2 style={{ width: 10, height: 10 }} /> Structured data (JSON-LD)
+                <Code2 style={{ width: 10, height: 10 }} /> {t("editor.seoPanel.structuredData")}
               </p>
               <CustomSelect
                 value={jsonLdTemplate}
@@ -474,7 +476,7 @@ Rules:
                   }
                 }}
                 options={[
-                  { value: "", label: "None" },
+                  { value: "", label: t("editor.seoPanel.none") },
                   ...JSON_LD_TEMPLATES.map((t) => ({ value: t.id, label: `${t.label} — ${t.description}` })),
                 ]}
               />
@@ -486,7 +488,7 @@ Rules:
                   <div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
                     {visibleFields.length === 0 && (
                       <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-                        All fields auto-filled from document + SEO data above.
+                        {t("editor.seoPanel.allAutoFilled")}
                       </p>
                     )}
                     {visibleFields.map((f) => (
@@ -512,7 +514,7 @@ Rules:
                     {jsonLd && (
                       <details style={{ marginTop: "0.25rem" }}>
                         <summary style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", cursor: "pointer" }}>
-                          Preview JSON-LD
+                          {t("editor.seoPanel.previewJsonLd")}
                         </summary>
                         <pre style={{
                           fontSize: "0.6rem", padding: "0.5rem", background: "var(--background)",
@@ -535,16 +537,16 @@ Rules:
         <button data-testid="seo-google-preview-toggle" type="button" onClick={() => setShowPreview(!showPreview)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: 0 }}>
           {showPreview ? <ChevronUp style={{ width: 12, height: 12 }} /> : <ChevronDown style={{ width: 12, height: 12 }} />}
-          Google preview
+          {t("editor.seoPanel.googlePreview")}
         </button>
         {showPreview && (
           <div style={{ padding: "0.75rem", background: "#fff", borderRadius: "8px", fontFamily: "Arial, sans-serif" }}>
             <p style={{ fontSize: "0.7rem", color: "#202124", margin: 0 }}>{siteUrl} › ...</p>
             <p style={{ fontSize: "0.9rem", color: "#1a0dab", margin: "0.15rem 0", fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {metaTitle || title || "Page title"}
+              {metaTitle || title || t("editor.seoPanel.pageTitle")}
             </p>
             <p style={{ fontSize: "0.72rem", color: "#4d5156", margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
-              {metaDesc || "No meta description set."}
+              {metaDesc || t("editor.seoPanel.noMetaDescription")}
             </p>
           </div>
         )}
@@ -553,16 +555,16 @@ Rules:
         <button data-testid="seo-social-preview-toggle" type="button" onClick={() => setShowSocialPreview(!showSocialPreview)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: 0 }}>
           {showSocialPreview ? <ChevronUp style={{ width: 12, height: 12 }} /> : <ChevronDown style={{ width: 12, height: 12 }} />}
-          Social preview
+          {t("editor.seoPanel.socialPreview")}
         </button>
         {showSocialPreview && (
           <div style={{ borderRadius: "8px", overflow: "hidden", border: "1px solid #ddd", background: "#f0f2f5", fontFamily: "-apple-system, sans-serif" }}>
             {ogImage && ogImage.startsWith("/uploads/") ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={ogImage} alt="Social preview" style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }} />
+              <img src={ogImage} alt={t("editor.seoPanel.socialPreview")} style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }} />
             ) : (
               <div style={{ width: "100%", height: 130, background: "#e4e6eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: "0.7rem", color: "#65676b" }}>No image set</span>
+                <span style={{ fontSize: "0.7rem", color: "#65676b" }}>{t("editor.seoPanel.noImage")}</span>
               </div>
             )}
             <div style={{ padding: "0.5rem 0.75rem" }}>
@@ -570,10 +572,10 @@ Rules:
                 {siteUrl}
               </p>
               <p style={{ fontSize: "0.82rem", color: "#1c1e21", margin: "0.15rem 0", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {seo.ogTitle || metaTitle || title || "Page title"}
+                {seo.ogTitle || metaTitle || title || t("editor.seoPanel.pageTitle")}
               </p>
               <p style={{ fontSize: "0.7rem", color: "#65676b", margin: 0, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
-                {seo.ogDescription || metaDesc || "No description set."}
+                {seo.ogDescription || metaDesc || t("editor.seoPanel.noDescription")}
               </p>
             </div>
           </div>
@@ -582,7 +584,7 @@ Rules:
         {/* SEO Checks */}
         {score && score.details.length > 0 && (
           <div>
-            <p style={lbl}>SEO Checks</p>
+            <p style={lbl}>{t("editor.seoPanel.seoChecks")}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
               {score.details.map((d) => (
                 <div key={d.rule} style={{ display: "flex", alignItems: "flex-start", gap: "0.375rem", fontSize: "0.72rem" }}>
@@ -599,7 +601,7 @@ Rules:
         {/* GEO Checks */}
         {geoScore && geoScore.details.length > 0 && (
           <div>
-            <p style={lbl}>GEO Checks (AI Visibility)</p>
+            <p style={lbl}>{t("editor.seoPanel.geoChecks")}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
               {geoScore.details.map((d) => (
                 <div key={d.rule} style={{ display: "flex", alignItems: "flex-start", gap: "0.375rem", fontSize: "0.72rem" }}>

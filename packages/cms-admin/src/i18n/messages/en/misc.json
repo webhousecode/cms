@@ -1,1 +1,305 @@
-{}
+{
+  "beamTokens": {
+    "loadFailed": "Failed to load tokens",
+    "generateFailed": "Failed to generate token",
+    "title": "Beam tokens",
+    "intro": "Generate a single-use token to receive a site via Beam. Paste the token into the source CMS's Site Settings → Beam → Send to remote, and the site will be transferred to this instance. Tokens expire after 1 hour and can only be used once.",
+    "newToken": "New token — copy now, it won't be shown again",
+    "copied": "Copied",
+    "copy": "Copy",
+    "expiresAt": "Expires {date}",
+    "generating": "Generating...",
+    "generate": "Generate new token",
+    "refresh": "Refresh",
+    "active": "Active tokens",
+    "loading": "Loading…",
+    "none": "No active tokens.",
+    "expiresLower": "expires {date}"
+  },
+  "buildHistory": {
+    "phase": {
+      "init": "Initializing",
+      "sourceExtract": "Extracting source",
+      "imageBuild": "Building image",
+      "imagePush": "Pushing to registry",
+      "done": "Done",
+      "failed": "Failed"
+    },
+    "loading": "Loading build history…",
+    "unavailable": "Build history unavailable: {error}",
+    "empty": "No SSR builds yet. Click Deploy on a Next.js / Bun-Hono / custom-Dockerfile site to trigger one.",
+    "image": "Image:"
+  },
+  "buildLog": {
+    "startedProfile": "Build started ({profile})",
+    "started": "Build started",
+    "failed": "Build failed",
+    "cancelledToast": "Build cancelled",
+    "complete": "Build complete",
+    "exitCode": "Exit code {code}",
+    "error": "Build error",
+    "copied": "Copied to clipboard",
+    "title": "Build Log",
+    "cancelBuild": "Cancel build",
+    "cancel": "Cancel",
+    "rerunBuild": "Re-run build",
+    "rerun": "Re-run",
+    "noBuild": "No build running",
+    "start": "Start Build",
+    "building": "Building...",
+    "exit": "Exit: {code}",
+    "lines": "{count} lines",
+    "copyLogs": "Copy logs",
+    "copy": "Copy",
+    "downloadLogs": "Download logs",
+    "download": "Download",
+    "status": {
+      "ready": "Ready",
+      "running": "Running",
+      "success": "Success",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "deployModal": {
+    "step": {
+      "init": "Initializing",
+      "build": "Building & optimizing",
+      "push": "Pushing to provider",
+      "done": "Live"
+    },
+    "failedStatus": "Deploy failed: {status}",
+    "deploying": "Deploying",
+    "title": "Deploy Site",
+    "list": {
+      "build": "Build static pages from content",
+      "generate": "Generate sitemap, robots.txt, llms.txt, RSS feed",
+      "seo": "Optimize SEO (OpenGraph, JSON-LD, meta tags)",
+      "push": "Push to {provider}"
+    },
+    "deployNow": "Deploy now",
+    "skipDialog": "Don't show this dialog — deploy immediately",
+    "waiting": "Waiting...",
+    "failed": "Deploy failed",
+    "close": "Close"
+  },
+  "deployOutput": {
+    "loading": "Loading deploy output…",
+    "unavailable": "Browser unavailable: {error}",
+    "icd": {
+      "title": "This site is not built by the CMS.",
+      "body": "The site lives as a separate web application that builds and deploys independently (typically Next.js / Bun on Fly.io, shipped via the site repo's own CI/CD). Content edits you make here propagate live via {icd} — a signed webhook that writes the new document to the live site's volume and revalidates the affected routes (typically <100 ms server-side).",
+      "name": "Instant Content Deployment",
+      "noDir": "There is no {dir} directory because the CMS does not generate the site's HTML or assets — only its content. Code rebuilds happen via {gitPush} to the site's own repository."
+    },
+    "ssr": {
+      "title": "Builds for this site happen in an ephemeral Fly Machine.",
+      "body": "The CMS doesn't produce a local {dir} directory for {kind} sites — the build runs in a short-lived VM that pushes a Docker image to GHCR and deploys it directly to the target Fly app. See the {panel} panel below for the recent build history and live logs.",
+      "panel": "SSR builds"
+    },
+    "empty": "No {dir} directory yet. Click {deployNow} to build the site.",
+    "deployNow": "Deploy now",
+    "stats": "{files} files · {html} HTML · {size}",
+    "refresh": "Refresh",
+    "selectFile": "Select a file to preview",
+    "loadingShort": "Loading…",
+    "openRaw": "Open raw",
+    "error": "Error: {error}",
+    "rel": {
+      "justNow": "just now",
+      "minutes": "{n}m ago",
+      "hours": "{n}h ago",
+      "days": "{n}d ago"
+    }
+  },
+  "deployWizard": {
+    "steps": {
+      "template": "Template",
+      "configure": "Configure",
+      "connect": "Connect",
+      "deploy": "Deploy"
+    },
+    "back": "Back",
+    "deploy": "Deploy",
+    "next": "Next",
+    "configure": {
+      "title": "Configure deployment",
+      "intro": "Set your app name, region, and VM size. All settings can be changed after deploy.",
+      "appName": "App name",
+      "appNamePlaceholder": "my-awesome-site",
+      "appNameInvalid": "3-30 characters, lowercase letters, numbers, and hyphens only",
+      "appNameHint": "Your site will be at {host}",
+      "adminEmail": "Admin email",
+      "adminEmailPlaceholder": "admin@webhouse.app",
+      "adminEmailHint": "Login email for the CMS admin. Password is auto-generated.",
+      "region": "Region",
+      "vmSize": "VM size",
+      "selfHost": "Prefer to self-host? Download a Docker package with everything you need.",
+      "downloadDocker": "Download Docker package"
+    },
+    "connect": {
+      "verifyFailedStatus": "Token verification failed (HTTP {status})",
+      "verifyFailed": "Verification failed",
+      "title": "Connect to Fly.io",
+      "intro": "Enter your Fly.io API token to deploy directly. Your token is used only for this deploy session and is never stored.",
+      "apiToken": "API Token",
+      "tokenPlaceholder": "fo1_...",
+      "verify": "Verify",
+      "getKey": "Get key",
+      "verified": "Token verified",
+      "organizationValue": "Organization: {org}",
+      "available": "({count} available)",
+      "organization": "Organization"
+    },
+    "deployStep": {
+      "steps": {
+        "init": "Validating",
+        "createApp": "Creating app",
+        "setSecrets": "Setting secrets",
+        "createMachine": "Deploying container",
+        "waitHealthy": "Starting",
+        "allocateIp": "Allocating IPs",
+        "done": "Live"
+      },
+      "failed": "Deploy failed",
+      "title": "Deploying to Fly.io",
+      "initializing": "Initializing...",
+      "credentials": "Admin credentials (save these!)",
+      "email": "Email: {email}",
+      "password": "Password: {hint}",
+      "passwordHint": "check Fly.io secrets",
+      "runHint": "Run {command} to see the generated password."
+    },
+    "template": {
+      "loading": "Loading...",
+      "title": "What do you want to deploy?",
+      "intro": "Deploy an existing site from your CMS, or start fresh with a template.",
+      "yourSites": "Your Sites",
+      "templates": "Templates",
+      "boilerplates": "Starter Boilerplates"
+    }
+  },
+  "importWizard": {
+    "transform": {
+      "none": "None",
+      "slugify": "Slugify",
+      "dateIso": "Date → ISO",
+      "splitComma": "Split commas → array",
+      "number": "To number",
+      "boolean": "To boolean"
+    },
+    "uploadFailed": "Upload failed",
+    "previewFailed": "Preview failed",
+    "importFailed": "Import failed",
+    "title": "Import into {collection}",
+    "stepOf": "Step {step} of {total}",
+    "fileSelected": "File selected",
+    "dropHint": "Drop file here or click to browse",
+    "formats": "CSV, JSON, or Markdown (.md)",
+    "parsing": "Parsing...",
+    "uploadDetect": "Upload & Detect",
+    "detected": "Detected {rows} rows, {fields} fields ({format}). Map source fields to collection schema.",
+    "addMapping": "+ Add mapping",
+    "back": "Back",
+    "previewing": "Previewing...",
+    "preview": "Preview",
+    "validRows": "{valid} of {total} rows valid.",
+    "willSkip": "{count} will be skipped.",
+    "slug": "Slug",
+    "status": "Status",
+    "importing": "Importing...",
+    "importDocs": "Import {count} documents",
+    "complete": "Import complete",
+    "summary": "{imported} documents created as drafts · {skipped} skipped",
+    "errorCount": "{count} errors",
+    "rowError": "Row {row}: {field} — {message}",
+    "done": "Done"
+  },
+  "collectionList": {
+    "itemCount": "{count} items",
+    "unpublish": "Unpublish",
+    "publish": "Publish",
+    "cloning": "Cloning…",
+    "clone": "Clone",
+    "removeFavorite": "Remove from favorites",
+    "addFavorite": "Add to favorites",
+    "moveToTrashConfirm": "Move to trash?",
+    "moveToTrash": "Move to trash",
+    "filterAll": "All",
+    "filterPublished": "Published",
+    "filterDraft": "Draft",
+    "filterScheduled": "Scheduled",
+    "filterExpired": "Expired",
+    "filterTrashed": "Trashed",
+    "filterSource": "Source",
+    "emptyTitle": "No items yet",
+    "emptyHint": "Create your first item to get started.",
+    "searchPlaceholder": "Search…",
+    "colTitle": "Title",
+    "colStatus": "Status",
+    "colUpdated": "Updated",
+    "clickToUnpublish": "Click to unpublish",
+    "clickToPublish": "Click to publish",
+    "statusScheduled": "scheduled",
+    "status": {
+      "published": "published",
+      "draft": "draft",
+      "expired": "expired",
+      "trashed": "trashed"
+    },
+    "expires": "Expires: {date}",
+    "noMatches": "No items match your filters."
+  },
+  "collectionListPage": {
+    "gridView": "Grid view",
+    "listView": "List view",
+    "editSchema": "Edit schema",
+    "import": "Import"
+  },
+  "newDocumentButton": {
+    "newDocument": "New document",
+    "titlePlaceholder": "Item title…",
+    "creating": "Creating…",
+    "create": "Create"
+  },
+  "generateDocument": {
+    "generate": "Generate",
+    "generateContent": "Generate content",
+    "generateNamed": "Generate {name}",
+    "promptPlaceholder": "Describe what to generate, e.g. \"Write an article about the history of CMS systems from the 90's to 2026\"",
+    "elapsed": "Elapsed: {time}",
+    "collection": "Collection: {name}",
+    "shortcutHint": "⌘ Enter to generate",
+    "generationFailed": "Generation failed",
+    "createFailed": "Failed to create document",
+    "networkError": "Network error",
+    "status": {
+      "analyzing": "Analyzing prompt…",
+      "schema": "Building schema context…",
+      "structure": "Generating title and structure…",
+      "writing": "Writing content…",
+      "paragraphs": "Composing paragraphs…",
+      "metadata": "Adding metadata…",
+      "tags": "Selecting tags…",
+      "polishing": "Polishing output…",
+      "almost": "Almost there…"
+    }
+  },
+  "devInspector": {
+    "toggleTitle": "Toggle dev inspector (Ctrl+I)",
+    "copied": "✓ copied"
+  },
+  "tourTooltip": {
+    "skipTour": "Skip tour"
+  },
+  "pushToggle": {
+    "title": "Browser notifications",
+    "unsupported": "Your browser doesn't support web push (no Notification API or PushManager). Try Chrome/Firefox/Safari 16+.",
+    "blocked": "You blocked notifications for this site. To re-enable: click the lock icon in the address bar → Site settings → Notifications → Allow, then reload.",
+    "noVapid": "Server is missing VAPID keys. Run {cmd} and set {pub}, {priv}, and {subject} as Fly secrets, then redeploy cms-admin.",
+    "on": "ON",
+    "disable": "Disable",
+    "enable": "Enable",
+    "description": "Get a native OS notification when your site finishes deploying — even when this tab is closed."
+  }
+}

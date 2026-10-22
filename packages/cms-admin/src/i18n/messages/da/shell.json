@@ -1,1 +1,655 @@
-{}
+{
+  "sidebar": {
+    "tagline": "AI-native indholdsmotor",
+    "sites": "Sites",
+    "dashboard": "Oversigt",
+    "favorites": "Favoritter",
+    "cockpit": "Cockpit",
+    "agents": "Agenter",
+    "curationQueue": "Kurateringskø",
+    "calendar": "Kalender",
+    "content": "Indhold",
+    "interactives": "Interaktive elementer",
+    "mediaLibrary": "Mediebibliotek",
+    "media": "Medier",
+    "forms": "Formularer",
+    "podcast": "Podcast",
+    "tools": "Værktøjer",
+    "linkChecker": "Linktjek",
+    "seo": "SEO",
+    "backupRestore": "Backup og gendannelse",
+    "backup": "Backup",
+    "aiAnalytics": "AI-analyse",
+    "visibility": "Synlighed",
+    "lighthouse": "Lighthouse",
+    "eventLog": "Hændelseslog",
+    "searchShortcut": "Søg (⌘K)",
+    "search": "Søg",
+    "liveEditHint": "Redigér teksten direkte på det færdige website",
+    "liveEdit": "Redigér live",
+    "siteSettings": "Site-indstillinger",
+    "trash": "Papirkurv"
+  },
+  "adminHeader": {
+    "tempNeutral": "Neutral",
+    "tempCool": "Kølig",
+    "tempWarm": "Varm",
+    "theme": "Tema",
+    "themeDark": "Mørk",
+    "themeLight": "Lys",
+    "themeSystem": "System",
+    "userMenu": "Brugermenu: {name}",
+    "accountPreferences": "Kontoindstillinger",
+    "siteSettings": "Site-indstillinger",
+    "orgSettings": "Organisationsindstillinger",
+    "signOut": "Log ud",
+    "liveInSeconds": "Live på {seconds} s!",
+    "liveNow": "Live!",
+    "publishedRocket": "Udgivet! 🚀",
+    "open": "Åbn",
+    "deployFailed": "Udgivelsen fejlede",
+    "checkGithubActions": "Se detaljer i GitHub Actions.",
+    "phaseQueued": "I kø...",
+    "phaseBuilding": "Bygger...",
+    "doneInSeconds": "Færdig på {seconds} s",
+    "liveOnPages": "Live på GitHub Pages 🌐",
+    "urlReadyInSeconds": "{url} · klar på {seconds} s",
+    "readyInSeconds": "Klar på {seconds} s",
+    "pagesBuildFailed": "GitHub Pages-bygningen fejlede",
+    "pagesBuildFailedHint": "Se detaljer i repoet → Settings → Pages.",
+    "phaseResyncing": "Synkroniserer indhold...",
+    "resynced": "Indhold synkroniseret",
+    "resyncedHint": "Live-sitets cache er opdateret.",
+    "resyncFailed": "Synkroniseringen fejlede",
+    "unknownError": "Ukendt fejl",
+    "requestFailed": "Forespørgslen fejlede",
+    "deployNotConfigured": "Udgivelse er ikke sat op",
+    "setUpProvider": "Vælg en udgivelsesudbyder for dette site.",
+    "configure": "Sæt op",
+    "askAdminProvider": "Bed din site-admin om at sætte en udgivelsesudbyder op.",
+    "phaseSending": "Sender...",
+    "deployQueued": "Udgivelse sat i kø",
+    "deployQueuedHint": "GitHub Actions bygger dit site. Du får besked, når det er live.",
+    "publishedBuildingPages": "Udgivet 🚀 — bygger på GitHub Pages",
+    "urlLiveSoon": "{url} · live om 1–3 min. (nogle gange længere)",
+    "pagesTypicalTime": "GitHub Pages udgiver typisk på 1–3 minutter.",
+    "published": "Udgivet!",
+    "changesLive": "Dine ændringer er nu live.",
+    "publishFailed": "Udgivelsen fejlede",
+    "publishFailedWith": "Udgivelsen fejlede: {error}",
+    "resyncing": "Synkroniserer...",
+    "icdHint": "Indhold synkroniseres automatisk, når du gemmer. Klik for at synkronisere alt manuelt.",
+    "icdAria": "ICD-status — klik for at synkronisere manuelt",
+    "icdSyncing": "ICD · synkroniserer…",
+    "icdAuto": "ICD · auto",
+    "publishing": "Udgiver...",
+    "publishChanges": "Udgiv ændringer",
+    "beamComplete": "Beam fuldført 🚀",
+    "beamCompleteHint": "Sitet er overført",
+    "beamFailed": "Beam fejlede",
+    "transferFailed": "Overførslen fejlede",
+    "beamInProgress": "Beam i gang — klik for at se",
+    "beaming": "Beamer…",
+    "buildShortcut": "Byg (b)",
+    "buildSite": "Byg site",
+    "selectBuildProfile": "Vælg byggeprofil",
+    "default": "standard",
+    "previewTab": "Forhåndsvisning: {name}",
+    "noPreviewYet": "Ingen forhåndsvisning endnu",
+    "notBuiltYet": "Sitet er ikke bygget. Kør et build først.",
+    "previewStartFailed": "Forhåndsvisningen kunne ikke startes",
+    "previewShortcut": "Forhåndsvis site (p)",
+    "previewSite": "Forhåndsvis site",
+    "previewOrLiveTitle": "Forhåndsvisning / live-site",
+    "previewOrLiveAria": "Forhåndsvisning eller live-site",
+    "preview": "Forhåndsvisning",
+    "liveSite": "Live-site",
+    "down": "nede",
+    "modeChat": "Chat",
+    "switchMode": "Skift til {mode}-tilstand",
+    "chatWithSite": "Chat med dit site",
+    "newConversation": "Ny samtale",
+    "new": "Ny",
+    "conversationHistory": "Samtalehistorik",
+    "history": "Historik"
+  },
+  "tabBar": {
+    "closeTab": "Luk fane (⌥W)",
+    "newTab": "Ny fane (⌘-klik på et link)",
+    "closeAllTabs": "Luk alle faner",
+    "closeAll": "Luk alle",
+    "confirmCloseAll": "Luk alle {count} faner? Alle åbne dokumenter lukkes, og du kommer tilbage til Oversigt.",
+    "cancel": "Annuller"
+  },
+  "commandPalette": {
+    "items": {
+      "navDashboard": {
+        "label": "Oversigt",
+        "sublabel": "Overblik"
+      },
+      "navSites": {
+        "label": "Sites",
+        "sublabel": "Administrér sites"
+      },
+      "navAgents": {
+        "label": "AI-agenter",
+        "sublabel": "Automatisk indholdsproduktion"
+      },
+      "navAgentTemplates": {
+        "label": "Agentskabeloner",
+        "sublabel": "Lokale agentskabeloner + markedspladsens"
+      },
+      "navWorkflows": {
+        "label": "Agent-workflows",
+        "sublabel": "Pipelines med flere agenter"
+      },
+      "navMedia": {
+        "label": "Medier",
+        "sublabel": "Billeder og filer"
+      },
+      "navInts": {
+        "label": "Interaktive elementer",
+        "sublabel": "Interaktive HTML-elementer"
+      },
+      "navCalendar": {
+        "label": "Kalender",
+        "sublabel": "Planlagt indhold"
+      },
+      "navCuration": {
+        "label": "Kurateringskø",
+        "sublabel": "Gennemgå AI-genereret indhold"
+      },
+      "navChat": {
+        "label": "Chat",
+        "sublabel": "Chat med dit site"
+      },
+      "navSeo": {
+        "label": "SEO",
+        "sublabel": "SEO-oversigt og optimering"
+      },
+      "navVisibility": {
+        "label": "Synlighed",
+        "sublabel": "Samlet SEO- og GEO-score"
+      },
+      "navAnalytics": {
+        "label": "AI-analyse",
+        "sublabel": "Indsigt i indholdets performance"
+      },
+      "navLinkchecker": {
+        "label": "Linktjek",
+        "sublabel": "Find døde links"
+      },
+      "navLog": {
+        "label": "Hændelseslog",
+        "sublabel": "Revisionsspor, serverfejl, klienthændelser"
+      },
+      "navBackup": {
+        "label": "Backup",
+        "sublabel": "Backup og gendannelse af indhold"
+      },
+      "navTrash": {
+        "label": "Papirkurv",
+        "sublabel": "Slettede elementer"
+      },
+      "actNewAgent": {
+        "label": "Ny agent",
+        "sublabel": "Opret en ny AI-agent"
+      },
+      "actNewWorkflow": {
+        "label": "Nyt workflow",
+        "sublabel": "Kæd agenter sammen i en pipeline"
+      },
+      "actNewSite": {
+        "label": "Nyt site",
+        "sublabel": "Opret et nyt site"
+      },
+      "actNewOrg": {
+        "label": "Ny organisation",
+        "sublabel": "Opret en ny organisation"
+      },
+      "actBackup": {
+        "label": "Opret backup",
+        "sublabel": "Tag backup af alt indhold nu"
+      },
+      "actLinkcheck": {
+        "label": "Kør linktjek",
+        "sublabel": "Scan alt indhold for døde links"
+      },
+      "actPreview": {
+        "label": "Forhåndsvis site",
+        "sublabel": "Åbn forhåndsvisning af sitet"
+      },
+      "actRefresh": {
+        "label": "Opdatér data",
+        "sublabel": "Genindlæs sidens data"
+      },
+      "actViewLanding": {
+        "label": "Se landingssiden",
+        "sublabel": "Åbn i ny fane"
+      },
+      "actHelp": {
+        "label": "Hjælp og support",
+        "sublabel": "Dokumentation, genveje, fællesskab"
+      },
+      "setGeneral": {
+        "label": "Site-indstillinger",
+        "sublabel": "Generel opsætning af sitet"
+      },
+      "setTeam": {
+        "label": "Team",
+        "sublabel": "Administrér teammedlemmer"
+      },
+      "setEmail": {
+        "label": "E-mailindstillinger",
+        "sublabel": "Opsæt afsendelse af e-mail"
+      },
+      "setAi": {
+        "label": "AI-indstillinger",
+        "sublabel": "API-nøgler og udbydere"
+      },
+      "setDeploy": {
+        "label": "Udgivelse",
+        "sublabel": "Udgivelses-hooks og udløsere"
+      },
+      "setCustomDomain": {
+        "label": "Eget domæne",
+        "sublabel": "DNS, registrar og egen URL til live-sitet"
+      },
+      "setAutomation": {
+        "label": "Automatisering",
+        "sublabel": "Backup, linktjek, webhooks"
+      },
+      "setBrand": {
+        "label": "Brandstemme",
+        "sublabel": "Tone og skrivestil"
+      },
+      "setMcp": {
+        "label": "MCP-indstillinger",
+        "sublabel": "Model Context Protocol"
+      },
+      "setPrompts": {
+        "label": "AI-prompts",
+        "sublabel": "Tilpas AI-prompts"
+      },
+      "accPrefs": {
+        "label": "Kontoindstillinger",
+        "sublabel": "Profil og præferencer"
+      },
+      "accSecurity": {
+        "label": "Sikkerhed",
+        "sublabel": "Adgangskode og godkendelse"
+      },
+      "accLogout": {
+        "label": "Log ud",
+        "sublabel": "Log ud af din konto"
+      }
+    },
+    "categories": {
+      "favorites": "Favoritter",
+      "content": "Indhold",
+      "navigation": "Navigation",
+      "action": "Handlinger",
+      "settings": "Indstillinger",
+      "account": "Konto"
+    },
+    "collectionSub": "Samling · {name}",
+    "switchToSite": "Skift til site",
+    "switchToOrg": "Skift til organisation",
+    "workflowStepsOne": "Workflow · {count} trin",
+    "workflowStepsOther": "Workflow · {count} trin",
+    "localTemplate": "Lokal skabelon · {description}",
+    "marketplaceTemplate": "Skabelon fra markedspladsen · {description}",
+    "foundInBody": "{collection} · fundet i brødteksten",
+    "placeholder": "Søg i indhold, navigér eller kør handlinger…",
+    "close": "Luk (Esc)",
+    "searching": "Søger…",
+    "noResults": "Ingen resultater for {query}",
+    "hintNavigate": "↑↓ navigér",
+    "hintOpen": "↵ åbn",
+    "hintClose": "ESC luk",
+    "hintToggle": "⌘K slå til/fra"
+  },
+  "helpDrawer": {
+    "links": {
+      "documentation": "Dokumentation",
+      "troubleshooting": "Fejlfinding",
+      "systemStatus": "Systemstatus",
+      "contactSupport": "Kontakt support"
+    },
+    "shortcutGroups": {
+      "chatWithYourSite": "Chat med dit site",
+      "general": "Generelt",
+      "documentEditor": "Dokumenteditor",
+      "collectionList": "Samlingsliste",
+      "richTextEditor": "Teksteditor"
+    },
+    "shortcuts": {
+      "toggleChatAdminMode": "Skift mellem chat og admin",
+      "focusChatInput": "Gå til chatfeltet",
+      "newConversation": "Ny samtale",
+      "commandPalette": "Kommandopalet",
+      "helpSupport": "Hjælp og support",
+      "previewSite": "Forhåndsvis site",
+      "deploySite": "Udgiv site",
+      "newTab": "Ny fane",
+      "closeTab": "Luk fane",
+      "previousTab": "Forrige fane",
+      "nextTab": "Næste fane",
+      "saveDocument": "Gem dokument",
+      "publish": "Udgiv",
+      "newItem": "Nyt element",
+      "generateWithAi": "Generér med AI",
+      "bold": "Fed",
+      "italic": "Kursiv",
+      "underline": "Understreget",
+      "strikethrough": "Gennemstreget",
+      "orderedList": "Nummereret liste",
+      "bulletList": "Punktliste",
+      "blockquote": "Citat",
+      "codeBlock": "Kodeblok"
+    },
+    "toolGroups": {
+      "content": "Indhold",
+      "media": "Medier",
+      "aiAgents": "AI-agenter",
+      "workflows": "Workflows",
+      "forms": "Formularer",
+      "seoQuality": "SEO og kvalitet",
+      "translation": "Oversættelse",
+      "interactives": "Interaktive elementer",
+      "memoryWeb": "Hukommelse og web",
+      "operations": "Drift",
+      "schedulingHistory": "Planlægning og historik"
+    },
+    "tools": {
+      "siteOverview": {
+        "name": "Overblik over sitet",
+        "desc": "Samlinger, antal dokumenter, indstillinger"
+      },
+      "searchContent": {
+        "name": "Søg i indhold",
+        "desc": "Fritekstsøgning i alle dokumenter"
+      },
+      "listReadDocs": {
+        "name": "Vis / læs dokumenter",
+        "desc": "Gennemse samlinger, læs hele dokumenter"
+      },
+      "createEdit": {
+        "name": "Opret / redigér",
+        "desc": "Opret, opdatér, udgiv og afpublicér dokumenter"
+      },
+      "cloneDocument": {
+        "name": "Kopiér dokument",
+        "desc": "Kopiér et dokument som kladde"
+      },
+      "generateContent": {
+        "name": "Generér indhold",
+        "desc": "Lad AI skrive eller omskrive et felt"
+      },
+      "inlineEditForm": {
+        "name": "Redigeringsformular i chatten",
+        "desc": "Redigér bestemte felter direkte i chatten"
+      },
+      "bulkPublish": {
+        "name": "Udgiv flere",
+        "desc": "Udgiv alle kladder på én gang"
+      },
+      "bulkUpdate": {
+        "name": "Opdatér flere",
+        "desc": "Opdatér et felt i mange dokumenter"
+      },
+      "listDrafts": {
+        "name": "Vis kladder",
+        "desc": "Alle ikke-udgivne dokumenter i alle samlinger"
+      },
+      "getSchema": {
+        "name": "Hent skema",
+        "desc": "Se samlingens felter og blokdefinitioner"
+      },
+      "restoreFromTrash": {
+        "name": "Gendan fra papirkurv",
+        "desc": "Gendan et dokument fra papirkurven"
+      },
+      "searchMedia": {
+        "name": "Søg i medier",
+        "desc": "Find billeder via AI-billedtekster, tags og filnavn"
+      },
+      "listMedia": {
+        "name": "Vis medier",
+        "desc": "Gennemse alle filer med AI-analysedata"
+      },
+      "upload": {
+        "name": "Upload",
+        "desc": "Upload billeder med +-knappen eller træk og slip"
+      },
+      "listAgents": {
+        "name": "Vis agenter",
+        "desc": "Se alle opsatte AI-agenter"
+      },
+      "createAgent": {
+        "name": "Opret agent",
+        "desc": "Opsæt en ny tekstforfatter-, SEO- eller egen agent"
+      },
+      "runAgent": {
+        "name": "Kør agent",
+        "desc": "Kør en agent med en prompt"
+      },
+      "curationQueue": {
+        "name": "Kurateringskø",
+        "desc": "Gennemgå, godkend eller afvis AI-indhold"
+      },
+      "approveQueueItem": {
+        "name": "Godkend element i køen",
+        "desc": "Udgiv en AI-genereret kladde fra kurateringen"
+      },
+      "rejectQueueItem": {
+        "name": "Afvis element i køen",
+        "desc": "Kassér eller send en AI-genereret kladde tilbage"
+      },
+      "agentTemplates": {
+        "name": "Agentskabeloner",
+        "desc": "Start fra en skabelon, gem nye"
+      },
+      "agentFeedback": {
+        "name": "Agentfeedback",
+        "desc": "Godkendt/afvist-statistik pr. agent"
+      },
+      "agentBudget": {
+        "name": "Agentbudget",
+        "desc": "Sæt loft over tokens eller omkostninger pr. agent"
+      },
+      "agentLocale": {
+        "name": "Agentsprog",
+        "desc": "Lås en agent til et bestemt sprog"
+      },
+      "listWorkflows": {
+        "name": "Vis workflows",
+        "desc": "Se agentkæder med flere trin"
+      },
+      "createWorkflow": {
+        "name": "Opret workflow",
+        "desc": "Kæd agenter sammen i en pipeline"
+      },
+      "runWorkflow": {
+        "name": "Kør workflow",
+        "desc": "Kør et workflow på et dokument"
+      },
+      "deleteWorkflow": {
+        "name": "Slet workflow",
+        "desc": "Fjern en workflow-definition"
+      },
+      "listSubmissions": {
+        "name": "Vis indsendelser",
+        "desc": "Alle indsendelser pr. formular"
+      },
+      "readSubmission": {
+        "name": "Læs indsendelse",
+        "desc": "Læs en bestemt formularindsendelse"
+      },
+      "formStats": {
+        "name": "Formularstatistik",
+        "desc": "Antal indsendelser og konverteringsdata"
+      },
+      "runLighthouse": {
+        "name": "Kør Lighthouse",
+        "desc": "Performance-tjek på mobil og desktop"
+      },
+      "lighthouseScores": {
+        "name": "Lighthouse-scorer",
+        "desc": "Seneste scorer for hver side"
+      },
+      "lighthouseHistory": {
+        "name": "Lighthouse-historik",
+        "desc": "Scorer over tid"
+      },
+      "translateDocument": {
+        "name": "Oversæt dokument",
+        "desc": "Lad AI oversætte et dokument til et sprog"
+      },
+      "translateSite": {
+        "name": "Oversæt site",
+        "desc": "Lad AI oversætte alle dokumenter til et sprog"
+      },
+      "generateInteractive": {
+        "name": "Generér interaktivt element",
+        "desc": "Lad AI bygge en HTML-widget"
+      },
+      "enableImageGeneration": {
+        "name": "Slå billedgenerering til",
+        "desc": "Slå AI-billedgenerering til/fra pr. site"
+      },
+      "searchMemories": {
+        "name": "Søg i hukommelsen",
+        "desc": "Søg i chattens langtidshukommelse"
+      },
+      "addMemory": {
+        "name": "Tilføj til hukommelsen",
+        "desc": "Gem en oplysning eller præference til fremtidige samtaler"
+      },
+      "forgetMemory": {
+        "name": "Glem",
+        "desc": "Fjern noget gemt fra hukommelsen"
+      },
+      "webSearch": {
+        "name": "Websøgning",
+        "desc": "Live websøgning via Brave eller Tavily"
+      },
+      "webFetch": {
+        "name": "Hent webside",
+        "desc": "Hent og læs en URL i samtalen"
+      },
+      "deploy": {
+        "name": "Udgiv",
+        "desc": "Udgiv sitet til den valgte udbyder"
+      },
+      "buildSite": {
+        "name": "Byg site",
+        "desc": "Byg de statiske sider igen"
+      },
+      "backup": {
+        "name": "Backup",
+        "desc": "Tag en backup med det samme"
+      },
+      "linkChecker": {
+        "name": "Linktjek",
+        "desc": "Tjek for døde links"
+      },
+      "siteSettings": {
+        "name": "Site-indstillinger",
+        "desc": "Se og opdatér opsætningen"
+      },
+      "deployHistory": {
+        "name": "Udgivelseshistorik",
+        "desc": "Se seneste udgivelser"
+      },
+      "schedulePublish": {
+        "name": "Planlæg udgivelse",
+        "desc": "Sæt en fremtidig dato for udgivelse/afpublicering"
+      },
+      "calendar": {
+        "name": "Kalender",
+        "desc": "Se planlagte udgivelser/afpubliceringer"
+      },
+      "revisions": {
+        "name": "Versioner",
+        "desc": "Se dokumentets ændringshistorik"
+      },
+      "trash": {
+        "name": "Papirkurv",
+        "desc": "Vis slettede dokumenter og gendan dem"
+      },
+      "contentStats": {
+        "name": "Indholdsstatistik",
+        "desc": "Antal ord, AI-andel, aktivitet"
+      }
+    },
+    "title": "Hjælp og support",
+    "tabHelp": "Hjælp",
+    "tabShortcuts": "Genveje",
+    "tabAiChat": "AI-chat",
+    "needHelp": "Brug for hjælp til dit projekt?",
+    "startWithDocs": "Start med vores dokumentation eller fællesskab.",
+    "community": "Fællesskab",
+    "communityText": "Kom med på vores Discord for at få hjælp, melde fejl eller diskutere funktioner. Mange spørgsmål bliver besvaret på få minutter.",
+    "joinDiscord": "Kom med på Discord",
+    "aiToolsIntro": "Skift til {chat}-tilstand for at bruge disse værktøjer. Spørg med almindelige ord — AI'en vælger selv det rigtige værktøj.",
+    "chat": "Chat",
+    "buttonTitle": "Hjælp og support (?)"
+  },
+  "gateScreen": {
+    "noAccess": "Ingen adgang",
+    "noSitesYet": "Du har endnu ikke adgang til nogen sites.",
+    "askAdmin": "Bed en administrator om at invitere dig.",
+    "signOut": "Log ud",
+    "connectGithub": "Forbind GitHub",
+    "waitingForSetup": "Venter på opsætning",
+    "storesOnGithub": "Dette site gemmer sit indhold på GitHub.",
+    "connectToContinue": "Forbind din konto for at fortsætte.",
+    "rateLimited": "GitHub API-grænsen er nået",
+    "tokenExpired": "GitHub-token er udløbet",
+    "connectionError": "Fejl i forbindelsen til GitHub",
+    "rateLimitedHint": "For mange forespørgsler til GitHubs API. Det nulstilles automatisk inden for få minutter. Du kan skifte til et lokalt site i mellemtiden.",
+    "tokenExpiredHint": "GitHub-adgangstokenet er udløbet eller tilbagekaldt. Forbind GitHub igen under Site-indstillinger, eller skift til et andet site.",
+    "switchToLocal": "Skift til lokalt site",
+    "retry": "Prøv igen",
+    "configError": "Fejl i sitets konfiguration",
+    "configErrorText": "{site} har en ugyldig {file} og kan ikke indlæses. Ret konfigurationen nedenfor, og skift derefter tilbage til dette site.",
+    "switchToAnother": "Skift til et andet site",
+    "redirecting": "Sender dig videre til dit site…"
+  },
+  "siteSwitcher": {
+    "running": "Kører",
+    "unreachable": "Kan ikke nås",
+    "noPreviewUrl": "Ingen forhåndsvisnings-URL",
+    "checking": "Tjekker...",
+    "selectSite": "Vælg site",
+    "selectOrg": "Vælg organisation",
+    "allSites": "Alle sites",
+    "newSite": "Nyt site",
+    "allOrgs": "Alle organisationer",
+    "newOrg": "Ny organisation"
+  },
+  "poweredBy": {
+    "text": "Drevet af {product}",
+    "docs": "Dokumentation"
+  },
+  "favoritesList": {
+    "typeDocument": "Dokument",
+    "typeCollection": "Samling",
+    "typePage": "Side",
+    "typeTool": "Værktøj",
+    "typeInteractive": "Interaktivt element",
+    "empty": "Ingen favoritter endnu",
+    "emptyHint": "Klik på hjerteikonet på en side eller et dokument for at tilføje det her.",
+    "search": "Søg i favoritter…",
+    "allCount": "Alle ({count})",
+    "gridView": "Gittervisning",
+    "listView": "Listevisning",
+    "noMatch": "Ingen favoritter matcher din søgning.",
+    "colTitle": "Titel",
+    "colType": "Type",
+    "colAdded": "Tilføjet",
+    "remove": "Fjern fra favoritter",
+    "addedOn": "Tilføjet {date}"
+  }
+}

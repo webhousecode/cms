@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useCapabilities } from "@/hooks/use-capabilities";
+import { useT } from "@/lib/i18n-context";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react").then(m => m.default), { ssr: false });
 
@@ -310,6 +311,7 @@ function formatDate(iso: string): string {
 
 /* ─── Page ───────────────────────────────────────────────────── */
 export default function InteractiveDetailPage() {
+  const t = useT();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -504,7 +506,7 @@ export default function InteractiveDetailPage() {
     return (
       <div className="p-8 max-w-4xl">
         <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)", fontSize: "0.875rem" }}>
-          Loading...
+          {t("pages.interactiveEdit.loading")}
         </div>
       </div>
     );
@@ -534,9 +536,9 @@ export default function InteractiveDetailPage() {
   if (!detail) return null;
 
   const modes: { value: EditMode; label: string; icon: typeof Eye }[] = [
-    { value: "preview", label: "Preview", icon: Eye },
-    { value: "visual", label: "Visual Edit", icon: MousePointer2 },
-    { value: "code", label: "Code", icon: Code },
+    { value: "preview", label: t("pages.interactiveEdit.preview"), icon: Eye },
+    { value: "visual", label: t("pages.interactiveEdit.visualEdit"), icon: MousePointer2 },
+    { value: "code", label: t("pages.interactiveEdit.code"), icon: Code },
   ];
 
   return (
@@ -546,7 +548,7 @@ export default function InteractiveDetailPage() {
         actions={
           <div className="flex items-center gap-2">
             {saved && (
-              <span className="text-xs text-muted-foreground">Saved</span>
+              <span className="text-xs text-muted-foreground">{t("pages.interactiveEdit.saved")}</span>
             )}
 
             {/* Status badge — same as editor */}
@@ -556,7 +558,7 @@ export default function InteractiveDetailPage() {
                 : "bg-status-warning/10 text-status-warning"
             }`}>
               <Globe className="w-3 h-3" />
-              {detail.status ?? "draft"}
+              {(detail.status === "published" ? t("pages.interactiveEdit.statusPublished") : detail.status === "trashed" ? t("pages.interactiveEdit.statusTrashed") : t("pages.interactiveEdit.statusDraft"))}
             </span>
 
             {/* Locale selector — matches document editor */}
@@ -566,7 +568,7 @@ export default function InteractiveDetailPage() {
                   data-testid="interactive-locale-selector"
                   type="button"
                   onClick={() => siblings.length > 0 ? setLocaleDropdownOpen(o => !o) : undefined}
-                  title={siblings.length > 0 ? "Switch between translations" : `Language: ${(detail.locale || defaultLocale).toUpperCase()}`}
+                  title={siblings.length > 0 ? t("pages.interactiveEdit.switchTranslations") : t("pages.interactiveEdit.languageTitle", { locale: (detail.locale || defaultLocale).toUpperCase() })}
                   style={{
                     display: "inline-flex", alignItems: "center", gap: "0.3rem",
                     padding: "0.2rem 0.5rem", borderRadius: "6px",
@@ -591,7 +593,7 @@ export default function InteractiveDetailPage() {
                       padding: "0.4rem 0.75rem", fontSize: "0.8rem", fontFamily: "monospace",
                       background: "var(--accent)", color: "var(--foreground)", fontWeight: 600,
                     }}>
-                      {(detail.locale || defaultLocale).toUpperCase()} — current
+                      {t("pages.interactiveEdit.currentLocale", { locale: (detail.locale || defaultLocale).toUpperCase() })}
                     </div>
                     {siblings.map(s => (
                       <Link
@@ -620,10 +622,10 @@ export default function InteractiveDetailPage() {
                 onClick={cloneInteractive}
                 disabled={cloning}
                 className="text-muted-foreground hover:text-foreground gap-1.5"
-                title="Clone interactive"
+                title={t("pages.interactiveEdit.cloneTitle")}
               >
                 <Copy className="w-3.5 h-3.5" />
-                {cloning ? "Cloning..." : "Clone"}
+                {cloning ? t("pages.interactiveEdit.cloning") : t("pages.interactiveEdit.clone")}
               </Button>
             )}
 
@@ -635,21 +637,21 @@ export default function InteractiveDetailPage() {
                      mode === "code" ? <Code className="w-3.5 h-3.5" /> :
                      mode === "ai-edit" ? <Sparkles className="w-3.5 h-3.5" /> :
                      <Pencil className="w-3.5 h-3.5" />}
-                    {mode === "visual" ? "Visual" : mode === "code" ? "Code" : mode === "ai-edit" ? "AI" : "Edit"}
+                    {mode === "visual" ? t("pages.interactiveEdit.visual") : mode === "code" ? t("pages.interactiveEdit.code") : mode === "ai-edit" ? t("pages.interactiveEdit.ai") : t("pages.interactiveEdit.edit")}
                     <ChevronDown className="w-3 h-3 opacity-50" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-40">
                   <DropdownMenuItem onClick={() => setMode("visual")} className={mode === "visual" ? "bg-accent" : ""}>
                     <MousePointer2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                    Visual
+                    {t("pages.interactiveEdit.visual")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setMode("code")} className={mode === "code" ? "bg-accent" : ""}>
                     <Code className="mr-2 h-4 w-4 text-muted-foreground" />
-                    Code
+                    {t("pages.interactiveEdit.code")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setMode("ai-edit")} className={mode === "ai-edit" ? "bg-accent" : ""}>
                     <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" />
-                    AI
+                    {t("pages.interactiveEdit.ai")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -660,11 +662,11 @@ export default function InteractiveDetailPage() {
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-foreground gap-1.5"
-              title="Revision history"
+              title={t("pages.interactiveEdit.historyTitle")}
               disabled
             >
               <History className="w-3.5 h-3.5" />
-              History
+              {t("pages.interactiveEdit.history")}
             </Button>
 
             {/* Properties */}
@@ -673,7 +675,7 @@ export default function InteractiveDetailPage() {
               size="icon"
               onClick={() => { setPropertiesOpen((o) => !o); if (!propertiesOpen) setEditName(detail.name); }}
               className={propertiesOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"}
-              title="Properties (name, filename, dates)"
+              title={t("pages.interactiveEdit.propertiesTitle")}
             >
               <Settings2 className="w-4 h-4" />
             </Button>
@@ -685,7 +687,7 @@ export default function InteractiveDetailPage() {
                 size="icon"
                 onClick={() => setConfirmTrash(true)}
                 className="text-muted-foreground hover:text-destructive"
-                title="Move to trash"
+                title={t("pages.interactiveEdit.moveToTrash")}
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -697,7 +699,7 @@ export default function InteractiveDetailPage() {
               size="icon"
               onClick={() => setMode("preview")}
               className={mode === "preview" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
-              title="Preview"
+              title={t("pages.interactiveEdit.preview")}
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -711,10 +713,10 @@ export default function InteractiveDetailPage() {
                   onClick={() => setStatus("draft")}
                   disabled={saving}
                   className="gap-1.5"
-                  title="Revert to draft (unpublish)"
+                  title={t("pages.interactiveEdit.unpublishTitle")}
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  Unpublish
+                  {t("pages.interactiveEdit.unpublish")}
                 </Button>
               ) : (
                 <Button
@@ -723,10 +725,10 @@ export default function InteractiveDetailPage() {
                   onClick={() => setStatus("published")}
                   disabled={saving}
                   className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
-                  title="Publish"
+                  title={t("pages.interactiveEdit.publish")}
                 >
                   <Globe className="w-3.5 h-3.5" />
-                  Publish
+                  {t("pages.interactiveEdit.publish")}
                 </Button>
               )
             )}
@@ -744,7 +746,7 @@ export default function InteractiveDetailPage() {
                 ) : (
                   <Save className="w-3.5 h-3.5" />
                 )}
-                {saved ? "Saved!" : "Save"}
+                {saved ? t("pages.interactiveEdit.savedBang") : t("pages.interactiveEdit.save")}
               </Button>
             )}
           </div>
@@ -754,11 +756,11 @@ export default function InteractiveDetailPage() {
         <Link
           href="/admin/interactives"
           className="text-muted-foreground hover:text-foreground transition-colors"
-          title="Back to Interactives"
+          title={t("pages.interactiveEdit.back")}
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
-        <ActionBarBreadcrumb items={["interactives", detail.name]} />
+        <ActionBarBreadcrumb items={[t("pages.interactiveEdit.breadcrumb"), detail.name]} />
         <span className="text-xs text-muted-foreground font-mono">{formatSize(detail.size)}</span>
       </ActionBar>
 
@@ -771,7 +773,7 @@ export default function InteractiveDetailPage() {
           position: "sticky", top: "calc(var(--cms-chrome-top, 84px) + 48px)", zIndex: 20,
         }}>
           <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Translations
+            {t("pages.interactiveEdit.translations")}
           </span>
           {siblings.map(s => (
             <Link
@@ -809,7 +811,7 @@ export default function InteractiveDetailPage() {
               }}
             >
               <Languages size={11} />
-              Side-by-side
+              {t("pages.interactiveEdit.sideBySide")}
             </button>
           )}
           {/* Add translation — any interactive in a group can add (equal partners) */}
@@ -840,11 +842,11 @@ export default function InteractiveDetailPage() {
                     });
                     if (res.ok) {
                       const result = await res.json();
-                      toast.success("Translation created");
+                      toast.success(t("pages.interactiveEdit.translationCreated"));
                       router.push(`/admin/interactives/${result.id}`);
                     } else {
-                      const body = await res.json().catch(() => ({ error: "Translation failed" }));
-                      toast.error(body.error ?? "Translation failed");
+                      const body = await res.json().catch(() => ({ error: t("pages.interactiveEdit.translationFailed") }));
+                      toast.error(body.error ?? t("pages.interactiveEdit.translationFailed"));
                       // Reload to pick up any locale corrections
                       loadDetail();
                     }
@@ -860,7 +862,7 @@ export default function InteractiveDetailPage() {
                   background: "transparent", cursor: translating ? "wait" : "pointer",
                 }}
               >
-                {translating ? "Translating..." : "+ Add translation"}
+                {translating ? t("pages.interactiveEdit.translating") : t("pages.interactiveEdit.addTranslation")}
               </button>
             );
           })()}
@@ -876,20 +878,20 @@ export default function InteractiveDetailPage() {
           display: "flex", flexDirection: "column",
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
-            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Properties</span>
+            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>{t("pages.interactiveEdit.properties")}</span>
             <button data-testid="interactive-properties-close" type="button" onClick={() => setPropertiesOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             {/* ID */}
             <div>
-              <p style={labelStyle}>ID</p>
+              <p style={labelStyle}>{t("pages.interactiveEdit.id")}</p>
               <p style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.72rem" }}>{detail.id}</p>
             </div>
 
             {/* Name — editable */}
             <div>
-              <p style={labelStyle}>Name</p>
+              <p style={labelStyle}>{t("pages.interactiveEdit.name")}</p>
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <input
                   data-testid="interactive-properties-name-input"
@@ -916,7 +918,7 @@ export default function InteractiveDetailPage() {
                       cursor: "pointer", flexShrink: 0,
                     }}
                   >
-                    Save
+                    {t("pages.interactiveEdit.save")}
                   </button>
                 )}
               </div>
@@ -924,30 +926,30 @@ export default function InteractiveDetailPage() {
 
             {/* Filename */}
             <div>
-              <p style={labelStyle}>Filename</p>
+              <p style={labelStyle}>{t("pages.interactiveEdit.filename")}</p>
               <p style={valueStyle}>{detail.filename}</p>
             </div>
 
             {/* Status */}
             <div>
-              <p style={labelStyle}>Status</p>
-              <p style={valueStyle}>{detail.status ?? "draft"}</p>
+              <p style={labelStyle}>{t("pages.interactiveEdit.status")}</p>
+              <p style={valueStyle}>{(detail.status === "published" ? t("pages.interactiveEdit.statusPublished") : detail.status === "trashed" ? t("pages.interactiveEdit.statusTrashed") : t("pages.interactiveEdit.statusDraft"))}</p>
             </div>
 
             {/* Size */}
             <div>
-              <p style={labelStyle}>Size</p>
+              <p style={labelStyle}>{t("pages.interactiveEdit.size")}</p>
               <p style={valueStyle}>{formatSize(detail.size)}</p>
             </div>
 
             {/* Dates */}
             <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <div>
-                <p style={labelStyle}>Created</p>
+                <p style={labelStyle}>{t("pages.interactiveEdit.created")}</p>
                 <p style={valueStyle}>{new Date(detail.createdAt).toLocaleString()}</p>
               </div>
               <div>
-                <p style={labelStyle}>Last updated</p>
+                <p style={labelStyle}>{t("pages.interactiveEdit.lastUpdated")}</p>
                 <p style={valueStyle}>{new Date(detail.updatedAt).toLocaleString()}</p>
               </div>
             </div>
@@ -993,7 +995,7 @@ export default function InteractiveDetailPage() {
             <iframe
               ref={iframeRef}
               srcDoc={injectWysiwyg(codeValue)}
-              title={`${detail.name} - Visual Edit`}
+              title={t("pages.interactiveEdit.visualEditFrameTitle", { name: detail.name })}
               sandbox="allow-scripts allow-same-origin"
               style={{
                 width: "100%",
@@ -1062,23 +1064,23 @@ export default function InteractiveDetailPage() {
             <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
               <AlertTriangle style={{ width: "1.25rem", height: "1.25rem", color: "rgb(239 68 68)", flexShrink: 0, marginTop: "1px" }} />
               <div>
-                <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>Move to trash?</p>
+                <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("pages.interactiveEdit.trashConfirmTitle")}</p>
                 <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace", wordBreak: "break-all", marginTop: "0.2rem" }}>{detail.name}</p>
               </div>
             </div>
             <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-              This interactive will be moved to trash. You can restore it later from the trash.
+              {t("pages.interactiveEdit.trashConfirmBody")}
             </p>
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
               <Button variant="outline" size="sm" onClick={() => setConfirmTrash(false)}>
-                Cancel
+                {t("pages.interactiveEdit.cancel")}
               </Button>
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={() => { setConfirmTrash(false); setStatus("trashed"); }}
               >
-                Move to trash
+                {t("pages.interactiveEdit.moveToTrash")}
               </Button>
             </div>
           </div>

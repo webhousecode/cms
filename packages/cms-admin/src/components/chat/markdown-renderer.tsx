@@ -2,6 +2,7 @@
 
 import { Fragment, useState, useEffect, useCallback } from "react";
 import { Copy, Check } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 import { PagePreviewCard } from "./page-preview-card";
 
 /**
@@ -24,6 +25,7 @@ export function MarkdownRenderer({ text }: { text: string }) {
 
 /** Small copy button — used on code blocks */
 function CopyButton({ text }: { text: string }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(text).then(() => {
@@ -35,7 +37,7 @@ function CopyButton({ text }: { text: string }) {
     <button
       data-testid="markdown-copy-button"
       onClick={handleCopy}
-      title="Copy"
+      title={t("chat.markdownRenderer.copy")}
       style={{
         position: "absolute",
         top: "6px",
@@ -57,7 +59,7 @@ function CopyButton({ text }: { text: string }) {
       onMouseLeave={(e) => { if (!copied) e.currentTarget.style.opacity = "0.6"; }}
     >
       {copied ? <Check style={{ width: "11px", height: "11px" }} /> : <Copy style={{ width: "11px", height: "11px" }} />}
-      {copied ? "Copied" : "Copy"}
+      {copied ? t("chat.markdownRenderer.copied") : t("chat.markdownRenderer.copy")}
     </button>
   );
 }
@@ -450,7 +452,8 @@ function DocPillView({ collection, slug }: { collection: string; slug: string })
 }
 
 function DocPill({ collection, slug, variant }: { collection: string; slug: string; variant: "edit" | "view" }) {
-  const label = variant === "edit" ? "Edit" : "View";
+  const t = useT();
+  const label = variant === "edit" ? t("chat.markdownRenderer.edit") : t("chat.markdownRenderer.view");
   return (
     <button
       data-testid="markdown-doc-pill"
@@ -501,6 +504,7 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
 
 /** Render inline markdown: bold, italic, code, links, strikethrough, doc refs */
 function InlineRich({ text }: { text: string }) {
+  const t = useT();
   // Split on: ![img](url), `code`, **bold**, *italic*, ~~strike~~, [link](url), [doc:col/slug|Title], [form:name]
   const regex = /(!\[[^\]]*\]\([^)]+\)|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[doc:[^\]]+\]|\[form:[^\]]+\]|\[[^\]]+\]\([^)]+\))/g;
   const parts: React.ReactNode[] = [];
@@ -595,7 +599,7 @@ function InlineRich({ text }: { text: string }) {
               verticalAlign: "middle", lineHeight: 1.4, marginLeft: "4px",
             }}
           >
-            Inbox
+            {t("chat.markdownRenderer.inbox")}
           </button>
         );
       }

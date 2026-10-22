@@ -1,9 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { Fragment, useState, useRef, useEffect, useCallback } from "react";
 import { Download, Upload, Zap, FileArchive, CheckCircle, AlertTriangle, Key, Send, Copy } from "lucide-react";
 import { BeamProgressModal } from "./beam-progress-modal";
 import { BeamImportModal } from "./beam-import-modal";
+import { useT } from "@/lib/i18n-context";
+
+/** Renders a translated sentence whose {placeholders} are React nodes (e.g. <code>). */
+function fillNodes(template: string, nodes: Record<string, React.ReactNode>): React.ReactNode[] {
+  return template.split(/(\{\w+\})/).map((part, i) => {
+    const m = /^\{(\w+)\}$/.exec(part);
+    return m && m[1] in nodes ? <Fragment key={i}>{nodes[m[1]]}</Fragment> : part;
+  });
+}
 
 interface ExportStats {
   contentFiles: number;
@@ -37,6 +46,7 @@ interface BeamProgress {
 }
 
 export function BeamSettingsPanel({ orgId }: { orgId: string }) {
+  const t = useT();
   // ── Export state ──
   const [exporting, setExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
@@ -75,7 +85,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
         es.close();
       } else if (data.phase === "error") {
         setPushing(false);
-        setPushError(data.error ?? "Transfer failed");
+        setPushError(data.error ?? t("integrations.beamSettings.transferFailed"));
         es.close();
       }
     });
@@ -83,7 +93,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       es.close();
     };
     return () => es.close();
-  }, []);
+  }, [t]);
 
   // ── Export handler ──
   async function handleExport() {
@@ -92,7 +102,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
     try {
       const res = await fetch("/api/admin/beam/export", { method: "POST" });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: "Export failed" }));
+        const data = await res.json().catch(() => ({ error: t("integrations.beamSettings.exportFailed") }));
         throw new Error(data.error);
       }
       const blob = await res.blob();
@@ -108,7 +118,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       URL.revokeObjectURL(url);
       setExportDone(true);
     } catch (err) {
-      setPushError(err instanceof Error ? err.message : "Export failed");
+      setPushError(err instanceof Error ? err.message : t("integrations.beamSettings.exportFailed"));
     } finally {
       setExporting(false);
     }
@@ -118,11 +128,11 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
   function handleImport() {
     const file = fileRef.current?.files?.[0];
     if (!file) {
-      setImportError("Please choose a .beam file first");
+      setImportError(t("integrations.beamSettings.chooseFileFirst"));
       return;
     }
     if (!file.name.endsWith(".beam")) {
-      setImportError("File must be a .beam archive");
+      setImportError(t("integrations.beamSettings.mustBeBeam"));
       return;
     }
     setImportResult(null);
@@ -140,7 +150,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       setBeamToken({ token: data.token, expiresAt: data.expiresAt });
       setTokenCopied(false);
     } catch (err) {
-      setPushError(err instanceof Error ? err.message : "Token generation failed");
+      setPushError(err instanceof Error ? err.message : t("integrations.beamSettings.tokenFailed"));
     } finally {
       setGeneratingToken(false);
     }
@@ -175,7 +185,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error ?? "Push failed");
+        throw new Error(data.error ?? t("integrations.beamSettings.pushFailed"));
       }
 
       if (data.beamId && data.beamId !== "pending") {
@@ -191,7 +201,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       }
     } catch (err) {
       setPushing(false);
-      setPushError(err instanceof Error ? err.message : "Push failed");
+      setPushError(err instanceof Error ? err.message : t("integrations.beamSettings.pushFailed"));
       setModalOpen(false);
     }
   }
@@ -240,11 +250,10 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
           <Zap style={{ width: 18, height: 18, color: "var(--brand)" }} />
-          <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>Beam Export</h3>
+          <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>{t("integrations.beamSettings.exportHeading")}</h3>
         </div>
         <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
-          Download a complete <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>.beam</code> archive
-          of this site — content, media, config, agents, and settings. Secrets are automatically stripped.
+          {fillNodes(t("integrations.beamSettings.exportIntro"), { file: <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>.beam</code> })}
         </p>
         <button
           data-testid="beam-export-button"
@@ -268,17 +277,17 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
           {exporting ? (
             <>
               <FileArchive style={{ width: 14, height: 14 }} />
-              Creating archive...
+              {t("integrations.beamSettings.creatingArchive")}
             </>
           ) : exportDone ? (
             <>
               <CheckCircle style={{ width: 14, height: 14 }} />
-              Downloaded!
+              {t("integrations.beamSettings.downloaded")}
             </>
           ) : (
             <>
               <Download style={{ width: 14, height: 14 }} />
-              Download .beam
+              {t("integrations.beamSettings.downloadBeam")}
             </>
           )}
         </button>
@@ -293,16 +302,16 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
           <Send style={{ width: 18, height: 18, color: "var(--brand)" }} />
-          <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>Live Beam</h3>
+          <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>{t("integrations.beamSettings.liveHeading")}</h3>
         </div>
         <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
-          Transfer this site directly to another CMS admin instance. The target must generate a beam token first.
+          {t("integrations.beamSettings.liveIntro")}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1rem" }}>
           <div>
             <label style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--muted-foreground)", display: "block", marginBottom: "0.25rem" }}>
-              Target URL
+              {t("integrations.beamSettings.targetUrl")}
             </label>
             <input
               data-testid="beam-target-url-input"
@@ -324,7 +333,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
           </div>
           <div>
             <label style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--muted-foreground)", display: "block", marginBottom: "0.25rem" }}>
-              Beam Token
+              {t("integrations.beamSettings.beamToken")}
             </label>
             <input
               data-testid="beam-token-input"
@@ -369,17 +378,17 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
           {pushing ? (
             <>
               <Zap style={{ width: 14, height: 14 }} />
-              Beaming...
+              {t("integrations.beamSettings.beaming")}
             </>
           ) : pushDone ? (
             <>
               <CheckCircle style={{ width: 14, height: 14 }} />
-              Beam Complete!
+              {t("integrations.beamSettings.beamComplete")}
             </>
           ) : (
             <>
               <Zap style={{ width: 14, height: 14 }} />
-              Beam Site
+              {t("integrations.beamSettings.beamSite")}
             </>
           )}
         </button>
@@ -403,7 +412,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.35rem" }}>
               <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-                {pushProgress.currentFile || "Starting..."}
+                {pushProgress.currentFile || t("integrations.beamSettings.starting")}
               </span>
               <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontWeight: 600 }}>
                 {progressPct}% ({pushProgress.transferredFiles}/{pushProgress.totalFiles})
@@ -423,9 +432,9 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             fontSize: "0.78rem",
           }}>
             <CheckCircle style={{ width: 14, height: 14, display: "inline", verticalAlign: "text-bottom", marginRight: 4, color: "#22c55e" }} />
-            Site beamed successfully!
+            {t("integrations.beamSettings.beamedSuccessfully")}
             {pushProgress.checksumErrors && pushProgress.checksumErrors > 0 && (
-              <span style={{ color: "var(--status-warning)" }}> ({pushProgress.checksumErrors} checksum warnings)</span>
+              <span style={{ color: "var(--status-warning)" }}> ({t("integrations.beamSettings.checksumWarnings", { n: pushProgress.checksumErrors })})</span>
             )}
           </div>
         )}
@@ -455,11 +464,10 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
           <Key style={{ width: 18, height: 18, color: "var(--foreground)" }} />
-          <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>Beam Token</h3>
+          <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>{t("integrations.beamSettings.beamToken")}</h3>
         </div>
         <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
-          Generate a one-time token to allow another CMS instance to beam a site to this instance.
-          Tokens expire after 1 hour.
+          {t("integrations.beamSettings.tokenIntro")}
         </p>
 
         <button
@@ -482,7 +490,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
           }}
         >
           <Key style={{ width: 14, height: 14 }} />
-          {generatingToken ? "Generating..." : "Generate Beam Token"}
+          {generatingToken ? t("integrations.beamSettings.generating") : t("integrations.beamSettings.generateToken")}
         </button>
 
         {beamToken && (
@@ -515,11 +523,11 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
                 }}
               >
                 <Copy style={{ width: 12, height: 12 }} />
-                {tokenCopied ? "Copied!" : "Copy"}
+                {tokenCopied ? t("integrations.beamSettings.copied") : t("integrations.beamSettings.copy")}
               </button>
             </div>
             <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Expires: {new Date(beamToken.expiresAt).toLocaleTimeString()}
+              {t("integrations.beamSettings.expires", { time: new Date(beamToken.expiresAt).toLocaleTimeString() })}
             </p>
           </div>
         )}
@@ -534,11 +542,10 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
           <Upload style={{ width: 18, height: 18, color: "var(--foreground)" }} />
-          <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>Beam Import</h3>
+          <h3 style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>{t("integrations.beamSettings.importHeading")}</h3>
         </div>
         <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
-          Import a <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>.beam</code> archive
-          from another CMS instance. The site will be added to your current organization.
+          {fillNodes(t("integrations.beamSettings.importIntro"), { file: <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>.beam</code> })}
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <input
@@ -571,7 +578,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             }}
           >
             <FileArchive style={{ width: 14, height: 14 }} />
-            {importFileName ?? "Choose .beam file…"}
+            {importFileName ?? t("integrations.beamSettings.chooseFile")}
           </button>
           <button
             data-testid="beam-import-button"
@@ -590,7 +597,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               cursor: "pointer",
             }}
           >
-            Import
+            {t("integrations.beamSettings.import")}
           </button>
         </div>
 
@@ -606,18 +613,18 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
           }}>
             <div style={{ fontWeight: 600, marginBottom: "0.25rem" }}>
               <CheckCircle style={{ width: 14, height: 14, display: "inline", verticalAlign: "text-bottom", marginRight: 4, color: "#22c55e" }} />
-              Imported &quot;{importResult.siteName}&quot;
+              {t("integrations.beamSettings.imported", { name: importResult.siteName })}
             </div>
             <div style={{ color: "var(--muted-foreground)" }}>
-              {importResult.stats.contentFiles} documents · {importResult.stats.mediaFiles} media · {importResult.stats.dataFiles} config files
+              {t("integrations.beamSettings.importStats", { docs: importResult.stats.contentFiles, media: importResult.stats.mediaFiles, config: importResult.stats.dataFiles })}
               {importResult.checksumErrors > 0 && (
-                <span style={{ color: "var(--status-warning)" }}> · {importResult.checksumErrors} checksum warnings</span>
+                <span style={{ color: "var(--status-warning)" }}> · {t("integrations.beamSettings.checksumWarnings", { n: importResult.checksumErrors })}</span>
               )}
             </div>
             {importResult.secretsRequired.length > 0 && (
               <div style={{ marginTop: "0.5rem", color: "var(--status-warning)" }}>
                 <AlertTriangle style={{ width: 13, height: 13, display: "inline", verticalAlign: "text-bottom", marginRight: 4 }} />
-                Secrets needed: {importResult.secretsRequired.join(", ")}
+                {t("integrations.beamSettings.secretsNeeded", { secrets: importResult.secretsRequired.join(", ") })}
               </div>
             )}
           </div>

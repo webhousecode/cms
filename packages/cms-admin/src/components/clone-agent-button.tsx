@@ -2,8 +2,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Copy } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 export function CloneAgentButton({ id }: { id: string }) {
+  const t = useT();
   const router = useRouter();
   const [cloning, setCloning] = useState(false);
 
@@ -26,7 +28,7 @@ export function CloneAgentButton({ id }: { id: string }) {
       type="button"
       onClick={handleClone}
       disabled={cloning}
-      title="Clone agent"
+      title={t("agents.cloneAgentButton.title")}
       style={{
         padding: "0.25rem 0.4rem",
         borderRadius: "5px",
@@ -44,7 +46,7 @@ export function CloneAgentButton({ id }: { id: string }) {
       className="hover:border-border hover:bg-secondary hover:text-foreground"
     >
       <Copy style={{ width: "0.7rem", height: "0.7rem" }} />
-      Clone
+      {t("agents.cloneAgentButton.label")}
     </button>
   );
 }

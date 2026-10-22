@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { LOCALE_FLAGS } from "@/lib/locale";
+import { useT } from "@/lib/i18n-context";
 
 export function NewDocumentButton({ collection, titleField = "title", defaultLocale, siteLocales }: {
   collection: string;
@@ -15,6 +16,7 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
   defaultLocale?: string;
   siteLocales?: string[];
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const hasMultipleLocales = siteLocales && siteLocales.length > 1;
 
@@ -61,7 +63,7 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
         data-testid="btn-create"
       >
         <Plus className="w-4 h-4" />
-        New document
+        {t("misc.newDocumentButton.newDocument")}
       </Button>
     );
   }
@@ -76,7 +78,7 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
           if (e.key === "Enter") create();
           if (e.key === "Escape") setOpen(false);
         }}
-        placeholder="Item title…"
+        placeholder={t("misc.newDocumentButton.titlePlaceholder")}
         className="w-56"
       />
       {hasMultipleLocales && (
@@ -95,7 +97,7 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
         onClick={create}
         disabled={saving || !title.trim()}
       >
-        {saving ? "Creating…" : "Create"}
+        {saving ? t("misc.newDocumentButton.creating") : t("misc.newDocumentButton.create")}
       </Button>
       <Button
         variant="ghost"

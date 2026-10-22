@@ -1,1 +1,32 @@
-{}
+{
+  "dashboardStats": {
+    "loadFailed": "Kunne ikke indlæse oversigtens tal.",
+    "eyebrow": "Oversigt",
+    "title": "Indholdsoverblik",
+    "published": "{count} udgivet",
+    "draft": "{count} kladde",
+    "scheduledEyebrow": "planlagt",
+    "scheduledTitle": "Planlagt indhold",
+    "more": "+{count} mere",
+    "noScheduled": "Intet kommende planlagt indhold",
+    "mediaEyebrow": "medier",
+    "mediaTitle": "Mediebibliotek",
+    "mediaHint": "Billeder, video, lyd, filer",
+    "intsEyebrow": "interaktive",
+    "intsTitle": "Interaktive elementer",
+    "intsHint": "Diagrammer, demoer, beregnere",
+    "seoEyebrow": "seo",
+    "seoTitle": "SEO-sundhed",
+    "optimized": "{count} optimeret",
+    "needAttention": "{count} kræver opmærksomhed",
+    "keywordCoverage": "søgeordsdækning ({count} fulgt)",
+    "visibilityEyebrow": "synlighed",
+    "visibilityTitle": "Synlighed",
+    "seo": "SEO",
+    "geo": "GEO",
+    "visibilityHint": "Søgemaskiner + AI-platforme"
+  },
+  "siteIntroCard": {
+    "loadingPreview": "Indlæser forhåndsvisning..."
+  }
+}

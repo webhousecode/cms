@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { Check, Copy, Plus, Trash2, Key, RefreshCw, Server, Power, PowerOff, X, Pencil, Braces } from "lucide-react";
 import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Checkbox } from "@/components/ui/checkbox-styled";
+import { useT } from "@/lib/i18n-context";
 
 interface McpApiKeyMasked {
   id: string;
@@ -20,12 +21,20 @@ interface McpConfigMasked {
 const ALL_SCOPES = ["read", "write", "publish", "deploy", "ai"] as const;
 
 const SCOPE_DESCRIPTIONS: Record<string, string> = {
-  read:    "Read content, list collections, search",
-  write:   "Create and update documents",
-  publish: "Publish and unpublish documents",
-  deploy:  "Trigger site builds",
-  ai:      "Generate and rewrite content with AI",
+  read:    "integrations.mcp.scopeRead",
+  write:   "integrations.mcp.scopeWrite",
+  publish: "integrations.mcp.scopePublish",
+  deploy:  "integrations.mcp.scopeDeploy",
+  ai:      "integrations.mcp.scopeAi",
 };
+
+/** Renders a translated sentence whose {placeholders} are React nodes (e.g. <code>). */
+function fillNodes(template: string, nodes: Record<string, React.ReactNode>): React.ReactNode[] {
+  return template.split(/(\{\w+\})/).map((part, i) => {
+    const m = /^\{(\w+)\}$/.exec(part);
+    return m && m[1] in nodes ? <Fragment key={i}>{nodes[m[1]]}</Fragment> : part;
+  });
+}
 
 function generateKey(): string {
   const arr = new Uint8Array(32);
@@ -34,12 +43,13 @@ function generateKey(): string {
 }
 
 function CopyButton({ text }: { text: string }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   return (
     <button
       data-testid="mcp-copy-btn"
       type="button"
-      title="Copy to clipboard"
+      title={t("integrations.mcp.copyToClipboard")}
       onClick={async () => {
         await navigator.clipboard.writeText(text);
         setCopied(true);
@@ -58,6 +68,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export function MCPSettingsPanel() {
+  const t = useT();
   const [config, setConfig] = useState<McpConfigMasked>({ keys: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -84,9 +95,9 @@ export function MCPSettingsPanel() {
   }, []);
 
   async function handleAdd() {
-    if (!newLabel.trim()) { setAddError("Label is required"); return; }
-    if (!newKey.trim())   { setAddError("API key is required"); return; }
-    if (newScopes.length === 0) { setAddError("Select at least one scope"); return; }
+    if (!newLabel.trim()) { setAddError(t("integrations.mcp.labelRequired")); return; }
+    if (!newKey.trim())   { setAddError(t("integrations.mcp.keyRequired")); return; }
+    if (newScopes.length === 0) { setAddError(t("integrations.mcp.scopeRequired")); return; }
 
     setAdding(true);
     setAddError("");
@@ -97,14 +108,14 @@ export function MCPSettingsPanel() {
     });
     const data = (await res.json()) as McpConfigMasked & { error?: string };
     if (!res.ok) {
-      setAddError(data.error ?? "Failed to add key");
+      setAddError(data.error ?? t("integrations.mcp.addFailed"));
     } else {
       setConfig(data);
       setShowAddForm(false);
       setNewLabel("");
       setNewKey("");
       setNewScopes([...ALL_SCOPES]);
-      toast.success("API key created");
+      toast.success(t("integrations.mcp.keyCreated"));
     }
     setAdding(false);
   }
@@ -119,10 +130,10 @@ export function MCPSettingsPanel() {
     });
     const data = (await res.json()) as McpConfigMasked & { error?: string };
     if (!res.ok) {
-      setError(data.error ?? "Failed to remove key");
+      setError(data.error ?? t("integrations.mcp.removeFailed"));
     } else {
       setConfig(data);
-      toast.success("API key removed");
+      toast.success(t("integrations.mcp.keyRemoved"));
     }
     setRemoving(null);
   }
@@ -141,18 +152,18 @@ export function MCPSettingsPanel() {
   };
 
   if (loading) {
-    return <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Loading…</p>;
+    return <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("integrations.mcp.loading")}</p>;
   }
 
   return (
     <div data-testid="panel-mcp" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       {/* Endpoints */}
       <section>
-        <SectionHeading>Endpoints</SectionHeading>
+        <SectionHeading>{t("integrations.mcp.endpoints")}</SectionHeading>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {[
-            { label: "Public (read-only, rate-limited)", url: publicEndpoint },
-            { label: "Admin (authenticated, full access)", url: adminEndpoint },
+            { label: t("integrations.mcp.publicEndpoint"), url: publicEndpoint },
+            { label: t("integrations.mcp.adminEndpoint"), url: adminEndpoint },
           ].map(({ label, url }) => (
             <div data-testid="mcp-endpoint-item" key={url} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -164,15 +175,14 @@ export function MCPSettingsPanel() {
           ))}
         </div>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.6rem" }}>
-          Add the admin endpoint to Claude iOS under Settings → Claude for Work → MCP Servers, or in your Cursor <code style={{ fontSize: "0.7rem" }}>mcp.json</code>.
-          Use a Bearer token from the API keys below.
+          {fillNodes(t("integrations.mcp.endpointsHelp"), { file: <code style={{ fontSize: "0.7rem" }}>mcp.json</code> })}
         </p>
       </section>
 
       {/* API Keys */}
       <section>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-          <h2 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>API Keys</h2>
+          <h2 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>{t("integrations.mcp.apiKeys")}</h2>
           <button
             data-testid="mcp-new-key-button"
             type="button"
@@ -185,7 +195,7 @@ export function MCPSettingsPanel() {
               fontWeight: 500,
             }}
           >
-            <Plus style={{ width: "0.75rem", height: "0.75rem" }} /> New key
+            <Plus style={{ width: "0.75rem", height: "0.75rem" }} /> {t("integrations.mcp.newKey")}
           </button>
         </div>
 
@@ -196,7 +206,7 @@ export function MCPSettingsPanel() {
         {config.keys.length === 0 && !showAddForm && (
           <div style={{ padding: "1.5rem", borderRadius: "8px", border: "1px dashed var(--border)", textAlign: "center" }}>
             <Key style={{ width: "1.5rem", height: "1.5rem", color: "var(--muted-foreground)", margin: "0 auto 0.5rem" }} />
-            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>No API keys configured yet. Create one to enable authenticated MCP access.</p>
+            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("integrations.mcp.noKeys")}</p>
           </div>
         )}
 
@@ -222,11 +232,11 @@ export function MCPSettingsPanel() {
                 <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
                   <button data-testid="mcp-key-remove-cancel" type="button" onClick={() => setConfirmRemoveKey(null)}
                     style={{ padding: "0.3rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.7rem", cursor: "pointer" }}>
-                    Cancel
+                    {t("integrations.mcp.cancel")}
                   </button>
                   <button data-testid="mcp-key-remove-confirm" type="button" onClick={() => { handleRemove(k.id); setConfirmRemoveKey(null); }} disabled={removing === k.id}
                     style={{ padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.7rem", cursor: "pointer", opacity: removing === k.id ? 0.5 : 1 }}>
-                    {removing === k.id ? "Removing…" : "Confirm"}
+                    {removing === k.id ? t("integrations.mcp.removing") : t("integrations.mcp.confirm")}
                   </button>
                 </div>
               ) : (
@@ -240,10 +250,10 @@ export function MCPSettingsPanel() {
                     border: "1px solid var(--border)", background: "transparent",
                     color: "var(--destructive)", fontSize: "0.75rem", cursor: "pointer",
                   }}
-                  title="Remove API key"
+                  title={t("integrations.mcp.removeKey")}
                 >
                   <Trash2 style={{ width: "0.75rem", height: "0.75rem" }} />
-                  Remove
+                  {t("integrations.mcp.remove")}
                 </button>
               )}
             </div>
@@ -253,30 +263,30 @@ export function MCPSettingsPanel() {
         {/* Add key form */}
         {showAddForm && (
           <div style={{ marginTop: "0.75rem", padding: "1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            <p style={{ fontSize: "0.8rem", fontWeight: 600 }}>New API key</p>
+            <p style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t("integrations.mcp.newApiKey")}</p>
 
             <div>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>Label</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>{t("integrations.mcp.label")}</label>
               <input
                 data-testid="mcp-add-label-input"
                 type="text"
                 value={newLabel}
                 onChange={(e) => setNewLabel(e.target.value)}
-                placeholder="e.g. Claude iOS, Cursor, n8n"
+                placeholder={t("integrations.mcp.labelPlaceholder")}
                 style={fieldStyle}
               />
             </div>
 
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.35rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Key</label>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.mcp.key")}</label>
                 <button
                   data-testid="mcp-add-key-regenerate"
                   type="button"
                   onClick={() => setNewKey(generateKey())}
                   style={{ display: "flex", alignItems: "center", gap: "0.2rem", fontSize: "0.7rem", color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
                 >
-                  <RefreshCw style={{ width: "0.65rem", height: "0.65rem" }} /> Regenerate
+                  <RefreshCw style={{ width: "0.65rem", height: "0.65rem" }} /> {t("integrations.mcp.regenerate")}
                 </button>
               </div>
               <div style={{ display: "flex", gap: "0.375rem" }}>
@@ -285,18 +295,18 @@ export function MCPSettingsPanel() {
                   type="text"
                   value={newKey}
                   onChange={(e) => setNewKey(e.target.value)}
-                  placeholder="Paste or generate a key"
+                  placeholder={t("integrations.mcp.keyPlaceholder")}
                   style={{ ...fieldStyle, flex: 1 }}
                 />
                 <CopyButton text={newKey} />
               </div>
               <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-                Copy this now — it won&apos;t be shown again after saving.
+                {t("integrations.mcp.copyNow")}
               </p>
             </div>
 
             <div>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>Scopes</label>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>{t("integrations.mcp.scopes")}</label>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                 {ALL_SCOPES.map((scope) => (
                   <Checkbox
@@ -308,7 +318,7 @@ export function MCPSettingsPanel() {
                       );
                     }}
                     label={scope}
-                    description={SCOPE_DESCRIPTIONS[scope]}
+                    description={t(SCOPE_DESCRIPTIONS[scope])}
                   />
                 ))}
               </div>
@@ -332,7 +342,7 @@ export function MCPSettingsPanel() {
                 }}
               >
                 <Check style={{ width: "0.85rem", height: "0.85rem" }} />
-                {adding ? "Saving…" : "Save key"}
+                {adding ? t("integrations.mcp.saving") : t("integrations.mcp.saveKey")}
               </button>
               <button
                 data-testid="mcp-add-key-cancel"
@@ -344,7 +354,7 @@ export function MCPSettingsPanel() {
                   color: "var(--muted-foreground)", fontSize: "0.85rem", cursor: "pointer",
                 }}
               >
-                Cancel
+                {t("integrations.mcp.cancel")}
               </button>
             </div>
           </div>
@@ -352,8 +362,11 @@ export function MCPSettingsPanel() {
       </section>
 
       <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-        Keys are stored in <code style={{ fontSize: "0.7rem" }}>_data/mcp-config.json</code> in your project directory.
-        Environment variables <code style={{ fontSize: "0.7rem" }}>MCP_API_KEY</code> / <code style={{ fontSize: "0.7rem" }}>MCP_API_KEY_1..5</code> are used as fallback.
+        {fillNodes(t("integrations.mcp.storageNote"), {
+          file: <code style={{ fontSize: "0.7rem" }}>_data/mcp-config.json</code>,
+          env1: <code style={{ fontSize: "0.7rem" }}>MCP_API_KEY</code>,
+          env2: <code style={{ fontSize: "0.7rem" }}>MCP_API_KEY_1..5</code>,
+        })}
       </p>
 
       {/* External MCP Servers */}
@@ -374,13 +387,14 @@ interface McpServerDef {
 }
 
 const PRESETS = [
-  { name: "Agent Memory", command: "npx", args: ["-y", "@anthropic/mcp-memory"], description: "Persistent memory between agent runs" },
-  { name: "Brave Search", command: "npx", args: ["-y", "@anthropic/mcp-brave-search"], description: "Web search (requires BRAVE_API_KEY)", envHint: "BRAVE_API_KEY" },
-  { name: "GitHub", command: "npx", args: ["-y", "@modelcontextprotocol/server-github"], description: "Access repos, issues, PRs", envHint: "GITHUB_PERSONAL_ACCESS_TOKEN" },
-  { name: "Filesystem", command: "npx", args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp/agent-workspace"], description: "Read/write files in a workspace" },
+  { name: "Agent Memory", command: "npx", args: ["-y", "@anthropic/mcp-memory"], description: "integrations.mcp.presetMemory" },
+  { name: "Brave Search", command: "npx", args: ["-y", "@anthropic/mcp-brave-search"], description: "integrations.mcp.presetBrave", envHint: "BRAVE_API_KEY" },
+  { name: "GitHub", command: "npx", args: ["-y", "@modelcontextprotocol/server-github"], description: "integrations.mcp.presetGithub", envHint: "GITHUB_PERSONAL_ACCESS_TOKEN" },
+  { name: "Filesystem", command: "npx", args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp/agent-workspace"], description: "integrations.mcp.presetFilesystem" },
 ];
 
 function ExternalMcpServers() {
+  const t = useT();
   const [servers, setServers] = useState<McpServerDef[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
@@ -461,7 +475,7 @@ function ExternalMcpServers() {
     try {
       parsed = JSON.parse(editJson) as McpServerDef;
     } catch {
-      setEditError("Invalid JSON");
+      setEditError(t("integrations.mcp.invalidJson"));
       return;
     }
     const res = await fetch("/api/cms/mcp-servers", {
@@ -474,7 +488,7 @@ function ExternalMcpServers() {
       setServers((prev) => prev.map((s) => s.id === editingId ? updated : s));
       setEditingId(null);
     } else {
-      setEditError("Save failed");
+      setEditError(t("integrations.mcp.saveFailed"));
     }
   }
 
@@ -484,9 +498,9 @@ function ExternalMcpServers() {
     <section style={{ borderTop: "1px solid var(--border)", paddingTop: "1.5rem" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
         <div>
-          <h2 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>External MCP Servers</h2>
+          <h2 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>{t("integrations.mcp.externalServers")}</h2>
           <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.2rem" }}>
-            Connect external tools that AI agents can use during content generation.
+            {t("integrations.mcp.externalIntro")}
           </p>
         </div>
         <button
@@ -500,7 +514,7 @@ function ExternalMcpServers() {
             color: "var(--foreground)", fontSize: "0.75rem", cursor: "pointer", fontWeight: 500,
           }}
         >
-          <Plus style={{ width: "0.75rem", height: "0.75rem" }} /> Add server
+          <Plus style={{ width: "0.75rem", height: "0.75rem" }} /> {t("integrations.mcp.addServer")}
         </button>
       </div>
 
@@ -522,7 +536,7 @@ function ExternalMcpServers() {
                         background: v ? "color-mix(in srgb, var(--primary) 10%, transparent)" : "color-mix(in srgb, var(--destructive) 10%, transparent)",
                         color: v ? "var(--primary)" : "var(--destructive)",
                       }}>
-                        {k}{v ? " ✓" : " (not set)"}
+                        {k}{v ? " ✓" : ` ${t("integrations.mcp.notSet")}`}
                       </span>
                     ))}
                   </div>
@@ -534,24 +548,24 @@ function ExternalMcpServers() {
                     style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
                       border: "1px solid var(--border)", background: "transparent",
                       color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
-                    Cancel
+                    {t("integrations.mcp.cancel")}
                   </button>
                   <button data-testid="mcp-server-delete-confirm" type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
                     style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
                       border: "none", background: "var(--destructive)", color: "#fff",
                       fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
-                    Confirm
+                    {t("integrations.mcp.confirm")}
                   </button>
                 </span>
               ) : (
                 <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0, minWidth: "12rem", justifyContent: "flex-end" }}>
-                  <button data-testid="mcp-server-edit-json" type="button" onClick={() => startEdit(s)} title="Edit JSON config"
+                  <button data-testid="mcp-server-edit-json" type="button" onClick={() => startEdit(s)} title={t("integrations.mcp.editJson")}
                     style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                     <Pencil style={{ width: "0.8rem", height: "0.8rem" }} />
                   </button>
                   <button data-testid="mcp-server-toggle-json" type="button" onClick={() => {
                       if (editingId === s.id) { setEditingId(null); } else { startEdit(s); }
-                    }} title="Toggle JSON view"
+                    }} title={t("integrations.mcp.toggleJson")}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: "0.2rem",
                       padding: "0.15rem 0.4rem", borderRadius: "9999px",
@@ -563,11 +577,11 @@ function ExternalMcpServers() {
                     <Braces style={{ width: "0.65rem", height: "0.65rem" }} />
                     JSON
                   </button>
-                  <button data-testid="mcp-server-toggle-enabled" type="button" onClick={() => toggleEnabled(s.id, !s.enabled)} title={s.enabled ? "Disable server" : "Enable server"}
+                  <button data-testid="mcp-server-toggle-enabled" type="button" onClick={() => toggleEnabled(s.id, !s.enabled)} title={s.enabled ? t("integrations.mcp.disableServer") : t("integrations.mcp.enableServer")}
                     style={{ background: "none", border: "none", cursor: "pointer", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", padding: "0.25rem" }}>
                     {s.enabled ? <Power style={{ width: "0.9rem", height: "0.9rem" }} /> : <PowerOff style={{ width: "0.9rem", height: "0.9rem" }} />}
                   </button>
-                  <button data-testid="mcp-server-delete-trigger" type="button" onClick={() => setConfirmDeleteId(s.id)} title="Remove server"
+                  <button data-testid="mcp-server-delete-trigger" type="button" onClick={() => setConfirmDeleteId(s.id)} title={t("integrations.mcp.removeServer")}
                     style={{
                       display: "flex", alignItems: "center", gap: "0.3rem",
                       padding: "0.35rem 0.6rem", borderRadius: "6px",
@@ -575,7 +589,7 @@ function ExternalMcpServers() {
                       color: "var(--destructive)", fontSize: "0.75rem", cursor: "pointer",
                     }}>
                     <Trash2 style={{ width: "0.75rem", height: "0.75rem" }} />
-                    Remove
+                    {t("integrations.mcp.remove")}
                   </button>
                 </span>
               )}
@@ -602,12 +616,12 @@ function ExternalMcpServers() {
                 <div style={{ display: "flex", gap: "0.375rem", marginTop: "0.5rem" }}>
                   <button data-testid="mcp-server-json-save" type="button" onClick={saveEdit}
                     style={{ padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
-                    Save
+                    {t("integrations.mcp.save")}
                   </button>
                   <CopyButton text={editJson} />
                   <button data-testid="mcp-server-json-cancel" type="button" onClick={() => setEditingId(null)}
                     style={{ padding: "0.35rem 0.75rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
-                    Cancel
+                    {t("integrations.mcp.cancel")}
                   </button>
                 </div>
               </div>
@@ -618,8 +632,8 @@ function ExternalMcpServers() {
         {servers.length === 0 && !showAdd && (
           <div style={{ padding: "1.25rem", borderRadius: "8px", border: "1px dashed var(--border)", textAlign: "center" }}>
             <Server style={{ width: "1.5rem", height: "1.5rem", color: "var(--muted-foreground)", margin: "0 auto 0.5rem" }} />
-            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>No external MCP servers configured.</p>
-            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>Add one from the presets below or configure a custom server.</p>
+            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("integrations.mcp.noServers")}</p>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>{t("integrations.mcp.noServersHint")}</p>
           </div>
         )}
       </div>
@@ -628,7 +642,7 @@ function ExternalMcpServers() {
       {showAdd && (
         <div style={{ marginTop: "0.75rem", padding: "1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <p style={{ fontSize: "0.8rem", fontWeight: 600 }}>Add MCP Server</p>
+            <p style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t("integrations.mcp.addMcpServer")}</p>
             <button data-testid="mcp-add-server-close" type="button" onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)" }}>
               <X style={{ width: "0.8rem", height: "0.8rem" }} />
             </button>
@@ -636,7 +650,7 @@ function ExternalMcpServers() {
 
           {/* Quick presets */}
           <div>
-            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Quick add:</p>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>{t("integrations.mcp.quickAdd")}</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
               {PRESETS.filter((p) => !servers.some((s) => s.name === p.name)).map((preset) => (
                 <button
@@ -651,7 +665,7 @@ function ExternalMcpServers() {
                     color: "var(--foreground)", fontSize: "0.72rem", cursor: "pointer",
                     display: "flex", alignItems: "center", gap: "0.3rem",
                   }}
-                  title={preset.description}
+                  title={t(preset.description)}
                 >
                   <Plus style={{ width: "0.6rem", height: "0.6rem" }} /> {preset.name}
                 </button>
@@ -662,32 +676,32 @@ function ExternalMcpServers() {
           <div style={{ height: "1px", background: "var(--border)" }} />
 
           {/* Custom server form */}
-          <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>Or add a custom server:</p>
+          <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>{t("integrations.mcp.customServer")}</p>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>Name</label>
-              <input data-testid="mcp-custom-server-name" type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="My Server"
+              <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>{t("integrations.mcp.name")}</label>
+              <input data-testid="mcp-custom-server-name" type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("integrations.mcp.namePlaceholder")}
                 style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", outline: "none", boxSizing: "border-box" }} />
             </div>
             <div style={{ width: "80px" }}>
-              <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>Command</label>
+              <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>{t("integrations.mcp.command")}</label>
               <input data-testid="mcp-custom-server-command" type="text" value={newCommand} onChange={(e) => setNewCommand(e.target.value)} placeholder="npx"
                 style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace", outline: "none", boxSizing: "border-box" }} />
             </div>
           </div>
           <div>
-            <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>Arguments (space-separated)</label>
+            <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>{t("integrations.mcp.arguments")}</label>
             <input data-testid="mcp-custom-server-args" type="text" value={newArgs} onChange={(e) => setNewArgs(e.target.value)} placeholder="-y @anthropic/mcp-memory"
               style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace", outline: "none", boxSizing: "border-box" }} />
           </div>
 
           {/* Env vars */}
           <div>
-            <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>Environment variables</label>
+            <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>{t("integrations.mcp.envVars")}</label>
             {Object.entries(newEnvPairs).map(([k, v]) => (
               <div key={k} style={{ display: "flex", gap: "0.375rem", marginBottom: "0.25rem" }}>
                 <code style={{ fontSize: "0.75rem", padding: "0.3rem 0.5rem", background: "var(--secondary)", borderRadius: "4px", minWidth: "120px" }}>{k}</code>
-                <input data-testid={`mcp-env-value-${k}`} type="text" value={v} onChange={(e) => setNewEnvPairs((p) => ({ ...p, [k]: e.target.value }))} placeholder="value"
+                <input data-testid={`mcp-env-value-${k}`} type="text" value={v} onChange={(e) => setNewEnvPairs((p) => ({ ...p, [k]: e.target.value }))} placeholder={t("integrations.mcp.value")}
                   style={{ flex: 1, padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
                 <button data-testid={`mcp-env-remove-${k}`} type="button" onClick={() => setNewEnvPairs((p) => { const n = { ...p }; delete n[k]; return n; })}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--destructive)", padding: "0.2rem" }}>
@@ -698,11 +712,11 @@ function ExternalMcpServers() {
             <div style={{ display: "flex", gap: "0.375rem" }}>
               <input data-testid="mcp-env-key-input" type="text" value={newEnvKey} onChange={(e) => setNewEnvKey(e.target.value)} placeholder="KEY_NAME"
                 style={{ width: "120px", padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
-              <input data-testid="mcp-env-val-input" type="text" value={newEnvVal} onChange={(e) => setNewEnvVal(e.target.value)} placeholder="value"
+              <input data-testid="mcp-env-val-input" type="text" value={newEnvVal} onChange={(e) => setNewEnvVal(e.target.value)} placeholder={t("integrations.mcp.value")}
                 style={{ flex: 1, padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
               <button data-testid="mcp-env-add-button" type="button" onClick={() => { if (newEnvKey.trim()) { setNewEnvPairs((p) => ({ ...p, [newEnvKey]: newEnvVal })); setNewEnvKey(""); setNewEnvVal(""); } }}
                 style={{ padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.7rem", cursor: "pointer" }}>
-                Add
+                {t("integrations.mcp.add")}
               </button>
             </div>
           </div>
@@ -719,7 +733,7 @@ function ExternalMcpServers() {
               opacity: saving || !newName.trim() || !newArgs.trim() ? 0.6 : 1,
             }}
           >
-            {saving ? "Adding…" : "Add server"}
+            {saving ? t("integrations.mcp.adding") : t("integrations.mcp.addServer")}
           </button>
         </div>
       )}

@@ -4,6 +4,7 @@ import type { BlockConfig } from "@webhouse/cms";
 import { BlocksEditor } from "./blocks-editor";
 import { useState, useEffect } from "react";
 import { Maximize2, X } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface ColumnsEditorProps {
   block: Record<string, unknown>;
@@ -16,8 +17,8 @@ const LAYOUT_PRESETS = [
   { value: "1-1", label: "50 / 50", cols: "1fr 1fr" },
   { value: "2-1", label: "66 / 33", cols: "2fr 1fr" },
   { value: "1-2", label: "33 / 66", cols: "1fr 2fr" },
-  { value: "1-1-1", label: "3 equal", cols: "1fr 1fr 1fr" },
-  { value: "1-1-1-1", label: "4 equal", cols: "repeat(4, 1fr)" },
+  { value: "1-1-1", label: "3 equal", labelKey: "editor.columnsEditor.threeEqual", cols: "1fr 1fr 1fr" },
+  { value: "1-1-1-1", label: "4 equal", labelKey: "editor.columnsEditor.fourEqual", cols: "repeat(4, 1fr)" },
 ];
 
 function getColumnCount(layout: string): number {
@@ -29,6 +30,7 @@ function getGridCols(layout: string): string {
 }
 
 export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: ColumnsEditorProps) {
+  const t = useT();
   const layout = (block.layout as string) || "1-1";
   const columns = Array.isArray(block.columns)
     ? (block.columns as Record<string, unknown>[][])
@@ -167,7 +169,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
                 }}
                 className={layout === preset.value ? "" : "hover:border-primary transition-colors"}
               >
-                {preset.label}
+                {"labelKey" in preset && preset.labelKey ? t(preset.labelKey) : preset.label}
               </button>
             ))}
             {/* Open all / Close all — right-aligned */}
@@ -175,11 +177,11 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
               <div style={{ display: "flex", gap: "0.25rem", marginLeft: "auto" }}>
                 <button data-testid="columns-open-all-button" type="button" onClick={() => toggleAllColumns(true)} disabled={allOpen}
                   style={{ background: "none", border: "none", cursor: allOpen ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allOpen ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
-                  className={allOpen ? "" : "hover:text-foreground transition-colors"}>Open all</button>
+                  className={allOpen ? "" : "hover:text-foreground transition-colors"}>{t("editor.columnsEditor.openAll")}</button>
                 <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: 0.3 }}>|</span>
                 <button data-testid="columns-close-all-button" type="button" onClick={() => toggleAllColumns(false)} disabled={allClosed}
                   style={{ background: "none", border: "none", cursor: allClosed ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allClosed ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
-                  className={allClosed ? "" : "hover:text-foreground transition-colors"}>Close all</button>
+                  className={allClosed ? "" : "hover:text-foreground transition-colors"}>{t("editor.columnsEditor.closeAll")}</button>
               </div>
             )}
           </div>
@@ -196,12 +198,12 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
               fontSize: "0.7rem",
             }}>
               <span style={{ color: "var(--destructive)", fontWeight: 500 }}>
-                Column {droppedColumnsWithContent(pendingLayout).join(", ")} content will be removed.
+                {t("editor.columnsEditor.contentWillBeRemoved", { columns: droppedColumnsWithContent(pendingLayout).join(", ") })}
               </span>
               <button data-testid="columns-layout-confirm-ok" type="button" onClick={() => applyLayout(pendingLayout)}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>OK</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.columnsEditor.ok")}</button>
               <button data-testid="columns-layout-confirm-cancel" type="button" onClick={() => setPendingLayout(null)}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>Cancel</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.columnsEditor.cancel")}</button>
             </div>
           )}
         </div>
@@ -237,7 +239,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
                 color: "var(--primary)",
               }}
             >
-              Editing Column {focusedCol + 1}
+              {t("editor.columnsEditor.editingColumn", { n: focusedCol + 1 })}
             </span>
             <button
               data-testid="columns-focused-close-button"
@@ -256,7 +258,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
               }}
               className="hover:text-foreground transition-colors"
             >
-              Close <X style={{ width: 14, height: 14 }} />
+              {t("editor.columnsEditor.close")} <X style={{ width: 14, height: 14 }} />
             </button>
           </div>
           {/* Full-width blocks editor */}
@@ -314,13 +316,13 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
                     color: "var(--muted-foreground)",
                   }}
                 >
-                  Column {colIdx + 1}
+                  {t("editor.columnsEditor.column", { n: colIdx + 1 })}
                 </span>
                 <button
                   data-testid="columns-expand-button"
                   type="button"
                   onClick={() => setFocusedCol(colIdx)}
-                  title="Expand column editor"
+                  title={t("editor.columnsEditor.expand")}
                   style={{
                     background: "none",
                     border: "none",

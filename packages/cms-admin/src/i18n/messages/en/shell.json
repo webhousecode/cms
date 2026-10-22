@@ -1,1 +1,655 @@
-{}
+{
+  "sidebar": {
+    "tagline": "AI-native content engine",
+    "sites": "Sites",
+    "dashboard": "Dashboard",
+    "favorites": "Favorites",
+    "cockpit": "Cockpit",
+    "agents": "Agents",
+    "curationQueue": "Curation Queue",
+    "calendar": "Calendar",
+    "content": "Content",
+    "interactives": "Interactives",
+    "mediaLibrary": "Media library",
+    "media": "Media",
+    "forms": "Forms",
+    "podcast": "Podcast",
+    "tools": "Tools",
+    "linkChecker": "Link Checker",
+    "seo": "SEO",
+    "backupRestore": "Backup & Restore",
+    "backup": "Backup",
+    "aiAnalytics": "AI Analytics",
+    "visibility": "Visibility",
+    "lighthouse": "Lighthouse",
+    "eventLog": "Event Log",
+    "searchShortcut": "Search (⌘K)",
+    "search": "Search",
+    "liveEditHint": "Edit the text directly on the finished website",
+    "liveEdit": "Edit live",
+    "siteSettings": "Site Settings",
+    "trash": "Trash"
+  },
+  "adminHeader": {
+    "tempNeutral": "Neutral",
+    "tempCool": "Cool",
+    "tempWarm": "Warm",
+    "theme": "Theme",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "themeSystem": "System",
+    "userMenu": "User menu: {name}",
+    "accountPreferences": "Account Preferences",
+    "siteSettings": "Site Settings",
+    "orgSettings": "Organization Settings",
+    "signOut": "Sign out",
+    "liveInSeconds": "Live in {seconds}s!",
+    "liveNow": "Live in!",
+    "publishedRocket": "Published! 🚀",
+    "open": "Open",
+    "deployFailed": "Deploy failed",
+    "checkGithubActions": "Check GitHub Actions for details.",
+    "phaseQueued": "Queued...",
+    "phaseBuilding": "Building...",
+    "doneInSeconds": "Done in {seconds}s",
+    "liveOnPages": "Live on GitHub Pages 🌐",
+    "urlReadyInSeconds": "{url} · ready in {seconds}s",
+    "readyInSeconds": "Ready in {seconds}s",
+    "pagesBuildFailed": "GitHub Pages build failed",
+    "pagesBuildFailedHint": "See repo → Settings → Pages for details.",
+    "phaseResyncing": "Re-syncing content...",
+    "resynced": "Content re-synced",
+    "resyncedHint": "Live site cache refreshed.",
+    "resyncFailed": "Re-sync failed",
+    "unknownError": "Unknown error",
+    "requestFailed": "Request failed",
+    "deployNotConfigured": "Deploy not configured",
+    "setUpProvider": "Set up a deploy provider for this site.",
+    "configure": "Configure",
+    "askAdminProvider": "Ask your site admin to set up a deploy provider.",
+    "phaseSending": "Sending...",
+    "deployQueued": "Deploy queued",
+    "deployQueuedHint": "GitHub Actions is building your site. You'll be notified when it's live.",
+    "publishedBuildingPages": "Published 🚀 — building on GitHub Pages",
+    "urlLiveSoon": "{url} · live in 1–3 min (sometimes longer)",
+    "pagesTypicalTime": "GitHub Pages typically deploys in 1–3 minutes.",
+    "published": "Published!",
+    "changesLive": "Your changes are now live.",
+    "publishFailed": "Publish failed",
+    "publishFailedWith": "Publish failed: {error}",
+    "resyncing": "Re-syncing...",
+    "icdHint": "Content auto-syncs on save. Click to manually re-sync everything.",
+    "icdAria": "ICD status — click to manually re-sync",
+    "icdSyncing": "ICD · syncing…",
+    "icdAuto": "ICD · auto",
+    "publishing": "Publishing...",
+    "publishChanges": "Publish changes",
+    "beamComplete": "Beam complete 🚀",
+    "beamCompleteHint": "Site transferred successfully",
+    "beamFailed": "Beam failed",
+    "transferFailed": "Transfer failed",
+    "beamInProgress": "Beam in progress — click to view",
+    "beaming": "Beaming…",
+    "buildShortcut": "Build (b)",
+    "buildSite": "Build site",
+    "selectBuildProfile": "Select build profile",
+    "default": "default",
+    "previewTab": "Preview: {name}",
+    "noPreviewYet": "No preview yet",
+    "notBuiltYet": "The site has not been built. Run a build first.",
+    "previewStartFailed": "The preview could not be started",
+    "previewShortcut": "Preview site (p)",
+    "previewSite": "Preview site",
+    "previewOrLiveTitle": "Preview / Live site",
+    "previewOrLiveAria": "Preview or live site",
+    "preview": "Preview",
+    "liveSite": "Live site",
+    "down": "down",
+    "modeChat": "Chat",
+    "switchMode": "Switch to {mode} mode",
+    "chatWithSite": "Chat with your site",
+    "newConversation": "New conversation",
+    "new": "New",
+    "conversationHistory": "Conversation history",
+    "history": "History"
+  },
+  "tabBar": {
+    "closeTab": "Close tab (⌥W)",
+    "newTab": "New tab (⌘click any link)",
+    "closeAllTabs": "Close all tabs",
+    "closeAll": "Close all",
+    "confirmCloseAll": "Close all {count} tabs? All open documents will be closed and you'll return to Dashboard.",
+    "cancel": "Cancel"
+  },
+  "commandPalette": {
+    "items": {
+      "navDashboard": {
+        "label": "Dashboard",
+        "sublabel": "Overview"
+      },
+      "navSites": {
+        "label": "Sites",
+        "sublabel": "Manage sites"
+      },
+      "navAgents": {
+        "label": "AI Agents",
+        "sublabel": "Automated content generation"
+      },
+      "navAgentTemplates": {
+        "label": "Agent Templates",
+        "sublabel": "Local + marketplace agent presets"
+      },
+      "navWorkflows": {
+        "label": "Agent Workflows",
+        "sublabel": "Multi-agent pipelines"
+      },
+      "navMedia": {
+        "label": "Media",
+        "sublabel": "Images and files"
+      },
+      "navInts": {
+        "label": "Interactives",
+        "sublabel": "HTML interactives"
+      },
+      "navCalendar": {
+        "label": "Calendar",
+        "sublabel": "Scheduled content"
+      },
+      "navCuration": {
+        "label": "Curation Queue",
+        "sublabel": "Review AI-generated content"
+      },
+      "navChat": {
+        "label": "Chat",
+        "sublabel": "Chat with your site"
+      },
+      "navSeo": {
+        "label": "SEO",
+        "sublabel": "SEO dashboard & optimization"
+      },
+      "navVisibility": {
+        "label": "Visibility",
+        "sublabel": "SEO + GEO combined score"
+      },
+      "navAnalytics": {
+        "label": "AI Analytics",
+        "sublabel": "Content performance insights"
+      },
+      "navLinkchecker": {
+        "label": "Link Checker",
+        "sublabel": "Find broken links"
+      },
+      "navLog": {
+        "label": "Event Log",
+        "sublabel": "Audit trail, server errors, client events"
+      },
+      "navBackup": {
+        "label": "Backup",
+        "sublabel": "Backup & restore content"
+      },
+      "navTrash": {
+        "label": "Trash",
+        "sublabel": "Deleted items"
+      },
+      "actNewAgent": {
+        "label": "New Agent",
+        "sublabel": "Create a new AI agent"
+      },
+      "actNewWorkflow": {
+        "label": "New Workflow",
+        "sublabel": "Chain agents into a pipeline"
+      },
+      "actNewSite": {
+        "label": "New site",
+        "sublabel": "Create a new site"
+      },
+      "actNewOrg": {
+        "label": "New organization",
+        "sublabel": "Create a new organization"
+      },
+      "actBackup": {
+        "label": "Create Backup",
+        "sublabel": "Backup all content now"
+      },
+      "actLinkcheck": {
+        "label": "Run Link Check",
+        "sublabel": "Scan all content for broken links"
+      },
+      "actPreview": {
+        "label": "Preview site",
+        "sublabel": "Open site preview"
+      },
+      "actRefresh": {
+        "label": "Refresh data",
+        "sublabel": "Reload current page data"
+      },
+      "actViewLanding": {
+        "label": "View landing page",
+        "sublabel": "Open in new tab"
+      },
+      "actHelp": {
+        "label": "Help & Support",
+        "sublabel": "Docs, shortcuts, community"
+      },
+      "setGeneral": {
+        "label": "Site Settings",
+        "sublabel": "General site configuration"
+      },
+      "setTeam": {
+        "label": "Team",
+        "sublabel": "Manage team members"
+      },
+      "setEmail": {
+        "label": "Email Settings",
+        "sublabel": "Configure email delivery"
+      },
+      "setAi": {
+        "label": "AI Settings",
+        "sublabel": "API keys and providers"
+      },
+      "setDeploy": {
+        "label": "Deploy",
+        "sublabel": "Deploy hooks and triggers"
+      },
+      "setCustomDomain": {
+        "label": "Custom Domain",
+        "sublabel": "DNS, registrar, custom URL for the live site"
+      },
+      "setAutomation": {
+        "label": "Automation",
+        "sublabel": "Backup, link checker, webhooks"
+      },
+      "setBrand": {
+        "label": "Brand Voice",
+        "sublabel": "Tone and writing style"
+      },
+      "setMcp": {
+        "label": "MCP Settings",
+        "sublabel": "Model Context Protocol"
+      },
+      "setPrompts": {
+        "label": "AI Prompts",
+        "sublabel": "Customize AI prompts"
+      },
+      "accPrefs": {
+        "label": "Account Preferences",
+        "sublabel": "Profile and preferences"
+      },
+      "accSecurity": {
+        "label": "Security",
+        "sublabel": "Password and authentication"
+      },
+      "accLogout": {
+        "label": "Log out",
+        "sublabel": "Sign out of your account"
+      }
+    },
+    "categories": {
+      "favorites": "Favorites",
+      "content": "Content",
+      "navigation": "Navigation",
+      "action": "Actions",
+      "settings": "Settings",
+      "account": "Account"
+    },
+    "collectionSub": "Collection · {name}",
+    "switchToSite": "Switch to site",
+    "switchToOrg": "Switch to organization",
+    "workflowStepsOne": "Workflow · {count} step",
+    "workflowStepsOther": "Workflow · {count} steps",
+    "localTemplate": "Local template · {description}",
+    "marketplaceTemplate": "Marketplace template · {description}",
+    "foundInBody": "{collection} · found in body",
+    "placeholder": "Search content, navigate, or run actions…",
+    "close": "Close (Esc)",
+    "searching": "Searching…",
+    "noResults": "No results for {query}",
+    "hintNavigate": "↑↓ navigate",
+    "hintOpen": "↵ open",
+    "hintClose": "ESC close",
+    "hintToggle": "⌘K toggle"
+  },
+  "helpDrawer": {
+    "links": {
+      "documentation": "Documentation",
+      "troubleshooting": "Troubleshooting",
+      "systemStatus": "System status",
+      "contactSupport": "Contact support"
+    },
+    "shortcutGroups": {
+      "chatWithYourSite": "Chat with Your Site",
+      "general": "General",
+      "documentEditor": "Document Editor",
+      "collectionList": "Collection List",
+      "richTextEditor": "Rich Text Editor"
+    },
+    "shortcuts": {
+      "toggleChatAdminMode": "Toggle Chat / Admin mode",
+      "focusChatInput": "Focus chat input",
+      "newConversation": "New conversation",
+      "commandPalette": "Command palette",
+      "helpSupport": "Help & Support",
+      "previewSite": "Preview site",
+      "deploySite": "Deploy site",
+      "newTab": "New tab",
+      "closeTab": "Close tab",
+      "previousTab": "Previous tab",
+      "nextTab": "Next tab",
+      "saveDocument": "Save document",
+      "publish": "Publish",
+      "newItem": "New item",
+      "generateWithAi": "Generate with AI",
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strikethrough": "Strikethrough",
+      "orderedList": "Ordered list",
+      "bulletList": "Bullet list",
+      "blockquote": "Blockquote",
+      "codeBlock": "Code block"
+    },
+    "toolGroups": {
+      "content": "Content",
+      "media": "Media",
+      "aiAgents": "AI Agents",
+      "workflows": "Workflows",
+      "forms": "Forms",
+      "seoQuality": "SEO & Quality",
+      "translation": "Translation",
+      "interactives": "Interactives",
+      "memoryWeb": "Memory & Web",
+      "operations": "Operations",
+      "schedulingHistory": "Scheduling & History"
+    },
+    "tools": {
+      "siteOverview": {
+        "name": "Site overview",
+        "desc": "Collections, doc counts, settings"
+      },
+      "searchContent": {
+        "name": "Search content",
+        "desc": "Full-text search across all documents"
+      },
+      "listReadDocs": {
+        "name": "List / read docs",
+        "desc": "Browse collections, read full documents"
+      },
+      "createEdit": {
+        "name": "Create / edit",
+        "desc": "Create, update, publish, unpublish docs"
+      },
+      "cloneDocument": {
+        "name": "Clone document",
+        "desc": "Duplicate any document as draft"
+      },
+      "generateContent": {
+        "name": "Generate content",
+        "desc": "AI-write or rewrite any field"
+      },
+      "inlineEditForm": {
+        "name": "Inline edit form",
+        "desc": "Edit specific fields directly in chat"
+      },
+      "bulkPublish": {
+        "name": "Bulk publish",
+        "desc": "Publish all drafts at once"
+      },
+      "bulkUpdate": {
+        "name": "Bulk update",
+        "desc": "Update a field across many docs"
+      },
+      "listDrafts": {
+        "name": "List drafts",
+        "desc": "All unpublished documents across collections"
+      },
+      "getSchema": {
+        "name": "Get schema",
+        "desc": "Inspect collection fields and block definitions"
+      },
+      "restoreFromTrash": {
+        "name": "Restore from trash",
+        "desc": "Recover a trashed document"
+      },
+      "searchMedia": {
+        "name": "Search media",
+        "desc": "Find images by AI captions, tags, filename"
+      },
+      "listMedia": {
+        "name": "List media",
+        "desc": "Browse all files with AI analysis data"
+      },
+      "upload": {
+        "name": "Upload",
+        "desc": "Upload images via + button or drag & drop"
+      },
+      "listAgents": {
+        "name": "List agents",
+        "desc": "View all configured AI agents"
+      },
+      "createAgent": {
+        "name": "Create agent",
+        "desc": "Set up a new copywriter, SEO, or custom agent"
+      },
+      "runAgent": {
+        "name": "Run agent",
+        "desc": "Execute an agent with a prompt"
+      },
+      "curationQueue": {
+        "name": "Curation queue",
+        "desc": "Review, approve, or reject AI content"
+      },
+      "approveQueueItem": {
+        "name": "Approve queue item",
+        "desc": "Publish an AI-generated draft from curation"
+      },
+      "rejectQueueItem": {
+        "name": "Reject queue item",
+        "desc": "Discard or send back an AI-generated draft"
+      },
+      "agentTemplates": {
+        "name": "Agent templates",
+        "desc": "Start from a template, save new ones"
+      },
+      "agentFeedback": {
+        "name": "Agent feedback",
+        "desc": "Accept / reject stats per agent"
+      },
+      "agentBudget": {
+        "name": "Agent budget",
+        "desc": "Set token or cost ceilings per agent"
+      },
+      "agentLocale": {
+        "name": "Agent locale",
+        "desc": "Lock an agent to a specific language"
+      },
+      "listWorkflows": {
+        "name": "List workflows",
+        "desc": "View multi-step agent chains"
+      },
+      "createWorkflow": {
+        "name": "Create workflow",
+        "desc": "Chain agents into a pipeline"
+      },
+      "runWorkflow": {
+        "name": "Run workflow",
+        "desc": "Execute a workflow on a document"
+      },
+      "deleteWorkflow": {
+        "name": "Delete workflow",
+        "desc": "Remove a workflow definition"
+      },
+      "listSubmissions": {
+        "name": "List submissions",
+        "desc": "All form submissions per form"
+      },
+      "readSubmission": {
+        "name": "Read submission",
+        "desc": "Read a specific form submission"
+      },
+      "formStats": {
+        "name": "Form stats",
+        "desc": "Submission counts and conversion data"
+      },
+      "runLighthouse": {
+        "name": "Run Lighthouse",
+        "desc": "Mobile + desktop performance audit"
+      },
+      "lighthouseScores": {
+        "name": "Lighthouse scores",
+        "desc": "Latest scores for every page"
+      },
+      "lighthouseHistory": {
+        "name": "Lighthouse history",
+        "desc": "Scores over time"
+      },
+      "translateDocument": {
+        "name": "Translate document",
+        "desc": "AI-translate one document to a locale"
+      },
+      "translateSite": {
+        "name": "Translate site",
+        "desc": "AI-translate every document to a locale"
+      },
+      "generateInteractive": {
+        "name": "Generate interactive",
+        "desc": "AI-build a custom HTML widget"
+      },
+      "enableImageGeneration": {
+        "name": "Enable image generation",
+        "desc": "Turn AI image gen on/off per site"
+      },
+      "searchMemories": {
+        "name": "Search memories",
+        "desc": "Search chat's long-term memory"
+      },
+      "addMemory": {
+        "name": "Add memory",
+        "desc": "Save a fact or preference for future chats"
+      },
+      "forgetMemory": {
+        "name": "Forget memory",
+        "desc": "Remove a stored memory"
+      },
+      "webSearch": {
+        "name": "Web search",
+        "desc": "Live web search via Brave or Tavily"
+      },
+      "webFetch": {
+        "name": "Web fetch",
+        "desc": "Fetch and read any URL in the conversation"
+      },
+      "deploy": {
+        "name": "Deploy",
+        "desc": "Deploy site to configured provider"
+      },
+      "buildSite": {
+        "name": "Build site",
+        "desc": "Rebuild static pages"
+      },
+      "backup": {
+        "name": "Backup",
+        "desc": "Create a backup right now"
+      },
+      "linkChecker": {
+        "name": "Link checker",
+        "desc": "Check for broken links"
+      },
+      "siteSettings": {
+        "name": "Site settings",
+        "desc": "View and update configuration"
+      },
+      "deployHistory": {
+        "name": "Deploy history",
+        "desc": "View recent deployments"
+      },
+      "schedulePublish": {
+        "name": "Schedule publish",
+        "desc": "Set future publish/unpublish date"
+      },
+      "calendar": {
+        "name": "Calendar",
+        "desc": "View scheduled publishes/unpublishes"
+      },
+      "revisions": {
+        "name": "Revisions",
+        "desc": "View document change history"
+      },
+      "trash": {
+        "name": "Trash",
+        "desc": "List trashed docs, restore them"
+      },
+      "contentStats": {
+        "name": "Content stats",
+        "desc": "Word counts, AI ratio, activity"
+      }
+    },
+    "title": "Help & Support",
+    "tabHelp": "Help",
+    "tabShortcuts": "Shortcuts",
+    "tabAiChat": "AI Chat",
+    "needHelp": "Need help with your project?",
+    "startWithDocs": "Start with our docs or community.",
+    "community": "Community",
+    "communityText": "Join our Discord to get support, report bugs, or discuss features. Many questions are answered in minutes.",
+    "joinDiscord": "Join us on Discord",
+    "aiToolsIntro": "Switch to {chat} mode to use these tools. Ask in natural language — the AI picks the right tool automatically.",
+    "chat": "Chat",
+    "buttonTitle": "Help & Support (?)"
+  },
+  "gateScreen": {
+    "noAccess": "No access",
+    "noSitesYet": "You don't have access to any sites yet.",
+    "askAdmin": "Ask an administrator to invite you.",
+    "signOut": "Sign out",
+    "connectGithub": "Connect GitHub",
+    "waitingForSetup": "Waiting for setup",
+    "storesOnGithub": "This site stores content on GitHub.",
+    "connectToContinue": "Connect your account to continue.",
+    "rateLimited": "GitHub API Rate Limited",
+    "tokenExpired": "GitHub Token Expired",
+    "connectionError": "GitHub Connection Error",
+    "rateLimitedHint": "Too many requests to GitHub API. This resets automatically within a few minutes. You can switch to a local site in the meantime.",
+    "tokenExpiredHint": "The GitHub access token has expired or been revoked. Reconnect GitHub in Site Settings, or switch to another site.",
+    "switchToLocal": "Switch to local site",
+    "retry": "Retry",
+    "configError": "Site config error",
+    "configErrorText": "{site} has an invalid {file} and cannot load. Fix the config below, then switch back to this site.",
+    "switchToAnother": "Switch to another site",
+    "redirecting": "Redirecting to your site…"
+  },
+  "siteSwitcher": {
+    "running": "Running",
+    "unreachable": "Unreachable",
+    "noPreviewUrl": "No preview URL",
+    "checking": "Checking...",
+    "selectSite": "Select site",
+    "selectOrg": "Select org",
+    "allSites": "All sites",
+    "newSite": "New site",
+    "allOrgs": "All organizations",
+    "newOrg": "New organization"
+  },
+  "poweredBy": {
+    "text": "Powered by {product}",
+    "docs": "Docs"
+  },
+  "favoritesList": {
+    "typeDocument": "Document",
+    "typeCollection": "Collection",
+    "typePage": "Page",
+    "typeTool": "Tool",
+    "typeInteractive": "Interactive",
+    "empty": "No favorites yet",
+    "emptyHint": "Click the heart icon on any page or document to add it here.",
+    "search": "Search favorites…",
+    "allCount": "All ({count})",
+    "gridView": "Grid view",
+    "listView": "List view",
+    "noMatch": "No favorites match your search.",
+    "colTitle": "Title",
+    "colType": "Type",
+    "colAdded": "Added",
+    "remove": "Remove from favorites",
+    "addedOn": "Added {date}"
+  }
+}

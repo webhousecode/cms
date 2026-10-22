@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from "re
 import { Loader2, Send, RefreshCw, Pencil, History, ChevronDown, Languages, Check, ArrowUpDown, Globe } from "lucide-react";
 import type { BrandVoice, BrandVoiceVersion } from "@/lib/brand-voice";
 import { useHeaderData } from "@/lib/header-data-context";
+import { useT } from "@/lib/i18n-context";
 
 const TRANSLATE_LANGUAGES = ["English", "Danish", "German", "French", "Spanish", "Norwegian", "Swedish"];
 
@@ -65,6 +66,7 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
   onRestore: (v: BrandVoiceVersion) => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const [restoring, setRestoring] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -88,12 +90,12 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
   return (
     <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "380px", zIndex: 100, background: "var(--card)", borderLeft: "1px solid var(--border)", boxShadow: "-4px 0 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
-        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Revision history</span>
+        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>{t("pages.brandVoice.history.title")}</span>
         <button data-testid="history-panel-close" type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "0.5rem 0" }}>
         {versions.length === 0 && (
-          <p style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>No versions yet.</p>
+          <p style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("pages.brandVoice.history.empty")}</p>
         )}
         {versions.map((v, idx) => {
           const prev = versions[idx + 1];
@@ -105,22 +107,22 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--foreground)", margin: 0 }}>
                     {new Date(v.completedAt).toLocaleString()}
-                    {v.active && <span style={{ marginLeft: "0.5rem", fontSize: "0.65rem", color: "var(--primary)", fontWeight: 600 }}>· active</span>}
+                    {v.active && <span style={{ marginLeft: "0.5rem", fontSize: "0.65rem", color: "var(--primary)", fontWeight: 600 }}>{t("pages.brandVoice.history.active")}</span>}
                   </p>
                   <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-                    {v.language}{prev ? ` · ${changedFields.length} changed field${changedFields.length !== 1 ? "s" : ""}` : " · initial version"}
+                    {v.language}{prev ? (changedFields.length === 1 ? t("pages.brandVoice.history.changedOne") : t("pages.brandVoice.history.changedOther", { count: changedFields.length })) : t("pages.brandVoice.history.initial")}
                   </p>
                   {changedFields.length > 0 && (
                     <button data-testid="version-diff-toggle" type="button" onClick={() => setExpanded(isOpen ? null : v.id)}
                       style={{ fontSize: "0.65rem", color: "var(--primary)", background: "transparent", border: "none", cursor: "pointer", padding: 0, marginTop: "0.2rem" }}>
-                      {isOpen ? "Hide diff" : "Show diff"}
+                      {isOpen ? t("pages.brandVoice.history.hideDiff") : t("pages.brandVoice.history.showDiff")}
                     </button>
                   )}
                 </div>
                 {!v.active && (
                   <button data-testid="version-restore-button" type="button" onClick={() => restore(v)} disabled={restoring === v.id}
                     style={{ fontSize: "0.7rem", padding: "0.25rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", cursor: restoring === v.id ? "wait" : "pointer", background: "transparent", color: "var(--foreground)", whiteSpace: "nowrap", flexShrink: 0 }}>
-                    {restoring === v.id ? "…" : "Restore"}
+                    {restoring === v.id ? "…" : t("pages.brandVoice.history.restore")}
                   </button>
                 )}
               </div>
@@ -174,6 +176,7 @@ function EditForm({ version, onSaved, onCancel }: {
   onSaved: (v: BrandVoiceVersion) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   const [form, setForm] = useState({
     name: version.name,
     industry: version.industry,
@@ -250,19 +253,19 @@ function EditForm({ version, onSaved, onCancel }: {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-        {field("Site name", "name")}
-        {field("Industry", "industry")}
-        {field("Language", "language")}
-        {field("Primary tone", "primaryTone")}
+        {field(t("pages.brandVoice.edit.siteName"), "name")}
+        {field(t("pages.brandVoice.edit.industry"), "industry")}
+        {field(t("pages.brandVoice.edit.language"), "language")}
+        {field(t("pages.brandVoice.edit.primaryTone"), "primaryTone")}
       </div>
-      {field("Description", "description", true)}
-      {field("Target audience", "targetAudience", true)}
-      {field("Brand personality", "brandPersonality", false, "(comma-separated)")}
-      {field("Content goals", "contentGoals", false, "(comma-separated)")}
-      {field("Content pillars", "contentPillars", false, "(comma-separated)")}
-      {field("SEO keywords", "seoKeywords", false, "(comma-separated)")}
-      {field("Avoid", "avoidTopics", false, "(comma-separated)")}
-      {field("Voice examples", "examplePhrases", true, "(one per line)")}
+      {field(t("pages.brandVoice.edit.description"), "description", true)}
+      {field(t("pages.brandVoice.edit.targetAudience"), "targetAudience", true)}
+      {field(t("pages.brandVoice.edit.brandPersonality"), "brandPersonality", false, t("pages.brandVoice.edit.commaSeparated"))}
+      {field(t("pages.brandVoice.edit.contentGoals"), "contentGoals", false, t("pages.brandVoice.edit.commaSeparated"))}
+      {field(t("pages.brandVoice.edit.contentPillars"), "contentPillars", false, t("pages.brandVoice.edit.commaSeparated"))}
+      {field(t("pages.brandVoice.edit.seoKeywords"), "seoKeywords", false, t("pages.brandVoice.edit.commaSeparated"))}
+      {field(t("pages.brandVoice.edit.avoid"), "avoidTopics", false, t("pages.brandVoice.edit.commaSeparated"))}
+      {field(t("pages.brandVoice.edit.voiceExamples"), "examplePhrases", true, t("pages.brandVoice.edit.onePerLine"))}
 
       <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
         <button
@@ -273,7 +276,7 @@ function EditForm({ version, onSaved, onCancel }: {
           style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.5rem 1rem", borderRadius: "7px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.875rem", fontWeight: 600, cursor: saving ? "not-allowed" : "pointer" }}
         >
           {saving ? <Loader2 style={{ width: "13px", height: "13px" }} className="animate-spin" /> : <Check style={{ width: "13px", height: "13px" }} />}
-          Save changes
+          {t("pages.brandVoice.edit.saveChanges")}
         </button>
         <button
           data-testid="edit-form-cancel-button"
@@ -281,7 +284,7 @@ function EditForm({ version, onSaved, onCancel }: {
           onClick={onCancel}
           style={{ padding: "0.5rem 1rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.875rem", cursor: "pointer" }}
         >
-          Cancel
+          {t("pages.brandVoice.cancel")}
         </button>
       </div>
     </div>
@@ -308,23 +311,24 @@ const BV_SCHEMA_HINT = `Expected format:
   "examplePhrases": ["phrase1", "phrase2"]
 }`;
 
-function validateBrandVoice(data: unknown): { ok: true; value: BrandVoice } | { ok: false; errors: string[] } {
+function validateBrandVoice(data: unknown, t: (key: string, vars?: Record<string, string | number>) => string): { ok: true; value: BrandVoice } | { ok: false; errors: string[] } {
   const errors: string[] = [];
   if (typeof data !== "object" || data === null || Array.isArray(data))
-    return { ok: false, errors: ["Root must be a JSON object."] };
+    return { ok: false, errors: [t("pages.brandVoice.import.rootObject")] };
   const obj = data as Record<string, unknown>;
   for (const key of BV_STRING_FIELDS) {
     if (typeof obj[key] !== "string" || !(obj[key] as string).trim())
-      errors.push(`"${key}" must be a non-empty string`);
+      errors.push(t("pages.brandVoice.import.nonEmptyString", { key }));
   }
   for (const key of BV_ARRAY_FIELDS) {
     if (!Array.isArray(obj[key]) || !(obj[key] as unknown[]).every((x) => typeof x === "string"))
-      errors.push(`"${key}" must be an array of strings`);
+      errors.push(t("pages.brandVoice.import.arrayOfStrings", { key }));
   }
   return errors.length ? { ok: false, errors } : { ok: true, value: data as BrandVoice };
 }
 
 function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: BrandVoice) => Promise<void> }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [errors, setErrors] = useState<string[] | null>(null);
@@ -359,8 +363,8 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
       const text = await file.text();
       let parsed: unknown;
       try { parsed = JSON.parse(text); }
-      catch { setErrors(["Invalid JSON — could not parse file."]); return; }
-      const result = validateBrandVoice(parsed);
+      catch { setErrors([t("pages.brandVoice.import.invalidJson")]); return; }
+      const result = validateBrandVoice(parsed, t);
       if (!result.ok) { setErrors(result.errors); return; }
       await onImport(result.value);
       setErrors(null);
@@ -381,10 +385,10 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
       {open && (
         <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50, background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)", minWidth: "150px", overflow: "hidden" }}>
           {[
-            { label: "Export JSON", action: doExport },
-            { label: "Import JSON", action: openImport },
-          ].map(({ label, action }) => (
-            <button key={label} type="button" data-testid={`menu-${label.toLowerCase().replace(/\s+/g, '-')}`} onClick={action}
+            { id: "Export JSON", label: t("pages.brandVoice.import.exportJson"), action: doExport },
+            { id: "Import JSON", label: t("pages.brandVoice.import.importJson"), action: openImport },
+          ].map(({ id, label, action }) => (
+            <button key={id} type="button" data-testid={`menu-${id.toLowerCase().replace(/\s+/g, '-')}`} onClick={action}
               style={{ display: "block", width: "100%", padding: "0.5rem 0.875rem", textAlign: "left", background: "none", border: "none", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}
               onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>
@@ -396,14 +400,14 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
       {errors && (
         <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50, background: "var(--popover)", border: "1px solid var(--destructive)", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)", padding: "0.75rem 1rem", minWidth: "320px", maxWidth: "420px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
-            <p style={{ margin: 0, fontSize: "0.75rem", fontWeight: 600, color: "var(--destructive)" }}>Import failed</p>
+            <p style={{ margin: 0, fontSize: "0.75rem", fontWeight: 600, color: "var(--destructive)" }}>{t("pages.brandVoice.import.failed")}</p>
             <button data-testid="import-export-error-close" type="button" onClick={() => setErrors(null)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1rem", lineHeight: 1, padding: 0 }}>×</button>
           </div>
           <ul style={{ margin: "0 0 0.75rem", paddingLeft: "1.1rem", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
             {errors.map((e) => <li key={e} style={{ fontSize: "0.75rem", color: "var(--destructive)" }}>{e}</li>)}
           </ul>
           <details>
-            <summary style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", cursor: "pointer", userSelect: "none" }}>Show expected format</summary>
+            <summary style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", cursor: "pointer", userSelect: "none" }}>{t("pages.brandVoice.import.showFormat")}</summary>
             <pre style={{ margin: "0.5rem 0 0", fontSize: "0.65rem", lineHeight: 1.5, color: "var(--muted-foreground)", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{BV_SCHEMA_HINT}</pre>
           </details>
         </div>
@@ -424,6 +428,7 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
   hideTranslateDropdown?: boolean;
   retranslateLabel?: string;
 }) {
+  const t = useT();
   const [langOpen, setLangOpen] = useState(false);
   const [translating, setTranslating] = useState(false);
   const pillStyle: React.CSSProperties = {
@@ -461,7 +466,7 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
                 {translating
                   ? <Loader2 style={{ width: "12px", height: "12px" }} className="animate-spin" />
                   : <Languages style={{ width: "12px", height: "12px" }} />}
-                Translate to
+                {t("pages.brandVoice.card.translateTo")}
                 <ChevronDown style={{ width: "10px", height: "10px" }} />
               </button>
               {langOpen && (
@@ -490,17 +495,17 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
 
           <button type="button" data-testid="card-edit-button" onClick={onEdit}
             style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
-            <Pencil style={{ width: "12px", height: "12px" }} /> Edit
+            <Pencil style={{ width: "12px", height: "12px" }} /> {t("pages.brandVoice.card.edit")}
           </button>
           {!hideHistory && (
             <button type="button" data-testid="card-history-button" onClick={onHistory}
               style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
-              <History style={{ width: "12px", height: "12px" }} /> History
+              <History style={{ width: "12px", height: "12px" }} /> {t("pages.brandVoice.card.history")}
             </button>
           )}
           <button type="button" data-testid="card-reinterview-button" onClick={onReinterview}
             style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
-            <RefreshCw style={{ width: "12px", height: "12px" }} /> {retranslateLabel || "Re-interview"}
+            <RefreshCw style={{ width: "12px", height: "12px" }} /> {retranslateLabel || t("pages.brandVoice.card.reinterview")}
           </button>
         </div>
       </div>
@@ -510,22 +515,22 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-        <Section label="Target Audience">
+        <Section label={t("pages.brandVoice.card.targetAudience")}>
           <p style={{ fontSize: "0.875rem", margin: 0, lineHeight: 1.5 }}>{bv.targetAudience}</p>
         </Section>
-        <Section label="Tone & Personality">
+        <Section label={t("pages.brandVoice.card.tonePersonality")}>
           <p style={{ fontSize: "0.875rem", margin: "0 0 0.5rem", lineHeight: 1.5 }}>{bv.primaryTone}</p>
           <div>{bv.brandPersonality.map((p) => <span key={p} style={pillStyle}>{p}</span>)}</div>
         </Section>
-        <Section label="Content Goals">
+        <Section label={t("pages.brandVoice.card.contentGoals")}>
           <ul style={{ margin: 0, paddingLeft: "1.1rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
             {bv.contentGoals.map((g) => <li key={g} style={{ fontSize: "0.875rem" }}>{g}</li>)}
           </ul>
         </Section>
-        <Section label="Content Pillars">
+        <Section label={t("pages.brandVoice.card.contentPillars")}>
           <div>{bv.contentPillars.map((p) => <span key={p} style={pillStyle}>{p}</span>)}</div>
         </Section>
-        <Section label="SEO Keywords">
+        <Section label={t("pages.brandVoice.card.seoKeywords")}>
           <div style={{ display: "flex", flexWrap: "wrap" }}>
             {bv.seoKeywords.map((k) => (
               <span key={k} style={{ ...pillStyle, background: "color-mix(in srgb, var(--muted-foreground) 10%, transparent)", color: "var(--foreground)" }}>{k}</span>
@@ -533,10 +538,10 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
           </div>
         </Section>
         {bv.avoidTopics.length > 0 && (
-          <Section label="Avoid">
+          <Section label={t("pages.brandVoice.card.avoid")}>
             <div>
-              {bv.avoidTopics.map((t) => (
-                <span key={t} style={{ ...pillStyle, background: "color-mix(in srgb, var(--destructive) 10%, transparent)", color: "var(--destructive)" }}>{t}</span>
+              {bv.avoidTopics.map((topic) => (
+                <span key={topic} style={{ ...pillStyle, background: "color-mix(in srgb, var(--destructive) 10%, transparent)", color: "var(--destructive)" }}>{topic}</span>
               ))}
             </div>
           </Section>
@@ -544,7 +549,7 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
       </div>
 
       {bv.examplePhrases.length > 0 && (
-        <Section label="Voice Examples">
+        <Section label={t("pages.brandVoice.card.voiceExamples")}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {bv.examplePhrases.map((phrase) => (
               <div key={phrase} style={{ padding: "0.6rem 0.875rem", borderRadius: "8px", background: "var(--card)", border: "1px solid var(--border)", borderLeft: "3px solid var(--primary)", fontSize: "0.875rem", fontStyle: "italic" }}>
@@ -569,6 +574,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 
 /* ─── Main page ─────────────────────────────────────────────────── */
 export default function BrandVoicePage() {
+  const t = useT();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -720,7 +726,7 @@ export default function BrandVoicePage() {
     } catch {
       setMessages((prev) => {
         const next = [...prev];
-        next[next.length - 1] = { role: "assistant", content: "Something went wrong. Please try again." };
+        next[next.length - 1] = { role: "assistant", content: t("pages.brandVoice.interview.error") };
         return next;
       });
     } finally {
@@ -778,14 +784,14 @@ export default function BrandVoicePage() {
   }
 
   if (loading) {
-    return <div className="p-8"><p className="text-sm text-muted-foreground">Loading…</p></div>;
+    return <div className="p-8"><p className="text-sm text-muted-foreground">{t("pages.brandVoice.loading")}</p></div>;
   }
 
   const pageHeader = (
     <div className="mb-8">
-      <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Settings</p>
-      <h1 className="text-2xl font-bold text-foreground">Site Persona & Goals</h1>
-      <p className="text-sm text-muted-foreground mt-1">The foundation every AI agent works from.</p>
+      <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">{t("pages.brandVoice.header.eyebrow")}</p>
+      <h1 className="text-2xl font-bold text-foreground">{t("pages.brandVoice.header.title")}</h1>
+      <p className="text-sm text-muted-foreground mt-1">{t("pages.brandVoice.header.subtitle")}</p>
     </div>
   );
 
@@ -795,9 +801,9 @@ export default function BrandVoicePage() {
       <div className="p-8 max-w-2xl" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 100px)" }}>
         <div className="mb-6" style={{ flexShrink: 0, display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
-            <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Settings</p>
-            <h1 className="text-2xl font-bold text-foreground">Site Persona & Goals</h1>
-            <p className="text-xs text-muted-foreground mt-1">Powered by Claude Opus · ⌘ Enter to send</p>
+            <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">{t("pages.brandVoice.header.eyebrow")}</p>
+            <h1 className="text-2xl font-bold text-foreground">{t("pages.brandVoice.header.title")}</h1>
+            <p className="text-xs text-muted-foreground mt-1">{t("pages.brandVoice.interview.poweredBy")}</p>
           </div>
           {activeVoice && (
             <button
@@ -806,7 +812,7 @@ export default function BrandVoicePage() {
               onClick={() => { setInterviewActive(false); setMessages([]); }}
               style={{ marginTop: "0.25rem", padding: "0.35rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer", flexShrink: 0 }}
             >
-              ← Cancel
+              {t("pages.brandVoice.interview.cancel")}
             </button>
           )}
         </div>
@@ -842,7 +848,7 @@ export default function BrandVoicePage() {
             onInput={autoResize}
             onKeyDown={handleKey}
             disabled={streaming}
-            placeholder="Your answer… (tip: paste multiple URLs and the AI will read them all)"
+            placeholder={t("pages.brandVoice.interview.placeholder")}
             rows={1}
             style={{ flex: 1, border: "none", background: "transparent", color: "var(--foreground)", fontSize: "0.9rem", outline: "none", resize: "none", lineHeight: 1.5, overflow: "hidden" }}
           />
@@ -882,8 +888,8 @@ export default function BrandVoicePage() {
           }}
         >
           <Globe style={{ width: "12px", height: "12px" }} />
-          {LOCALE_LABELS[cfgDefaultLocale || "en"] || "Primary"}
-          <span style={{ fontSize: "0.6rem", opacity: 0.6, textTransform: "uppercase" }}>primary</span>
+          {LOCALE_LABELS[cfgDefaultLocale || "en"] || t("pages.brandVoice.locale.primaryFallback")}
+          <span style={{ fontSize: "0.6rem", opacity: 0.6, textTransform: "uppercase" }}>{t("pages.brandVoice.locale.primaryBadge")}</span>
         </button>
         {siteLocales.filter((l) => l !== cfgDefaultLocale).map((locale) => (
           <button
@@ -914,13 +920,12 @@ export default function BrandVoicePage() {
 
         {/* Locale view — no voice yet for this locale */}
         {isLocaleView && localeLoading && (
-          <p className="text-sm text-muted-foreground">Loading {LOCALE_LABELS[activeLocale!] || activeLocale}…</p>
+          <p className="text-sm text-muted-foreground">{t("pages.brandVoice.locale.loading", { language: LOCALE_LABELS[activeLocale!] || activeLocale! })}</p>
         )}
         {isLocaleView && !localeLoading && !localeVoice && (
           <div style={{ padding: "2rem", borderRadius: "10px", border: "1px solid var(--border)", background: "var(--card)", display: "flex", flexDirection: "column", gap: "1rem", alignItems: "flex-start" }}>
             <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--muted-foreground)" }}>
-              No Brand Voice for <strong>{LOCALE_LABELS[activeLocale!] || activeLocale}</strong> yet.
-              Translate from the primary version to create one.
+              {t("pages.brandVoice.locale.emptyBefore")}<strong>{LOCALE_LABELS[activeLocale!] || activeLocale}</strong>{t("pages.brandVoice.locale.emptyAfter")}
             </p>
             <button
               type="button"
@@ -937,8 +942,8 @@ export default function BrandVoicePage() {
               }}
             >
               {translatingLocale === activeLocale
-                ? <><Loader2 style={{ width: "13px", height: "13px" }} className="animate-spin" /> Translating…</>
-                : <><Languages style={{ width: "13px", height: "13px" }} /> Translate from {LOCALE_LABELS[cfgDefaultLocale || "en"] || "primary"}</>
+                ? <><Loader2 style={{ width: "13px", height: "13px" }} className="animate-spin" /> {t("pages.brandVoice.locale.translating")}</>
+                : <><Languages style={{ width: "13px", height: "13px" }} /> {t("pages.brandVoice.locale.translateFrom", { language: LOCALE_LABELS[cfgDefaultLocale || "en"] || t("pages.brandVoice.locale.primaryLower") })}</>
               }
             </button>
           </div>
@@ -962,7 +967,7 @@ export default function BrandVoicePage() {
               onImport={async (imported) => { await saveLocaleVoice(activeLocale!, imported); }}
               hideHistory
               hideTranslateDropdown
-              retranslateLabel={`Re-translate from ${LOCALE_LABELS[cfgDefaultLocale || "en"] || "primary"}`}
+              retranslateLabel={t("pages.brandVoice.locale.retranslateFrom", { language: LOCALE_LABELS[cfgDefaultLocale || "en"] || t("pages.brandVoice.locale.primaryLower") })}
             />
           )
         )}
@@ -1022,13 +1027,13 @@ export default function BrandVoicePage() {
       {pageHeader}
       <div style={{ padding: "2rem", borderRadius: "14px", border: "1px solid var(--border)", background: "var(--card)", display: "flex", flexDirection: "column", gap: "1.25rem", alignItems: "flex-start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          <p style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>How it works</p>
+          <p style={{ fontSize: "0.9rem", fontWeight: 600, margin: 0 }}>{t("pages.brandVoice.start.howItWorks")}</p>
           <ul style={{ margin: 0, paddingLeft: "1.1rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
             {[
-              "Claude Opus — the most capable model — interviews you",
-              "6–8 focused questions, each building on your previous answer",
-              "Takes about 3 minutes",
-              "Result is saved and injected into every agent automatically",
+              t("pages.brandVoice.start.step1"),
+              t("pages.brandVoice.start.step2"),
+              t("pages.brandVoice.start.step3"),
+              t("pages.brandVoice.start.step4"),
             ].map((item) => (
               <li key={item} style={{ fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{item}</li>
             ))}
@@ -1037,7 +1042,7 @@ export default function BrandVoicePage() {
         <button data-testid="start-interview-button" type="button" onClick={startInterview}
           style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1.25rem", borderRadius: "8px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer" }}>
           <Pencil style={{ width: "14px", height: "14px" }} />
-          Start interview
+          {t("pages.brandVoice.start.startInterview")}
         </button>
       </div>
     </div>

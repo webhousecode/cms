@@ -4,6 +4,7 @@ import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { getSessionUser } from "@/lib/auth";
 import { MobilePairingClient } from "./client";
+import { getServerT } from "@/i18n/server";
 
 /**
  * /admin/account/mobile-pairing
@@ -18,6 +19,7 @@ import { MobilePairingClient } from "./client";
  */
 export default async function MobilePairingPage() {
   const user = await getSessionUser(await cookies());
+  const t = await getServerT();
   if (!user) {
     redirect("/admin/login?next=/admin/account/mobile-pairing");
   }
@@ -25,12 +27,12 @@ export default async function MobilePairingPage() {
   return (
     <>
       <ActionBar>
-        <ActionBarBreadcrumb items={["Account", "Pair mobile device"]} />
+        <ActionBarBreadcrumb items={[t("tools.mobilePairing.account"), t("tools.mobilePairing.title")]} />
       </ActionBar>
       <div className="p-8 max-w-2xl">
-        <SectionHeading first>Pair mobile device</SectionHeading>
+        <SectionHeading first>{t("tools.mobilePairing.title")}</SectionHeading>
         <p className="text-sm text-muted-foreground mb-6">
-          Sign in to the webhouse.app mobile app by scanning this QR code with your phone.
+          {t("tools.mobilePairing.intro")}
         </p>
         <MobilePairingClient />
       </div>

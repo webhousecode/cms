@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FolderOpen, Link2, X, Image as ImageIcon } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 export interface GalleryImage {
   url: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }: Props) {
+  const t = useT();
   // Normalize: accept both { url, alt } objects and plain URL strings
   const value: GalleryImage[] = rawValue.map((item: GalleryImage | string) =>
     typeof item === "string" ? { url: item, alt: "" } : item
@@ -114,10 +116,10 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
         }}
       >
         <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-          {uploading ? "Uploading…" : "Click or drag images here"}
+          {uploading ? t("editor.imageGallery.uploading") : t("editor.imageGallery.dropHint")}
         </p>
         <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", opacity: 0.5, marginTop: "0.25rem" }}>
-          JPEG, PNG, WebP, GIF — multiple files allowed
+          {t("editor.imageGallery.formats")}
         </p>
       </div>
       <input
@@ -145,7 +147,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
             className="hover:border-primary hover:text-primary transition-colors"
           >
             <FolderOpen style={{ width: 12, height: 12 }} />
-            Browse Media
+            {t("editor.imageGallery.browseMedia")}
           </button>
           <button
             data-testid="gallery-add-url"
@@ -155,7 +157,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
             className="hover:border-primary hover:text-primary transition-colors"
           >
             <Link2 style={{ width: 12, height: 12 }} />
-            Add URL
+            {t("editor.imageGallery.addUrl")}
           </button>
         </div>
       )}
@@ -197,7 +199,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
               border: "none", background: "var(--primary)", color: "var(--primary-foreground)",
               fontSize: "0.75rem", fontWeight: 500, cursor: "pointer",
             }}
-          >Add</button>
+          >{t("editor.imageGallery.add")}</button>
         </div>
       )}
 
@@ -216,19 +218,19 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
               <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>
                 <ImageIcon style={{ width: 16, height: 16, display: "inline", verticalAlign: "text-bottom", marginRight: "0.4rem" }} />
-                Media Library
+                {t("editor.imageGallery.mediaLibrary")}
               </span>
               <button data-testid="media-browser-close" type="button" onClick={() => setMediaBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                 <X style={{ width: 16, height: 16 }} />
               </button>
             </div>
             <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
-              <input data-testid="media-search-input" type="text" value={mediaSearch} onChange={(e) => setMediaSearch(e.target.value)} placeholder="Search images…" autoFocus
+              <input data-testid="media-search-input" type="text" value={mediaSearch} onChange={(e) => setMediaSearch(e.target.value)} placeholder={t("editor.imageGallery.searchPlaceholder")} autoFocus
                 style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
             </div>
             <div style={{ overflowY: "auto", padding: "0.75rem" }}>
-              {mediaLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>}
-              {!mediaLoading && mediaItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No images found</div>}
+              {mediaLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.imageGallery.loadingMedia")}</div>}
+              {!mediaLoading && mediaItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.imageGallery.noImages")}</div>}
               {!mediaLoading && mediaItems.length > 0 && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.5rem" }}>
                   {mediaItems.filter((item) => !mediaSearch || item.name.toLowerCase().includes(mediaSearch.toLowerCase())).map((item) => (
@@ -271,7 +273,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
                 data-testid={`gallery-img-thumbnail-${idx}`}
                 style={{ aspectRatio: "16/9", overflow: "hidden", cursor: disabled ? "default" : "pointer" }}
                 onClick={() => !disabled && setEditingUrlIdx(editingUrlIdx === idx ? null : idx)}
-                title="Click to edit URL"
+                title={t("editor.imageGallery.clickToEditUrl")}
               >
                 <img
                   src={img.url}
@@ -308,7 +310,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
                 data-testid={`gallery-img-alt-${idx}`}
                 value={img.alt}
                 onChange={(e) => updateAlt(idx, e.target.value)}
-                placeholder="Alt text…"
+                placeholder={t("editor.imageGallery.altPlaceholder")}
                 disabled={disabled}
                 style={{
                   width: "100%",
@@ -331,7 +333,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
                   <button
                     data-testid={`gallery-img-move-left-${idx}`}
                     type="button"
-                    title="Move left"
+                    title={t("editor.imageGallery.moveLeft")}
                     onClick={() => moveImage(idx, idx - 1)}
                     style={iconBtn}
                   >←</button>
@@ -340,21 +342,21 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
                   <button
                     data-testid={`gallery-img-move-right-${idx}`}
                     type="button"
-                    title="Move right"
+                    title={t("editor.imageGallery.moveRight")}
                     onClick={() => moveImage(idx, idx + 1)}
                     style={iconBtn}
                   >→</button>
                 )}
                 {confirmRemoveIdx === idx ? (
                   <>
-                    <span style={{ fontSize: "0.6rem", color: "var(--destructive)", fontWeight: 500, padding: "0 1px" }}>Remove?</span>
+                    <span style={{ fontSize: "0.6rem", color: "var(--destructive)", fontWeight: 500, padding: "0 1px" }}>{t("editor.confirm.remove")}</span>
                     <button data-testid={`gallery-img-confirm-yes-${idx}`} type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); removeImage(idx); }}
-                      style={{ ...iconBtn, fontSize: "0.55rem", padding: "0 4px", width: "auto", background: "var(--destructive)", color: "#fff", borderRadius: "3px" }}>Yes</button>
+                      style={{ ...iconBtn, fontSize: "0.55rem", padding: "0 4px", width: "auto", background: "var(--destructive)", color: "#fff", borderRadius: "3px" }}>{t("editor.confirm.yes")}</button>
                     <button data-testid={`gallery-img-confirm-no-${idx}`} type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); }}
-                      style={{ ...iconBtn, fontSize: "0.55rem", padding: "0 4px", width: "auto", border: "1px solid var(--border)", borderRadius: "3px" }}>No</button>
+                      style={{ ...iconBtn, fontSize: "0.55rem", padding: "0 4px", width: "auto", border: "1px solid var(--border)", borderRadius: "3px" }}>{t("editor.confirm.no")}</button>
                   </>
                 ) : (
-                  <button data-testid={`gallery-img-remove-${idx}`} type="button" title="Remove" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(idx); confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000); }}
+                  <button data-testid={`gallery-img-remove-${idx}`} type="button" title={t("editor.imageGallery.remove")} onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(idx); confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000); }}
                     style={{ ...iconBtn, color: "var(--destructive)", fontSize: "0.75rem", fontWeight: 700 }}>×</button>
                 )}
               </div>

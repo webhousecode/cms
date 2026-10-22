@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, ChevronDown, Check, Plus, LayoutGrid, Globe } from "lucide-react";
 import { switchSite, switchOrg } from "@/lib/switch-context";
+import { useT } from "@/lib/i18n-context";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,8 +15,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 function HealthDot({ status }: { status?: "up" | "down" | "no-preview" }) {
+  const t = useT();
   const color = status === "up" ? "rgb(74 222 128)" : status === "down" ? "var(--destructive)" : "var(--muted-foreground)";
-  const title = status === "up" ? "Running" : status === "down" ? "Unreachable" : status === "no-preview" ? "No preview URL" : "Checking...";
+  const title = status === "up" ? t("shell.siteSwitcher.running") : status === "down" ? t("shell.siteSwitcher.unreachable") : status === "no-preview" ? t("shell.siteSwitcher.noPreviewUrl") : t("shell.siteSwitcher.checking");
   return (
     <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "50%", flexShrink: 0, background: color, marginRight: "0.5rem" }} title={title} />
   );
@@ -48,6 +50,7 @@ function setCookie(name: string, value: string) {
 }
 
 export function SiteSwitcher() {
+  const t = useT();
   const router = useRouter();
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState<string>("");
@@ -133,7 +136,7 @@ export function SiteSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger data-testid="site-switcher" className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer">
         <HealthDot status={healthMap[activeSiteId]} />
-        <span className="max-w-[140px] truncate">{activeSite?.name ?? "Select site"}</span>
+        <span className="max-w-[140px] truncate">{activeSite?.name ?? t("shell.siteSwitcher.selectSite")}</span>
         <ChevronDown className="h-3 w-3 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -149,11 +152,11 @@ export function SiteSwitcher() {
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-muted-foreground" onClick={() => { router.push("/admin/sites"); }}>
               <LayoutGrid className="mr-2 h-4 w-4" />
-              All sites
+              {t("shell.siteSwitcher.allSites")}
             </DropdownMenuItem>
             <DropdownMenuItem className="text-muted-foreground" onClick={() => { router.push("/admin/sites/new"); }}>
               <Plus className="mr-2 h-4 w-4" />
-              New site
+              {t("shell.siteSwitcher.newSite")}
             </DropdownMenuItem>
           </>
         )}
@@ -163,6 +166,7 @@ export function SiteSwitcher() {
 }
 
 export function OrgSwitcher() {
+  const t = useT();
   const router = useRouter();
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState<string>("");
@@ -221,7 +225,7 @@ export function OrgSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger data-testid="org-switcher" className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer">
         <Building2 className="h-4 w-4 text-muted-foreground" />
-        <span className="max-w-[120px] truncate">{activeOrg?.name ?? "Select org"}</span>
+        <span className="max-w-[120px] truncate">{activeOrg?.name ?? t("shell.siteSwitcher.selectOrg")}</span>
         <ChevronDown className="h-3 w-3 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -244,11 +248,11 @@ export function OrgSwitcher() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push("/admin/organizations")}>
               <LayoutGrid className="mr-2 h-4 w-4" />
-              All organizations
+              {t("shell.siteSwitcher.allOrgs")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push("/admin/organizations/new")}>
               <Plus className="mr-2 h-4 w-4" />
-              New organization
+              {t("shell.siteSwitcher.newOrg")}
             </DropdownMenuItem>
           </>
         )}

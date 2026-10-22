@@ -2,6 +2,7 @@
 import { BrandLogo } from "@/components/brand-logo";
 import { useBrand } from "@/lib/brand-context";
 import { DEFAULT_BRAND } from "@/lib/brand";
+import { useT } from "@/lib/i18n-context";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,6 +24,7 @@ import {
  * Shows only org-level navigation: Sites, Team, Billing, Organization Settings.
  */
 export function OrgSidebar() {
+  const t = useT();
   const pathname = usePathname();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -49,8 +51,8 @@ export function OrgSidebar() {
   }, []);
 
   const navItems = [
-    { href: "/admin/sites", label: "Sites", icon: Boxes },
-    { href: "/admin/organizations/settings", label: "Organization Settings", icon: Settings2 },
+    { href: "/admin/sites", label: t("shell.sidebar.sites"), icon: Boxes },
+    { href: "/admin/organizations/settings", label: t("shell.adminHeader.orgSettings"), icon: Settings2 },
   ];
 
   return (
@@ -68,7 +70,7 @@ export function OrgSidebar() {
             />
           )}
           <span style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "0.75rem", marginTop: "-0.25rem", letterSpacing: "0.08em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }} className="text-muted-foreground">
-            AI-native content engine
+            {t("shell.sidebar.tagline")}
           </span>
         </Link>
       </SidebarHeader>

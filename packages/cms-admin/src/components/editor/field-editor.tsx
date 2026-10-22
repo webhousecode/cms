@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { noteCollections, readPath, resolveNote } from "@/lib/option-notes";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   field: FieldConfig;
@@ -92,6 +93,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled, documentLo
   disabled?: boolean;
   documentLocale?: string;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
@@ -159,7 +161,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled, documentLo
           </span>
         ))}
         {value.length === 0 && (
-          <span style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>— none —</span>
+          <span style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.none")}</span>
         )}
         <span style={{ marginLeft: "auto", fontSize: "0.65rem", opacity: 0.5 }}>▾</span>
       </div>
@@ -178,7 +180,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled, documentLo
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search…"
+              placeholder={t("editor.fieldEditor.search")}
               style={{
                 width: "100%", padding: "0.35rem 0.6rem",
                 borderRadius: "5px", border: "1px solid var(--border)",
@@ -188,10 +190,10 @@ function MultiRelationPicker({ collection, value, onChange, disabled, documentLo
             />
           </div>
           <div style={{ maxHeight: "220px", overflowY: "auto" }}>
-            {loading && <div style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Loading…</div>}
+            {loading && <div style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.loading")}</div>}
             {!loading && filtered.length === 0 && (
               <div style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                {query ? "No results" : "All items already selected"}
+                {query ? t("editor.fieldEditor.noResults") : t("editor.fieldEditor.allSelected")}
               </div>
             )}
             {filtered.map((opt) => (
@@ -225,6 +227,7 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
   disabled?: boolean;
   documentLocale?: string;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
@@ -260,7 +263,7 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
         }}
       >
         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {value || "— none —"}
+          {value || t("editor.fieldEditor.none")}
         </span>
         <span style={{ fontSize: "0.65rem", opacity: 0.5 }}>▾</span>
       </button>
@@ -279,7 +282,7 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search…"
+              placeholder={t("editor.fieldEditor.search")}
               style={{
                 width: "100%", padding: "0.35rem 0.6rem",
                 borderRadius: "5px", border: "1px solid var(--border)",
@@ -289,9 +292,9 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
             />
           </div>
           <div style={{ maxHeight: "220px", overflowY: "auto" }}>
-            {loading && <div style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Loading…</div>}
+            {loading && <div style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.loading")}</div>}
             {!loading && filtered.length === 0 && (
-              <div style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>No results</div>
+              <div style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.noResults")}</div>
             )}
             {/* Clear option */}
             {value && (
@@ -301,7 +304,7 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
                 onClick={() => { onChange(""); setOpen(false); setQuery(""); }}
                 style={{ width: "100%", textAlign: "left", padding: "0.5rem 1rem", fontSize: "0.8rem", color: "var(--muted-foreground)", background: "transparent", border: "none", cursor: "pointer" }}
               >
-                ✕ Clear
+                {t("editor.fieldEditor.clear")}
               </button>
             )}
             {filtered.map((opt) => (
@@ -343,6 +346,7 @@ function textWidth(fieldName: string): string | undefined {
 
 /** Simple string array editor — extracted to its own component to avoid hooks-rules violation */
 function SimpleStringArray({ values, onChange, locked }: { values: string[]; onChange: (v: string[]) => void; locked?: boolean }) {
+  const t = useT();
   const [confirmIdx, setConfirmIdx] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   return (
@@ -363,11 +367,11 @@ function SimpleStringArray({ values, onChange, locked }: { values: string[]; onC
             <span style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
               {confirmIdx === i ? (
                 <>
-                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.fieldEditor.removeConfirm")}</span>
                   <button data-testid="string-array-delete-confirm-yes" type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmIdx(null); onChange(values.filter((_, j) => j !== i)); }}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.fieldEditor.yes")}</button>
                   <button data-testid="string-array-delete-confirm-no" type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmIdx(null); }}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.fieldEditor.no")}</button>
                 </>
               ) : (
                 <button data-testid="string-array-delete-button" type="button" onClick={() => {
@@ -375,7 +379,7 @@ function SimpleStringArray({ values, onChange, locked }: { values: string[]; onC
                   if (confirmTimer.current) clearTimeout(confirmTimer.current);
                   setConfirmIdx(i);
                   confirmTimer.current = setTimeout(() => setConfirmIdx(null), 3000);
-                }} style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title="Remove item" className="hover:text-destructive transition-colors">×</button>
+                }} style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title={t("editor.fieldEditor.removeItem")} className="hover:text-destructive transition-colors">×</button>
               )}
             </span>
           )}
@@ -386,7 +390,7 @@ function SimpleStringArray({ values, onChange, locked }: { values: string[]; onC
           style={{ alignSelf: "flex-start", background: "none", border: "1px dashed var(--border)", borderRadius: "5px", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: "0.25rem 0.75rem", marginTop: "0.1rem" }}
           className="hover:border-primary hover:text-primary transition-colors"
         >
-          + Add item
+          {t("editor.fieldEditor.addItem")}
         </button>
       )}
     </div>
@@ -448,6 +452,7 @@ function useOptionNoteData(
 }
 
 export function FieldEditor({ field, value, onChange, locked, blocksConfig, documentLocale }: Props) {
+  const t = useT();
   const strVal = String(value ?? "");
   const testId = `field-${field.type}-${field.name}`;
   // Called unconditionally — hooks cannot live inside the switch below — and it
@@ -518,7 +523,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
               )}
             />
           </div>
-          <span className="text-sm text-muted-foreground">{value ? "Enabled" : "Disabled"}</span>
+          <span className="text-sm text-muted-foreground">{value ? t("editor.fieldEditor.enabled") : t("editor.fieldEditor.disabled")}</span>
         </label>
       );
 
@@ -622,7 +627,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={strVal.startsWith("http") ? strVal : strVal.startsWith("/uploads/") ? strVal : `/api/site-file${strVal.startsWith("/") ? "" : "/"}${strVal}`}
-                alt={strVal.split("/").pop() ?? "Preview"}
+                alt={strVal.split("/").pop() ?? t("editor.fieldEditor.preview")}
                 style={{
                   maxWidth: "200px",
                   maxHeight: "120px",
@@ -639,7 +644,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             value={strVal}
             onChange={(e) => onChange(e.target.value)}
             disabled={locked}
-            placeholder="Image URL"
+            placeholder={t("editor.fieldEditor.imageUrl")}
             className="font-mono text-xs"
           />
           {/* Upload + Browse buttons */}
@@ -647,7 +652,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             <div style={{ display: "flex", gap: "0.35rem" }}>
               <label
                 data-testid="image-field-upload-label"
-                title="Upload image"
+                title={t("editor.fieldEditor.uploadImage")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.25rem 0.6rem", borderRadius: "6px",
@@ -659,13 +664,13 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
               >
                 <input data-testid="image-field-file-input" ref={imgInputRef} type="file" accept="image/*" onChange={handleImageUpload} disabled={locked || imgUploading} style={{ display: "none" }} />
                 <Upload style={{ width: 12, height: 12 }} />
-                {imgUploading ? "..." : "Upload"}
+                {imgUploading ? "..." : t("editor.fieldEditor.upload")}
               </label>
               <button
                 data-testid="image-field-browse-button"
                 type="button"
                 onClick={openMediaBrowser}
-                title="Browse Media"
+                title={t("editor.fieldEditor.browseMedia")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.25rem 0.6rem", borderRadius: "6px",
@@ -676,7 +681,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 className="hover:border-primary hover:text-primary transition-colors"
               >
                 <FolderOpen style={{ width: 12, height: 12 }} />
-                Browse
+                {t("editor.fieldEditor.browse")}
               </button>
               {strVal && strVal.includes("/uploads/") && (
                 <AIMetadataPopover imageUrl={strVal} />
@@ -721,7 +726,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 }}>
                   <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>
                     <ImageIcon style={{ width: "16px", height: "16px", display: "inline", verticalAlign: "text-bottom", marginRight: "0.4rem" }} />
-                    Media Library
+                    {t("editor.fieldEditor.mediaLibrary")}
                   </span>
                   <button
                     data-testid="media-browser-close-button"
@@ -739,7 +744,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                     type="text"
                     value={mediaSearch}
                     onChange={(e) => setMediaSearch(e.target.value)}
-                    placeholder="Search images…"
+                    placeholder={t("editor.fieldEditor.searchImages")}
                     autoFocus
                     style={{
                       width: "100%", padding: "0.35rem 0.5rem",
@@ -753,12 +758,12 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 <div style={{ overflowY: "auto", padding: "0.75rem" }}>
                   {mediaLoading && (
                     <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                      Loading media...
+                      {t("editor.fieldEditor.loadingMedia")}
                     </div>
                   )}
                   {!mediaLoading && mediaItems.length === 0 && (
                     <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                      No images found in Media library
+                      {t("editor.fieldEditor.noImages")}
                     </div>
                   )}
                   {!mediaLoading && mediaItems.length > 0 && (
@@ -839,7 +844,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             value={strVal}
             onChange={(e) => onChange(e.target.value)}
             disabled={locked}
-            placeholder="YouTube or Vimeo URL"
+            placeholder={t("editor.fieldEditor.videoUrl")}
             className="font-mono text-sm"
           />
           {embedSrc && (
@@ -849,7 +854,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                title="Video preview"
+                title={t("editor.fieldEditor.videoPreview")}
               />
             </div>
           )}
@@ -919,15 +924,15 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                   </span>
                   {audioConfirm ? (
                     <>
-                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.fieldEditor.removeConfirm")}</span>
                       <button data-testid="audio-field-delete-confirm-yes" type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); onChange(""); }}
-                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.fieldEditor.yes")}</button>
                       <button data-testid="audio-field-delete-confirm-no" type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); }}
-                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.fieldEditor.no")}</button>
                     </>
                   ) : (
                     <button data-testid="audio-field-delete-button" type="button" onClick={() => { setAudioConfirm(true); audioConfirmTimer.current = setTimeout(() => setAudioConfirm(false), 3000); }}
-                      style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title="Remove audio">×</button>
+                      style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title={t("editor.fieldEditor.removeAudio")}>×</button>
                   )}
                 </div>
               )}
@@ -939,7 +944,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             value={strVal}
             onChange={(e) => onChange(e.target.value)}
             disabled={locked}
-            placeholder="Audio URL"
+            placeholder={t("editor.fieldEditor.audioUrl")}
             className="font-mono text-xs"
           />
           {/* Upload + Browse buttons */}
@@ -947,7 +952,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             <div style={{ display: "flex", gap: "0.35rem" }}>
               <label
                 data-testid="audio-field-upload-label"
-                title="Upload audio"
+                title={t("editor.fieldEditor.uploadAudio")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.25rem 0.6rem", borderRadius: "6px",
@@ -959,13 +964,13 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
               >
                 <input data-testid="audio-field-upload-input" ref={audioInputRef} type="file" accept="audio/*" onChange={handleAudioUpload} disabled={locked || audioUploading} style={{ display: "none" }} />
                 <Upload style={{ width: 12, height: 12 }} />
-                {audioUploading ? "..." : "Upload"}
+                {audioUploading ? "..." : t("editor.fieldEditor.upload")}
               </label>
               <button
                 data-testid="audio-field-browse-button"
                 type="button"
                 onClick={openAudioBrowser}
-                title="Browse Media"
+                title={t("editor.fieldEditor.browseMedia")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.25rem 0.6rem", borderRadius: "6px",
@@ -976,7 +981,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 className="hover:border-primary hover:text-primary transition-colors"
               >
                 <FolderOpen style={{ width: 12, height: 12 }} />
-                Browse
+                {t("editor.fieldEditor.browse")}
               </button>
             </div>
           )}
@@ -990,18 +995,18 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             >
               <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)", width: "min(640px, 90vw)", maxHeight: "70vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
-                  <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>Media Library</span>
+                  <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>{t("editor.fieldEditor.mediaLibrary")}</span>
                   <button data-testid="audio-browser-close-button" type="button" onClick={() => setAudioBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                     <X style={{ width: "16px", height: "16px" }} />
                   </button>
                 </div>
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
-                  <input data-testid="audio-browser-search-field" type="text" value={audioSearch} onChange={(e) => setAudioSearch(e.target.value)} placeholder="Search media…" autoFocus
+                  <input data-testid="audio-browser-search-field" type="text" value={audioSearch} onChange={(e) => setAudioSearch(e.target.value)} placeholder={t("editor.fieldEditor.searchMedia")} autoFocus
                     style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
                 </div>
                 <div style={{ overflowY: "auto", padding: "0.75rem" }}>
-                  {audioLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>}
-                  {!audioLoading && audioItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No media found</div>}
+                  {audioLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.loadingMedia")}</div>}
+                  {!audioLoading && audioItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.noMedia")}</div>}
                   {!audioLoading && audioItems.filter((item) => !audioSearch || item.name.toLowerCase().includes(audioSearch.toLowerCase())).map((item) => (
                     <button data-testid="audio-browser-item-button" key={item.url} type="button" onClick={() => {
                       let storedUrl = item.url;
@@ -1078,14 +1083,14 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             value={strVal}
             onChange={(e) => onChange(e.target.value)}
             disabled={locked}
-            placeholder="Interactive ID"
+            placeholder={t("editor.fieldEditor.interactiveId")}
             className="font-mono text-xs"
           />
           {/* Upload + Browse buttons */}
           {!locked && (
             <div style={{ display: "flex", gap: "0.35rem" }}>
               <label
-                title="Upload interactive (.html)"
+                title={t("editor.fieldEditor.uploadInteractive")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.25rem 0.6rem", borderRadius: "6px",
@@ -1097,13 +1102,13 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
               >
                 <input data-testid="int-field-file-input" ref={intInputRef} type="file" accept=".html,.htm,.zip" onChange={handleIntUpload} disabled={locked || intUploading} style={{ display: "none" }} />
                 <Upload style={{ width: 12, height: 12 }} />
-                {intUploading ? "..." : "Upload"}
+                {intUploading ? "..." : t("editor.fieldEditor.upload")}
               </label>
               <button
                 data-testid="int-field-browse-button"
                 type="button"
                 onClick={openIntBrowser}
-                title="Browse Interactives"
+                title={t("editor.fieldEditor.browseInteractives")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.25rem 0.6rem", borderRadius: "6px",
@@ -1114,7 +1119,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 className="hover:border-primary hover:text-primary transition-colors"
               >
                 <FolderOpen style={{ width: 12, height: 12 }} />
-                Browse
+                {t("editor.fieldEditor.browse")}
               </button>
             </div>
           )}
@@ -1128,18 +1133,18 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             >
               <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)", width: "min(480px, 90vw)", maxHeight: "70vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
-                  <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>Interactives</span>
+                  <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>{t("editor.fieldEditor.interactives")}</span>
                   <button data-testid="int-browser-close-button" type="button" onClick={() => setIntBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                     <X style={{ width: "16px", height: "16px" }} />
                   </button>
                 </div>
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
-                  <input data-testid="int-browser-search-field" type="text" value={intSearch} onChange={(e) => setIntSearch(e.target.value)} placeholder="Search interactives…" autoFocus
+                  <input data-testid="int-browser-search-field" type="text" value={intSearch} onChange={(e) => setIntSearch(e.target.value)} placeholder={t("editor.fieldEditor.searchInteractives")} autoFocus
                     style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
                 </div>
                 <div style={{ overflowY: "auto", padding: "0.5rem" }}>
-                  {intLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading...</div>}
-                  {!intLoading && intItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No interactives found</div>}
+                  {intLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.loading")}</div>}
+                  {!intLoading && intItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.noInteractives")}</div>}
                   {!intLoading && intItems.filter((i) => !intSearch || i.title.toLowerCase().includes(intSearch.toLowerCase()) || i.id.toLowerCase().includes(intSearch.toLowerCase())).map((item) => (
                     <button data-testid="int-browser-item-button" key={item.id} type="button" onClick={() => { onChange(item.id); setIntBrowserOpen(false); }}
                       style={{ width: "100%", textAlign: "left", padding: "0.5rem 0.75rem", fontSize: "0.8rem", background: item.id === strVal ? "var(--accent)" : "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", borderRadius: "4px", marginBottom: "2px" }} className="hover:bg-accent">
@@ -1211,14 +1216,14 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             value={strVal}
             onChange={(e) => onChange(e.target.value)}
             disabled={locked}
-            placeholder="File URL"
+            placeholder={t("editor.fieldEditor.fileUrl")}
             className="font-mono text-xs"
           />
           {/* Upload + Browse buttons */}
           {!locked && (
             <div style={{ display: "flex", gap: "0.35rem" }}>
               <label
-                title="Upload file"
+                title={t("editor.fieldEditor.uploadFile")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.25rem 0.6rem", borderRadius: "6px",
@@ -1230,13 +1235,13 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
               >
                 <input data-testid="file-field-upload-input" ref={fileInputRef} type="file" onChange={handleFileUpload} disabled={locked || fileUploading} style={{ display: "none" }} />
                 <Upload style={{ width: 12, height: 12 }} />
-                {fileUploading ? "..." : "Upload"}
+                {fileUploading ? "..." : t("editor.fieldEditor.upload")}
               </label>
               <button
                 data-testid="file-field-browse-button"
                 type="button"
                 onClick={openFileBrowser}
-                title="Browse Media"
+                title={t("editor.fieldEditor.browseMedia")}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.25rem 0.6rem", borderRadius: "6px",
@@ -1247,7 +1252,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 className="hover:border-primary hover:text-primary transition-colors"
               >
                 <FolderOpen style={{ width: 12, height: 12 }} />
-                Browse
+                {t("editor.fieldEditor.browse")}
               </button>
             </div>
           )}
@@ -1261,18 +1266,18 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             >
               <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)", width: "min(640px, 90vw)", maxHeight: "70vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
-                  <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>Media Library</span>
+                  <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>{t("editor.fieldEditor.mediaLibrary")}</span>
                   <button data-testid="file-browser-close-button" type="button" onClick={() => setFileBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                     <X style={{ width: "16px", height: "16px" }} />
                   </button>
                 </div>
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
-                  <input data-testid="file-browser-search-input" type="text" value={fileSearch} onChange={(e) => setFileSearch(e.target.value)} placeholder="Search media…" autoFocus
+                  <input data-testid="file-browser-search-input" type="text" value={fileSearch} onChange={(e) => setFileSearch(e.target.value)} placeholder={t("editor.fieldEditor.searchMedia")} autoFocus
                     style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
                 </div>
                 <div style={{ overflowY: "auto", padding: "0.75rem" }}>
-                  {fileLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>}
-                  {!fileLoading && fileItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No media found</div>}
+                  {fileLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.loadingMedia")}</div>}
+                  {!fileLoading && fileItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.fieldEditor.noMedia")}</div>}
                   {!fileLoading && fileItems.filter((item) => !fileSearch || item.name.toLowerCase().includes(fileSearch.toLowerCase())).map((item) => (
                     <button data-testid={`file-browser-item-${item.url.replace(/[^a-z0-9]/g, '-')}`} key={item.url} type="button" onClick={() => {
                       let storedUrl = item.url;

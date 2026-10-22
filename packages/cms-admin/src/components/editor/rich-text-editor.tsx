@@ -21,6 +21,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Markdown } from "tiptap-markdown";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n-context";
 import { sanitizeWordPasteHtml } from "@/lib/paste-sanitizer";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
@@ -55,10 +56,10 @@ interface Props {
 type HeadingKey = "paragraph" | "h1" | "h2" | "h3";
 
 const HEADING_OPTIONS: { key: HeadingKey; label: string; fontSize: string; fontWeight: string }[] = [
-  { key: "paragraph", label: "Normal text", fontSize: "14px", fontWeight: "400" },
-  { key: "h1",        label: "Heading 1",   fontSize: "26px", fontWeight: "700" },
-  { key: "h2",        label: "Heading 2",   fontSize: "20px", fontWeight: "700" },
-  { key: "h3",        label: "Heading 3",   fontSize: "16px", fontWeight: "600" },
+  { key: "paragraph", label: "editor.richText.heading.paragraph", fontSize: "14px", fontWeight: "400" },
+  { key: "h1",        label: "editor.richText.heading.h1", fontSize: "26px", fontWeight: "700" },
+  { key: "h2",        label: "editor.richText.heading.h2", fontSize: "20px", fontWeight: "700" },
+  { key: "h3",        label: "editor.richText.heading.h3", fontSize: "16px", fontWeight: "600" },
 ];
 
 /* ─── Confirm-delete hook ───────────────────────────────────────── */
@@ -193,6 +194,7 @@ const TextDragDrop = Extension.create({
 
 /* ─── Resizable Image NodeView ─────────────────────────────────── */
 function ImageNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const t = useT();
   const { src, alt, width, align } = node.attrs as {
     src: string; alt: string | null; width: string | null; align: "left" | "center" | "right" | null;
   };
@@ -256,26 +258,26 @@ function ImageNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
         {/* Footer bar — delete (matches Video/Interactive pattern) */}
         {selected && (
           <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.15rem 0.375rem", backgroundColor: "var(--muted)", borderTop: "1px solid var(--border)" }}>
-            <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 4px", opacity: 0.6, flex: 1 }}>Image</span>
+            <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 4px", opacity: 0.6, flex: 1 }}>{t("editor.richText.image.label")}</span>
             {del.confirming ? (
               <>
-                <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.richText.removeConfirm")}</span>
                 <button data-testid="image-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
-                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.yes")}</button>
                 <button data-testid="image-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
-                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.no")}</button>
               </>
             ) : (
               <button data-testid="image-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
                 style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
-                title="Remove image">×</button>
+                title={t("editor.richText.image.remove")}>×</button>
             )}
           </div>
         )}
         {selected && (
           <div
             data-testid="image-resize-handle"
-            title="Drag to resize"
+            title={t("editor.richText.dragToResize")}
             onMouseDown={handleResizeMouseDown}
             style={{
               position: "absolute", bottom: selected ? "28px" : "4px", right: "4px",
@@ -358,6 +360,7 @@ const ResizableImage = TipTapImage.extend({
 
 /* ─── Block Marker node + NodeView ──────────────────────────── */
 function BlockMarkerView({ node, deleteNode, editor, getPos }: NodeViewProps) {
+  const t = useT();
   const { slug, label } = node.attrs as { slug: string; label: string };
   const del = useConfirmDelete(deleteNode);
 
@@ -396,14 +399,14 @@ function BlockMarkerView({ node, deleteNode, editor, getPos }: NodeViewProps) {
         </span>
         {!del.confirming && (
           <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", opacity: 0.5 }}>
-            [block:{slug}]
+            {`[block:${slug}]`}
           </span>
         )}
         {del.confirming ? (
           <>
-            <span style={{ fontSize: "0.75rem", color: "var(--destructive)", fontWeight: 500 }}>Remove block?</span>
-            <button data-testid="block-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
-            <button data-testid="block-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
+            <span style={{ fontSize: "0.75rem", color: "var(--destructive)", fontWeight: 500 }}>{t("editor.richText.block.removeConfirm")}</span>
+            <button data-testid="block-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>{t("editor.richText.confirm")}</button>
+            <button data-testid="block-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>{t("editor.richText.cancel")}</button>
           </>
         ) : (
           <button
@@ -416,7 +419,7 @@ function BlockMarkerView({ node, deleteNode, editor, getPos }: NodeViewProps) {
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1,
             }}
-            title="Remove block"
+            title={t("editor.richText.block.remove")}
           >×</button>
         )}
       </div>
@@ -539,6 +542,7 @@ function parseVideoEmbedSrc(url: string, startAt?: number): string | null {
 }
 
 function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const t = useT();
   const { url, startAt, width, align } = node.attrs as {
     url: string; startAt: number; width: string | null; align: "left" | "center" | "right";
   };
@@ -625,14 +629,14 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
                 style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                title="Video embed"
+                title={t("editor.richText.video.embedTitle")}
               />
               {/* Overlay during resize OR node-drag — prevents iframe from stealing events */}
               {(dragging || nodeDragging) && <div style={{ position: "absolute", inset: 0, zIndex: 10, cursor: dragging ? "ew-resize" : "grabbing" }} />}
             </div>
           ) : (
             <div style={{ padding: "2rem", textAlign: "center", color: "var(--muted-foreground)", fontSize: "0.875rem" }}>
-              🎬 No valid video URL
+              {t("editor.richText.video.noValidUrl")}
             </div>
           )}
         </div>
@@ -641,7 +645,7 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
         {selected && !editing && (
           <div
             data-testid="video-resize-handle"
-            title="Træk for at ændre størrelse"
+            title={t("editor.richText.dragToResize")}
             onMouseDown={handleResizeMouseDown}
             style={{
               position: "absolute", bottom: "36px", right: "4px",
@@ -665,18 +669,18 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
             <>
               <input data-testid="video-url-input" ref={urlInputRef} type="url" value={draft} onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); confirm(); } if (e.key === "Escape") { e.preventDefault(); setEditing(false); } }}
-                placeholder="YouTube or Vimeo URL"
+                placeholder={t("editor.richText.video.urlPlaceholder")}
                 style={{ flex: 1, minWidth: 0, fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontFamily: "monospace" }}
               />
-              <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", whiteSpace: "nowrap", padding: "0 4px" }}>Start:</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", whiteSpace: "nowrap", padding: "0 4px" }}>{t("editor.richText.video.start")}</span>
               <input data-testid="video-start-input" type="number" value={draftStart} onChange={(e) => setDraftStart(e.target.value)}
                 min={0} placeholder="0"
                 style={{ width: "52px", fontSize: "0.75rem", padding: "0.2rem 0.35rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)" }}
               />
-              <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 2px" }}>s</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 2px" }}>{t("editor.richText.video.seconds")}</span>
               <CtxSep />
-              <CtxBtn title="OK" active onClick={confirm}>✓</CtxBtn>
-              <CtxBtn title="Cancel" onClick={() => setEditing(false)}>✕</CtxBtn>
+              <CtxBtn title={t("editor.richText.ok")} active onClick={confirm}>✓</CtxBtn>
+              <CtxBtn title={t("editor.richText.cancel")} onClick={() => setEditing(false)}>✕</CtxBtn>
             </>
           ) : (
             <>
@@ -684,23 +688,23 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
                 {url.includes("youtu") ? "YouTube" : url.includes("vimeo") ? "Vimeo" : "Video"}
               </span>
               {startAt > 0 && (
-                <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", background: "var(--accent)", borderRadius: "3px", padding: "0.1rem 0.3rem", flexShrink: 0 }}>⏱ {startAt}s</span>
+                <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", background: "var(--accent)", borderRadius: "3px", padding: "0.1rem 0.3rem", flexShrink: 0 }}>{t("editor.richText.video.startAt", { seconds: startAt })}</span>
               )}
               <span style={{ flex: 1 }} />
               <button data-testid="video-edit-button" type="button" onMouseDown={(e) => { e.preventDefault(); setDraft(url); setDraftStart(String(startAt || 0)); setEditing(true); }}
-                style={{ fontSize: "0.7rem", padding: "0.15rem 0.375rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)" }}>Edit</button>
+                style={{ fontSize: "0.7rem", padding: "0.15rem 0.375rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)" }}>{t("editor.richText.edit")}</button>
               {del.confirming ? (
                 <>
-                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.richText.removeConfirm")}</span>
                   <button data-testid="video-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.yes")}</button>
                   <button data-testid="video-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.no")}</button>
                 </>
               ) : (
                 <button data-testid="video-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
                   style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
-                  title="Remove video">×</button>
+                  title={t("editor.richText.video.remove")}>×</button>
               )}
             </>
           )}
@@ -811,6 +815,7 @@ const VideoEmbed = TipTapNode.create({
 
 /* ─── Audio embed node + NodeView ───────────────────────────── */
 function AudioNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const t = useT();
   const { src, title, align } = node.attrs as {
     src: string; title: string; align: "left" | "center" | "right";
   };
@@ -854,7 +859,7 @@ function AudioNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
             transition: "border-color 150ms, background 150ms",
           }}
         >
-          {uploading ? "Uploading…" : "Drop or click to upload audio"}
+          {uploading ? t("editor.richText.uploadingEllipsis") : t("editor.richText.audio.dropOrClick")}
           <input data-testid="audio-file-input" ref={fileRef} type="file" accept="audio/*" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
         </div>
@@ -882,9 +887,9 @@ function AudioNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
             backgroundColor: "rgba(0,0,0,0.55)",
             display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
           }}>
-            <span style={{ fontSize: "0.8rem", color: "var(--destructive)", fontWeight: 600 }}>Remove audio?</span>
-            <button data-testid="audio-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
-            <button data-testid="audio-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
+            <span style={{ fontSize: "0.8rem", color: "var(--destructive)", fontWeight: 600 }}>{t("editor.richText.audio.removeConfirm")}</span>
+            <button data-testid="audio-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>{t("editor.richText.confirm")}</button>
+            <button data-testid="audio-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>{t("editor.richText.cancel")}</button>
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
@@ -893,7 +898,7 @@ function AudioNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
           </span>
           <button data-testid="audio-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
             style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
-            title="Remove audio">×</button>
+            title={t("editor.richText.audio.remove")}>×</button>
         </div>
       </div>
     </NodeViewWrapper>
@@ -993,6 +998,7 @@ const AudioEmbed = TipTapNode.create({
 
 /* ─── Interactive embed node + NodeView ─────────────────────── */
 function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: NodeViewProps) {
+  const t = useT();
   const { interactiveId, title, align, width } = node.attrs as { interactiveId: string; title: string; align: string; width: string };
   const del = useConfirmDelete(deleteNode);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1051,7 +1057,7 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
           borderRadius: "8px", border: "2px dashed var(--border)",
           backgroundColor: "var(--card)", color: "var(--muted-foreground)", fontSize: "0.875rem",
         }}>
-          Select an interactive…
+          {t("editor.richText.interactive.select")}
         </div>
       </NodeViewWrapper>
     );
@@ -1077,27 +1083,27 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
           <span style={{ fontSize: "0.65rem", color: "var(--brand)", fontWeight: 600, padding: "0 4px", flexShrink: 0 }}>⚡</span>
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {title || "Interactive"}
+            {title || t("editor.richText.interactive.label")}
           </span>
           {del.confirming ? (
             <>
-              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.richText.removeConfirm")}</span>
               <button data-testid="interactive-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.yes")}</button>
               <button data-testid="interactive-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.no")}</button>
             </>
           ) : (
             <button data-testid="interactive-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
               style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
-              title="Remove interactive">×</button>
+              title={t("editor.richText.interactive.remove")}>×</button>
           )}
         </div>
         {/* Resize knob (same as Image) */}
         {selected && (
           <div
             data-testid="interactive-resize-handle"
-            title="Drag to resize"
+            title={t("editor.richText.dragToResize")}
             onMouseDown={handleResizeMouseDown}
             style={{
               position: "absolute", bottom: "28px", right: "4px",
@@ -1244,6 +1250,7 @@ const InteractiveEmbed = TipTapNode.create({
 
 /* ─── Map embed node + NodeView ────────────────────────────── */
 function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const t = useT();
   const { address, zoom } = node.attrs as { address: string; zoom: string };
   const [editing, setEditing] = useState(!address);
   const [inputVal, setInputVal] = useState(address);
@@ -1320,15 +1327,15 @@ function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: Node
               <span style={{ display: "flex", gap: "0.25rem" }}>
                 <button data-testid="map-edit-button" type="button" onClick={() => { setEditing(true); setInputVal(address); }}
                   style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>
-                  Edit
+                  {t("editor.richText.edit")}
                 </button>
                 {del.confirming ? (
                   <>
-                    <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                    <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.richText.removeConfirm")}</span>
                     <button data-testid="map-delete-confirm" type="button" onClick={del.confirm}
-                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.yes")}</button>
                     <button data-testid="map-delete-cancel" type="button" onClick={del.cancel}
-                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.no")}</button>
                   </>
                 ) : (
                   <button data-testid="map-delete-trigger" type="button" onClick={del.request}
@@ -1357,7 +1364,7 @@ function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: Node
                 type="text"
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
-                placeholder="Address or place..."
+                placeholder={t("editor.richText.map.placeholder")}
                 autoFocus
                 style={{
                   flex: 1, padding: "0.35rem 0.5rem", fontSize: "0.8rem", borderRadius: "6px",
@@ -1370,7 +1377,7 @@ function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: Node
                 background: "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.75rem",
                 fontWeight: 600, cursor: "pointer",
               }}>
-                Show
+                {t("editor.richText.map.show")}
               </button>
             </form>
           </div>
@@ -1472,6 +1479,7 @@ function formatFileSize(bytes: number): string {
 }
 
 function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const t = useT();
   const { src, filename, size } = node.attrs as {
     src: string; filename: string; size: string;
   };
@@ -1541,7 +1549,7 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
         }}>
           <span style={{ fontWeight: 500, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <IconFile />
-            Media Library
+            {t("editor.richText.file.mediaLibrary")}
           </span>
           <button
             data-testid="file-media-browser-close"
@@ -1549,7 +1557,7 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
             onClick={() => setMediaBrowserOpen(false)}
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem", fontSize: "1.1rem", lineHeight: 1 }}
           >
-            &times;
+            ×
           </button>
         </div>
         {/* Search */}
@@ -1559,7 +1567,7 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
             type="text"
             value={mediaSearch}
             onChange={(e) => setMediaSearch(e.target.value)}
-            placeholder="Search files..."
+            placeholder={t("editor.richText.file.search")}
             autoFocus
             style={{
               width: "100%", padding: "0.35rem 0.5rem",
@@ -1573,19 +1581,19 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
         <div style={{ overflowY: "auto", padding: "0.75rem" }}>
           {mediaLoading && (
             <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-              Loading media...
+              {t("editor.richText.loadingMedia")}
             </div>
           )}
           {!mediaLoading && mediaItems.length === 0 && (
             <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-              No files found in Media library
+              {t("editor.richText.file.noneInLibrary")}
             </div>
           )}
           {!mediaLoading && mediaItems.length > 0 && (() => {
             const filtered = mediaItems.filter((item) => !mediaSearch || item.name.toLowerCase().includes(mediaSearch.toLowerCase()));
             if (filtered.length === 0) return (
               <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                No files match &ldquo;{mediaSearch}&rdquo;
+                {t("editor.richText.file.noneMatch", { query: mediaSearch })}
               </div>
             );
             return (
@@ -1679,17 +1687,17 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
             display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem",
           }}
         >
-          {uploading ? "Uploading..." : (
+          {uploading ? t("editor.richText.uploadingDots") : (
             <>
-              <span style={{ fontSize: "0.8rem" }}>Drop file here or</span>
+              <span style={{ fontSize: "0.8rem" }}>{t("editor.richText.file.dropOr")}</span>
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <button data-testid="file-upload-button" type="button" onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
                   style={btnStyle} className="hover:border-primary hover:text-primary">
-                  <IconAttachment /> Upload file
+                  <IconAttachment /> {t("editor.richText.uploadFile")}
                 </button>
                 <button data-testid="file-browse-media-button" type="button" onClick={(e) => { e.stopPropagation(); openMediaBrowser(); }}
                   style={btnStyle} className="hover:border-primary hover:text-primary">
-                  <IconFile /> Browse Media
+                  <IconFile /> {t("editor.richText.browseMedia")}
                 </button>
               </div>
             </>
@@ -1724,25 +1732,25 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
         </div>
         {/* Footer bar — download + delete (matches Image/Video/Int pattern) */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.15rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)" }}>
-          <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 4px", opacity: 0.6, flex: 1 }}>File</span>
+          <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 4px", opacity: 0.6, flex: 1 }}>{t("editor.richText.file.label")}</span>
           <a data-testid="file-download-link" href={src} download={filename} target="_blank" rel="noopener noreferrer"
             onMouseDown={(e) => e.stopPropagation()}
             style={{ width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", flexShrink: 0 }}
-            title="Download">
+            title={t("editor.richText.file.download")}>
             <IconDownload />
           </a>
           {del.confirming ? (
             <>
-              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.richText.removeConfirm")}</span>
               <button data-testid="file-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.yes")}</button>
               <button data-testid="file-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.no")}</button>
             </>
           ) : (
             <button data-testid="file-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
               style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
-              title="Remove file">×</button>
+              title={t("editor.richText.file.remove")}>×</button>
           )}
         </div>
       </div>
@@ -1879,6 +1887,7 @@ const CALLOUT_STYLES: Record<CalloutVariant, { border: string; bg: string; icon:
 };
 
 function CalloutNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const t = useT();
   const variant = (node.attrs.variant as CalloutVariant) || "info";
   const style = CALLOUT_STYLES[variant];
   const del = useConfirmDelete(deleteNode);
@@ -1922,14 +1931,14 @@ function CalloutNodeView({ node, updateAttributes, deleteNode, selected }: NodeV
           {btnVariant("tip", "Tip")}
           {del.confirming ? (
             <>
-              <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-              <button data-testid="callout-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none", fontSize: "0.65rem" }}>Yes</button>
-              <button data-testid="callout-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={{ ...btnSm, fontSize: "0.65rem" }}>No</button>
+              <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.richText.removeConfirm")}</span>
+              <button data-testid="callout-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none", fontSize: "0.65rem" }}>{t("editor.richText.yes")}</button>
+              <button data-testid="callout-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={{ ...btnSm, fontSize: "0.65rem" }}>{t("editor.richText.no")}</button>
             </>
           ) : (
             <button data-testid="callout-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
               style={{ width: "16px", height: "16px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.8rem", lineHeight: 1, flexShrink: 0 }}
-              title="Remove callout">×</button>
+              title={t("editor.richText.callout.remove")}>×</button>
           )}
         </div>
         {/* Editable content area */}
@@ -2036,6 +2045,7 @@ const Callout = TipTapNode.create({
 
 /* ─── Snippet embed node + NodeView ─────────────────────────── */
 function SnippetNodeView({ node, selected, deleteNode }: NodeViewProps) {
+  const t = useT();
   const { slug, title, lang, code } = node.attrs as { slug: string; title: string; lang: string; code: string };
   const [expanded, setExpanded] = useState(false);
   const del = useConfirmDelete(deleteNode);
@@ -2079,11 +2089,11 @@ function SnippetNodeView({ node, selected, deleteNode }: NodeViewProps) {
           }} />
           {del.confirming ? (
             <span style={{ display: "flex", alignItems: "center", gap: "0.2rem" }}>
-              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.richText.removeConfirm")}</span>
               <button data-testid="snippet-delete-confirm" type="button" onClick={(e) => { e.stopPropagation(); del.confirm(); }}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.yes")}</button>
               <button data-testid="snippet-delete-cancel" type="button" onClick={(e) => { e.stopPropagation(); del.cancel(); }}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.no")}</button>
             </span>
           ) : (
             <button data-testid="snippet-delete-trigger" type="button" onClick={(e) => { e.stopPropagation(); del.request(); }}
@@ -2200,6 +2210,7 @@ const SnippetEmbed = TipTapNode.create({
  * <img> tag for simplicity.
  */
 function SvgNodeView({ node, selected, updateAttributes, deleteNode }: NodeViewProps) {
+  const t = useT();
   const { slug, src, caption } = node.attrs as { slug: string; src: string; caption: string };
   const del = useConfirmDelete(deleteNode);
   const [captionDraft, setCaptionDraft] = useState(caption ?? "");
@@ -2238,7 +2249,7 @@ function SvgNodeView({ node, selected, updateAttributes, deleteNode }: NodeViewP
             fontSize: "0.8rem",
           }}>
             <Shapes style={{ width: 24, height: 24, opacity: 0.4, marginBottom: "0.5rem" }} />
-            <div>SVG: <code>{slug || "(no slug)"}</code></div>
+            <div>{t("editor.richText.svg.prefix")} <code>{slug || "(no slug)"}</code></div>
           </div>
         )}
         <input
@@ -2247,7 +2258,7 @@ function SvgNodeView({ node, selected, updateAttributes, deleteNode }: NodeViewP
           value={captionDraft}
           onChange={(e) => setCaptionDraft(e.target.value)}
           onBlur={commitCaption}
-          placeholder="Caption (optional)"
+          placeholder={t("editor.richText.svg.caption")}
           style={{
             width: "100%",
             marginTop: "0.5rem",
@@ -2271,11 +2282,11 @@ function SvgNodeView({ node, selected, updateAttributes, deleteNode }: NodeViewP
           </span>
           {del.confirming ? (
             <>
-              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.richText.removeConfirm")}</span>
               <button data-testid="svg-delete-confirm" type="button" onClick={del.confirm}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.yes")}</button>
               <button data-testid="svg-delete-cancel" type="button" onClick={del.cancel}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.richText.no")}</button>
             </>
           ) : (
             <button data-testid="svg-delete-trigger" type="button" onClick={del.request}
@@ -2426,6 +2437,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
   onClose: () => void;
   initial: string;
 }) {
+  const t = useT();
   const [url, setUrl] = useState(initial);
   const [suggestions, setSuggestions] = useState<InternalLink[]>([]);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -2476,7 +2488,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
       onMouseDown={(e) => e.stopPropagation()}
     >
       <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "0.5rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        Link — URL or search pages
+        {t("editor.richText.link.heading")}
       </p>
 
       {/* Input */}
@@ -2488,7 +2500,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={onKeyDown}
           onFocus={() => url && !(/^https?:\/\/\S{8,}/.test(url)) && setShowSuggestions(suggestions.length > 0)}
-          placeholder="https:// or search pages…"
+          placeholder={t("editor.richText.link.placeholder")}
           style={{ width: "100%", padding: "0.4rem 0.625rem", borderRadius: "0.5rem", border: "1px solid var(--input)", backgroundColor: "transparent", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", marginBottom: showSuggestions && suggestions.length > 0 ? "0" : "0.5rem", boxSizing: "border-box" }}
         />
 
@@ -2515,7 +2527,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
                     {s.title}
                   </span>
                   {s.status === "draft" && (
-                    <span style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", background: "var(--muted)", color: "var(--muted-foreground)", fontFamily: "monospace" }}>draft</span>
+                    <span style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", background: "var(--muted)", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{t("editor.richText.link.draft")}</span>
                   )}
                 </span>
                 <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>
@@ -2535,7 +2547,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
           onClick={() => confirm(url)}
           style={{ flex: 1, padding: "0.375rem 0.75rem", borderRadius: "0.5rem", backgroundColor: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
         >
-          Apply
+          {t("editor.richText.link.apply")}
         </button>
         {initial && (
           <button
@@ -2544,7 +2556,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
             onClick={onRemove}
             style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", backgroundColor: "transparent", color: "var(--destructive)", fontSize: "0.8rem", border: "1px solid var(--destructive)", cursor: "pointer" }}
           >
-            Remove
+            {t("editor.richText.link.remove")}
           </button>
         )}
       </div>
@@ -2554,6 +2566,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
 
 /* ─── Main editor ─────────────────────────────────────────────── */
 function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, features }: Props) {
+  const t = useT();
   // Feature check: if features whitelist is set, only show those toolbar items
   const has = (feature: string) => !features || features.includes(feature);
   const creatingRef = useRef(true); // suppress onChange during onCreate
@@ -2622,7 +2635,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       StarterKit.configure({
         link: false,       // configured separately below
       }),
-      Placeholder.configure({ placeholder: "Start writing…" }),
+      Placeholder.configure({ placeholder: t("editor.richText.placeholder") }),
       TipTapLink.configure({ openOnClick: false }),
       Superscript,
       Subscript,
@@ -3053,7 +3066,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   }, [editor]);
 
   const curKey = activeKey();
-  const curLabel = HEADING_OPTIONS.find(h => h.key === curKey)?.label ?? "Normal text";
+  const curLabel = t(HEADING_OPTIONS.find(h => h.key === curKey)?.label ?? "editor.richText.heading.paragraph");
   const currentLink = editor?.getAttributes("link").href ?? "";
 
   return (
@@ -3068,11 +3081,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
         {!disabled && editor && (
           <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "2px", padding: "0.375rem 0.75rem", borderBottom: "1px solid var(--border)", position: "sticky", top: stickyOffset, zIndex: 20, backgroundColor: "var(--background)", borderRadius: "0.5rem 0.5rem 0 0" }}>
 
-            <Btn tooltip="Undo (⌘Z)" disabled={!editor.can().undo()}
+            <Btn tooltip={t("editor.richText.toolbar.undo")} disabled={!editor.can().undo()}
               onClick={() => editor.chain().focus().undo().run()}>
               <IconUndo />
             </Btn>
-            <Btn tooltip="Redo (⌘⇧Z)" disabled={!editor.can().redo()}
+            <Btn tooltip={t("editor.richText.toolbar.redo")} disabled={!editor.can().redo()}
               onClick={() => editor.chain().focus().redo().run()}>
               <IconRedo />
             </Btn>
@@ -3101,7 +3114,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   <span style={{ minWidth: "96px", textAlign: "left", fontSize: "0.875rem" }}>{curLabel}</span>
                   <IconChevronDown />
                 </TooltipTrigger>
-                <TooltipContent side="bottom">Text style</TooltipContent>
+                <TooltipContent side="bottom">{t("editor.richText.toolbar.textStyle")}</TooltipContent>
               </Tooltip>
 
               {headingOpen && (
@@ -3125,7 +3138,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                           padding: "0.625rem 1rem", textAlign: "left", border: "none", cursor: "pointer",
                         }}
                       >
-                        <span>{h.label}</span>
+                        <span>{t(h.label)}</span>
                         {isActive && <IconCheck />}
                       </button>
                     );
@@ -3136,31 +3149,31 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             <Sep />
 
-            {has("bold") && <Btn tooltip="Bold (⌘B)" active={toolbarState?.isBold ?? false}
+            {has("bold") && <Btn tooltip={t("editor.richText.toolbar.bold")} active={toolbarState?.isBold ?? false}
               onClick={() => editor.chain().focus().toggleBold().run()}>
               <IconBold />
             </Btn>}
-            {has("italic") && <Btn tooltip="Italic (⌘I)" active={toolbarState?.isItalic ?? false}
+            {has("italic") && <Btn tooltip={t("editor.richText.toolbar.italic")} active={toolbarState?.isItalic ?? false}
               onClick={() => editor.chain().focus().toggleItalic().run()}>
               <IconItalic />
             </Btn>}
-            {has("strike") && <Btn tooltip="Strikethrough (⌘⇧S)" active={toolbarState?.isStrike ?? false}
+            {has("strike") && <Btn tooltip={t("editor.richText.toolbar.strike")} active={toolbarState?.isStrike ?? false}
               onClick={() => editor.chain().focus().toggleStrike().run()}>
               <IconStrikethrough />
             </Btn>}
-            {has("underline") && <Btn tooltip="Underline (⌘U)" active={toolbarState?.isUnderline ?? false}
+            {has("underline") && <Btn tooltip={t("editor.richText.toolbar.underline")} active={toolbarState?.isUnderline ?? false}
               onClick={() => editor.chain().focus().toggleUnderline().run()}>
               <IconUnderline />
             </Btn>}
-            {has("code") && <Btn tooltip="Inline code" active={toolbarState?.isCode ?? false}
+            {has("code") && <Btn tooltip={t("editor.richText.toolbar.code")} active={toolbarState?.isCode ?? false}
               onClick={() => editor.chain().focus().toggleCode().run()}>
               <IconCode />
             </Btn>}
-            {has("superscript") && <Btn tooltip="Superscript (⌘.)" active={toolbarState?.isSuperscript ?? false}
+            {has("superscript") && <Btn tooltip={t("editor.richText.toolbar.superscript")} active={toolbarState?.isSuperscript ?? false}
               onClick={() => editor.chain().focus().toggleSuperscript().run()}>
               <IconSuperscript />
             </Btn>}
-            {has("subscript") && <Btn tooltip="Subscript (⌘,)" active={toolbarState?.isSubscript ?? false}
+            {has("subscript") && <Btn tooltip={t("editor.richText.toolbar.subscript")} active={toolbarState?.isSubscript ?? false}
               onClick={() => editor.chain().focus().toggleSubscript().run()}>
               <IconSubscript />
             </Btn>}
@@ -3171,7 +3184,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 something visible instead of silently no-op'ing on an empty
                 selection. */}
             {(has("bold") || has("italic") || has("strike") || has("code")) && <Btn
-              tooltip="Clear formatting (whole field if nothing selected)" testId="clear-formatting-button"
+              tooltip={t("editor.richText.toolbar.clearFormatting")} testId="clear-formatting-button"
               onClick={() => {
                 const chain = editor.chain().focus();
                 if (editor.state.selection.empty) chain.selectAll();
@@ -3182,19 +3195,19 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             {(has("bold") || has("italic") || has("strike") || has("code")) && <Sep />}
 
-            {has("bulletList") && <Btn tooltip="Bullet list" active={toolbarState?.isBulletList ?? false}
+            {has("bulletList") && <Btn tooltip={t("editor.richText.toolbar.bulletList")} active={toolbarState?.isBulletList ?? false}
               onClick={() => editor.chain().focus().toggleBulletList().run()}>
               <IconBulletList />
             </Btn>}
-            {has("orderedList") && <Btn tooltip="Numbered list" active={toolbarState?.isOrderedList ?? false}
+            {has("orderedList") && <Btn tooltip={t("editor.richText.toolbar.orderedList")} active={toolbarState?.isOrderedList ?? false}
               onClick={() => editor.chain().focus().toggleOrderedList().run()}>
               <IconNumberedList />
             </Btn>}
-            {has("blockquote") && <Btn tooltip="Blockquote" active={toolbarState?.isBlockquote ?? false}
+            {has("blockquote") && <Btn tooltip={t("editor.richText.toolbar.blockquote")} active={toolbarState?.isBlockquote ?? false}
               onClick={() => editor.chain().focus().toggleBlockquote().run()}>
               <IconBlockquote />
             </Btn>}
-            {has("horizontalRule") && <Btn tooltip="Horizontal rule"
+            {has("horizontalRule") && <Btn tooltip={t("editor.richText.toolbar.horizontalRule")}
               onClick={() => editor.chain().focus().setHorizontalRule().run()}>
               <IconHorizontalRule />
             </Btn>}
@@ -3203,15 +3216,15 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             {/* Text alignment */}
             {has("textAlign") && <>
-              <Btn tooltip="Align left" active={(toolbarState?.textAlign ?? "left") === "left"}
+              <Btn tooltip={t("editor.richText.toolbar.alignLeft")} active={(toolbarState?.textAlign ?? "left") === "left"}
                 onClick={() => editor.chain().focus().setTextAlign("left").run()}>
                 <IconAlignLeft />
               </Btn>
-              <Btn tooltip="Align center" active={toolbarState?.textAlign === "center"}
+              <Btn tooltip={t("editor.richText.toolbar.alignCenter")} active={toolbarState?.textAlign === "center"}
                 onClick={() => editor.chain().focus().setTextAlign("center").run()}>
                 <IconAlignCenter />
               </Btn>
-              <Btn tooltip="Align right" active={toolbarState?.textAlign === "right"}
+              <Btn tooltip={t("editor.richText.toolbar.alignRight")} active={toolbarState?.textAlign === "right"}
                 onClick={() => editor.chain().focus().setTextAlign("right").run()}>
                 <IconAlignRight />
               </Btn>
@@ -3220,7 +3233,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             {/* Link */}
             {has("link") && <div style={{ position: "relative" }} ref={linkRef}>
-              <Btn tooltip="Link (⌘K)" active={toolbarState?.isLink ?? false}
+              <Btn tooltip={t("editor.richText.toolbar.link")} active={toolbarState?.isLink ?? false}
                 onClick={() => setLinkOpen(o => !o)}>
                 <IconLink />
               </Btn>
@@ -3236,7 +3249,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             {/* Highlight */}
             {has("highlight") && <div style={{ position: "relative" }} ref={highlightRef}>
-              <Btn tooltip="Highlight" active={toolbarState?.isHighlight ?? false}
+              <Btn tooltip={t("editor.richText.toolbar.highlight")} active={toolbarState?.isHighlight ?? false}
                 onClick={() => setHighlightOpen(o => !o)}>
                 <IconHighlight />
               </Btn>
@@ -3256,7 +3269,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     { color: "#e9d5ff", label: "Purple" },
                     { color: "#fed7aa", label: "Orange" },
                   ].map(({ color, label }) => (
-                    <button data-testid={`highlight-color-${label.toLowerCase()}`} key={color} type="button" title={label}
+                    <button data-testid={`highlight-color-${label.toLowerCase()}`} key={color} type="button" title={t(`editor.richText.highlight.${label.toLowerCase()}`)}
                       onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHighlight({ color }).run(); setHighlightOpen(false); }}
                       style={{
                         width: 22, height: 22, borderRadius: "50%",
@@ -3266,7 +3279,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                         outlineOffset: "1px",
                       }} />
                   ))}
-                  <button data-testid="highlight-clear-button" type="button" title="Clear highlight"
+                  <button data-testid="highlight-clear-button" type="button" title={t("editor.richText.toolbar.clearHighlight")}
                     onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().unsetHighlight().run(); setHighlightOpen(false); }}
                     style={{
                       width: 22, height: 22, borderRadius: "50%",
@@ -3279,31 +3292,31 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             </div>}
 
             {/* Table */}
-            {has("table") && <Btn tooltip="Insert table" active={toolbarState?.isTable ?? false}
+            {has("table") && <Btn tooltip={t("editor.richText.toolbar.insertTable")} active={toolbarState?.isTable ?? false}
               onClick={insertTable}>
               <IconTable />
             </Btn>}
             {has("table") && (toolbarState?.isTable ?? false) && (
               <>
-                <Btn tooltip="Add column before" onClick={() => editor.chain().focus().addColumnBefore().run()}>
+                <Btn tooltip={t("editor.richText.toolbar.addColumnBefore")} onClick={() => editor.chain().focus().addColumnBefore().run()}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="3" width="12" height="18" rx="1"/><line x1="5" y1="9" x2="5" y2="15"/><line x1="2" y1="12" x2="8" y2="12"/></svg>
                 </Btn>
-                <Btn tooltip="Add column after" onClick={() => editor.chain().focus().addColumnAfter().run()}>
+                <Btn tooltip={t("editor.richText.toolbar.addColumnAfter")} onClick={() => editor.chain().focus().addColumnAfter().run()}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="12" height="18" rx="1"/><line x1="19" y1="9" x2="19" y2="15"/><line x1="16" y1="12" x2="22" y2="12"/></svg>
                 </Btn>
-                <Btn tooltip="Add row before" onClick={() => editor.chain().focus().addRowBefore().run()}>
+                <Btn tooltip={t("editor.richText.toolbar.addRowBefore")} onClick={() => editor.chain().focus().addRowBefore().run()}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="9" width="18" height="12" rx="1"/><line x1="9" y1="5" x2="15" y2="5"/><line x1="12" y1="2" x2="12" y2="8"/></svg>
                 </Btn>
-                <Btn tooltip="Add row after" onClick={() => editor.chain().focus().addRowAfter().run()}>
+                <Btn tooltip={t("editor.richText.toolbar.addRowAfter")} onClick={() => editor.chain().focus().addRowAfter().run()}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="12" rx="1"/><line x1="9" y1="19" x2="15" y2="19"/><line x1="12" y1="16" x2="12" y2="22"/></svg>
                 </Btn>
-                <Btn tooltip="Delete column" onClick={() => editor.chain().focus().deleteColumn().run()}>
+                <Btn tooltip={t("editor.richText.toolbar.deleteColumn")} onClick={() => editor.chain().focus().deleteColumn().run()}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="6" y="3" width="12" height="18" rx="1"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
                 </Btn>
-                <Btn tooltip="Delete row" onClick={() => editor.chain().focus().deleteRow().run()}>
+                <Btn tooltip={t("editor.richText.toolbar.deleteRow")} onClick={() => editor.chain().focus().deleteRow().run()}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="6" width="18" height="12" rx="1"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
                 </Btn>
-                <Btn tooltip="Delete table" onClick={() => editor.chain().focus().deleteTable().run()}>
+                <Btn tooltip={t("editor.richText.toolbar.deleteTable")} onClick={() => editor.chain().focus().deleteTable().run()}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                 </Btn>
               </>
@@ -3311,7 +3324,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             {/* Insert Media (combined dropdown) — shown if any media feature is enabled */}
             <div style={{ position: "relative" }} ref={mediaDropdownRef}>
-              <Btn tooltip={uploading ? "Uploading…" : "Insert media"} disabled={uploading}
+              <Btn tooltip={uploading ? t("editor.richText.uploadingEllipsis") : t("editor.richText.toolbar.insertMedia")} disabled={uploading}
                 onClick={() => { setShowMediaDropdown((o) => !o); setMediaSubMenu(null); }}>
                 <LucideImage className="w-[18px] h-[18px]" />
               </Btn>
@@ -3335,7 +3348,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                       onClick={() => setMediaSubMenu("image")}
                     >
-                      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><IconImage />Image</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><IconImage />{t("editor.richText.image.label")}</span>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     {/* Video */}
@@ -3349,7 +3362,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                       onClick={() => { setShowMediaDropdown(false); setShowVideoDialog(true); setVideoUrl(""); }}
                     >
-                      <IconVideo />Video
+                      <IconVideo />{t("editor.richText.video.label")}
                     </button>
                     {/* Audio — has sub-options */}
                     <button data-testid="media-menu-audio" type="button" style={{
@@ -3362,7 +3375,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                       onClick={() => setMediaSubMenu("audio")}
                     >
-                      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><IconAudio />Audio</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><IconAudio />{t("editor.richText.audio.label")}</span>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     {/* File attachment */}
@@ -3379,7 +3392,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                         editor.chain().focus().insertContent({ type: "fileAttachment", attrs: { src: "", filename: "", size: "" } }).run();
                       }}
                     >
-                      <IconAttachment />File attachment
+                      <IconAttachment />{t("editor.richText.file.attachment")}
                     </button>
                     {/* Map embed */}
                     {canUse("maps") && (
@@ -3395,7 +3408,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     >
                       <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                        Map
+                        {t("editor.richText.map.label")}
                       </span>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
@@ -3415,7 +3428,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onClick={() => setMediaSubMenu(null)}
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                      Image
+                      {t("editor.richText.image.label")}
                     </button>
                     <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
                     <button data-testid="media-submenu-upload-image" type="button" style={{
@@ -3428,7 +3441,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                       onClick={() => { setShowMediaDropdown(false); setMediaSubMenu(null); imageInputRef.current?.click(); }}
                     >
-                      Upload file
+                      {t("editor.richText.uploadFile")}
                     </button>
                     <button data-testid="media-submenu-browse-image" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
@@ -3440,7 +3453,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                       onClick={() => { setShowMediaDropdown(false); setMediaSubMenu(null); openImageMediaBrowser(); }}
                     >
-                      Browse Media
+                      {t("editor.richText.browseMedia")}
                     </button>
                   </>)}
 
@@ -3457,7 +3470,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onClick={() => setMediaSubMenu(null)}
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                      Audio
+                      {t("editor.richText.audio.label")}
                     </button>
                     <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
                     <button data-testid="media-submenu-upload-audio" type="button" style={{
@@ -3470,7 +3483,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                       onClick={() => { setShowMediaDropdown(false); setMediaSubMenu(null); audioInputRef.current?.click(); }}
                     >
-                      Upload file
+                      {t("editor.richText.uploadFile")}
                     </button>
                     <button data-testid="media-submenu-browse-audio" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
@@ -3482,7 +3495,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
                       onClick={() => { setShowMediaDropdown(false); setMediaSubMenu(null); openAudioMediaBrowser(); }}
                     >
-                      Browse Media
+                      {t("editor.richText.browseMedia")}
                     </button>
                   </>)}
 
@@ -3499,7 +3512,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       onClick={() => setMediaSubMenu(null)}
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                      Map
+                      {t("editor.richText.map.label")}
                     </button>
                     <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
                     <form data-testid="media-submenu-map-form"
@@ -3519,7 +3532,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                         data-testid="media-submenu-map-address-input"
                         name="mapAddress"
                         type="text"
-                        placeholder="Address or place..."
+                        placeholder={t("editor.richText.map.placeholder")}
                         autoFocus
                         style={{
                           flex: 1, padding: "0.3rem 0.5rem", fontSize: "0.75rem", borderRadius: "4px",
@@ -3532,7 +3545,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                         background: "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.7rem",
                         fontWeight: 600, cursor: "pointer",
                       }}>
-                        Insert
+                        {t("editor.richText.insert")}
                       </button>
                     </form>
                   </>)}
@@ -3580,12 +3593,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             />
 
             {/* Insert Block */}
-            <Btn tooltip="Insert content block" onClick={openBlockPicker}>
+            <Btn tooltip={t("editor.richText.toolbar.insertBlock")} onClick={openBlockPicker}>
               <IconBlocks />
             </Btn>
 
             {/* Insert Callout */}
-            {has("callout") && <Btn tooltip="Insert callout" onClick={() => {
+            {has("callout") && <Btn tooltip={t("editor.richText.toolbar.insertCallout")} onClick={() => {
               editor.chain().focus().insertContent({
                 type: "callout",
                 attrs: { variant: "info" },
@@ -3596,7 +3609,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             </Btn>}
 
             {/* Insert Interactive (separate from media — Zap icon, same as sidebar) */}
-            {has("interactive") && <Btn tooltip="Insert interactive" onClick={() => {
+            {has("interactive") && <Btn tooltip={t("editor.richText.toolbar.insertInteractive")} onClick={() => {
               setShowInteractivePicker(true);
               setIntSearch("");
               setInteractivesLoading(true);
@@ -3614,14 +3627,14 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <Zap className="w-[18px] h-[18px]" />
             </Btn>}
 
-            {hasSnippetsCollection && <Btn tooltip="Insert snippet" onClick={() => {
+            {hasSnippetsCollection && <Btn tooltip={t("editor.richText.toolbar.insertSnippet")} onClick={() => {
               setShowSnippetPicker(true);
               setSnippetSearch("");
             }}>
               <Braces className="w-[18px] h-[18px]" />
             </Btn>}
 
-            <Btn tooltip="Insert SVG figure" onClick={() => {
+            <Btn tooltip={t("editor.richText.toolbar.insertSvg")} onClick={() => {
               setShowSvgPicker(true);
               setSvgSearch("");
               setSvgsLoading(true);
@@ -3648,18 +3661,18 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             {/* Zoom */}
             <div style={{ display: "flex", alignItems: "center", gap: "4px", marginRight: "0.25rem" }}>
-              <button data-testid="zoom-out-button" type="button" title="Zoom out"
+              <button data-testid="zoom-out-button" type="button" title={t("editor.richText.toolbar.zoomOut")}
                 onMouseDown={(e) => { e.preventDefault(); setZoom(z => Math.max(50, z - 10)); }}
                 disabled={zoom <= 50}
                 style={{ width: 28, height: 28, borderRadius: 4, border: "none", background: "transparent", cursor: zoom <= 50 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom <= 50 ? 0.3 : 1, fontSize: "1rem" }}>
                 −
               </button>
-              <button data-testid="zoom-reset-button" type="button" title="Reset zoom"
+              <button data-testid="zoom-reset-button" type="button" title={t("editor.richText.toolbar.resetZoom")}
                 onMouseDown={(e) => { e.preventDefault(); setZoom(100); }}
                 style={{ fontSize: "0.75rem", fontFamily: "monospace", color: zoom === 100 ? "var(--muted-foreground)" : "var(--foreground)", background: "transparent", border: "none", cursor: "pointer", padding: "0 4px", minWidth: "2.5rem", textAlign: "center", fontWeight: 500 }}>
                 {zoom}%
               </button>
-              <button data-testid="zoom-in-button" type="button" title="Zoom in"
+              <button data-testid="zoom-in-button" type="button" title={t("editor.richText.toolbar.zoomIn")}
                 onMouseDown={(e) => { e.preventDefault(); setZoom(z => Math.min(200, z + 10)); }}
                 disabled={zoom >= 200}
                 style={{ width: 28, height: 28, borderRadius: 4, border: "none", background: "transparent", cursor: zoom >= 200 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom >= 200 ? 0.3 : 1, fontSize: "1rem" }}>
@@ -3670,7 +3683,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             <Sep />
 
             {/* Proofread */}
-            <Btn tooltip={proofreadActive ? "Close proofread" : "Proofread"} active={proofreadActive} onClick={async () => {
+            <Btn tooltip={proofreadActive ? t("editor.richText.toolbar.closeProofread") : t("editor.richText.toolbar.proofread")} active={proofreadActive} onClick={async () => {
               if (!editor) return;
               if (proofreadActive) {
                 // Close proofread mode
@@ -3690,7 +3703,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   body: JSON.stringify({ text }),
                 });
                 const data = await res.json();
-                if (!res.ok) { toast.error(data.error ?? "Proofread failed"); return; }
+                if (!res.ok) { toast.error(data.error ?? t("editor.richText.toolbar.proofreadFailed")); return; }
                 const corrections = data.corrections ?? [];
                 if (corrections.length === 0) {
                   toast.success(`No errors found (${data.language})`);
@@ -3713,14 +3726,14 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   const dom = editor.view.domAtPos(first.from);
                   (dom.node as HTMLElement).scrollIntoView?.({ behavior: "smooth", block: "center" });
                 }
-              } catch { toast.error("Proofread failed"); }
+              } catch { toast.error(t("editor.richText.toolbar.proofreadFailed")); }
               finally { setProofreadLoading(false); }
             }} disabled={proofreadLoading}>
               <IconProofread />
             </Btn>
 
             {/* Source toggle */}
-            <Btn tooltip={showSource ? "Visual editor" : "View source"} active={showSource}
+            <Btn tooltip={showSource ? t("editor.richText.toolbar.visualEditor") : t("editor.richText.toolbar.viewSource")} active={showSource}
               onClick={() => {
                 if (!showSource) {
                   // Switch to source: grab current markdown
@@ -3754,22 +3767,22 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             backgroundColor: "var(--background)",
             position: "sticky", top: stickyOffset + 49, zIndex: 19,
           }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Image</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t("editor.richText.image.label")}</span>
             <CtxSep />
-            <CtxBtn title="Float left" active={toolbarState.imageAlign === "left"}
+            <CtxBtn title={t("editor.richText.ctx.floatLeft")} active={toolbarState.imageAlign === "left"}
               onClick={() => editor.chain().focus().updateAttributes("image", { align: "left" }).run()}>
               <IconAlignLeft />
             </CtxBtn>
-            <CtxBtn title="Center (full width)" active={toolbarState.imageAlign === "center"}
+            <CtxBtn title={t("editor.richText.ctx.centerFull")} active={toolbarState.imageAlign === "center"}
               onClick={() => editor.chain().focus().updateAttributes("image", { align: "center" }).run()}>
               <IconAlignCenter />
             </CtxBtn>
-            <CtxBtn title="Float right" active={toolbarState.imageAlign === "right"}
+            <CtxBtn title={t("editor.richText.ctx.floatRight")} active={toolbarState.imageAlign === "right"}
               onClick={() => editor.chain().focus().updateAttributes("image", { align: "right" }).run()}>
               <IconAlignRight />
             </CtxBtn>
             <CtxSep />
-            <CtxBtn title="Reset width to full" active={false}
+            <CtxBtn title={t("editor.richText.ctx.resetWidth")} active={false}
               onClick={() => editor.chain().focus().updateAttributes("image", { width: null }).run()}>
               <IconMaximize />
             </CtxBtn>
@@ -3800,22 +3813,22 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             backgroundColor: "var(--background)",
             position: "sticky", top: stickyOffset + 49, zIndex: 19,
           }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Video</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t("editor.richText.video.label")}</span>
             <CtxSep />
-            <CtxBtn title="Float left"   active={toolbarState.videoAlign === "left"}
+            <CtxBtn title={t("editor.richText.ctx.floatLeft")}   active={toolbarState.videoAlign === "left"}
               onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { align: "left" }).run()}>
               <IconAlignLeft />
             </CtxBtn>
-            <CtxBtn title="Center (full width)" active={toolbarState.videoAlign === "center"}
+            <CtxBtn title={t("editor.richText.ctx.centerFull")} active={toolbarState.videoAlign === "center"}
               onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { align: "center" }).run()}>
               <IconAlignCenter />
             </CtxBtn>
-            <CtxBtn title="Float right"  active={toolbarState.videoAlign === "right"}
+            <CtxBtn title={t("editor.richText.ctx.floatRight")}  active={toolbarState.videoAlign === "right"}
               onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { align: "right" }).run()}>
               <IconAlignRight />
             </CtxBtn>
             <CtxSep />
-            <CtxBtn title="Reset width to full" active={false}
+            <CtxBtn title={t("editor.richText.ctx.resetWidth")} active={false}
               onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { width: null }).run()}>
               <IconMaximize />
             </CtxBtn>
@@ -3831,17 +3844,17 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             backgroundColor: "var(--background)",
             position: "sticky", top: stickyOffset + 49, zIndex: 19,
           }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Audio</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t("editor.richText.audio.label")}</span>
             <CtxSep />
-            <CtxBtn title="Align left"   active={toolbarState.audioAlign === "left"}
+            <CtxBtn title={t("editor.richText.toolbar.alignLeft")}   active={toolbarState.audioAlign === "left"}
               onClick={() => editor.chain().focus().updateAttributes("audioEmbed", { align: "left" }).run()}>
               <IconAlignLeft />
             </CtxBtn>
-            <CtxBtn title="Center" active={toolbarState.audioAlign === "center"}
+            <CtxBtn title={t("editor.richText.ctx.center")} active={toolbarState.audioAlign === "center"}
               onClick={() => editor.chain().focus().updateAttributes("audioEmbed", { align: "center" }).run()}>
               <IconAlignCenter />
             </CtxBtn>
-            <CtxBtn title="Align right"  active={toolbarState.audioAlign === "right"}
+            <CtxBtn title={t("editor.richText.toolbar.alignRight")}  active={toolbarState.audioAlign === "right"}
               onClick={() => editor.chain().focus().updateAttributes("audioEmbed", { align: "right" }).run()}>
               <IconAlignRight />
             </CtxBtn>
@@ -3857,22 +3870,22 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             backgroundColor: "var(--background)",
             position: "sticky", top: stickyOffset + 49, zIndex: 19,
           }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--brand)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Interactive</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--brand)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t("editor.richText.interactive.label")}</span>
             <CtxSep />
-            <CtxBtn title="Float left" active={toolbarState.interactiveAlign === "left"}
+            <CtxBtn title={t("editor.richText.ctx.floatLeft")} active={toolbarState.interactiveAlign === "left"}
               onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { align: "left" }).run()}>
               <IconAlignLeft />
             </CtxBtn>
-            <CtxBtn title="Center (full width)" active={toolbarState.interactiveAlign === "center" || toolbarState.interactiveAlign === ""}
+            <CtxBtn title={t("editor.richText.ctx.centerFull")} active={toolbarState.interactiveAlign === "center" || toolbarState.interactiveAlign === ""}
               onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { align: "center", width: null }).run()}>
               <IconAlignCenter />
             </CtxBtn>
-            <CtxBtn title="Float right" active={toolbarState.interactiveAlign === "right"}
+            <CtxBtn title={t("editor.richText.ctx.floatRight")} active={toolbarState.interactiveAlign === "right"}
               onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { align: "right" }).run()}>
               <IconAlignRight />
             </CtxBtn>
             <CtxSep />
-            <CtxBtn title="Reset width to full" active={false}
+            <CtxBtn title={t("editor.richText.ctx.resetWidth")} active={false}
               onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { width: null }).run()}>
               <IconMaximize />
             </CtxBtn>
@@ -3888,19 +3901,19 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             backgroundColor: "var(--background)",
             position: "sticky", top: stickyOffset + 49, zIndex: 19,
           }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Callout</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>{t("editor.richText.callout.label")}</span>
             <CtxSep />
-            <CtxBtn title="Info" active={toolbarState.calloutVariant === "info"}
+            <CtxBtn title={t("editor.richText.callout.info")} active={toolbarState.calloutVariant === "info"}
               onClick={() => editor.chain().focus().updateAttributes("callout", { variant: "info" }).run()}>
-              <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>Info</span>
+              <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>{t("editor.richText.callout.info")}</span>
             </CtxBtn>
-            <CtxBtn title="Warning" active={toolbarState.calloutVariant === "warning"}
+            <CtxBtn title={t("editor.richText.callout.warning")} active={toolbarState.calloutVariant === "warning"}
               onClick={() => editor.chain().focus().updateAttributes("callout", { variant: "warning" }).run()}>
-              <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>Warn</span>
+              <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>{t("editor.richText.callout.warn")}</span>
             </CtxBtn>
-            <CtxBtn title="Tip" active={toolbarState.calloutVariant === "tip"}
+            <CtxBtn title={t("editor.richText.callout.tip")} active={toolbarState.calloutVariant === "tip"}
               onClick={() => editor.chain().focus().updateAttributes("callout", { variant: "tip" }).run()}>
-              <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>Tip</span>
+              <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>{t("editor.richText.callout.tip")}</span>
             </CtxBtn>
           </div>
         )}
@@ -4015,8 +4028,8 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               borderRadius: "0 0 0.5rem 0.5rem", flexWrap: "wrap",
               position: "sticky", bottom: 0, zIndex: 20,
             }}>
-              <button data-testid="proofread-reject-all-button" type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={rejectAll}>Reject all</button>
-              <button data-testid="proofread-accept-all-button" type="button" style={{ ...btnStyle, color: "#4ade80" }} onClick={acceptAll}>Accept all</button>
+              <button data-testid="proofread-reject-all-button" type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={rejectAll}>{t("editor.richText.proofread.rejectAll")}</button>
+              <button data-testid="proofread-accept-all-button" type="button" style={{ ...btnStyle, color: "#4ade80" }} onClick={acceptAll}>{t("editor.richText.proofread.acceptAll")}</button>
 
               <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", margin: "0 0.25rem" }}>
                 <button data-testid="proofread-prev-button" type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem" }} onClick={() => navigate(-1)}>←</button>
@@ -4038,12 +4051,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
               {current && (
                 <div style={{ display: "flex", gap: "0.25rem", marginLeft: "auto" }}>
-                  <button data-testid="proofread-reject-button" type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={() => reject(current)}>✕ Reject</button>
-                  <button data-testid="proofread-accept-button" type="button" style={{ ...btnStyle, color: "#4ade80", borderColor: "#4ade80" }} onClick={() => accept(current)}>✓ Accept</button>
+                  <button data-testid="proofread-reject-button" type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={() => reject(current)}>{t("editor.richText.proofread.reject")}</button>
+                  <button data-testid="proofread-accept-button" type="button" style={{ ...btnStyle, color: "#4ade80", borderColor: "#4ade80" }} onClick={() => accept(current)}>{t("editor.richText.proofread.accept")}</button>
                 </div>
               )}
 
-              <button data-testid="proofread-close-button" type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem", marginLeft: current ? "0" : "auto" }} onClick={close} title="Close proofread">✕</button>
+              <button data-testid="proofread-close-button" type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem", marginLeft: current ? "0" : "auto" }} onClick={close} title={t("editor.richText.toolbar.closeProofread")}>✕</button>
             </div>
           );
         })()}
@@ -4068,7 +4081,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             }}>
               {/* Header */}
               <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--foreground)" }}>Insert Interactive</span>
+                <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--foreground)" }}>{t("editor.richText.interactive.insertTitle")}</span>
                 <button data-testid="interactive-picker-close-button" type="button" onClick={() => setShowInteractivePicker(false)}
                   style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
               </div>
@@ -4080,7 +4093,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   value={intSearch}
                   onChange={(e) => setIntSearch(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowInteractivePicker(false); } }}
-                  placeholder="Search interactives…"
+                  placeholder={t("editor.richText.interactive.search")}
                   autoFocus
                   style={{
                     width: "100%", padding: "0.4rem 0.625rem", borderRadius: "6px",
@@ -4092,11 +4105,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               {/* List */}
               <div style={{ flex: 1, overflow: "auto", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 {interactivesLoading && (
-                  <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>Loading…</p>
+                  <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>{t("editor.richText.loading")}</p>
                 )}
                 {!interactivesLoading && filtered.length === 0 && (
                   <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>
-                    {intSearch ? `No interactives matching "${intSearch}"` : "No interactives found. Create one in the Interactives Manager first."}
+                    {intSearch ? t("editor.richText.interactive.noneMatching", { query: intSearch }) : t("editor.richText.interactive.none")}
                   </p>
                 )}
                 {filtered.map(item => (
@@ -4149,7 +4162,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <div style={{ padding: "1rem 1.25rem 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <Braces style={{ width: 16, height: 16, color: "var(--brand)" }} />
-                  <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert Snippet</span>
+                  <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>{t("editor.richText.snippet.insertTitle")}</span>
                 </div>
                 <button data-testid="snippet-picker-close-button" type="button" onClick={() => setShowSnippetPicker(false)}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>×</button>
@@ -4158,7 +4171,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <div style={{ padding: "0 1.25rem 0.5rem" }}>
                 <input data-testid="snippet-picker-search-input" type="text" value={snippetSearch} onChange={(e) => setSnippetSearch(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowSnippetPicker(false); } }}
-                  placeholder="Search snippets…" autoFocus
+                  placeholder={t("editor.richText.snippet.search")} autoFocus
                   style={{
                     width: "100%", padding: "0.4rem 0.625rem", borderRadius: "6px",
                     border: "1px solid var(--border)", background: "var(--background)",
@@ -4169,11 +4182,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               {/* List */}
               <div style={{ flex: 1, overflow: "auto", padding: "0.5rem 1.25rem 1rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
                 {snippetsLoading && (
-                  <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>Loading…</p>
+                  <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>{t("editor.richText.loading")}</p>
                 )}
                 {!snippetsLoading && filtered.length === 0 && (
                   <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>
-                    {snippetSearch ? `No snippets matching "${snippetSearch}"` : "No snippets found. Create a snippets collection first."}
+                    {snippetSearch ? t("editor.richText.snippet.noneMatching", { query: snippetSearch }) : t("editor.richText.snippet.none")}
                   </p>
                 )}
                 {filtered.map(item => (
@@ -4228,7 +4241,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <div style={{ padding: "1rem 1.25rem 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <Shapes style={{ width: 16, height: 16, color: "var(--brand)" }} />
-                  <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert SVG figure</span>
+                  <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>{t("editor.richText.toolbar.insertSvg")}</span>
                 </div>
                 <button data-testid="svg-picker-close-button" type="button" onClick={() => setShowSvgPicker(false)}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>×</button>
@@ -4236,7 +4249,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <div style={{ padding: "0 1.25rem 0.5rem" }}>
                 <input data-testid="svg-picker-search-input" type="text" value={svgSearch} onChange={(e) => setSvgSearch(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowSvgPicker(false); } }}
-                  placeholder="Search SVG files…" autoFocus
+                  placeholder={t("editor.richText.svg.search")} autoFocus
                   style={{
                     width: "100%", padding: "0.4rem 0.625rem", borderRadius: "6px",
                     border: "1px solid var(--border)", background: "var(--background)",
@@ -4246,11 +4259,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               </div>
               <div style={{ flex: 1, overflow: "auto", padding: "0.5rem 1.25rem 1rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "0.5rem" }}>
                 {svgsLoading && (
-                  <p style={{ gridColumn: "1/-1", fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>Loading…</p>
+                  <p style={{ gridColumn: "1/-1", fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>{t("editor.richText.loading")}</p>
                 )}
                 {!svgsLoading && filtered.length === 0 && (
                   <p style={{ gridColumn: "1/-1", fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>
-                    {svgSearch ? `No SVG matching "${svgSearch}"` : "No SVG files found. Upload .svg to Media first."}
+                    {svgSearch ? t("editor.richText.svg.noneMatching", { query: svgSearch }) : t("editor.richText.svg.none")}
                   </p>
                 )}
                 {filtered.map(item => (
@@ -4296,7 +4309,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             borderRadius: "1rem", boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
             display: "flex", flexDirection: "column", gap: "0.875rem", padding: "1.5rem",
           }}>
-            <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert Video</span>
+            <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>{t("editor.richText.videoDialog.title")}</span>
             <input
               data-testid="video-dialog-url-input"
               type="url"
@@ -4309,7 +4322,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   setShowVideoDialog(false);
                 }
               }}
-              placeholder="YouTube or Vimeo URL"
+              placeholder={t("editor.richText.video.urlPlaceholder")}
               autoFocus
               style={{
                 width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px",
@@ -4320,14 +4333,14 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
               <button data-testid="video-dialog-cancel-button" type="button" onClick={() => setShowVideoDialog(false)}
                 style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>
-                Cancel
+                {t("editor.richText.cancel")}
               </button>
               <button data-testid="video-dialog-insert-button" type="button" disabled={!videoUrl.trim()} onClick={() => {
                 editor?.chain().focus().insertContent({ type: "videoEmbed", attrs: { url: videoUrl.trim() } }).run();
                 setShowVideoDialog(false);
               }}
                 style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: videoUrl.trim() ? "var(--primary)" : "var(--muted)", color: videoUrl.trim() ? "var(--primary-foreground)" : "var(--muted-foreground)", fontSize: "0.8rem", cursor: videoUrl.trim() ? "pointer" : "not-allowed" }}>
-                Insert
+                {t("editor.richText.insert")}
               </button>
             </div>
           </div>
@@ -4363,7 +4376,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 data-testid="block-picker-search-input"
                 autoFocus
                 type="text"
-                placeholder="Search blocks…"
+                placeholder={t("editor.richText.blocks.search")}
                 value={blockSearch}
                 onChange={e => setBlockSearch(e.target.value)}
                 onKeyDown={e => {
@@ -4381,13 +4394,13 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               {/* List */}
               <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.375rem", flex: 1 }}>
                 {blocksLoading && (
-                  <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0" }}>Loading blocks…</p>
+                  <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0" }}>{t("editor.richText.blocks.loading")}</p>
                 )}
                 {!blocksLoading && filtered.length === 0 && (
                   <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0" }}>
                     {availableBlocks.length === 0
-                      ? <>No blocks found. Create one in <strong>Content Blocks</strong> first.</>
-                      : "No blocks match your search."}
+                      ? (() => { const [before, after] = t("editor.richText.blocks.noneCreate", { place: "\u0001" }).split("\u0001"); return <>{before}<strong>{t("editor.richText.blocks.contentBlocks")}</strong>{after}</>; })()
+                      : t("editor.richText.blocks.noneMatch")}
                   </p>
                 )}
                 {filtered.map(block => (
@@ -4404,7 +4417,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--foreground)", marginBottom: "2px" }}>{block.label}</p>
                       <p style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>{block.slug} · {block.blockType}</p>
                     </div>
-                    <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", opacity: 0.5, flexShrink: 0, marginLeft: "0.5rem" }}>[block:{block.slug}]</span>
+                    <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", opacity: 0.5, flexShrink: 0, marginLeft: "0.5rem" }}>{`[block:${block.slug}]`}</span>
                   </button>
                 ))}
               </div>
@@ -4442,10 +4455,10 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             }}>
               <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontWeight: 500, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                  <IconImage /> Select Image
+                  <IconImage /> {t("editor.richText.mediaBrowser.selectImage")}
                 </span>
                 <button data-testid="media-browser-image-close-button" type="button" onClick={() => setShowImageMediaBrowser(false)}
-                  style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>&times;</button>
+                  style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
               </div>
               <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
                 <input
@@ -4453,7 +4466,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   type="text"
                   value={mediaBrowserSearch}
                   onChange={(e) => { setMediaBrowserSearch(e.target.value); setMediaBrowserPage(1); }}
-                  placeholder="Search images..."
+                  placeholder={t("editor.richText.mediaBrowser.searchImages")}
                   autoFocus
                   style={{
                     width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px",
@@ -4464,15 +4477,15 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               </div>
               <div style={{ overflowY: "auto", padding: "0.75rem" }}>
                 {mediaBrowserLoading && (
-                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>
+                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.richText.loadingMedia")}</div>
                 )}
                 {!mediaBrowserLoading && mediaBrowserItems.length === 0 && (
-                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No images found in Media library</div>
+                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.richText.mediaBrowser.noImages")}</div>
                 )}
                 {!mediaBrowserLoading && mediaBrowserItems.length > 0 && (() => {
                   if (filtered.length === 0) return (
                     <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                      No images match &ldquo;{mediaBrowserSearch}&rdquo;
+                      {t("editor.richText.mediaBrowser.noImagesMatch", { query: mediaBrowserSearch })}
                     </div>
                   );
                   const PAGE_SIZE = 50;
@@ -4514,7 +4527,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     {hasMore && (
                       <button data-testid="media-browser-image-show-more-button" type="button" onClick={() => setMediaBrowserPage((p) => p + 1)}
                         style={{ display: "block", margin: "0.75rem auto 0", padding: "0.4rem 1.25rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
-                        Show more ({filtered.length - visible.length} remaining)
+                        {t("editor.richText.mediaBrowser.showMore", { count: filtered.length - visible.length })}
                       </button>
                     )}
                     </>
@@ -4548,10 +4561,10 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             }}>
               <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontWeight: 500, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                  <IconAudio /> Select Audio
+                  <IconAudio /> {t("editor.richText.mediaBrowser.selectAudio")}
                 </span>
                 <button data-testid="media-browser-audio-close-button" type="button" onClick={() => setShowAudioMediaBrowser(false)}
-                  style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>&times;</button>
+                  style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
               </div>
               <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
                 <input
@@ -4559,7 +4572,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   type="text"
                   value={mediaBrowserSearch}
                   onChange={(e) => setMediaBrowserSearch(e.target.value)}
-                  placeholder="Search audio files..."
+                  placeholder={t("editor.richText.mediaBrowser.searchAudio")}
                   autoFocus
                   style={{
                     width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px",
@@ -4570,15 +4583,15 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               </div>
               <div style={{ overflowY: "auto", padding: "0.75rem" }}>
                 {mediaBrowserLoading && (
-                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>
+                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.richText.loadingMedia")}</div>
                 )}
                 {!mediaBrowserLoading && mediaBrowserItems.length === 0 && (
-                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No audio files found in Media library</div>
+                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>{t("editor.richText.mediaBrowser.noAudio")}</div>
                 )}
                 {!mediaBrowserLoading && mediaBrowserItems.length > 0 && (() => {
                   if (filtered.length === 0) return (
                     <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
-                      No audio files match &ldquo;{mediaBrowserSearch}&rdquo;
+                      {t("editor.richText.mediaBrowser.noAudioMatch", { query: mediaBrowserSearch })}
                     </div>
                   );
                   return (

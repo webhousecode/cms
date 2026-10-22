@@ -47,9 +47,10 @@ describe("site.domains is a security boundary, not a content setting", () => {
 describe("the domains panel follows house rules", () => {
   it("uses the house Yes/No confirm, never a native dialog", () => {
     expect(panel).not.toMatch(/window\.(confirm|alert|prompt)/);
-    expect(panel).toContain("Fjern?");
-    expect(panel).toContain(">Yes<");
-    expect(panel).toContain(">No<");
+    // The texts live in the catalog since F211.2; the panel must use the house keys.
+    expect(panel).toContain('t("settings.common.removeConfirm")');
+    expect(panel).toContain('t("settings.common.yes")');
+    expect(panel).toContain('t("settings.common.no")');
   });
 
   it("every interactive element carries a data-testid so Lens can drive it", () => {

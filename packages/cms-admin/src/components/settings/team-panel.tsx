@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { useT } from "@/lib/i18n-context";
 
 interface TeamUser {
   id: string;
@@ -32,9 +33,9 @@ interface AvailableUser {
 }
 
 const ROLE_OPTIONS = [
-  { value: "admin", label: "Admin" },
-  { value: "editor", label: "Editor" },
-  { value: "viewer", label: "Viewer" },
+  { value: "admin", label: "settings.team.roleAdmin" },
+  { value: "editor", label: "settings.team.roleEditor" },
+  { value: "viewer", label: "settings.team.roleViewer" },
 ];
 
 const ROLE_ICONS: Record<string, typeof Shield> = {
@@ -44,6 +45,8 @@ const ROLE_ICONS: Record<string, typeof Shield> = {
 };
 
 function RoleBadge({ role }: { role: string }) {
+  const t = useT();
+  const option = ROLE_OPTIONS.find((o) => o.value === role);
   const colors: Record<string, string> = {
     admin: "var(--primary)",
     editor: "var(--chart-2, #22c55e)",
@@ -62,12 +65,13 @@ function RoleBadge({ role }: { role: string }) {
         color: colors[role] ?? "var(--muted-foreground)",
       }}
     >
-      {role}
+      {option ? t(option.label) : role}
     </span>
   );
 }
 
 function CopyButton({ text }: { text: string }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -78,7 +82,7 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
-      title="Copy invite link"
+      title={t("settings.team.copyInviteLink")}
       style={{
         background: "none",
         border: "none",
@@ -95,16 +99,18 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function timeUntil(dateStr: string): string {
+function timeUntil(dateStr: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
   const diff = new Date(dateStr).getTime() - Date.now();
-  if (diff <= 0) return "expired";
+  if (diff <= 0) return t("settings.team.expiredLower");
   const hours = Math.floor(diff / 3600000);
-  if (hours < 24) return `${hours}h`;
+  if (hours < 24) return t("settings.team.hoursShort", { n: hours });
   const days = Math.floor(hours / 24);
-  return `${days}d`;
+  return t("settings.team.daysShort", { n: days });
 }
 
 export function TeamPanel() {
+  const t = useT();
+  const roleOptions = ROLE_OPTIONS.map((o) => ({ value: o.value, label: t(o.label) }));
   const [users, setUsers] = useState<TeamUser[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -174,18 +180,18 @@ export function TeamPanel() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setInviteError(data.error ?? "Failed to create invitation");
+        setInviteError(data.error ?? t("settings.team.inviteFailed"));
         return;
       }
       // Build invite link
       const link = `${window.location.origin}/admin/invite/${data.invitation.token}`;
       setLastInviteLink(link);
       setEmailStatus({ sent: data.emailSent ?? false, error: data.emailError });
-      toast.success("Invitation sent", { description: inviteEmail.trim() });
+      toast.success(t("settings.team.invitationSent"), { description: inviteEmail.trim() });
       setInviteEmail("");
       load();
     } catch {
-      setInviteError("Network error");
+      setInviteError(t("settings.team.networkError"));
     } finally {
       setInviting(false);
     }
@@ -203,14 +209,14 @@ export function TeamPanel() {
   async function handleDeleteUser(userId: string) {
     await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
     setConfirmDeleteId(null);
-    toast.success("User removed");
+    toast.success(t("settings.team.userRemoved"));
     load();
   }
 
   async function handleRevokeInvite(invId: string) {
     await fetch(`/api/admin/invitations/${invId}`, { method: "DELETE" });
     setConfirmRevokeId(null);
-    toast.success("Invitation revoked");
+    toast.success(t("settings.team.invitationRevoked"));
     load();
   }
 
@@ -222,16 +228,16 @@ export function TeamPanel() {
   }
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Loading team...</p>;
+    return <p className="text-sm text-muted-foreground">{t("settings.team.loading")}</p>;
   }
 
   return (
     <div data-testid="panel-team" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       {/* Invite form */}
       <div>
-        <SectionHeading>Invite a team member</SectionHeading>
+        <SectionHeading>{t("settings.team.inviteHeading")}</SectionHeading>
         <p className="text-xs text-muted-foreground" style={{ marginTop: "-0.5rem", marginBottom: "1rem" }}>
-          Invite an existing user or a new email address to this site.
+          {t("settings.team.inviteHint")}
         </p>
         <form data-testid="team-invite-form" onSubmit={handleInvite} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
           <div style={{ flex: 1, position: "relative" }}>
@@ -239,7 +245,7 @@ export function TeamPanel() {
               data-testid="team-invite-email-input"
               ref={inputRef}
               type="email"
-              placeholder="email@example.com"
+              placeholder={t("settings.team.emailPlaceholder")}
               value={inviteEmail}
               onChange={(e) => {
                 setInviteEmail(e.target.value);
@@ -319,7 +325,7 @@ export function TeamPanel() {
                 ))}
                 {inviteEmail.length > 0 && filteredSuggestions(inviteEmail).length === 0 && availableUsers.length > 0 && (
                   <div style={{ padding: "0.5rem 0.75rem", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
-                    New email — will create invitation for new user
+                    {t("settings.team.newEmailHint")}
                   </div>
                 )}
               </div>
@@ -327,14 +333,14 @@ export function TeamPanel() {
           </div>
           <div style={{ width: 120 }}>
             <CustomSelect
-              options={ROLE_OPTIONS}
+              options={roleOptions}
               value={inviteRole}
               onChange={setInviteRole}
             />
           </div>
           <Button data-testid="team-invite-submit" type="submit" size="sm" disabled={inviting} className="gap-1.5">
             <UserPlus className="w-3.5 h-3.5" />
-            {inviting ? "Sending..." : "Invite"}
+            {inviting ? t("settings.team.sending") : t("settings.team.invite")}
           </Button>
         </form>
         {inviteError && (
@@ -375,17 +381,17 @@ export function TeamPanel() {
             style={{ color: emailStatus.sent ? "var(--chart-2, #22c55e)" : "var(--muted-foreground)" }}
           >
             {emailStatus.sent
-              ? "Invitation email sent!"
+              ? t("settings.team.emailSent")
               : emailStatus.error
-                ? `Email not sent: ${emailStatus.error}`
-                : "Email not configured — share the link manually. Set up Resend in Settings → Email."}
+                ? t("settings.team.emailNotSent", { error: emailStatus.error })
+                : t("settings.team.emailNotConfigured")}
           </p>
         )}
       </div>
 
       {/* Team members */}
       <div>
-        <SectionHeading>Team members</SectionHeading>
+        <SectionHeading>{t("settings.team.membersHeading")}</SectionHeading>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {users.map((user) => {
             const Icon = ROLE_ICONS[user.role] ?? Eye;
@@ -430,7 +436,7 @@ export function TeamPanel() {
                           color: "var(--muted-foreground)",
                         }}
                       >
-                        you
+                        {t("settings.team.you")}
                       </span>
                     )}
                   </div>
@@ -445,7 +451,7 @@ export function TeamPanel() {
                     <>
                       <div style={{ width: 100 }}>
                         <CustomSelect
-                          options={ROLE_OPTIONS}
+                          options={roleOptions}
                           value={user.role}
                           onChange={(r) => handleChangeRole(user.id, r)}
                         />
@@ -466,7 +472,7 @@ export function TeamPanel() {
                               cursor: "pointer",
                             }}
                           >
-                            OK
+                            {t("settings.team.ok")}
                           </button>
                           <button
                             data-testid={`team-user-delete-cancel-${user.id}`}
@@ -482,7 +488,7 @@ export function TeamPanel() {
                               cursor: "pointer",
                             }}
                           >
-                            No
+                            {t("settings.common.no")}
                           </button>
                         </div>
                       ) : (
@@ -490,7 +496,7 @@ export function TeamPanel() {
                           data-testid={`team-user-delete-button-${user.id}`}
                           type="button"
                           onClick={() => setConfirmDeleteId(user.id)}
-                          title="Remove user"
+                          title={t("settings.team.removeUser")}
                           style={{
                             background: "none",
                             border: "none",
@@ -517,7 +523,7 @@ export function TeamPanel() {
       {/* Pending invitations */}
       {invitations.length > 0 && (
         <div>
-          <SectionHeading>Pending invitations</SectionHeading>
+          <SectionHeading>{t("settings.team.pendingHeading")}</SectionHeading>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {invitations.map((inv) => {
               const expired = new Date(inv.expiresAt) < new Date();
@@ -556,7 +562,7 @@ export function TeamPanel() {
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       <span className="text-xs text-muted-foreground">
                         <Clock style={{ width: 10, height: 10, display: "inline", verticalAlign: "middle", marginRight: 3 }} />
-                        {expired ? "Expired" : `Expires in ${timeUntil(inv.expiresAt)}`}
+                        {expired ? t("settings.team.expired") : t("settings.team.expiresIn", { time: timeUntil(inv.expiresAt, t) })}
                       </span>
                     </div>
                   </div>
@@ -578,7 +584,7 @@ export function TeamPanel() {
                           cursor: "pointer",
                         }}
                       >
-                        OK
+                        {t("settings.team.ok")}
                       </button>
                       <button
                         data-testid={`team-invite-revoke-cancel-${inv.id}`}
@@ -594,7 +600,7 @@ export function TeamPanel() {
                           cursor: "pointer",
                         }}
                       >
-                        No
+                        {t("settings.common.no")}
                       </button>
                     </div>
                   ) : (
@@ -602,7 +608,7 @@ export function TeamPanel() {
                       data-testid={`team-invite-revoke-button-${inv.id}`}
                       type="button"
                       onClick={() => setConfirmRevokeId(inv.id)}
-                      title="Revoke invitation"
+                      title={t("settings.team.revokeInvitation")}
                       style={{
                         background: "none",
                         border: "none",

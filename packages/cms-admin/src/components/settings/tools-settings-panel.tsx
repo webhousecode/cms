@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { Fragment, useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { CustomRangeSlider } from "@/components/ui/custom-range-slider";
 import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
+import { useT } from "@/lib/i18n-context";
 
 interface AutomationConfig {
   linkCheckSchedule: "off" | "daily" | "weekly";
@@ -39,6 +40,7 @@ const DEFAULTS: AutomationConfig = {
 };
 
 export function ToolsSettingsPanel() {
+  const t = useT();
   const [config, setConfig] = useState<AutomationConfig>(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -95,10 +97,24 @@ export function ToolsSettingsPanel() {
   }, [handleSave]);
 
   const scheduleOptions = [
-    { value: "off", label: "Off" },
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly (Mondays)" },
+    { value: "off", label: t("settings.tools.scheduleOff") },
+    { value: "daily", label: t("settings.tools.scheduleDaily") },
+    { value: "weekly", label: t("settings.tools.scheduleWeekly") },
   ];
+
+  // "Fires {events}." — the event names stay as code, the sentence around them is translated.
+  function fires(key: string, events: string[]) {
+    const [before, after] = t(key).split("{events}");
+    return (
+      <>
+        {before}
+        {events.map((e, i) => (
+          <Fragment key={e}>{i > 0 && ", "}<code style={{ fontSize: "0.7rem" }}>{e}</code></Fragment>
+        ))}
+        {after}
+      </>
+    );
+  }
 
   const labelStyle = { display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" } as const;
   const descStyle = { fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" } as const;
@@ -107,14 +123,14 @@ export function ToolsSettingsPanel() {
   return (
     <div data-testid="tools-settings-panel">
       {/* ── Link Checker ───────────────────────────────────── */}
-      <SectionHeading>Link Checker</SectionHeading>
+      <SectionHeading>{t("settings.tools.linkCheckerHeading")}</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-          Automatic link checking across all content. Scheduled runs appear in the Calendar.
+          {t("settings.tools.linkCheckerHint")}
         </p>
 
         <div>
-          <label style={labelStyle}>Frequency</label>
+          <label style={labelStyle}>{t("settings.tools.frequency")}</label>
           <CustomSelect
             value={config.linkCheckSchedule}
             onChange={(v) => updateConfig((c) => ({ ...c, linkCheckSchedule: v as AutomationConfig["linkCheckSchedule"] }))}
@@ -124,7 +140,7 @@ export function ToolsSettingsPanel() {
 
         {config.linkCheckSchedule !== "off" && (
           <div>
-            <label style={labelStyle}>Time</label>
+            <label style={labelStyle}>{t("settings.tools.time")}</label>
             <CustomTimeInput
               value={config.linkCheckTime}
               onChange={(v) => updateConfig((c) => ({ ...c, linkCheckTime: v }))}
@@ -132,9 +148,9 @@ export function ToolsSettingsPanel() {
           </div>
         )}
 
-        <label style={webhookLabel}>Webhooks</label>
+        <label style={webhookLabel}>{t("settings.tools.webhooks")}</label>
         <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "-0.5rem 0 0" }}>
-          Called in order when a link check completes.
+          {t("settings.tools.linkCheckWebhooksHint")}
         </p>
         <WebhookList
           webhooks={config.linkCheckWebhooks}
@@ -143,10 +159,10 @@ export function ToolsSettingsPanel() {
       </SettingsCard>
 
       {/* ── Content Publishing ─────────────────────────────── */}
-      <SectionHeading>Content Publishing</SectionHeading>
+      <SectionHeading>{t("settings.tools.publishingHeading")}</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-          Notified when content is auto-published or expired by the scheduler.
+          {t("settings.tools.publishingHint")}
         </p>
         <WebhookList
           webhooks={config.publishWebhooks}
@@ -155,11 +171,11 @@ export function ToolsSettingsPanel() {
       </SettingsCard>
 
       {/* ── Default Agent Webhook ──────────────────────────── */}
-      <SectionHeading>AI Agents (default)</SectionHeading>
+      <SectionHeading>{t("settings.tools.agentsHeading")}</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-          Default webhooks for all agents. Individual agents can override with their own webhooks.
-          Fires <code style={{ fontSize: "0.7rem" }}>agent.started</code>, <code style={{ fontSize: "0.7rem" }}>agent.completed</code>, <code style={{ fontSize: "0.7rem" }}>agent.failed</code>.
+          {t("settings.tools.agentsHint")}{" "}
+          {fires("settings.tools.firesEvents", ["agent.started", "agent.completed", "agent.failed"])}
         </p>
         <WebhookList
           webhooks={config.agentDefaultWebhooks}
@@ -168,12 +184,12 @@ export function ToolsSettingsPanel() {
       </SettingsCard>
 
       {/* ── F35 Content Lifecycle ──────────────────────────── */}
-      <SectionHeading>Content Lifecycle (F35)</SectionHeading>
+      <SectionHeading>{t("settings.tools.contentLifecycleHeading")}</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-          Notified on every content change — create, update, publish, unpublish, trash, restore, clone.
-          Fires <code style={{ fontSize: "0.7rem" }}>content.published</code>, <code style={{ fontSize: "0.7rem" }}>content.updated</code>, <code style={{ fontSize: "0.7rem" }}>content.trashed</code>, etc.
-          Generic webhooks include HMAC-SHA256 signature when a secret is set.
+          {t("settings.tools.contentLifecycleHint")}{" "}
+          {fires("settings.tools.firesEventsEtc", ["content.published", "content.updated", "content.trashed"])}{" "}
+          {t("settings.tools.hmacHint")}
         </p>
         <WebhookList
           webhooks={config.contentWebhooks}
@@ -182,11 +198,11 @@ export function ToolsSettingsPanel() {
       </SettingsCard>
 
       {/* ── F35 Deploy Lifecycle ───────────────────────────── */}
-      <SectionHeading>Deploy Lifecycle (F35)</SectionHeading>
+      <SectionHeading>{t("settings.tools.deployLifecycleHeading")}</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-          Notified when deploys start, succeed, or fail.
-          Fires <code style={{ fontSize: "0.7rem" }}>deploy.started</code>, <code style={{ fontSize: "0.7rem" }}>deploy.success</code>, <code style={{ fontSize: "0.7rem" }}>deploy.failed</code>.
+          {t("settings.tools.deployLifecycleHint")}{" "}
+          {fires("settings.tools.firesEvents", ["deploy.started", "deploy.success", "deploy.failed"])}
         </p>
         <WebhookList
           webhooks={config.deployWebhooks}
@@ -195,11 +211,11 @@ export function ToolsSettingsPanel() {
       </SettingsCard>
 
       {/* ── F35 Media Lifecycle ────────────────────────────── */}
-      <SectionHeading>Media Lifecycle (F35)</SectionHeading>
+      <SectionHeading>{t("settings.tools.mediaLifecycleHeading")}</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-          Notified when media files are uploaded or deleted.
-          Fires <code style={{ fontSize: "0.7rem" }}>media.uploaded</code>, <code style={{ fontSize: "0.7rem" }}>media.deleted</code>.
+          {t("settings.tools.mediaLifecycleHint")}{" "}
+          {fires("settings.tools.firesEvents", ["media.uploaded", "media.deleted"])}
         </p>
         <WebhookList
           webhooks={config.mediaWebhooks}
@@ -207,29 +223,29 @@ export function ToolsSettingsPanel() {
         />
       </SettingsCard>
 
-      <SectionHeading>AI Image Analysis</SectionHeading>
+      <SectionHeading>{t("settings.tools.imageAnalysisHeading")}</SectionHeading>
       <SettingsCard>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>
-            Batch overwrite behavior
+            {t("settings.tools.batchOverwrite")}
           </label>
           <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-            When running &quot;Analyze All&quot;, how should already-analyzed images be handled?
+            {t("settings.tools.batchOverwriteHint")}
           </p>
           <CustomSelect
             value={config.aiImageOverwrite}
             onChange={(v) => updateConfig((c) => ({ ...c, aiImageOverwrite: v as AutomationConfig["aiImageOverwrite"] }))}
             options={[
-              { value: "ask", label: "Ask each time" },
-              { value: "skip", label: "Skip already analyzed" },
-              { value: "overwrite", label: "Always re-analyze" },
+              { value: "ask", label: t("settings.tools.overwriteAsk") },
+              { value: "skip", label: t("settings.tools.overwriteSkip") },
+              { value: "overwrite", label: t("settings.tools.overwriteAlways") },
             ]}
           />
         </div>
       </SettingsCard>
 
       <div id="media-processing" />
-      <SectionHeading>Media Processing</SectionHeading>
+      <SectionHeading>{t("settings.tools.mediaProcessingHeading")}</SectionHeading>
       <SettingsCard>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -241,15 +257,15 @@ export function ToolsSettingsPanel() {
               style={{ accentColor: "var(--primary)" }}
             />
             <div>
-              <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>Generate WebP variants on upload</label>
+              <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>{t("settings.tools.generateWebp")}</label>
               <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-                Automatically create optimized WebP variants when images are uploaded
+                {t("settings.tools.generateWebpHint")}
               </p>
             </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>Variant widths (px)</label>
+            <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>{t("settings.tools.variantWidths")}</label>
             <input
               data-testid="tools-settings-media-variant-widths"
               type="text"
@@ -276,13 +292,13 @@ export function ToolsSettingsPanel() {
               }}
             />
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Comma-separated pixel widths. Variants larger than the original are skipped.
+              {t("settings.tools.variantWidthsHint")}
             </p>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>
-              WebP quality: {config.mediaWebpQuality}
+              {t("settings.tools.webpQuality", { quality: config.mediaWebpQuality })}
             </label>
             <CustomRangeSlider
               min={10}
@@ -292,7 +308,7 @@ export function ToolsSettingsPanel() {
               onChange={(v) => updateConfig((c) => ({ ...c, mediaWebpQuality: v }))}
             />
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Higher = better quality, larger files. 80 is recommended.
+              {t("settings.tools.webpQualityHint")}
             </p>
           </div>
         </div>

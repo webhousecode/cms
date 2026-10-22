@@ -1,1 +1,44 @@
-{}
+{
+  "yes": "Yes",
+  "no": "No",
+  "edit": "Edit",
+  "preview": "Preview",
+  "cancel": "Cancel",
+  "close": "Close",
+  "dateInput": {
+    "openCalendar": "Open calendar",
+    "formatHint": "Use YYYY-MM-DD",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "today": "Today",
+    "clear": "Clear",
+    "weekdayInitials": "M T W T F S S",
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    }
+  },
+  "timeInput": {
+    "placeholder": "HH:MM",
+    "formatHint": "Use HH:MM (00:00 – 23:59)"
+  },
+  "help": {
+    "loading": "Loading...",
+    "learnMore": "Learn more at docs"
+  },
+  "sidebar": {
+    "title": "Sidebar",
+    "description": "Displays the mobile sidebar.",
+    "toggle": "Toggle Sidebar"
+  }
+}

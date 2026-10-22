@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle, Check, Loader2, Wrench, ChevronDown, ChevronUp, Copy, CheckCheck } from "lucide-react";
 import type { DiagnoseResult, DiagnoseIssue } from "@/app/api/admin/site-config/diagnose/route";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   siteName: string;
@@ -34,6 +35,7 @@ function buildAiHandoff(siteName: string, diagnosis: DiagnoseResult): string {
 }
 
 export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
+  const t = useT();
   const [phase, setPhase] = useState<Phase>("diagnosing");
   const [diagnosis, setDiagnosis] = useState<DiagnoseResult | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
@@ -60,19 +62,19 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
         });
         if (cancelled) return;
         const data = await res.json() as DiagnoseResult & { error?: string };
-        if (!res.ok) throw new Error(data.error ?? "Diagnosis failed");
+        if (!res.ok) throw new Error(data.error ?? t("schema.configRepairPanel.diagnosisFailed"));
         setDiagnosis(data);
         setPhase("report");
       } catch (err) {
         if (!cancelled) {
-          setErrMsg(err instanceof Error ? err.message : "Diagnosis failed");
+          setErrMsg(err instanceof Error ? err.message : t("schema.configRepairPanel.diagnosisFailed"));
           setPhase("error");
         }
       }
     }
     diagnose();
     return () => { cancelled = true; };
-  }, [rawErrors]);
+  }, [rawErrors, t]);
 
   async function handleFix() {
     setPhase("fixing");
@@ -84,12 +86,12 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
         body: JSON.stringify({ rawErrors }),
       });
       const data = await res.json() as { ok?: boolean; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Fix failed");
+      if (!res.ok) throw new Error(data.error ?? t("schema.configRepairPanel.fixFailed"));
       setPhase("done");
       // Reload after short delay so site-pool picks up corrected config
       setTimeout(() => { window.location.href = "/admin"; }, 1800);
     } catch (err) {
-      setErrMsg(err instanceof Error ? err.message : "Fix failed");
+      setErrMsg(err instanceof Error ? err.message : t("schema.configRepairPanel.fixFailed"));
       setPhase("report");
     }
   }
@@ -115,10 +117,10 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
         <AlertTriangle style={{ width: "1.5rem", height: "1.5rem", color: "var(--status-warning)", flexShrink: 0, marginTop: "2px" }} />
         <div>
           <h1 style={{ fontSize: "1.15rem", fontWeight: 700, margin: "0 0 0.25rem" }}>
-            Configuration problem in &ldquo;{siteName}&rdquo;
+            {t("schema.configRepairPanel.title", { site: siteName })}
           </h1>
           <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
-            This site cannot load until the config is corrected. All other sites are unaffected.
+            {t("schema.configRepairPanel.subtitle")}
           </p>
         </div>
       </div>
@@ -127,7 +129,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
       {phase === "diagnosing" && (
         <div style={{ ...card, display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--muted-foreground)" }}>
           <Loader2 className="animate-spin" style={{ width: "1rem", height: "1rem" }} />
-          <span style={{ fontSize: "0.85rem" }}>Analysing the configuration…</span>
+          <span style={{ fontSize: "0.85rem" }}>{t("schema.configRepairPanel.analysing")}</span>
         </div>
       )}
 
@@ -136,7 +138,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
         <div style={{ ...card, borderColor: "var(--destructive)" }}>
           <p style={{ fontSize: "0.85rem", color: "var(--destructive)", margin: "0 0 0.5rem" }}>{errMsg}</p>
           <details style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-            <summary style={{ cursor: "pointer" }}>Raw validation errors</summary>
+            <summary style={{ cursor: "pointer" }}>{t("schema.configRepairPanel.rawErrors")}</summary>
             <pre style={{ marginTop: "0.5rem", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{rawErrors}</pre>
           </details>
         </div>
@@ -157,12 +159,12 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
                 <h2 style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", margin: 0 }}>
-                  {diagnosis.issues.length} {diagnosis.issues.length === 1 ? "issue" : "issues"} found
+                  {diagnosis.issues.length === 1 ? t("schema.configRepairPanel.issuesFoundOne") : t("schema.configRepairPanel.issuesFoundOther", { count: diagnosis.issues.length })}
                 </h2>
                 <button
                   data-testid="config-repair-copy-button"
                   onClick={handleCopy}
-                  title="Copy all issues as markdown — paste into AI site builder"
+                  title={t("schema.configRepairPanel.copyTitle")}
                   style={{
                     display: "flex", alignItems: "center", gap: "0.3rem",
                     fontSize: "0.7rem", fontWeight: 600,
@@ -174,8 +176,8 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                   }}
                 >
                   {copied
-                    ? <><CheckCheck style={{ width: "0.75rem", height: "0.75rem" }} />Copied!</>
-                    : <><Copy style={{ width: "0.75rem", height: "0.75rem" }} />Copy for AI builder</>}
+                    ? <><CheckCheck style={{ width: "0.75rem", height: "0.75rem" }} />{t("schema.configRepairPanel.copied")}</>
+                    : <><Copy style={{ width: "0.75rem", height: "0.75rem" }} />{t("schema.configRepairPanel.copyForAi")}</>}
                 </button>
               </div>
               {diagnosis.issues.map((issue: DiagnoseIssue, i: number) => (
@@ -202,7 +204,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                         background: "color-mix(in srgb, var(--status-warning) 15%, transparent)",
                         color: "#d97706", fontWeight: 600, flexShrink: 0,
                       }}>
-                        Auto-fixable
+                        {t("schema.configRepairPanel.autoFixable")}
                       </span>
                     )}
                   </div>
@@ -216,8 +218,8 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                     }}
                   >
                     {expanded[i]
-                      ? <><ChevronUp style={{ width: "0.7rem", height: "0.7rem" }} /> Hide fix</>
-                      : <><ChevronDown style={{ width: "0.7rem", height: "0.7rem" }} /> How to fix</>}
+                      ? <><ChevronUp style={{ width: "0.7rem", height: "0.7rem" }} /> {t("schema.configRepairPanel.hideFix")}</>
+                      : <><ChevronDown style={{ width: "0.7rem", height: "0.7rem" }} /> {t("schema.configRepairPanel.howToFix")}</>}
                   </button>
                   {expanded[i] && (
                     <div style={{
@@ -243,8 +245,8 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
             }}>
               <Check style={{ width: "1.25rem", height: "1.25rem", flexShrink: 0 }} />
               <div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>Configuration fixed!</div>
-                <div style={{ fontSize: "0.75rem", opacity: 0.8 }}>Returning to the site…</div>
+                <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{t("schema.configRepairPanel.fixed")}</div>
+                <div style={{ fontSize: "0.75rem", opacity: 0.8 }}>{t("schema.configRepairPanel.returning")}</div>
               </div>
             </div>
           )}
@@ -254,7 +256,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
               {diagnosis.canAutoFix ? (
                 <>
                   <p style={{ fontSize: "0.9rem", margin: 0 }}>
-                    😊 Jeg kan fixe det for dig — skal jeg prøve?
+                    {t("schema.configRepairPanel.offerFix")}
                   </p>
                   {diagnosis.autoFixNotes && (
                     <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
@@ -273,16 +275,16 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                       }}
                     >
                       <Wrench style={{ width: "0.85rem", height: "0.85rem" }} />
-                      Ja, fix det for mig
+                      {t("schema.configRepairPanel.yesFix")}
                     </button>
                     <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-                      The original file will be overwritten.
+                      {t("schema.configRepairPanel.willOverwrite")}
                     </span>
                   </div>
                 </>
               ) : (
                 <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", margin: 0 }}>
-                  This configuration requires manual editing — see the instructions above.
+                  {t("schema.configRepairPanel.manualEdit")}
                 </p>
               )}
             </div>
@@ -291,7 +293,11 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
           {(phase === "confirming" || phase === "fixing") && (
             <div style={{ ...card, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <p style={{ fontSize: "0.9rem", margin: 0, fontWeight: 600 }}>
-                Er du sikker? Filen <code style={{ fontSize: "0.8rem" }}>{diagnosis.configPath.split("/").slice(-2).join("/")}</code> overskrives.
+                {(() => {
+                  // One sentence in the catalog; split around the file name rendered as <code>.
+                  const [before, after = ""] = t("schema.configRepairPanel.confirmOverwrite", { file: "\u0001" }).split("\u0001");
+                  return <>{before}<code style={{ fontSize: "0.8rem" }}>{diagnosis.configPath.split("/").slice(-2).join("/")}</code>{after}</>;
+                })()}
               </p>
               {errMsg && (
                 <p style={{ fontSize: "0.75rem", color: "var(--destructive)", margin: 0 }}>{errMsg}</p>
@@ -311,7 +317,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                   }}
                 >
                   {phase === "fixing" && <Loader2 className="animate-spin" style={{ width: "0.75rem", height: "0.75rem" }} />}
-                  {phase === "fixing" ? "Fixing…" : "Ja, overskriv"}
+                  {phase === "fixing" ? t("schema.configRepairPanel.fixing") : t("schema.configRepairPanel.yesOverwrite")}
                 </button>
                 <button
                   data-testid="config-repair-cancel-fix-button"
@@ -324,7 +330,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                     cursor: phase === "fixing" ? "not-allowed" : "pointer",
                   }}
                 >
-                  Nej, annuller
+                  {t("schema.configRepairPanel.noCancel")}
                 </button>
               </div>
             </div>

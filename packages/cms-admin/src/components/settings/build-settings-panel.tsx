@@ -16,8 +16,10 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { SettingsCard } from "./settings-card";
 import { DeployOutputBrowser } from "@/components/deploy-output-browser";
 import { BuildHistory } from "@/components/build-history";
+import { useT } from "@/lib/i18n-context";
 
 export function BuildSettingsPanel() {
+  const t = useT();
   const [siteId, setSiteId] = useState<string | null>(null);
   useEffect(() => {
     const m = document.cookie.match(/(?:^|;\s*)cms-active-site=([^;]+)/);
@@ -27,7 +29,7 @@ export function BuildSettingsPanel() {
   if (!siteId) {
     return (
       <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem" }}>
-        No active site selected.
+        {t("settings.buildSettings.noActiveSite")}
       </div>
     );
   }
@@ -35,10 +37,12 @@ export function BuildSettingsPanel() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <div>
-        <SectionHeading first>Build output</SectionHeading>
+        <SectionHeading first>{t("settings.buildSettings.outputHeading")}</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1rem" }}>
-          The exact bytes the most recent build produced — read-only browser
-          of <code>deploy/</code> on disk.
+          {(() => {
+            const [before, after] = t("settings.buildSettings.outputHint").split("{path}");
+            return <>{before}<code>deploy/</code>{after}</>;
+          })()}
         </p>
         <SettingsCard>
           <DeployOutputBrowser siteId={siteId} />
@@ -46,10 +50,9 @@ export function BuildSettingsPanel() {
       </div>
 
       <div>
-        <SectionHeading>SSR builds</SectionHeading>
+        <SectionHeading>{t("settings.buildSettings.ssrHeading")}</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1rem" }}>
-          Recent ephemeral builder runs for sites that use the Fly.io
-          ephemeral builder provider (Next.js / Bun-Hono / custom Dockerfile).
+          {t("settings.buildSettings.ssrHint")}
         </p>
         <SettingsCard>
           <BuildHistory siteId={siteId} />

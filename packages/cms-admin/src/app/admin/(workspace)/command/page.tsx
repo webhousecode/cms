@@ -7,6 +7,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomRangeSlider } from "@/components/ui/custom-range-slider";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { useT } from "@/lib/i18n-context";
 
 interface CockpitParams {
   temperature: number;
@@ -48,6 +49,7 @@ const labelStyle: React.CSSProperties = {
 };
 
 export default function CommandPage() {
+  const t = useT();
   const siteRole = useSiteRole();
   const readOnly = siteRole === null || siteRole === "viewer";
   const [params, setParams] = useState<CockpitParams | null>(null);
@@ -84,7 +86,7 @@ export default function CommandPage() {
   if (!params) {
     return (
       <div className="p-8">
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">{t("tools.common.loading")}</p>
       </div>
     );
   }
@@ -102,11 +104,11 @@ export default function CommandPage() {
       actions={!readOnly ? (
         <ActionButton variant="primary" onClick={handleSave} disabled={saving}
           icon={saving ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> : <Save style={{ width: 14, height: 14 }} />}>
-          {saving ? "Saving..." : "Save Settings"}
+          {saving ? t("tools.command.saving") : t("tools.command.saveSettings")}
         </ActionButton>
       ) : undefined}
     >
-      <ActionBarBreadcrumb items={["AI", "Cockpit"]} /></ActionBar>
+      <ActionBarBreadcrumb items={[t("tools.command.ai"), t("tools.command.cockpit")]} /></ActionBar>
     <div className="p-8 max-w-5xl">
 
       <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, opacity: readOnly ? 0.7 : 1 }}>
@@ -116,12 +118,12 @@ export default function CommandPage() {
           {/* Global params */}
           <div className="rounded-xl border border-border p-5 space-y-5">
             <h2 className="font-semibold text-foreground">
-              Global Parameters
+              {t("tools.command.globalParams")}
             </h2>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium">Temperature</span>
+                <span className="text-xs font-medium">{t("tools.command.temperature")}</span>
                 <span className="text-xs text-muted-foreground font-mono">
                   {params.temperature}
                 </span>
@@ -133,18 +135,18 @@ export default function CommandPage() {
                 onChange={(v) => setParams({ ...params, temperature: v })}
               />
               <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>Factual</span>
-                <span>Creative</span>
+                <span>{t("tools.command.factual")}</span>
+                <span>{t("tools.command.creative")}</span>
               </div>
             </div>
 
             <div>
-              <label style={labelStyle}>Prompt Depth</label>
+              <label style={labelStyle}>{t("tools.command.promptDepth")}</label>
               <SegmentedControl
                 options={[
-                  { value: "minimal", label: "Minimal" },
-                  { value: "medium", label: "Medium" },
-                  { value: "deep", label: "Deep" },
+                  { value: "minimal", label: t("tools.command.depthMinimal") },
+                  { value: "medium", label: t("tools.command.depthMedium") },
+                  { value: "deep", label: t("tools.command.depthDeep") },
                 ]}
                 value={params.promptDepth}
                 onChange={(v) =>
@@ -158,7 +160,7 @@ export default function CommandPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium">SEO Weight</span>
+                <span className="text-xs font-medium">{t("tools.command.seoWeight")}</span>
                 <span className="text-xs text-muted-foreground font-mono">
                   {params.seoWeight}
                 </span>
@@ -170,18 +172,18 @@ export default function CommandPage() {
                 onChange={(v) => setParams({ ...params, seoWeight: v })}
               />
               <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>Creative freedom</span>
-                <span>SEO optimized</span>
+                <span>{t("tools.command.creativeFreedom")}</span>
+                <span>{t("tools.command.seoOptimized")}</span>
               </div>
             </div>
 
             <div>
-              <label style={labelStyle}>Speed / Quality</label>
+              <label style={labelStyle}>{t("tools.command.speedQuality")}</label>
               <SegmentedControl
                 options={[
-                  { value: "fast", label: "Fast" },
-                  { value: "balanced", label: "Balanced" },
-                  { value: "thorough", label: "Thorough" },
+                  { value: "fast", label: t("tools.command.fast") },
+                  { value: "balanced", label: t("tools.command.balanced") },
+                  { value: "thorough", label: t("tools.command.thorough") },
                 ]}
                 value={params.speedQuality}
                 onChange={(v) =>
@@ -196,10 +198,10 @@ export default function CommandPage() {
 
           {/* Model engine */}
           <div className="rounded-xl border border-border p-5 space-y-4">
-            <h2 className="font-semibold text-foreground">Model Engine</h2>
+            <h2 className="font-semibold text-foreground">{t("tools.command.modelEngine")}</h2>
 
             <div>
-              <label style={labelStyle}>Primary model</label>
+              <label style={labelStyle}>{t("tools.command.primaryModel")}</label>
               <CustomSelect
                 options={MODELS}
                 value={params.primaryModel}
@@ -215,12 +217,12 @@ export default function CommandPage() {
                   multiModelEnabled: v,
                 })
               }
-              label="Multi-model comparison"
+              label={t("tools.command.multiModel")}
             />
 
             {params.multiModelEnabled && (
               <div>
-                <label style={labelStyle}>Compare models</label>
+                <label style={labelStyle}>{t("tools.command.compareModels")}</label>
                 <div className="space-y-1.5">
                   {MODELS.filter((m) => m.value !== params.primaryModel).map(
                     (m) => (
@@ -250,9 +252,9 @@ export default function CommandPage() {
         <div className="space-y-6">
           {/* Budget */}
           <div className="rounded-xl border border-border p-5 space-y-3">
-            <h2 className="font-semibold text-foreground">Budget</h2>
+            <h2 className="font-semibold text-foreground">{t("tools.command.budget")}</h2>
             <div>
-              <label style={labelStyle}>Monthly budget (USD)</label>
+              <label style={labelStyle}>{t("tools.command.monthlyBudget")}</label>
               <input data-testid="command-monthly-budget-input"
                 type="number"
                 min={0}
@@ -268,7 +270,7 @@ export default function CommandPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Spent this month</label>
+              <label style={labelStyle}>{t("tools.command.spentThisMonth")}</label>
               <p className="text-lg font-mono font-bold text-foreground">
                 ${params.currentMonthSpentUsd.toFixed(2)}
               </p>
@@ -281,29 +283,29 @@ export default function CommandPage() {
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {budgetPct.toFixed(0)}% of budget used
+                {t("tools.command.budgetUsed", { pct: budgetPct.toFixed(0) })}
               </p>
             </div>
           </div>
 
           {/* Status monitor */}
           <div className="rounded-xl border border-border p-5 space-y-3">
-            <h2 className="font-semibold text-foreground">Status Monitor</h2>
+            <h2 className="font-semibold text-foreground">{t("tools.command.statusMonitor")}</h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Ready</span>
+                <span className="text-muted-foreground">{t("tools.command.ready")}</span>
                 <span className="font-mono">{queueStats.ready ?? 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">In review</span>
+                <span className="text-muted-foreground">{t("tools.command.inReview")}</span>
                 <span className="font-mono">{queueStats.in_review ?? 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Approved</span>
+                <span className="text-muted-foreground">{t("tools.command.approved")}</span>
                 <span className="font-mono">{queueStats.approved ?? 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Rejected</span>
+                <span className="text-muted-foreground">{t("tools.command.rejected")}</span>
                 <span className="font-mono">{queueStats.rejected ?? 0}</span>
               </div>
             </div>
@@ -320,7 +322,7 @@ export default function CommandPage() {
               <RefreshCw
                 className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
               />
-              {syncing ? "Syncing..." : "Re-Sync Orchestrator"}
+              {syncing ? t("tools.command.syncing") : t("tools.command.resync")}
             </button>
           )}
         </div>

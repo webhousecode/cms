@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { useTabs } from "@/lib/tabs-context";
 import { previewPath } from "@/lib/utils";
 import { useHeaderData } from "@/lib/header-data-context";
+import { useT } from "@/lib/i18n-context";
 
 export function SiteIntroCard() {
+  const t = useT();
   const { siteConfig } = useHeaderData();
   const [previewUrl, setPreviewUrl] = useState("");
   const [siteName, setSiteName] = useState("Site");
@@ -78,7 +80,7 @@ export function SiteIntroCard() {
             width: "100%", height: "100%", display: "flex",
             alignItems: "center", justifyContent: "center",
             color: "var(--muted-foreground)", fontSize: "0.75rem",
-          }}>Loading preview...</div>
+          }}>{t("dashboard.siteIntroCard.loadingPreview")}</div>
         )}
       </div>
     </a>

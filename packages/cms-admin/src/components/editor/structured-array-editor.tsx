@@ -6,6 +6,7 @@ import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus } from "lucide-reac
 import { useState, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { ModeToggle } from "@/components/ui/mode-toggle";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   field: FieldConfig;
@@ -15,7 +16,7 @@ interface Props {
   blocksConfig?: BlockConfig[];
 }
 
-function getItemLabel(item: Record<string, unknown>, fields: FieldConfig[], index: number): string {
+function getItemLabel(item: Record<string, unknown>, fields: FieldConfig[], index: number, t: ReturnType<typeof useT>): string {
   // Use first text-ish field value as label
   for (const f of fields) {
     if ((f.type === "text" || f.type === "textarea") && item[f.name]) {
@@ -23,10 +24,11 @@ function getItemLabel(item: Record<string, unknown>, fields: FieldConfig[], inde
       return val.length > 50 ? val.slice(0, 50) + "…" : val;
     }
   }
-  return `Item ${index + 1}`;
+  return t("editor.structuredArray.itemNumber", { n: index + 1 });
 }
 
 export function StructuredArrayEditor({ field, value, onChange, locked, blocksConfig }: Props) {
+  const t = useT();
   const items = Array.isArray(value) ? value : [];
   const fields = field.fields ?? [];
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
@@ -115,7 +117,7 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
         <>
           {items.length === 0 && (
             <div style={{ padding: "1rem", textAlign: "center", color: "var(--muted-foreground)", fontSize: "0.85rem", border: "1px dashed var(--border)", borderRadius: "8px" }}>
-              No items added
+              {t("editor.structuredArray.empty")}
             </div>
           )}
           {items.map((item, i) => {
@@ -146,7 +148,7 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
                 >
                   {isOpen ? <ChevronDown style={{ width: 14, height: 14, flexShrink: 0 }} /> : <ChevronRight style={{ width: 14, height: 14, flexShrink: 0 }} />}
                   <span style={{ flex: 1, fontSize: "0.85rem", fontWeight: 500 }}>
-                    {getItemLabel(item, fields, i)}
+                    {getItemLabel(item, fields, i, t)}
                   </span>
                   {!locked && (
                     <span data-testid={`array-item-actions-${i}`} style={{ display: "flex", gap: "0.25rem", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
@@ -158,15 +160,15 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
                       </button>
                       {confirmRemoveIdx === i ? (
                         <>
-                          <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                          <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.confirm.remove")}</span>
                           <button data-testid={`array-confirm-remove-${i}`} type="button" onClick={(e) => { e.stopPropagation(); if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); removeItem(i); }}
-                            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("editor.confirm.yes")}</button>
                           <button data-testid={`array-cancel-remove-${i}`} type="button" onClick={(e) => { e.stopPropagation(); if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); }}
-                            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("editor.confirm.no")}</button>
                         </>
                       ) : (
                         <button data-testid={`array-remove-${i}`} type="button" onClick={(e) => { e.stopPropagation(); if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(i); confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000); }}
-                          style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }} title="Remove item" className="hover:text-destructive transition-colors">×</button>
+                          style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }} title={t("editor.structuredArray.removeItem")} className="hover:text-destructive transition-colors">×</button>
                       )}
                     </span>
                   )}
@@ -213,7 +215,7 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
               }}
               className="hover:border-primary hover:text-primary transition-colors"
             >
-              <Plus style={{ width: 14, height: 14 }} /> Add item
+              <Plus style={{ width: 14, height: 14 }} /> {t("editor.structuredArray.addItem")}
             </button>
           )}
         </>

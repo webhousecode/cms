@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, lazy, Suspense, type ComponentType } from "react";
 import { createPortal } from "react-dom";
+import { useT } from "@/lib/i18n-context";
 import { Lightbulb, ExternalLink, X, Settings2, Loader2 } from "lucide-react";
 import { getHelpArticle } from "@/lib/help/articles";
 
@@ -71,6 +72,7 @@ function renderInline(text: string): React.ReactNode {
 }
 
 export function HelpButton({ articleId }: HelpButtonProps) {
+  const t = useT();
   const article = getHelpArticle(articleId);
   const [open, setOpen] = useState(false);
   const [activeISU, setActiveISU] = useState<string | null>(null);
@@ -176,7 +178,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
                       {activeISU === action.isu && ISUComp && (
                         <Suspense fallback={
                           <div style={{ padding: "0.5rem 0", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-                            <Loader2 className="animate-spin" style={{ width: "0.65rem", height: "0.65rem" }} /> Loading...
+                            <Loader2 className="animate-spin" style={{ width: "0.65rem", height: "0.65rem" }} /> {t("common.help.loading")}
                           </div>
                         }>
                           <ISUComp />
@@ -215,7 +217,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
                 target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.7rem", color: "var(--brand)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
               >
-                Learn more at docs <ExternalLink style={{ width: 10, height: 10 }} />
+                {t("common.help.learnMore")} <ExternalLink style={{ width: 10, height: 10 }} />
               </a>
             </div>
           )}

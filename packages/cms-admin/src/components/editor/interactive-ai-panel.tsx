@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { Sparkles, Send, Copy, Check, Replace, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n-context";
 
 interface Message {
   role: "user" | "assistant";
@@ -21,6 +22,7 @@ interface Props {
  * AI sees the current code and responds with improved versions.
  */
 export function InteractiveAIPanel({ interactiveId, title, content, onApply }: Props) {
+  const t = useT();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -93,7 +95,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
         setMessages((prev) => {
           const next = [...prev];
           const last = next[next.length - 1];
-          if (last) last.content = `Error: ${err.error ?? "Unknown error"}`;
+          if (last) last.content = t("editor.aiPanel.errorPrefixed", { error: err.error ?? t("editor.aiPanel.unknownError") });
           return next;
         });
         setStreaming(false);
@@ -119,7 +121,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
         setMessages((prev) => {
           const next = [...prev];
           const last = next[next.length - 1];
-          if (last && !last.content) last.content = "Network error";
+          if (last && !last.content) last.content = t("editor.aiPanel.networkError");
           return next;
         });
       }
@@ -183,9 +185,9 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
         display: "flex", alignItems: "center", gap: "0.5rem",
       }}>
         <Sparkles style={{ width: "0.875rem", height: "0.875rem", color: "var(--primary)" }} />
-        <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>AI Edit</span>
+        <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t("editor.interactiveAiPanel.title")}</span>
         <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginLeft: "auto" }}>
-          Chat with AI to modify this interactive
+          {t("editor.interactiveAiPanel.subtitle")}
         </span>
       </div>
 
@@ -193,7 +195,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
       {content.length > 12000 && messages.length === 0 && (
         <div style={{ padding: "0.5rem 0.75rem", display: "flex", alignItems: "center", gap: "0.375rem", background: "color-mix(in srgb, var(--status-warning) 8%, transparent)", borderBottom: "1px solid color-mix(in srgb, var(--status-warning) 20%, transparent)", fontSize: "0.7rem", color: "var(--status-warning)" }}>
           <AlertTriangle style={{ width: "0.75rem", height: "0.75rem", flexShrink: 0 }} />
-          <span>This interactive is large ({Math.round(content.length / 1024)} KB). If AI output gets truncated, increase Max Tokens in Settings → AI.</span>
+          <span>{t("editor.interactiveAiPanel.largeWarning", { size: Math.round(content.length / 1024) })}</span>
         </div>
       )}
 
@@ -202,20 +204,25 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
         {messages.length === 0 && (
           <div style={{ textAlign: "center", padding: "2rem 1rem", color: "var(--muted-foreground)" }}>
             <Sparkles style={{ width: "1.5rem", height: "1.5rem", margin: "0 auto 0.75rem", opacity: 0.4 }} />
-            <p style={{ fontSize: "0.8rem", margin: "0 0 0.5rem" }}>Describe what you want to change</p>
+            <p style={{ fontSize: "0.8rem", margin: "0 0 0.5rem" }}>{t("editor.interactiveAiPanel.describeChange")}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxWidth: "260px", margin: "0 auto" }}>
-              {["Add a smooth fade-in animation", "Make it responsive for mobile", "Change the color scheme to dark blue", "Add a hover tooltip on data points"].map((s) => (
+              {[
+                { id: "Add a smooth fade-in animation", key: "editor.interactiveAiPanel.suggestFadeIn" },
+                { id: "Make it responsive for mobile", key: "editor.interactiveAiPanel.suggestResponsive" },
+                { id: "Change the color scheme to dark blue", key: "editor.interactiveAiPanel.suggestDarkBlue" },
+                { id: "Add a hover tooltip on data points", key: "editor.interactiveAiPanel.suggestTooltip" },
+              ].map(({ id: s, key: sKey }) => (
                 <button
                   data-testid={`interactive-ai-suggestion-${s.toLowerCase().replace(/\s+/g, '-')}`}
                   key={s}
-                  onClick={() => { setInput(s); textareaRef.current?.focus(); }}
+                  onClick={() => { setInput(t(sKey)); textareaRef.current?.focus(); }}
                   style={{
                     fontSize: "0.7rem", padding: "0.4rem 0.625rem", borderRadius: "6px",
                     border: "1px solid var(--border)", background: "var(--card)",
                     color: "var(--muted-foreground)", cursor: "pointer", textAlign: "left",
                   }}
                 >
-                  {s}
+                  {t(sKey)}
                 </button>
               ))}
             </div>
@@ -240,7 +247,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
               marginLeft: msg.role === "user" ? "auto" : 0,
             }}
           >
-            {msg.content || (streaming && i === messages.length - 1 ? "Thinking…" : "")}
+            {msg.content || (streaming && i === messages.length - 1 ? t("editor.interactiveAiPanel.thinking") : "")}
 
             {/* Action buttons for assistant messages with HTML */}
             {msg.role === "assistant" && msg.content && !streaming && (() => {
@@ -252,7 +259,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
                   {isTruncated && (
                     <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 0.625rem", borderRadius: "6px", background: "color-mix(in srgb, var(--status-warning) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--status-warning) 30%, transparent)", fontSize: "0.7rem", color: "var(--status-warning)" }}>
                       <AlertTriangle style={{ width: "0.75rem", height: "0.75rem", flexShrink: 0 }} />
-                      Output was truncated — the HTML is incomplete. Try asking AI to make only the specific change instead of rewriting everything.
+                      {t("editor.interactiveAiPanel.truncated")}
                     </div>
                   )}
                   <div style={{ display: "flex", gap: "0.375rem", justifyContent: "flex-end" }}>
@@ -261,7 +268,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
                       onClick={() => copyMessage(msg.content, i)}
                       style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.65rem", cursor: "pointer" }}
                     >
-                      {copiedIdx === i ? <><Check style={{ width: "0.6rem", height: "0.6rem" }} /> Copied</> : <><Copy style={{ width: "0.6rem", height: "0.6rem" }} /> Copy</>}
+                      {copiedIdx === i ? <><Check style={{ width: "0.6rem", height: "0.6rem" }} /> {t("editor.aiPanel.copied")}</> : <><Copy style={{ width: "0.6rem", height: "0.6rem" }} /> {t("editor.aiPanel.copy")}</>}
                     </button>
                     {html && (
                       <button
@@ -269,7 +276,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
                         onClick={() => applyHtml(msg.content)}
                         style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.75rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
                       >
-                        <Replace style={{ width: "0.75rem", height: "0.75rem" }} /> Apply Changes
+                        <Replace style={{ width: "0.75rem", height: "0.75rem" }} /> {t("editor.interactiveAiPanel.applyChanges")}
                       </button>
                     )}
                   </div>
@@ -288,7 +295,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Describe a change... (Enter to send)"
+          placeholder={t("editor.interactiveAiPanel.inputPlaceholder")}
           rows={4}
           style={{
             flex: 1, resize: "none", padding: "0.5rem 0.75rem", borderRadius: "7px",

@@ -5,6 +5,7 @@ import { Check, Send, AlertCircle, ExternalLink, Mail } from "lucide-react";
 import { SettingsCard } from "./settings-card";
 import { toast } from "sonner";
 import { useBrand } from "@/lib/brand-context";
+import { useT } from "@/lib/i18n-context";
 
 interface EmailConfig {
   resendApiKey: string;
@@ -18,6 +19,7 @@ function maskKey(key: string): string {
 }
 
 export function EmailSettingsPanel() {
+  const t = useT();
   const brand = useBrand();
   const [config, setConfig] = useState<EmailConfig>({
     resendApiKey: "",
@@ -73,7 +75,7 @@ export function EmailSettingsPanel() {
       body: JSON.stringify(patch),
     });
     if (!res.ok) {
-      setError("Save failed");
+      setError(t("settings.common.saveFailed"));
     } else {
       const data = await res.json();
       setConfig({
@@ -83,7 +85,7 @@ export function EmailSettingsPanel() {
       });
       setEditing({});
       setSaved(true);
-      toast.success("Email settings saved");
+      toast.success(t("settings.email.saved"));
       setTimeout(() => setSaved(false), 2500);
     }
     setSaving(false);
@@ -110,16 +112,16 @@ export function EmailSettingsPanel() {
       const data = await res.json();
       setTestResult({
         ok: res.ok,
-        message: res.ok ? "Test email sent!" : data.error ?? "Failed to send",
+        message: res.ok ? t("settings.email.testSentMessage") : data.error ?? t("settings.email.failedToSend"),
       });
       if (res.ok) {
-        toast.success("Test email sent");
+        toast.success(t("settings.email.testSent"));
       } else {
-        toast.error("Failed to send test email");
+        toast.error(t("settings.email.testFailed"));
       }
     } catch {
-      setTestResult({ ok: false, message: "Network error" });
-      toast.error("Failed to send test email");
+      setTestResult({ ok: false, message: t("settings.email.networkError") });
+      toast.error(t("settings.email.testFailed"));
     } finally {
       setTesting(false);
     }
@@ -139,29 +141,29 @@ export function EmailSettingsPanel() {
   };
 
   if (loading) {
-    return <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Loading…</p>;
+    return <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("settings.common.loading")}</p>;
   }
 
   const FIELDS = [
     {
       id: "resendApiKey",
-      label: "Resend API key",
+      label: t("settings.email.resendKey"),
       placeholder: "re_…",
       docsUrl: "https://resend.com/api-keys",
-      docsLabel: "Get key",
+      docsLabel: t("settings.common.getKey"),
       type: "secret",
     },
     {
       id: "emailFrom",
-      label: "Sender email",
-      placeholder: "noreply@yourdomain.com",
+      label: t("settings.email.senderEmail"),
+      placeholder: t("settings.email.senderEmailPlaceholder"),
       docsUrl: "https://resend.com/domains",
-      docsLabel: "Domains",
+      docsLabel: t("settings.email.domains"),
       type: "text",
     },
     {
       id: "emailFromName",
-      label: "Sender name",
+      label: t("settings.email.senderName"),
       placeholder: brand.name,
       type: "text",
     },
@@ -186,7 +188,7 @@ export function EmailSettingsPanel() {
                     padding: "0.1rem 0.4rem", borderRadius: "4px",
                     background: "color-mix(in srgb, var(--primary) 10%, transparent)",
                     color: "var(--primary)",
-                  }}>configured</span>
+                  }}>{t("settings.common.configured")}</span>
                 )}
                 {"docsUrl" in f && f.docsUrl && (
                   <a
@@ -219,7 +221,7 @@ export function EmailSettingsPanel() {
                     onClick={() => setEditing((prev) => { const n = { ...prev }; delete n[f.id]; return n; })}
                     style={{ padding: "0.5rem 0.625rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}
                   >
-                    Cancel
+                    {t("settings.common.cancel")}
                   </button>
                 </div>
               ) : (
@@ -235,7 +237,7 @@ export function EmailSettingsPanel() {
                     opacity: hasValue ? 1 : 0.6,
                   }}
                 >
-                  {hasValue ? displayValue : `Click to set ${f.label}…`}
+                  {hasValue ? displayValue : t("settings.email.clickToSet", { label: f.label })}
                 </button>
               )}
             </div>
@@ -247,14 +249,17 @@ export function EmailSettingsPanel() {
 
 
       <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-        Keys are stored in <code style={{ fontSize: "0.7rem" }}>_data/site-config.json</code>. Falls back to <code style={{ fontSize: "0.7rem" }}>RESEND_API_KEY</code> env var.
+        {t("settings.email.storageNote").split(/(\{file\}|\{env\})/).map((part, i) =>
+          part === "{file}" ? <code key={i} style={{ fontSize: "0.7rem" }}>_data/site-config.json</code>
+          : part === "{env}" ? <code key={i} style={{ fontSize: "0.7rem" }}>RESEND_API_KEY</code>
+          : part)}
       </p>
       </SettingsCard>
 
       {/* Test email */}
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1.25rem", marginTop: "1.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-          <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Send test email</label>
+          <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("settings.email.sendTestEmail")}</label>
         </div>
         <div style={{ display: "flex", gap: "0.375rem" }}>
           <input
@@ -262,7 +267,7 @@ export function EmailSettingsPanel() {
             type="email"
             value={testEmail}
             onChange={(e) => setTestEmail(e.target.value)}
-            placeholder="your@email.com"
+            placeholder={t("settings.email.testPlaceholder")}
             style={{ ...fieldStyle, flex: 1 }}
             onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
             onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
@@ -281,7 +286,7 @@ export function EmailSettingsPanel() {
             }}
           >
             <Send style={{ width: "0.75rem", height: "0.75rem" }} />
-            {testing ? "Sending…" : "Send test"}
+            {testing ? t("settings.email.sending") : t("settings.email.sendTest")}
           </button>
         </div>
         {testResult && (

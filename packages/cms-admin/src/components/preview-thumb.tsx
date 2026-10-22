@@ -1,18 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n-context";
 
 // Cache probe results so we only check each URL once per session
 const probeCache = new Map<string, boolean>();
 
 export function NoPreviewPlaceholder() {
+  const t = useT();
   return (
     <div style={{
       width: "100%", flex: 1, minHeight: "8rem",
       background: "var(--muted)", display: "flex",
       alignItems: "center", justifyContent: "center",
       color: "var(--muted-foreground)", fontSize: "0.75rem",
-    }}>No preview</div>
+    }}>{t("media.previewThumb.noPreview")}</div>
   );
 }
 

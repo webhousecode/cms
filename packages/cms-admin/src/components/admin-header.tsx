@@ -25,6 +25,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { previewPath } from "@/lib/utils";
+import { useT } from "@/lib/i18n-context";
 
 interface SessionUser {
   email: string;
@@ -44,12 +45,13 @@ function getInitials(name: string): string {
 }
 
 const TEMP_OPTIONS: { value: Temperature; label: string }[] = [
-  { value: "neutral", label: "Neutral" },
-  { value: "cool",    label: "Cool" },
-  { value: "warm",    label: "Warm" },
+  { value: "neutral", label: "shell.adminHeader.tempNeutral" },
+  { value: "cool",    label: "shell.adminHeader.tempCool" },
+  { value: "warm",    label: "shell.adminHeader.tempWarm" },
 ];
 
 function ThemeItems() {
+  const t = useT();
   const { brightness, temperature, setBrightness, setTemperature } = useThemeAxes();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -57,16 +59,16 @@ function ThemeItems() {
 
   return (
     <DropdownMenuGroup>
-      <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Theme</DropdownMenuLabel>
+      <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">{t("shell.adminHeader.theme")}</DropdownMenuLabel>
       {/* Brightness */}
       {([
-        { value: "dark" as const, label: "Dark", icon: Moon },
-        { value: "light" as const, label: "Light", icon: Sun },
-        { value: "system" as const, label: "System", icon: Monitor },
+        { value: "dark" as const, label: "shell.adminHeader.themeDark", icon: Moon },
+        { value: "light" as const, label: "shell.adminHeader.themeLight", icon: Sun },
+        { value: "system" as const, label: "shell.adminHeader.themeSystem", icon: Monitor },
       ]).map(({ value, label, icon: Icon }) => (
         <DropdownMenuItem data-testid={`theme-brightness-${value}`} key={value} onClick={() => setBrightness(value)}>
           <Icon className="mr-2 h-4 w-4" />
-          {label}
+          {t(label)}
           {brightness === value && <Check className="ml-auto h-4 w-4" />}
         </DropdownMenuItem>
       ))}
@@ -91,7 +93,7 @@ function ThemeItems() {
                 color: temperature === value ? "var(--primary-foreground)" : "var(--muted-foreground)",
               }}
             >
-              {label}
+              {t(label)}
             </button>
           ))}
         </div>
@@ -101,6 +103,7 @@ function ThemeItems() {
 }
 
 function UserNav({ user }: { user: SessionUser | null }) {
+  const t = useT();
   const displayName = user?.name ?? "Admin";
   const initials = user ? getInitials(user.name) : "";
   const router = useRouter();
@@ -116,7 +119,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger data-testid="user-menu-trigger" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-transparent border-0 p-0 cursor-pointer" aria-label={`User menu: ${displayName}`}>
+      <DropdownMenuTrigger data-testid="user-menu-trigger" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-transparent border-0 p-0 cursor-pointer" aria-label={t("shell.adminHeader.userMenu", { name: displayName })}>
         <Avatar className="h-8 w-8">
           {user?.gravatarUrl && <AvatarImage src={user.gravatarUrl} alt={displayName} />}
           <AvatarFallback className="text-xs">
@@ -137,12 +140,12 @@ function UserNav({ user }: { user: SessionUser | null }) {
         <DropdownMenuGroup>
           <DropdownMenuItem data-testid="user-menu-account" onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/account" } })); router.push("/admin/account"); }}>
             <Settings className="mr-2 h-4 w-4" />
-            Account Preferences
+            {t("shell.adminHeader.accountPreferences")}
           </DropdownMenuItem>
           {can("settings.edit") && !isAdminEmpty && (
             <DropdownMenuItem data-testid="user-menu-site-settings" onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/settings" } })); router.push("/admin/settings"); }}>
               <Settings className="mr-2 h-4 w-4" />
-              Site Settings
+              {t("shell.adminHeader.siteSettings")}
             </DropdownMenuItem>
           )}
           {can("settings.edit") && !isAdminEmpty && (
@@ -152,7 +155,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
             // → row → kebab → Settings just to tweak the active org.
             <DropdownMenuItem data-testid="user-menu-org-settings" onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/organizations/settings" } })); router.push("/admin/organizations/settings"); }}>
               <Building2 className="mr-2 h-4 w-4" />
-              Organization Settings
+              {t("shell.adminHeader.orgSettings")}
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
@@ -162,7 +165,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
         <DropdownMenuGroup>
           <DropdownMenuItem data-testid="user-menu-logout" onClick={logout} className="text-muted-foreground">
             <LogOut className="mr-2 h-4 w-4" />
-            Sign out
+            {t("shell.adminHeader.signOut")}
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
@@ -171,6 +174,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
 }
 
 function DeployButton() {
+  const t = useT();
   const router = useRouter();
   const can = usePermissions();
   const { user, siteConfig } = useHeaderData();
@@ -221,15 +225,15 @@ function DeployButton() {
           if (d.status === "success") {
             const desc = d.url
               ? `${d.url}${elapsed ? ` · ${elapsed}s` : ""}`
-              : `Live in${elapsed ? ` ${elapsed}s` : ""}!`;
-            toast.success("Published! 🚀", {
+              : elapsed ? t("shell.adminHeader.liveInSeconds", { seconds: elapsed }) : t("shell.adminHeader.liveNow");
+            toast.success(t("shell.adminHeader.publishedRocket"), {
               description: desc,
               duration: 12000,
-              action: d.url ? { label: "Open", onClick: () => window.open(d.url, "_blank") } : undefined,
+              action: d.url ? { label: t("shell.adminHeader.open"), onClick: () => window.open(d.url, "_blank") } : undefined,
             });
             window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
           } else {
-            toast.error("Deploy failed", { description: "Check GitHub Actions for details.", duration: 10000 });
+            toast.error(t("shell.adminHeader.deployFailed"), { description: t("shell.adminHeader.checkGithubActions"), duration: 10000 });
           }
         } catch { /* ignore parse errors */ }
       });
@@ -242,29 +246,29 @@ function DeployButton() {
   // Poll GitHub Actions status after a webhook deploy
   function startPolling(liveUrl?: string) {
     pollStartRef.current = Date.now();
-    setDeployPhase("Queued...");
+    setDeployPhase(t("shell.adminHeader.phaseQueued"));
     pollRef.current = setInterval(async () => {
       try {
         const r = await fetch("/api/admin/deploy/github-status");
         if (!r.ok) return;
         const d = await r.json() as { found: boolean; status?: string; conclusion?: string };
         if (!d.found) return;
-        if (d.status === "queued") setDeployPhase("Queued...");
-        else if (d.status === "in_progress") setDeployPhase("Building...");
+        if (d.status === "queued") setDeployPhase(t("shell.adminHeader.phaseQueued"));
+        else if (d.status === "in_progress") setDeployPhase(t("shell.adminHeader.phaseBuilding"));
         else if (d.status === "completed") {
           if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
           setDeploying(false);
           setDeployPhase("");
           const elapsed = Math.round((Date.now() - pollStartRef.current) / 1000);
           if (d.conclusion === "success") {
-            toast.success("Published! 🚀", {
-              description: liveUrl ? `${liveUrl} · ${elapsed}s` : `Done in ${elapsed}s`,
+            toast.success(t("shell.adminHeader.publishedRocket"), {
+              description: liveUrl ? `${liveUrl} · ${elapsed}s` : t("shell.adminHeader.doneInSeconds", { seconds: elapsed }),
               duration: 12000,
-              action: liveUrl ? { label: "Open", onClick: () => window.open(liveUrl, "_blank") } : undefined,
+              action: liveUrl ? { label: t("shell.adminHeader.open"), onClick: () => window.open(liveUrl, "_blank") } : undefined,
             });
             window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
           } else {
-            toast.error("Deploy failed", { description: "Check GitHub Actions for details.", duration: 10000 });
+            toast.error(t("shell.adminHeader.deployFailed"), { description: t("shell.adminHeader.checkGithubActions"), duration: 10000 });
           }
         }
       } catch { /* keep polling */ }
@@ -293,16 +297,16 @@ function DeployButton() {
 
     const finishBuilt = () => {
       const elapsed = Math.round((Date.now() - startedAt) / 1000);
-      toast.success("Live on GitHub Pages 🌐", {
-        description: liveUrl ? `${liveUrl} · ready in ${elapsed}s` : `Ready in ${elapsed}s`,
+      toast.success(t("shell.adminHeader.liveOnPages"), {
+        description: liveUrl ? t("shell.adminHeader.urlReadyInSeconds", { url: liveUrl, seconds: elapsed }) : t("shell.adminHeader.readyInSeconds", { seconds: elapsed }),
         duration: 12000,
-        ...(liveUrl && { action: { label: "Open", onClick: () => window.open(liveUrl, "_blank") } }),
+        ...(liveUrl && { action: { label: t("shell.adminHeader.open"), onClick: () => window.open(liveUrl, "_blank") } }),
       });
       cleanup();
     };
     const finishErrored = (errMsg?: string) => {
-      toast.error("GitHub Pages build failed", {
-        description: errMsg ?? "See repo → Settings → Pages for details.",
+      toast.error(t("shell.adminHeader.pagesBuildFailed"), {
+        description: errMsg ?? t("shell.adminHeader.pagesBuildFailedHint"),
         duration: 12000,
       });
       cleanup();
@@ -374,17 +378,17 @@ function DeployButton() {
     if (provider === "off" && canPublishContent) {
       setDeploying(true);
       setLastResult(null);
-      setDeployPhase("Re-syncing content...");
+      setDeployPhase(t("shell.adminHeader.phaseResyncing"));
       try {
         const res = await fetch("/api/admin/deploy", { method: "POST", signal: AbortSignal.timeout(120_000) });
         const data = await res.json() as { status: string; error?: string; url?: string };
         if (data.status === "success") {
-          toast.success("Content re-synced", { description: "Live site cache refreshed.", duration: 4000 });
+          toast.success(t("shell.adminHeader.resynced"), { description: t("shell.adminHeader.resyncedHint"), duration: 4000 });
         } else {
-          toast.error("Re-sync failed", { description: data.error ?? "Unknown error", duration: 8000 });
+          toast.error(t("shell.adminHeader.resyncFailed"), { description: data.error ?? t("shell.adminHeader.unknownError"), duration: 8000 });
         }
       } catch {
-        toast.error("Re-sync failed", { description: "Request failed", duration: 8000 });
+        toast.error(t("shell.adminHeader.resyncFailed"), { description: t("shell.adminHeader.requestFailed"), duration: 8000 });
       }
       setDeploying(false);
       setDeployPhase("");
@@ -394,14 +398,14 @@ function DeployButton() {
     // Truly nothing configured (no ICD, no rebuild) → tell the user
     if (provider === "off") {
       if (isAdminUser) {
-        toast.info("Deploy not configured", {
-          description: "Set up a deploy provider for this site.",
-          action: { label: "Configure", onClick: () => router.push("/admin/settings?tab=deploy") },
+        toast.info(t("shell.adminHeader.deployNotConfigured"), {
+          description: t("shell.adminHeader.setUpProvider"),
+          action: { label: t("shell.adminHeader.configure"), onClick: () => router.push("/admin/settings?tab=deploy") },
           duration: 8000,
         });
       } else {
-        toast.info("Deploy not configured", {
-          description: "Ask your site admin to set up a deploy provider.",
+        toast.info(t("shell.adminHeader.deployNotConfigured"), {
+          description: t("shell.adminHeader.askAdminProvider"),
           duration: 5000,
         });
       }
@@ -410,15 +414,15 @@ function DeployButton() {
 
     setDeploying(true);
     setLastResult(null);
-    setDeployPhase("Sending...");
+    setDeployPhase(t("shell.adminHeader.phaseSending"));
     try {
       const res = await fetch("/api/admin/deploy", { method: "POST", signal: AbortSignal.timeout(120_000) });
       const data = await res.json() as { status: string; error?: string; url?: string; async?: boolean };
 
       // Webhook/GitHub Actions deploy: async — switch to polling mode
       if (data.status === "success" && data.async) {
-        toast.info("Deploy queued", {
-          description: "GitHub Actions is building your site. You'll be notified when it's live.",
+        toast.info(t("shell.adminHeader.deployQueued"), {
+          description: t("shell.adminHeader.deployQueuedHint"),
           duration: 6000,
         });
         startPolling(data.url);
@@ -434,34 +438,34 @@ function DeployButton() {
         // 10 min on cold cache). Tell the user upfront, then poll the
         // pages/builds/latest endpoint and fire a follow-up "live" toast
         // once status === "built".
-        toast.success("Published 🚀 — building on GitHub Pages", {
+        toast.success(t("shell.adminHeader.publishedBuildingPages"), {
           description: data.url
-            ? `${data.url} · live in 1–3 min (sometimes longer)`
-            : "GitHub Pages typically deploys in 1–3 minutes.",
+            ? t("shell.adminHeader.urlLiveSoon", { url: data.url })
+            : t("shell.adminHeader.pagesTypicalTime"),
           duration: 10000,
-          ...(data.url && { action: { label: "Open", onClick: () => window.open(data.url, "_blank") } }),
+          ...(data.url && { action: { label: t("shell.adminHeader.open"), onClick: () => window.open(data.url, "_blank") } }),
         });
         window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
         startPagesBuildTracking(data.url);
         return; // polling fires the "Live" follow-up toast
       } else if (data.status === "success" && data.url) {
-        toast.success("Published!", {
+        toast.success(t("shell.adminHeader.published"), {
           description: data.url,
           duration: 10000,
-          action: { label: "Open", onClick: () => window.open(data.url, "_blank") },
+          action: { label: t("shell.adminHeader.open"), onClick: () => window.open(data.url, "_blank") },
         });
         window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
       } else if (data.status === "success") {
-        toast.success("Published!", { description: "Your changes are now live.", duration: 5000 });
+        toast.success(t("shell.adminHeader.published"), { description: t("shell.adminHeader.changesLive"), duration: 5000 });
       } else if (data.status === "error") {
-        toast.error("Publish failed", { description: data.error, duration: 8000 });
+        toast.error(t("shell.adminHeader.publishFailed"), { description: data.error, duration: 8000 });
       }
     } catch {
-      setLastResult({ ok: false, error: "Request failed" });
+      setLastResult({ ok: false, error: t("shell.adminHeader.requestFailed") });
     }
     setDeploying(false);
     setDeployPhase("");
-  }, [provider, canPublishContent, isAdminUser, router]);
+  }, [provider, canPublishContent, isAdminUser, router, t]);
 
   // "d" shortcut → deploy
   useEffect(() => {
@@ -523,8 +527,8 @@ function DeployButton() {
         type="button"
         onClick={handleDeploy}
         disabled={deploying}
-        title={deploying ? "Re-syncing..." : (reason ?? "Content auto-syncs on save. Click to manually re-sync everything.")}
-        aria-label="ICD status — click to manually re-sync"
+        title={deploying ? t("shell.adminHeader.resyncing") : (reason ?? t("shell.adminHeader.icdHint"))}
+        aria-label={t("shell.adminHeader.icdAria")}
         style={{
           fontSize: "0.65rem",
           padding: "0.2rem 0.55rem",
@@ -537,7 +541,7 @@ function DeployButton() {
           cursor: deploying ? "wait" : "pointer",
         }}
       >
-        {deploying ? "ICD · syncing…" : "ICD · auto"}
+        {deploying ? t("shell.adminHeader.icdSyncing") : t("shell.adminHeader.icdAuto")}
       </button>
     );
   }
@@ -549,8 +553,8 @@ function DeployButton() {
       type="button"
       onClick={handleDeploy}
       disabled={deploying}
-      title={deploying ? "Publishing..." : lastResult ? (lastResult.ok ? "Published!" : `Publish failed: ${lastResult.error}`) : provider === "off" ? "Deploy not configured" : "Publish changes"}
-      aria-label="Publish changes"
+      title={deploying ? t("shell.adminHeader.publishing") : lastResult ? (lastResult.ok ? t("shell.adminHeader.published") : t("shell.adminHeader.publishFailedWith", { error: lastResult.error ?? "" })) : provider === "off" ? t("shell.adminHeader.deployNotConfigured") : t("shell.adminHeader.publishChanges")}
+      aria-label={t("shell.adminHeader.publishChanges")}
       style={{
         background: "none",
         border: "1.5px solid var(--border)",
@@ -593,6 +597,7 @@ interface BuildProfileInfo {
 const toastedBeamIds = new Set<string>();
 
 function BeamPill() {
+  const t = useT();
   const router = useRouter();
   const [activeBeamId, setActiveBeamId] = useState<string | null>(null);
 
@@ -606,8 +611,8 @@ function BeamPill() {
       setActiveBeamId(null);
       if (toastedBeamIds.has(beamId)) return;
       toastedBeamIds.add(beamId);
-      if (success) toast.success("Beam complete 🚀", { description: "Site transferred successfully", duration: 8000 });
-      else toast.error("Beam failed", { description: error ?? "Transfer failed", duration: 10000 });
+      if (success) toast.success(t("shell.adminHeader.beamComplete"), { description: t("shell.adminHeader.beamCompleteHint"), duration: 8000 });
+      else toast.error(t("shell.adminHeader.beamFailed"), { description: error ?? t("shell.adminHeader.transferFailed"), duration: 10000 });
     }
     window.addEventListener("cms:beam-started", onStart);
     window.addEventListener("cms:beam-done", onDone);
@@ -615,7 +620,7 @@ function BeamPill() {
       window.removeEventListener("cms:beam-started", onStart);
       window.removeEventListener("cms:beam-done", onDone);
     };
-  }, []);
+  }, [t]);
 
   if (!activeBeamId) return null;
 
@@ -624,7 +629,7 @@ function BeamPill() {
       data-testid="beam-pill-button"
       type="button"
       onClick={() => router.push(`/admin/settings?tab=beam&active=${activeBeamId}`)}
-      title="Beam in progress — click to view"
+      title={t("shell.adminHeader.beamInProgress")}
       style={{
         display: "flex", alignItems: "center", gap: "0.35rem",
         fontSize: "0.65rem", color: "var(--brand)",
@@ -635,12 +640,13 @@ function BeamPill() {
       }}
     >
       <Loader2 style={{ width: "0.75rem", height: "0.75rem" }} className="animate-spin" />
-      Beaming…
+      {t("shell.adminHeader.beaming")}
     </button>
   );
 }
 
 function BuildButton() {
+  const t = useT();
   const [hasBuildCommand, setHasBuildCommand] = useState(false);
   const [profiles, setProfiles] = useState<BuildProfileInfo[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<string | undefined>();
@@ -696,8 +702,8 @@ function BuildButton() {
           data-testid="build-button"
           type="button"
           onClick={() => setPanelOpen((o) => !o)}
-          title="Build (b)"
-          aria-label="Build site"
+          title={t("shell.adminHeader.buildShortcut")}
+          aria-label={t("shell.adminHeader.buildSite")}
           style={{
             background: "none",
             border: "1.5px solid var(--border)",
@@ -718,7 +724,7 @@ function BuildButton() {
             data-testid="build-profile-dropdown"
             type="button"
             onClick={() => setDropdownOpen((o) => !o)}
-            title="Select build profile"
+            title={t("shell.adminHeader.selectBuildProfile")}
             style={{
               background: "none",
               border: "1.5px solid var(--border)",
@@ -777,7 +783,7 @@ function BuildButton() {
               >
                 <span>{p.name}</span>
                 {p.isDefault && (
-                  <span style={{ color: "var(--muted-foreground)", fontSize: "0.6rem", marginLeft: "0.4rem" }}>default</span>
+                  <span style={{ color: "var(--muted-foreground)", fontSize: "0.6rem", marginLeft: "0.4rem" }}>{t("shell.adminHeader.default")}</span>
                 )}
                 {p.description && (
                   <div style={{ color: "var(--muted-foreground)", fontSize: "0.6rem", marginTop: "0.1rem" }}>{p.description}</div>
@@ -799,6 +805,7 @@ function BuildButton() {
 }
 
 function PreviewButton() {
+  const t = useT();
   const { siteConfig } = useHeaderData();
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [liveUrl, setLiveUrl] = useState<string>("");
@@ -855,7 +862,7 @@ function PreviewButton() {
       if (isChatMode) {
         window.open(url, "_blank");
       } else {
-        openTab(previewPath(url), `Preview: ${siteName}`);
+        openTab(previewPath(url), t("shell.adminHeader.previewTab", { name: siteName }));
       }
     };
 
@@ -874,15 +881,15 @@ function PreviewButton() {
           return;
         }
         const { error } = await res.json().catch(() => ({ error: "" })) as { error?: string };
-        toast.error("Ingen forhåndsvisning endnu", {
-          description: error || "Sitet er ikke bygget. Kør et build først.",
+        toast.error(t("shell.adminHeader.noPreviewYet"), {
+          description: error || t("shell.adminHeader.notBuiltYet"),
           duration: 6000,
         });
       } catch {
-        toast.error("Forhåndsvisningen kunne ikke startes", { duration: 6000 });
+        toast.error(t("shell.adminHeader.previewStartFailed"), { duration: 6000 });
       }
     }
-  }, [previewUrl, siteName, openTab]);
+  }, [previewUrl, siteName, openTab, t]);
 
   const openLive = useCallback(() => {
     if (liveUrl && !liveDown) window.open(liveUrl, "_blank");
@@ -915,8 +922,8 @@ function PreviewButton() {
           borderRadius: "50%", width: "2rem", height: "2rem", padding: 0,
         }}
         className="hover:border-foreground hover:text-foreground transition-colors"
-        title="Preview site (p)"
-        aria-label="Preview site"
+        title={t("shell.adminHeader.previewShortcut")}
+        aria-label={t("shell.adminHeader.previewSite")}
       >
         <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
       </button>
@@ -935,15 +942,15 @@ function PreviewButton() {
           borderRadius: "50%", width: "2rem", height: "2rem", padding: 0,
         }}
         className="hover:border-foreground hover:text-foreground transition-colors focus-visible:outline-none"
-        title="Preview / Live site"
-        aria-label="Preview or live site"
+        title={t("shell.adminHeader.previewOrLiveTitle")}
+        aria-label={t("shell.adminHeader.previewOrLiveAria")}
       >
         <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" style={{ width: "200px" }}>
         <DropdownMenuItem data-testid="preview-dropdown-preview" onClick={openPreview}>
           <ExternalLink className="mr-2 h-4 w-4" />
-          Preview
+          {t("shell.adminHeader.preview")}
           {previewDown && <span className="ml-auto text-xs text-status-warning">sirv</span>}
           {!previewDown && <span className="ml-auto text-xs text-muted-foreground">p</span>}
         </DropdownMenuItem>
@@ -956,9 +963,9 @@ function PreviewButton() {
             : { color: "rgb(74 222 128)" }}
         >
           <ExternalLink className="mr-2 h-4 w-4" />
-          Live site
+          {t("shell.adminHeader.liveSite")}
           {liveDown
-            ? <span className="ml-auto text-xs text-muted-foreground">down</span>
+            ? <span className="ml-auto text-xs text-muted-foreground">{t("shell.adminHeader.down")}</span>
             : <span className="ml-auto text-xs text-muted-foreground">l</span>}
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -967,6 +974,7 @@ function PreviewButton() {
 }
 
 function ModeToggle({ mode, onToggle }: { mode: AdminMode; onToggle: () => void }) {
+  const t = useT();
   return (
     <div
       style={{
@@ -979,12 +987,12 @@ function ModeToggle({ mode, onToggle }: { mode: AdminMode; onToggle: () => void 
     >
       {([
         { value: "traditional" as const, label: "CMS", icon: LayoutDashboard },
-        { value: "chat" as const, label: "Chat", icon: MessageSquare },
+        { value: "chat" as const, label: t("shell.adminHeader.modeChat"), icon: MessageSquare },
       ]).map(({ value, label, icon: Icon }) => (
         <button
           key={value}
           data-testid={`mode-toggle-${value}`}
-          aria-label={`Switch to ${label} mode`}
+          aria-label={t("shell.adminHeader.switchMode", { mode: label })}
           aria-pressed={mode === value}
           onClick={(e) => { e.stopPropagation(); if (mode !== value) onToggle(); }}
           style={{
@@ -1040,8 +1048,9 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, showHistory }: AdminHeaderProps = {}) {
+  const t = useT();
   const { tabs, activeId } = useTabs();
-  const activeTab = tabs.find((t) => t.id === activeId);
+  const activeTab = tabs.find((tab) => tab.id === activeId);
   const title = activeTab?.title;
   const { user: headerUser } = useHeaderData();
   // F153: hide the Chat-mode toggle when the tenant has `chat` turned off.
@@ -1069,28 +1078,28 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
         {mode === "chat" ? (
           <>
             <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--foreground)" }}>
-              Chat with your site
+              {t("shell.adminHeader.chatWithSite")}
             </span>
             {onNewChat && (
               <button
                 data-testid="header-new-chat-button"
                 onClick={onNewChat}
-                title="New conversation"
+                title={t("shell.adminHeader.newConversation")}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "3px", fontSize: "0.75rem", marginLeft: "8px" }}
                 className="hover:text-foreground hover:bg-muted transition-colors"
               >
-                <Plus style={{ width: "14px", height: "14px" }} /> New
+                <Plus style={{ width: "14px", height: "14px" }} /> {t("shell.adminHeader.new")}
               </button>
             )}
             {onToggleHistory && (
               <button
                 data-testid="header-history-button"
                 onClick={onToggleHistory}
-                title="Conversation history"
+                title={t("shell.adminHeader.conversationHistory")}
                 style={{ background: showHistory ? "var(--muted)" : "none", border: "none", cursor: "pointer", color: showHistory ? "var(--foreground)" : "var(--muted-foreground)", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "3px", fontSize: "0.75rem" }}
                 className="hover:text-foreground hover:bg-muted transition-colors"
               >
-                <History style={{ width: "14px", height: "14px" }} /> History
+                <History style={{ width: "14px", height: "14px" }} /> {t("shell.adminHeader.history")}
               </button>
             )}
           </>

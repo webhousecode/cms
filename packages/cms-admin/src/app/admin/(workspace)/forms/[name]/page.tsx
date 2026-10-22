@@ -3,6 +3,7 @@
 import { use, useState, useEffect, useCallback } from "react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { Download, Inbox } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface Submission {
   id: string;
@@ -14,6 +15,7 @@ interface Submission {
 }
 
 export default function FormInboxPage({ params }: { params: Promise<{ name: string }> }) {
+  const t = useT();
   const { name } = use(params);
   const [subs, setSubs] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +77,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
   return (
     <>
       <ActionBar>
-        <ActionBarBreadcrumb items={["Forms", name]} />
+        <ActionBarBreadcrumb items={[t("tools.forms.title"), name]} />
         <a
           data-testid="form-inbox-export"
           href={`/api/admin/forms/${name}/export`}
@@ -95,7 +97,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
             marginLeft: "auto",
           }}
         >
-          <Download size={14} /> CSV
+          <Download size={14} /> {t("tools.forms.csv")}
         </a>
       </ActionBar>
       <div className="p-8 max-w-5xl">
@@ -118,17 +120,17 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
                 textTransform: "capitalize",
               }}
             >
-              {f}
+              {t(`tools.forms.filter.${f}`)}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <p className="text-sm text-muted-foreground">{t("tools.forms.loading")}</p>
         ) : subs.length === 0 ? (
           <div className="text-center py-16">
             <Inbox className="mx-auto mb-3 text-muted-foreground" size={36} />
-            <p className="text-sm text-muted-foreground">No submissions yet.</p>
+            <p className="text-sm text-muted-foreground">{t("tools.forms.noSubmissions")}</p>
           </div>
         ) : (
           <div style={{ display: "flex", gap: "1rem" }}>
@@ -168,7 +170,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "0.8rem", fontWeight: sub.status === "new" ? 600 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {preview(sub.data) || "(empty)"}
+                      {preview(sub.data) || t("tools.forms.empty")}
                     </div>
                     <div style={{ fontSize: "0.68rem", color: "var(--muted-foreground)" }}>
                       {formatDate(sub.createdAt)}
@@ -191,7 +193,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
                 }}
               >
                 <div style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
-                  {formatDate(selectedSub.createdAt)} · {selectedSub.status}
+                  {formatDate(selectedSub.createdAt)} · {t(`tools.forms.filter.${selectedSub.status}`)}
                 </div>
                 <dl style={{ margin: 0, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {Object.entries(selectedSub.data).map(([k, v]) => (
@@ -212,25 +214,25 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
                       onClick={() => archive(selectedSub.id)}
                       style={{ fontSize: "0.7rem", padding: "0.3rem 0.7rem", borderRadius: 4, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", cursor: "pointer" }}
                     >
-                      Archive
+                      {t("tools.forms.archive")}
                     </button>
                   )}
                   {confirmDelete === selectedSub.id ? (
                     <>
-                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px", alignSelf: "center" }}>Delete?</span>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px", alignSelf: "center" }}>{t("tools.forms.deleteConfirm")}</span>
                       <button
                         data-testid="form-submission-delete-confirm"
                         onClick={() => deleteSub(selectedSub.id)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
                       >
-                        Yes
+                        {t("tools.common.yes")}
                       </button>
                       <button
                         data-testid="form-submission-delete-cancel"
                         onClick={() => setConfirmDelete(null)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
                       >
-                        No
+                        {t("tools.common.no")}
                       </button>
                     </>
                   ) : (
@@ -239,7 +241,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
                       onClick={() => setConfirmDelete(selectedSub.id)}
                       style={{ fontSize: "0.7rem", padding: "0.3rem 0.7rem", borderRadius: 4, border: "1px solid var(--destructive)", background: "transparent", color: "var(--destructive)", cursor: "pointer" }}
                     >
-                      Delete
+                      {t("tools.forms.delete")}
                     </button>
                   )}
                 </div>

@@ -7,6 +7,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
+import { useT } from "@/lib/i18n-context";
 interface BackupConfig {
   backupSchedule: "off" | "daily" | "weekly";
   backupTime: string;
@@ -46,6 +47,7 @@ const DEFAULTS: BackupConfig = {
 };
 
 export function BackupSettingsPanel() {
+  const t = useT();
   const [config, setConfig] = useState<BackupConfig>(DEFAULTS);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [testing, setTesting] = useState(false);
@@ -130,39 +132,39 @@ export function BackupSettingsPanel() {
       const result = await res.json();
       setTestResult(result);
     } catch {
-      setTestResult({ ok: false, message: "Connection failed" });
+      setTestResult({ ok: false, message: t("integrations.backup.connectionFailed") });
     } finally {
       setTesting(false);
     }
   };
 
   const scheduleOptions = [
-    { value: "off", label: "Off" },
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly (Mondays)" },
+    { value: "off", label: t("integrations.backup.off") },
+    { value: "daily", label: t("integrations.backup.daily") },
+    { value: "weekly", label: t("integrations.backup.weekly") },
   ];
 
   const retentionOptions = [
-    { value: "7", label: "7 days" },
-    { value: "14", label: "14 days" },
-    { value: "30", label: "30 days" },
-    { value: "60", label: "60 days" },
-    { value: "90", label: "90 days" },
+    { value: "7", label: t("integrations.backup.days", { n: 7 }) },
+    { value: "14", label: t("integrations.backup.days", { n: 14 }) },
+    { value: "30", label: t("integrations.backup.days", { n: 30 }) },
+    { value: "60", label: t("integrations.backup.days", { n: 60 }) },
+    { value: "90", label: t("integrations.backup.days", { n: 90 }) },
   ];
 
   const providerOptions = [
-    { value: "off", label: "Local only" },
-    { value: "pcloud", label: "pCloud (10 GB free, EU)" },
-    { value: "s3", label: "S3-compatible (R2, B2, Scaleway, AWS)" },
+    { value: "off", label: t("integrations.backup.localOnly") },
+    { value: "pcloud", label: t("integrations.backup.pcloudOption") },
+    { value: "s3", label: t("integrations.backup.s3Option") },
   ];
 
   const s3PresetOptions = [
-    { value: "r2", label: "Cloudflare R2 (10 GB free)" },
-    { value: "scaleway", label: "Scaleway (75 GB free, EU)" },
-    { value: "b2", label: "Backblaze B2 (10 GB free)" },
-    { value: "hetzner", label: "Hetzner Object Storage (EU)" },
+    { value: "r2", label: t("integrations.backup.r2Option") },
+    { value: "scaleway", label: t("integrations.backup.scalewayOption") },
+    { value: "b2", label: t("integrations.backup.b2Option") },
+    { value: "hetzner", label: t("integrations.backup.hetznerOption") },
     { value: "s3", label: "AWS S3" },
-    { value: "custom", label: "Custom S3-compatible" },
+    { value: "custom", label: t("integrations.backup.customOption") },
   ];
 
   const s3PresetDefaults: Record<string, { endpoint: string; region: string }> = {
@@ -193,14 +195,14 @@ export function BackupSettingsPanel() {
   return (
     <div data-testid="panel-backup">
       {/* ── Schedule ─────────────────────────────────────── */}
-      <SectionHeading>Schedule</SectionHeading>
+      <SectionHeading>{t("integrations.backup.schedule")}</SectionHeading>
       <SettingsCard>
         <p style={descStyle}>
-          Automatic backups of all content and site data. Scheduled backups appear in the Calendar.
+          {t("integrations.backup.scheduleIntro")}
         </p>
 
         <div>
-          <label style={labelStyle}>Frequency</label>
+          <label style={labelStyle}>{t("integrations.backup.frequency")}</label>
           <CustomSelect
             data-testid="backup-schedule-select"
             value={config.backupSchedule}
@@ -212,7 +214,7 @@ export function BackupSettingsPanel() {
         {config.backupSchedule !== "off" && (
           <>
             <div>
-              <label style={labelStyle}>Time</label>
+              <label style={labelStyle}>{t("integrations.backup.time")}</label>
               <CustomTimeInput
                 data-testid="backup-time-input"
                 value={config.backupTime}
@@ -220,7 +222,7 @@ export function BackupSettingsPanel() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Retention</label>
+              <label style={labelStyle}>{t("integrations.backup.retention")}</label>
               <CustomSelect
                 data-testid="backup-retention-select"
                 value={String(config.backupRetentionDays)}
@@ -230,7 +232,7 @@ export function BackupSettingsPanel() {
             </div>
 
             <div>
-              <label style={labelStyle}>Max storage (GB)</label>
+              <label style={labelStyle}>{t("integrations.backup.maxStorage")}</label>
               <input
                 data-testid="backup-max-storage-input"
                 type="number"
@@ -238,7 +240,7 @@ export function BackupSettingsPanel() {
                 step={1}
                 value={config.backupMaxStorageGB || ""}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupMaxStorageGB: parseFloat(e.target.value) || 0 }))}
-                placeholder="0 = unlimited"
+                placeholder={t("integrations.backup.unlimited")}
                 style={{
                   width: "100%", padding: "0.4rem 0.6rem", borderRadius: "0.375rem",
                   border: "1px solid var(--border)", background: "var(--background)",
@@ -246,7 +248,7 @@ export function BackupSettingsPanel() {
                 }}
               />
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-                Oldest backups are automatically deleted when this limit is exceeded. Set to 9 for free-tier providers (10 GB).
+                {t("integrations.backup.maxStorageHelp")}
               </p>
             </div>
           </>
@@ -254,14 +256,14 @@ export function BackupSettingsPanel() {
       </SettingsCard>
 
       {/* ── Cloud Destination ────────────────────────────── */}
-      <SectionHeading>Cloud Destination</SectionHeading>
+      <SectionHeading>{t("integrations.backup.cloudDestination")}</SectionHeading>
       <SettingsCard>
         <p style={descStyle}>
-          Backups are always stored locally. Optionally upload a copy to a cloud provider for off-site redundancy.
+          {t("integrations.backup.cloudIntro")}
         </p>
 
         <div>
-          <label style={labelStyle}>Provider</label>
+          <label style={labelStyle}>{t("integrations.backup.provider")}</label>
           <CustomSelect
             data-testid="backup-provider-select"
             value={config.backupProvider}
@@ -276,25 +278,25 @@ export function BackupSettingsPanel() {
         {config.backupProvider === "pcloud" && (
           <>
             <div>
-              <label style={labelStyle}>Email</label>
+              <label style={labelStyle}>{t("integrations.backup.email")}</label>
               <input
                 data-testid="backup-pcloud-email-input"
                 type="email"
                 value={config.backupPcloudEmail}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupPcloudEmail: e.target.value }))}
-                placeholder="Your pCloud email"
+                placeholder={t("integrations.backup.pcloudEmail")}
                 style={inputStyle}
               />
             </div>
 
             <div>
-              <label style={labelStyle}>Password</label>
+              <label style={labelStyle}>{t("integrations.backup.password")}</label>
               <input
                 data-testid="backup-pcloud-password-input"
                 type="password"
                 value={config.backupPcloudPassword}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupPcloudPassword: e.target.value }))}
-                placeholder="Your pCloud password"
+                placeholder={t("integrations.backup.pcloudPassword")}
                 style={inputStyle}
               />
             </div>
@@ -307,7 +309,7 @@ export function BackupSettingsPanel() {
                 onChange={(e) => updateConfig((c) => ({ ...c, backupPcloudEu: e.target.checked }))}
                 style={{ accentColor: "var(--primary)" }}
               />
-              <label style={{ fontSize: "0.75rem" }}>EU region (Luxembourg — GDPR compliant)</label>
+              <label style={{ fontSize: "0.75rem" }}>{t("integrations.backup.euRegion")}</label>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
@@ -323,7 +325,7 @@ export function BackupSettingsPanel() {
                   opacity: testing || !config.backupPcloudEmail || !config.backupPcloudPassword ? 0.5 : 1,
                 }}
               >
-                {testing ? "Testing..." : "Test connection"}
+                {testing ? t("integrations.backup.testing") : t("integrations.backup.testConnection")}
               </button>
 
               {testResult && (
@@ -342,7 +344,7 @@ export function BackupSettingsPanel() {
         {config.backupProvider === "s3" && (
           <>
             <div>
-              <label style={labelStyle}>Provider</label>
+              <label style={labelStyle}>{t("integrations.backup.provider")}</label>
               <CustomSelect
                 data-testid="backup-s3-preset-select"
                 value={config.backupS3Provider || "r2"}
@@ -353,7 +355,7 @@ export function BackupSettingsPanel() {
 
             {(config.backupS3Provider === "r2" || !config.backupS3Provider) && (
               <div>
-                <label style={labelStyle}>Endpoint</label>
+                <label style={labelStyle}>{t("integrations.backup.endpoint")}</label>
                 <input
                   data-testid="backup-s3-r2-endpoint-input"
                   type="text"
@@ -363,7 +365,7 @@ export function BackupSettingsPanel() {
                   style={inputStyle}
                 />
                 <p style={{ ...descStyle, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap" }}>
-                  Find your Account ID in
+                  {t("integrations.backup.findAccountId")}
                   <a
                     data-testid="backup-r2-link"
                     href="https://dash.cloudflare.com/?to=/:account/r2/overview"
@@ -371,7 +373,7 @@ export function BackupSettingsPanel() {
                     rel="noopener noreferrer"
                     style={{ color: "var(--muted-foreground)", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}
                   >
-                    Cloudflare dashboard → R2 → Overview <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
+                    {t("integrations.backup.cloudflareDashboard")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
                   </a>
                 </p>
               </div>
@@ -379,7 +381,7 @@ export function BackupSettingsPanel() {
 
             {config.backupS3Provider === "b2" && (
               <div>
-                <label style={labelStyle}>Endpoint</label>
+                <label style={labelStyle}>{t("integrations.backup.endpoint")}</label>
                 <input
                   data-testid="backup-s3-b2-endpoint-input"
                   type="text"
@@ -394,7 +396,7 @@ export function BackupSettingsPanel() {
             {config.backupS3Provider === "custom" && (
               <>
                 <div>
-                  <label style={labelStyle}>Endpoint</label>
+                  <label style={labelStyle}>{t("integrations.backup.endpoint")}</label>
                   <input
                     data-testid="backup-s3-custom-endpoint-input"
                     type="text"
@@ -405,7 +407,7 @@ export function BackupSettingsPanel() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Region</label>
+                  <label style={labelStyle}>{t("integrations.backup.region")}</label>
                   <input
                     data-testid="backup-s3-custom-region-input"
                     type="text"
@@ -419,7 +421,7 @@ export function BackupSettingsPanel() {
             )}
 
             <div>
-              <label style={labelStyle}>Bucket</label>
+              <label style={labelStyle}>{t("integrations.backup.bucket")}</label>
               <input
                 data-testid="backup-s3-bucket-input"
                 type="text"
@@ -431,31 +433,31 @@ export function BackupSettingsPanel() {
             </div>
 
             <div>
-              <label style={labelStyle}>Access Key ID</label>
+              <label style={labelStyle}>{t("integrations.backup.accessKeyId")}</label>
               <input
                 data-testid="backup-s3-access-key-input"
                 type="text"
                 value={config.backupS3AccessKeyId}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupS3AccessKeyId: e.target.value }))}
-                placeholder="Access key ID"
+                placeholder={t("integrations.backup.accessKeyIdPlaceholder")}
                 style={inputStyle}
               />
             </div>
 
             <div>
-              <label style={labelStyle}>Secret Access Key</label>
+              <label style={labelStyle}>{t("integrations.backup.secretAccessKey")}</label>
               <input
                 data-testid="backup-s3-secret-key-input"
                 type="password"
                 value={config.backupS3SecretAccessKey}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupS3SecretAccessKey: e.target.value }))}
-                placeholder="Secret access key"
+                placeholder={t("integrations.backup.secretAccessKeyPlaceholder")}
                 style={inputStyle}
               />
             </div>
 
             <div>
-              <label style={labelStyle}>Prefix (folder)</label>
+              <label style={labelStyle}>{t("integrations.backup.prefix")}</label>
               <input
                 data-testid="backup-s3-prefix-input"
                 type="text"
@@ -480,7 +482,7 @@ export function BackupSettingsPanel() {
                   opacity: testing || !config.backupS3Bucket ? 0.5 : 1,
                 }}
               >
-                {testing ? "Testing..." : "Test connection"}
+                {testing ? t("integrations.backup.testing") : t("integrations.backup.testConnection")}
               </button>
 
               {testResult && (
@@ -498,11 +500,11 @@ export function BackupSettingsPanel() {
       </SettingsCard>
 
       {/* ── Webhooks ─────────────────────────────────────── */}
-      <SectionHeading>Notifications</SectionHeading>
+      <SectionHeading>{t("integrations.backup.notifications")}</SectionHeading>
       <SettingsCard>
-        <label style={webhookLabel}>Webhooks</label>
+        <label style={webhookLabel}>{t("integrations.backup.webhooks")}</label>
         <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "-0.5rem 0 0" }}>
-          Called in order when a backup completes. Discord, Slack, or any URL that accepts JSON POST.
+          {t("integrations.backup.webhooksHelp")}
         </p>
         <WebhookList
           webhooks={config.backupWebhooks}

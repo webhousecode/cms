@@ -8,6 +8,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useT } from "@/lib/i18n-context";
 import { Loader2, Check, AlertCircle, ChevronRight, ChevronDown } from "lucide-react";
 
 interface BuildSummary {
@@ -41,15 +42,16 @@ interface BuildHistoryProps {
 const TERMINAL_PHASES = new Set<BuildSummary["phase"]>(["done", "failed"]);
 
 const PHASE_LABEL: Record<BuildSummary["phase"], string> = {
-  "init": "Initializing",
-  "source-extract": "Extracting source",
-  "image-build": "Building image",
-  "image-push": "Pushing to registry",
-  "done": "Done",
-  "failed": "Failed",
+  "init": "misc.buildHistory.phase.init",
+  "source-extract": "misc.buildHistory.phase.sourceExtract",
+  "image-build": "misc.buildHistory.phase.imageBuild",
+  "image-push": "misc.buildHistory.phase.imagePush",
+  "done": "misc.buildHistory.phase.done",
+  "failed": "misc.buildHistory.phase.failed",
 };
 
 export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
+  const t = useT();
   const [builds, setBuilds] = useState<BuildSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,7 +105,7 @@ export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--muted-foreground)" }}>
         <Loader2 size={14} className="spin" />
-        <span style={{ fontSize: "0.85rem" }}>Loading build history…</span>
+        <span style={{ fontSize: "0.85rem" }}>{t("misc.buildHistory.loading")}</span>
       </div>
     );
   }
@@ -111,7 +113,7 @@ export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
   if (error) {
     return (
       <div style={{ color: "var(--destructive)", fontSize: "0.85rem" }}>
-        Build history unavailable: {error}
+        {t("misc.buildHistory.unavailable", { error })}
       </div>
     );
   }
@@ -119,7 +121,7 @@ export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
   if (builds.length === 0) {
     return (
       <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem", padding: "0.75rem", border: "1px dashed var(--border)", borderRadius: "6px" }}>
-        No SSR builds yet. Click Deploy on a Next.js / Bun-Hono / custom-Dockerfile site to trigger one.
+        {t("misc.buildHistory.empty")}
       </div>
     );
   }
@@ -150,7 +152,7 @@ export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
               {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
               <PhaseIcon phase={b.phase} />
               <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>{b.sha.slice(0, 16)}</code>
-              <span style={{ color: "var(--muted-foreground)" }}>{PHASE_LABEL[b.phase]}</span>
+              <span style={{ color: "var(--muted-foreground)" }}>{t(PHASE_LABEL[b.phase])}</span>
               {isLive && <Loader2 size={12} className="spin" style={{ color: "var(--primary)" }} />}
               <span style={{ marginLeft: "auto", color: "var(--muted-foreground)", fontSize: "0.75rem" }}>
                 {fmtTime(b.startedAt)} · {fmtDuration(b)}
@@ -161,13 +163,13 @@ export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
                 {detail.events.map((e, i) => (
                   <div key={i} style={{ fontSize: "0.75rem", display: "flex", gap: "0.5rem", padding: "0.15rem 0" }}>
                     <span style={{ color: "var(--muted-foreground)", minWidth: "5rem" }}>{fmtTime(e.ts)}</span>
-                    <span style={{ minWidth: "8rem" }}>{PHASE_LABEL[e.phase]}</span>
+                    <span style={{ minWidth: "8rem" }}>{t(PHASE_LABEL[e.phase])}</span>
                     {e.message && <span style={{ color: "var(--muted-foreground)" }}>{e.message}</span>}
                   </div>
                 ))}
                 {detail.final?.imageTag && (
                   <div style={{ fontSize: "0.7rem", marginTop: "0.5rem", color: "var(--muted-foreground)" }}>
-                    Image: <code style={{ fontFamily: "var(--font-mono)" }}>{detail.final.imageTag}</code>
+                    {t("misc.buildHistory.image")} <code style={{ fontFamily: "var(--font-mono)" }}>{detail.final.imageTag}</code>
                   </div>
                 )}
               </div>

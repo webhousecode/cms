@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { switchToNewOrg } from "@/lib/switch-context";
+import { useT } from "@/lib/i18n-context";
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
 }
 
 export default function NewOrganizationPage() {
+  const t = useT();
   const router = useRouter();
   const [name, setName] = useState("");
   const [type, setType] = useState("personal");
@@ -23,7 +25,7 @@ export default function NewOrganizationPage() {
 
   async function handleCreate() {
     setError("");
-    if (!name.trim()) { setError("Organization name is required"); return; }
+    if (!name.trim()) { setError(t("pages.orgNew.errNameRequired")); return; }
     setCreating(true);
     try {
       const res = await fetch("/api/cms/registry", {
@@ -33,12 +35,12 @@ export default function NewOrganizationPage() {
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d.error ?? `Failed (${res.status})`);
+        throw new Error(d.error ?? t("pages.orgNew.errFailedStatus", { status: res.status }));
       }
       const { org } = await res.json() as { org: { id: string } };
       switchToNewOrg(org.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create organization");
+      setError(err instanceof Error ? err.message : t("pages.orgNew.errCreate"));
     } finally {
       setCreating(false);
     }
@@ -58,69 +60,69 @@ export default function NewOrganizationPage() {
         borderRadius: "12px", padding: "2rem 2.5rem",
       }}>
         <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.35rem" }}>
-          Create a new organization
+          {t("pages.orgNew.title")}
         </h1>
         <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginBottom: "2rem", lineHeight: 1.5 }}>
-          Organizations are a way to group your sites. Each organization can be configured with different team members and settings.
+          {t("pages.orgNew.intro")}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           {/* Name */}
           <div>
-            <label style={{ fontSize: "0.85rem", fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>Name</label>
+            <label style={{ fontSize: "0.85rem", fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>{t("pages.orgNew.nameLabel")}</label>
             <input
               data-testid="org-new-name-input"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
-              placeholder="Organization name"
+              placeholder={t("pages.orgNew.namePlaceholder")}
               autoFocus
               style={inputStyle}
             />
             <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.35rem" }}>
-              What&rsquo;s the name of your company or team? You can change this later.
+              {t("pages.orgNew.nameHint")}
             </p>
             {name && (
               <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.15rem", fontFamily: "monospace" }}>
-                ID: {orgId()}
+                {t("pages.orgNew.idLine", { id: orgId() })}
               </p>
             )}
           </div>
 
           {/* Type */}
           <div>
-            <label style={{ fontSize: "0.85rem", fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>Type</label>
+            <label style={{ fontSize: "0.85rem", fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>{t("pages.orgNew.typeLabel")}</label>
             <CustomSelect
               options={[
-                { value: "agency", label: "Agency" },
-                { value: "company", label: "Company" },
-                { value: "personal", label: "Personal" },
-                { value: "freelancer", label: "Freelancer" },
-                { value: "nonprofit", label: "Non-profit" },
+                { value: "agency", label: t("pages.orgNew.typeAgency") },
+                { value: "company", label: t("pages.orgNew.typeCompany") },
+                { value: "personal", label: t("pages.orgNew.typePersonal") },
+                { value: "freelancer", label: t("pages.orgNew.typeFreelancer") },
+                { value: "nonprofit", label: t("pages.orgNew.typeNonprofit") },
               ]}
               value={type}
               onChange={(v) => setType(v)}
             />
             <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.35rem" }}>
-              What best describes your organization?
+              {t("pages.orgNew.typeHint")}
             </p>
           </div>
 
           {/* Plan */}
           <div>
-            <label style={{ fontSize: "0.85rem", fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>Plan</label>
+            <label style={{ fontSize: "0.85rem", fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>{t("pages.orgNew.planLabel")}</label>
             <CustomSelect
               options={[
-                { value: "free", label: "Free — $0/month" },
-                { value: "pro", label: "Pro — $25/month" },
-                { value: "team", label: "Team — $599/month" },
+                { value: "free", label: t("pages.orgNew.planFree") },
+                { value: "pro", label: t("pages.orgNew.planPro") },
+                { value: "team", label: t("pages.orgNew.planTeam") },
               ]}
               value={plan}
               onChange={(v) => setPlan(v)}
             />
             <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.35rem" }}>
-              Which plan fits your organization&rsquo;s needs best?
+              {t("pages.orgNew.planHint")}
             </p>
           </div>
 
@@ -147,7 +149,7 @@ export default function NewOrganizationPage() {
                 color: "var(--muted-foreground)", fontSize: "0.85rem", cursor: "pointer",
               }}
             >
-              Cancel
+              {t("pages.orgNew.cancel")}
             </button>
             <button
               data-testid="org-new-submit-button"
@@ -162,7 +164,7 @@ export default function NewOrganizationPage() {
                 opacity: creating || !name.trim() ? 0.5 : 1,
               }}
             >
-              {creating ? "Creating..." : "Create organization"}
+              {creating ? t("pages.orgNew.creating") : t("pages.orgNew.create")}
             </button>
           </div>
         </div>

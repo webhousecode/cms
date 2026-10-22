@@ -12,6 +12,7 @@ import { useTheme } from "next-themes";
 import { useHeaderData } from "@/lib/header-data-context";
 import { useCapabilities } from "@/hooks/use-capabilities";
 import { sanitizeFavorites } from "@/lib/favorites";
+import { useT } from "@/lib/i18n-context";
 import {
   LayoutDashboard,
   Cpu,
@@ -55,6 +56,7 @@ interface Props {
 }
 
 export function AppSidebar({ collections }: Props) {
+  const t = useT();
   const rawPathname = usePathname();
   // F146: slug-prefix site-scoped nav links so click-navigation keeps the
   // /admin/{slug}/… URL. Cross-site links (Sites, Organizations) intentionally
@@ -210,7 +212,7 @@ export function AppSidebar({ collections }: Props) {
             />
           )}
           <span style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "0.75rem", marginTop: "-0.25rem", letterSpacing: "0.08em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }} className="text-muted-foreground">
-            AI-native content engine
+            {t("shell.sidebar.tagline")}
           </span>
         </Link>
       </SidebarHeader>
@@ -222,11 +224,11 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/sites"}
-                tooltip="Sites"
+                tooltip={t("shell.sidebar.sites")}
                 render={<Link href="/admin/sites" data-testid="nav-link-sites" />}
               >
                 <Boxes className="!w-5 !h-5" />
-                <span>Sites</span>
+                <span>{t("shell.sidebar.sites")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             {/* F138: Dashboard + Favorites are site-scoped (Content Overview, per-site stats) — hide on empty admin. */}
@@ -234,11 +236,11 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={pathname === "/admin"}
-                  tooltip="Dashboard"
+                  tooltip={t("shell.sidebar.dashboard")}
                   render={<Link href={L("/admin")} data-testid="nav-link-dashboard" />}
                 >
                   <LayoutDashboard className="!w-5 !h-5" />
-                  <span>Dashboard</span>
+                  <span>{t("shell.sidebar.dashboard")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
@@ -246,11 +248,11 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={pathname === "/admin/favorites"}
-                  tooltip="Favorites"
+                  tooltip={t("shell.sidebar.favorites")}
                   render={<Link href={L("/admin/favorites")} data-testid="nav-link-favorites" />}
                 >
                   <Heart className="!w-5 !h-5" style={{ color: "#ef4444", fill: "#ef4444" }} />
-                  <span className="flex-1">Favorites</span>
+                  <span className="flex-1">{t("shell.sidebar.favorites")}</span>
                   <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>{favorites.length}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -268,11 +270,11 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={pathname === "/admin/command"}
-                  tooltip="Cockpit"
+                  tooltip={t("shell.sidebar.cockpit")}
                   render={<Link href={L("/admin/command")} data-testid="nav-link-cockpit" />}
                 >
                   <Cpu className="!w-5 !h-5" />
-                  <span>Cockpit</span>
+                  <span>{t("shell.sidebar.cockpit")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
@@ -280,11 +282,11 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/agents")}
-                tooltip="Agents"
+                tooltip={t("shell.sidebar.agents")}
                 render={<Link href={L("/admin/agents")} data-testid="nav-link-agents" />}
               >
                 <Bot className="!w-5 !h-5" />
-                <span>Agents</span>
+                <span>{t("shell.sidebar.agents")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             )}
@@ -292,11 +294,11 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/curation"}
-                tooltip="Curation Queue"
+                tooltip={t("shell.sidebar.curationQueue")}
                 render={<Link href={L("/admin/curation")} data-testid="nav-link-curation" />}
               >
                 <Inbox className="!w-5 !h-5" />
-                <span className="flex-1">Curation Queue</span>
+                <span className="flex-1">{t("shell.sidebar.curationQueue")}</span>
                 {readyCount > 0 && (
                   <span className="ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
                     {readyCount}
@@ -309,11 +311,11 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/scheduled"}
-                tooltip="Calendar"
+                tooltip={t("shell.sidebar.calendar")}
                 render={<Link href={L("/admin/scheduled")} data-testid="nav-link-calendar" />}
               >
                 <Calendar className="!w-5 !h-5" />
-                <span>Calendar</span>
+                <span>{t("shell.sidebar.calendar")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             )}
@@ -328,12 +330,12 @@ export function AppSidebar({ collections }: Props) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                tooltip="Content"
+                tooltip={t("shell.sidebar.content")}
                 onClick={() => setContentOpen((o) => { const next = !o; localStorage.setItem("cms-sidebar-content-open", String(next)); fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sidebarContentOpen: next }) }).catch(() => {}); return next; })}
                 render={<button type="button" data-testid="nav-link-content" />}
               >
                 <FolderOpen className="!w-5 !h-5" />
-                <span className="flex-1 text-left">Content</span>
+                <span className="flex-1 text-left">{t("shell.sidebar.content")}</span>
                 {contentOpen ? (
                   <ChevronDown className="!w-4 !h-4 ml-auto" />
                 ) : (
@@ -372,33 +374,33 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/interactives")}
-                tooltip="Interactives"
+                tooltip={t("shell.sidebar.interactives")}
                 render={<Link href={L("/admin/interactives")} data-testid="nav-link-interactives" />}
               >
                 <Zap className="!w-5 !h-5" />
-                <span>Interactives</span>
+                <span>{t("shell.sidebar.interactives")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             )}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/media"}
-                tooltip="Media library"
+                tooltip={t("shell.sidebar.mediaLibrary")}
                 render={<Link href={L("/admin/media")} data-testid="nav-link-media" />}
               >
                 <Image className="!w-5 !h-5" />
-                <span>Media</span>
+                <span>{t("shell.sidebar.media")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             {canUse("forms") && ctxUser?.permissions?.includes("forms.read") && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/forms")}
-                tooltip="Forms"
+                tooltip={t("shell.sidebar.forms")}
                 render={<Link href={L("/admin/forms")} data-testid="nav-link-forms" />}
               >
                 <ClipboardList className="!w-5 !h-5" />
-                <span className="flex-1">Forms</span>
+                <span className="flex-1">{t("shell.sidebar.forms")}</span>
                 {formUnreadTotal > 0 && (
                   <span className="ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
                     {formUnreadTotal}
@@ -418,11 +420,11 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/podcast")}
-                tooltip="Podcast"
+                tooltip={t("shell.sidebar.podcast")}
                 render={<Link href={L("/admin/podcast")} data-testid="nav-link-podcast" />}
               >
                 <Mic className="!w-5 !h-5" />
-                <span className="flex-1">Podcast</span>
+                <span className="flex-1">{t("shell.sidebar.podcast")}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             )}
@@ -437,12 +439,12 @@ export function AppSidebar({ collections }: Props) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                tooltip="Tools"
+                tooltip={t("shell.sidebar.tools")}
                 onClick={() => setToolsOpen((o) => { const next = !o; localStorage.setItem("cms-sidebar-tools-open", String(next)); fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sidebarToolsOpen: next }) }).catch(() => {}); return next; })}
                 render={<button type="button" data-testid="nav-link-tools" />}
               >
                 <Wrench className="!w-5 !h-5" />
-                <span className="flex-1 text-left">Tools</span>
+                <span className="flex-1 text-left">{t("shell.sidebar.tools")}</span>
                 {toolsOpen ? (
                   <ChevronDown className="!w-4 !h-4 ml-auto" />
                 ) : (
@@ -458,12 +460,12 @@ export function AppSidebar({ collections }: Props) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/link-checker"}
-                    tooltip="Link Checker"
+                    tooltip={t("shell.sidebar.linkChecker")}
                     render={<Link href={L("/admin/link-checker")} data-testid="nav-link-link-checker" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <Link2 className="!w-5 !h-5" />
-                    <span>Link Checker</span>
+                    <span>{t("shell.sidebar.linkChecker")}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 )}
@@ -471,12 +473,12 @@ export function AppSidebar({ collections }: Props) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/seo"}
-                    tooltip="SEO"
+                    tooltip={t("shell.sidebar.seo")}
                     render={<Link href={L("/admin/seo")} data-testid="nav-link-seo" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <Search className="!w-5 !h-5" />
-                    <span>SEO</span>
+                    <span>{t("shell.sidebar.seo")}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 )}
@@ -484,12 +486,12 @@ export function AppSidebar({ collections }: Props) {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={pathname === "/admin/backup"}
-                      tooltip="Backup & Restore"
+                      tooltip={t("shell.sidebar.backupRestore")}
                       render={<Link href={L("/admin/backup")} data-testid="nav-link-backup" />}
                       style={{ paddingLeft: "1.75rem" }}
                     >
                       <HardDrive className="!w-5 !h-5" />
-                      <span>Backup</span>
+                      <span>{t("shell.sidebar.backup")}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
@@ -497,12 +499,12 @@ export function AppSidebar({ collections }: Props) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/performance"}
-                    tooltip="AI Analytics"
+                    tooltip={t("shell.sidebar.aiAnalytics")}
                     render={<Link href={L("/admin/performance")} data-testid="nav-link-ai-analytics" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <BarChart2 className="!w-5 !h-5" />
-                    <span>AI Analytics</span>
+                    <span>{t("shell.sidebar.aiAnalytics")}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 )}
@@ -510,12 +512,12 @@ export function AppSidebar({ collections }: Props) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/visibility"}
-                    tooltip="Visibility"
+                    tooltip={t("shell.sidebar.visibility")}
                     render={<Link href={L("/admin/visibility")} data-testid="nav-link-visibility" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <Eye className="!w-5 !h-5" />
-                    <span>Visibility</span>
+                    <span>{t("shell.sidebar.visibility")}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 )}
@@ -523,12 +525,12 @@ export function AppSidebar({ collections }: Props) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/lighthouse"}
-                    tooltip="Lighthouse"
+                    tooltip={t("shell.sidebar.lighthouse")}
                     render={<Link href={L("/admin/lighthouse")} data-testid="nav-link-lighthouse" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <Gauge className="!w-5 !h-5" />
-                    <span>Lighthouse</span>
+                    <span>{t("shell.sidebar.lighthouse")}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 )}
@@ -536,12 +538,12 @@ export function AppSidebar({ collections }: Props) {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={pathname === "/admin/log"}
-                      tooltip="Event Log"
+                      tooltip={t("shell.sidebar.eventLog")}
                       render={<Link href={L("/admin/log")} data-testid="nav-link-log" />}
                       style={{ paddingLeft: "1.75rem" }}
                     >
                       <ScrollText className="!w-5 !h-5" />
-                      <span>Event Log</span>
+                      <span>{t("shell.sidebar.eventLog")}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
@@ -555,7 +557,7 @@ export function AppSidebar({ collections }: Props) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                tooltip="Search (⌘K)"
+                tooltip={t("shell.sidebar.searchShortcut")}
                 onClick={() =>
                   window.dispatchEvent(
                     new KeyboardEvent("keydown", {
@@ -568,7 +570,7 @@ export function AppSidebar({ collections }: Props) {
                 render={<button type="button" data-testid="nav-link-search" />}
               >
                 <Search className="!w-5 !h-5" />
-                <span className="flex-1 text-left">Search</span>
+                <span className="flex-1 text-left">{t("shell.sidebar.search")}</span>
                 <span className="ml-auto flex items-center gap-0.5">
                   <kbd
                     className="text-[11px] rounded border border-sidebar-border text-muted-foreground leading-none"
@@ -606,7 +608,7 @@ export function AppSidebar({ collections }: Props) {
             {canLiveEdit && (
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  tooltip="Redigér teksten direkte på det færdige website"
+                  tooltip={t("shell.sidebar.liveEditHint")}
                   render={
                     <a
                       href={liveEditHref}
@@ -617,7 +619,7 @@ export function AppSidebar({ collections }: Props) {
                   }
                 >
                   <SquarePen className="!w-5 !h-5" />
-                  <span>Redigér live</span>
+                  <span>{t("shell.sidebar.liveEdit")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
@@ -628,11 +630,11 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={pathname.startsWith("/admin/settings")}
-                  tooltip="Site Settings"
+                  tooltip={t("shell.sidebar.siteSettings")}
                   render={<Link href={L("/admin/settings")} data-testid="nav-link-settings" />}
                 >
                   <Settings2 className="!w-5 !h-5" />
-                  <span>Site Settings</span>
+                  <span>{t("shell.sidebar.siteSettings")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
@@ -645,11 +647,11 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={pathname === "/admin/trash"}
-                  tooltip="Trash"
+                  tooltip={t("shell.sidebar.trash")}
                   render={<Link href={L("/admin/trash")} data-testid="nav-link-trash" />}
                 >
                   <Trash2 className="!w-5 !h-5" />
-                  <span>Trash</span>
+                  <span>{t("shell.sidebar.trash")}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}

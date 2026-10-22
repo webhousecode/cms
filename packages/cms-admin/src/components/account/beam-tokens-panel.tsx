@@ -16,6 +16,7 @@
 
 import { useEffect, useState } from "react";
 import { Key, Copy, Check, RefreshCw } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface BeamToken {
   token: string;
@@ -26,6 +27,7 @@ interface BeamToken {
 }
 
 export function BeamTokensPanel() {
+  const t = useT();
   const [tokens, setTokens] = useState<BeamToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -40,7 +42,7 @@ export function BeamTokensPanel() {
       const data = await r.json();
       if (Array.isArray(data?.tokens)) setTokens(data.tokens);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load tokens");
+      setError(e instanceof Error ? e.message : t("misc.beamTokens.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -57,13 +59,13 @@ export function BeamTokensPanel() {
       const r = await fetch("/api/admin/beam/token", { method: "POST" });
       const data = await r.json();
       if (!r.ok || !data?.token) {
-        setError(data?.error ?? "Failed to generate token");
+        setError(data?.error ?? t("misc.beamTokens.generateFailed"));
         return;
       }
       setNewToken({ token: data.token, expiresAt: data.expiresAt });
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to generate token");
+      setError(e instanceof Error ? e.message : t("misc.beamTokens.generateFailed"));
     } finally {
       setGenerating(false);
     }
@@ -84,12 +86,10 @@ export function BeamTokensPanel() {
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }} id="beam-tokens">
       <div>
         <h3 style={{ fontSize: "1rem", fontWeight: 600, margin: "0 0 0.35rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <Key style={{ width: 16, height: 16 }} /> Beam tokens
+          <Key style={{ width: 16, height: 16 }} /> {t("misc.beamTokens.title")}
         </h3>
         <p style={{ fontSize: "0.825rem", color: "var(--muted-foreground)", margin: 0, maxWidth: "60ch" }}>
-          Generate a single-use token to receive a site via Beam. Paste the token into the source
-          CMS&apos;s Site Settings → Beam → Send to remote, and the site will be transferred to this
-          instance. Tokens expire after 1 hour and can only be used once.
+          {t("misc.beamTokens.intro")}
         </p>
       </div>
 
@@ -100,7 +100,7 @@ export function BeamTokensPanel() {
           border: "1px solid color-mix(in srgb, var(--primary) 35%, transparent)",
           display: "flex", flexDirection: "column", gap: "0.6rem",
         }}>
-          <div style={{ fontSize: "0.78rem", fontWeight: 600 }}>New token — copy now, it won&apos;t be shown again</div>
+          <div style={{ fontSize: "0.78rem", fontWeight: 600 }}>{t("misc.beamTokens.newToken")}</div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <code style={{
               flex: 1, padding: "0.5rem 0.75rem", borderRadius: "6px",
@@ -120,11 +120,11 @@ export function BeamTokensPanel() {
               }}
             >
               {copied ? <Check style={{ width: 14, height: 14 }} /> : <Copy style={{ width: 14, height: 14 }} />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? t("misc.beamTokens.copied") : t("misc.beamTokens.copy")}
             </button>
           </div>
           <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-            Expires {new Date(newToken.expiresAt).toLocaleString()}
+            {t("misc.beamTokens.expiresAt", { date: new Date(newToken.expiresAt).toLocaleString() })}
           </div>
         </div>
       )}
@@ -154,7 +154,7 @@ export function BeamTokensPanel() {
           }}
         >
           <Key style={{ width: 14, height: 14 }} />
-          {generating ? "Generating..." : "Generate new token"}
+          {generating ? t("misc.beamTokens.generating") : t("misc.beamTokens.generate")}
         </button>
         <button
           data-testid="beam-token-refresh"
@@ -170,30 +170,30 @@ export function BeamTokensPanel() {
           }}
         >
           <RefreshCw style={{ width: 14, height: 14 }} />
-          Refresh
+          {t("misc.beamTokens.refresh")}
         </button>
       </div>
 
       <div>
         <div style={{ fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-          Active tokens {tokens.length > 0 && <span style={{ color: "var(--muted-foreground)", fontWeight: 400 }}>({tokens.length})</span>}
+          {t("misc.beamTokens.active")} {tokens.length > 0 && <span style={{ color: "var(--muted-foreground)", fontWeight: 400 }}>({tokens.length})</span>}
         </div>
         {loading ? (
-          <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>Loading…</div>
+          <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>{t("misc.beamTokens.loading")}</div>
         ) : tokens.length === 0 ? (
-          <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>No active tokens.</div>
+          <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>{t("misc.beamTokens.none")}</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-            {tokens.map((t) => (
-              <div key={t.token} style={{
+            {tokens.map((tok) => (
+              <div key={tok.token} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "0.5rem 0.7rem", borderRadius: "6px",
                 background: "var(--card)", border: "1px solid var(--border)",
                 fontSize: "0.75rem", fontFamily: "ui-monospace, monospace",
               }}>
-                <code>{t.token}</code>
+                <code>{tok.token}</code>
                 <span style={{ color: "var(--muted-foreground)", fontFamily: "system-ui, sans-serif" }}>
-                  expires {new Date(t.expiresAt).toLocaleString()}
+                  {t("misc.beamTokens.expiresLower", { date: new Date(tok.expiresAt).toLocaleString() })}
                 </span>
               </div>
             ))}

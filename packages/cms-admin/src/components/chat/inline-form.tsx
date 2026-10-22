@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Save, Loader2, Check, X } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 import type { InlineFormData, InlineFormField } from "./message-list";
 import { CustomDateInput } from "@/components/ui/custom-date-input";
 
@@ -11,6 +12,7 @@ interface InlineFormProps {
 }
 
 export function InlineForm({ form, onSaved }: InlineFormProps) {
+  const t = useT();
   const [values, setValues] = useState<Record<string, unknown>>(() => {
     const v: Record<string, unknown> = {};
     for (const f of form.fields) v[f.name] = f.value;
@@ -34,8 +36,8 @@ export function InlineForm({ form, onSaved }: InlineFormProps) {
         body: JSON.stringify({ data: values }),
       });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Save failed" }));
-        setError(err.error ?? "Save failed");
+        const err = await res.json().catch(() => ({ error: t("chat.inlineForm.saveFailed") }));
+        setError(err.error ?? t("chat.inlineForm.saveFailed"));
       } else {
         setSaved(true);
         const changedFields = form.fields
@@ -46,10 +48,10 @@ export function InlineForm({ form, onSaved }: InlineFormProps) {
         setTimeout(() => setSaved(false), 3000);
       }
     } catch {
-      setError("Network error");
+      setError(t("chat.inlineForm.networkError"));
     }
     setSaving(false);
-  }, [form, values, onSaved]);
+  }, [form, values, onSaved, t]);
 
   return (
     <div
@@ -74,7 +76,7 @@ export function InlineForm({ form, onSaved }: InlineFormProps) {
           color: "var(--foreground)",
         }}
       >
-        <span>Edit: {form.title}</span>
+        <span>{t("chat.inlineForm.editTitle", { title: form.title })}</span>
         <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
           {form.collection}/{form.slug}
         </span>
@@ -128,7 +130,7 @@ export function InlineForm({ form, onSaved }: InlineFormProps) {
           ) : (
             <Save style={{ width: "14px", height: "14px" }} />
           )}
-          {saving ? "Saving..." : saved ? "Saved" : "Save"}
+          {saving ? t("chat.inlineForm.saving") : saved ? t("chat.inlineForm.saved") : t("chat.inlineForm.save")}
         </button>
         {error && (
           <span style={{ fontSize: "0.75rem", color: "var(--destructive)" }}>{error}</span>
@@ -139,6 +141,7 @@ export function InlineForm({ form, onSaved }: InlineFormProps) {
 }
 
 function FieldEditor({ field, value, onChange }: { field: InlineFormField; value: unknown; onChange: (v: unknown) => void }) {
+  const t = useT();
   const labelStyle: React.CSSProperties = {
     display: "block",
     fontSize: "0.7rem",
@@ -200,7 +203,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
             onChange={(e) => onChange(e.target.value)}
             style={{ ...inputStyle, cursor: "pointer" }}
           >
-            <option value="">— Select —</option>
+            <option value="">{t("chat.inlineForm.selectPlaceholder")}</option>
             {field.options?.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
@@ -260,7 +263,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
             type="text"
             value={Array.isArray(value) ? (value as string[]).join(", ") : String(value ?? "")}
             onChange={(e) => onChange(e.target.value.split(",").map((t) => t.trim()).filter(Boolean))}
-            placeholder="tag1, tag2, tag3"
+            placeholder={t("chat.inlineForm.tagsPlaceholder")}
             style={inputStyle}
           />
         </div>

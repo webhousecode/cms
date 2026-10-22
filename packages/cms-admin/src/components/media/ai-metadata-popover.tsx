@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Sparkles, Copy, Check, Loader2, RefreshCw, ArrowDownToLine } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface AIMetadata {
   caption: string | null;
@@ -29,13 +30,20 @@ interface Props {
   docLocale?: string;
 }
 
-function CopyBtn({ text, label }: { text: string; label: string }) {
+const COPY_TITLE_KEYS: Record<string, string> = {
+  caption: "media.aiMetadataPopover.copyCaption",
+  "alt-text": "media.aiMetadataPopover.copyAlt",
+  tags: "media.aiMetadataPopover.copyTags",
+};
+
+function CopyBtn({ text, kind }: { text: string; kind: string }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   return (
     <button
-      data-testid={`ai-metadata-copy-${label.toLowerCase().replace(/\s+/g, '-')}`}
+      data-testid={`ai-metadata-copy-${kind.toLowerCase().replace(/\s+/g, '-')}`}
       type="button"
-      title={`Copy ${label}`}
+      title={t(COPY_TITLE_KEYS[kind] ?? "media.aiMetadataPopover.copy")}
       onClick={() => {
         navigator.clipboard.writeText(text);
         setCopied(true);
@@ -55,6 +63,7 @@ function CopyBtn({ text, label }: { text: string; label: string }) {
 }
 
 export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, onApplyAlt, currentAlt, docLocale }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [meta, setMeta] = useState<AIMetadata | null>(null);
   const [loading, setLoading] = useState(false);
@@ -107,7 +116,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error ?? "Analysis failed");
+        setError(data.error ?? t("media.aiMetadataPopover.analysisFailed"));
         setAnalyzing(false);
         return;
       }
@@ -124,7 +133,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
       setMeta(newMeta);
       onAnalyzed?.(newMeta);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Analysis failed");
+      setError(err instanceof Error ? err.message : t("media.aiMetadataPopover.analysisFailed"));
     }
     setAnalyzing(false);
   }
@@ -138,7 +147,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
         <button
           data-testid="ai-metadata-trigger-ctx"
           type="button"
-          title="AI metadata"
+          title={t("media.aiMetadataPopover.triggerTitle")}
           onClick={() => setOpen((o) => !o)}
           style={{
             display: "flex", alignItems: "center", gap: "3px",
@@ -148,7 +157,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
           }}
         >
           <Sparkles style={{ width: 12, height: 12 }} />
-          <span style={{ fontWeight: 500 }}>AI</span>
+          <span style={{ fontWeight: 500 }}>{t("media.aiMetadataPopover.ai")}</span>
         </button>
       ) : (
         <button
@@ -163,7 +172,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
           }}
         >
           <Sparkles style={{ width: 14, height: 14 }} />
-          AI
+          {t("media.aiMetadataPopover.ai")}
         </button>
       )}
 
@@ -190,13 +199,13 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
             <span style={{ fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
-              <Sparkles style={{ width: 14, height: 14 }} /> AI Image Analysis
+              <Sparkles style={{ width: 14, height: 14 }} /> {t("media.aiMetadataPopover.heading")}
             </span>
             {meta && (
               <button
                 data-testid="ai-metadata-reanalyze"
                 type="button"
-                title="Re-analyze"
+                title={t("media.aiMetadataPopover.reanalyze")}
                 disabled={analyzing}
                 onClick={runAnalysis}
                 style={{
@@ -218,14 +227,14 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
           <div style={{ padding: "0.75rem 0.875rem" }}>
             {loading && (
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--muted-foreground)", fontSize: "0.8rem", padding: "1rem 0" }}>
-                <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> Loading…
+                <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> {t("media.aiMetadataPopover.loading")}
               </div>
             )}
 
             {!loading && !meta && !analyzing && (
               <div style={{ textAlign: "center", padding: "1rem 0" }}>
                 <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
-                  No AI analysis yet.
+                  {t("media.aiMetadataPopover.noAnalysis")}
                 </p>
                 <button
                   data-testid="ai-metadata-analyze"
@@ -239,14 +248,14 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                     cursor: "pointer", fontSize: "0.8rem", fontWeight: 500,
                   }}
                 >
-                  <Sparkles style={{ width: 14, height: 14 }} /> Analyze
+                  <Sparkles style={{ width: 14, height: 14 }} /> {t("media.aiMetadataPopover.analyze")}
                 </button>
               </div>
             )}
 
             {analyzing && !meta && (
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--muted-foreground)", fontSize: "0.8rem", padding: "1rem 0", justifyContent: "center" }}>
-                <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> Analyzing image…
+                <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> {t("media.aiMetadataPopover.analyzing")}
               </div>
             )}
 
@@ -293,8 +302,8 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                 {/* Caption */}
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
-                    <span style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>Caption</span>
-                    {displayCaption && <CopyBtn text={displayCaption} label="caption" />}
+                    <span style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>{t("media.aiMetadataPopover.caption")}</span>
+                    {displayCaption && <CopyBtn text={displayCaption} kind="caption" />}
                   </div>
                   <p style={{ fontSize: "0.8rem", color: "var(--foreground)", margin: 0, lineHeight: 1.4 }}>
                     {displayCaption ?? "—"}
@@ -304,7 +313,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                 {/* Alt-text */}
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
-                    <span style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>Alt-text</span>
+                    <span style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>{t("media.aiMetadataPopover.altText")}</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
                       {displayAlt && onApplyAlt && (() => {
                         const alreadyApplied = applied || (currentAlt === displayAlt);
@@ -314,13 +323,13 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                             padding: "1px 6px", borderRadius: "4px", fontSize: "0.6rem", fontWeight: 500,
                             background: "rgba(74,222,128,0.15)", color: "#4ade80",
                           }}>
-                            <Check style={{ width: 10, height: 10 }} /> Applied
+                            <Check style={{ width: 10, height: 10 }} /> {t("media.aiMetadataPopover.applied")}
                           </span>
                         ) : (
                           <button
                             data-testid="ai-metadata-apply-alt"
                             type="button"
-                            title="Apply alt-text to image"
+                            title={t("media.aiMetadataPopover.applyAltTitle")}
                             onClick={() => { onApplyAlt(displayAlt); setApplied(true); }}
                             style={{
                               display: "inline-flex", alignItems: "center", gap: "3px",
@@ -329,11 +338,11 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                               background: "color-mix(in srgb, var(--brand) 15%, transparent)", color: "var(--brand)",
                             }}
                           >
-                            <ArrowDownToLine style={{ width: 10, height: 10 }} /> Apply
+                            <ArrowDownToLine style={{ width: 10, height: 10 }} /> {t("media.aiMetadataPopover.apply")}
                           </button>
                         );
                       })()}
-                      {displayAlt && <CopyBtn text={displayAlt} label="alt-text" />}
+                      {displayAlt && <CopyBtn text={displayAlt} kind="alt-text" />}
                     </div>
                   </div>
                   <p style={{ fontSize: "0.8rem", color: "var(--foreground)", margin: 0, fontFamily: "monospace", lineHeight: 1.4 }}>
@@ -344,8 +353,8 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                 {/* Tags */}
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                    <span style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>Tags</span>
-                    {meta.tags.length > 0 && <CopyBtn text={meta.tags.join(", ")} label="tags" />}
+                    <span style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>{t("media.aiMetadataPopover.tags")}</span>
+                    {meta.tags.length > 0 && <CopyBtn text={meta.tags.join(", ")} kind="tags" />}
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                     {meta.tags.length > 0 ? meta.tags.map((tag) => (
@@ -361,7 +370,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                 {/* Timestamp */}
                 {meta.analyzedAt && (
                   <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", margin: 0, fontFamily: "monospace" }}>
-                    Analyzed: {new Date(meta.analyzedAt).toLocaleString()} · {meta.provider}
+                    {t("media.aiMetadataPopover.analyzedAt", { date: new Date(meta.analyzedAt).toLocaleString(), provider: meta.provider ?? "" })}
                   </p>
                 )}
               </div>

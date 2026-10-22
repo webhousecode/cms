@@ -8,6 +8,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { listModels } from "@broberg/ai-sdk/registry";
 import { DEFAULTS } from "@/lib/ai/model-defaults";
+import { useT } from "@/lib/i18n-context";
 
 interface AiDefaults {
   aiContentModel: string;
@@ -35,37 +36,40 @@ interface AiDefaults {
  * retired or suspended fleet-wide stops being offered here without an edit.
  */
 const MODEL_LABELS: Record<string, string> = {
-  "mistral-small-latest": "Mistral Small — fast, affordable",
-  "mistral-large-latest": "Mistral Large — most capable",
+  "mistral-small-latest": "settings.aiDefaults.modelMistralSmall",
+  "mistral-large-latest": "settings.aiDefaults.modelMistralLarge",
 };
 
 const MODEL_OPTIONS = listModels()
   .filter((m) => m.provider === "mistral" && m.available)
-  .map((m) => ({ value: m.id, label: MODEL_LABELS[m.id] ?? m.id }));
+  .map((m) => ({ value: m.id, labelKey: MODEL_LABELS[m.id] }));
 
 const TOKEN_OPTIONS = [
-  { value: "2048", label: "2,048 — short content" },
-  { value: "4096", label: "4,096 — standard content" },
-  { value: "8192", label: "8,192 — long content" },
-  { value: "16384", label: "16,384 — large HTML/code" },
+  { value: "2048", label: "settings.aiDefaults.tokensShort" },
+  { value: "4096", label: "settings.aiDefaults.tokensStandard" },
+  { value: "8192", label: "settings.aiDefaults.tokensLong" },
+  { value: "16384", label: "settings.aiDefaults.tokensLarge" },
 ];
 
 const CHAT_TOKEN_OPTIONS = [
-  { value: "4096", label: "4,096 — standard" },
-  { value: "8192", label: "8,192 — recommended" },
-  { value: "16384", label: "16,384 — long responses" },
-  { value: "32768", label: "32,768 — maximum" },
+  { value: "4096", label: "settings.aiDefaults.chatTokensStandard" },
+  { value: "8192", label: "settings.aiDefaults.chatTokensRecommended" },
+  { value: "16384", label: "settings.aiDefaults.chatTokensLong" },
+  { value: "32768", label: "settings.aiDefaults.chatTokensMax" },
 ];
 
 const ITERATION_OPTIONS = [
-  { value: "10", label: "10 — simple tasks" },
-  { value: "15", label: "15 — moderate tasks" },
-  { value: "25", label: "25 — complex multi-step" },
-  { value: "40", label: "40 — very complex workflows" },
-  { value: "50", label: "50 — maximum" },
+  { value: "10", label: "settings.aiDefaults.iterSimple" },
+  { value: "15", label: "settings.aiDefaults.iterModerate" },
+  { value: "25", label: "settings.aiDefaults.iterComplex" },
+  { value: "40", label: "settings.aiDefaults.iterVeryComplex" },
+  { value: "50", label: "settings.aiDefaults.iterMax" },
 ];
 
 export function AIDefaultsPanel() {
+  const t = useT();
+  const modelOptions = MODEL_OPTIONS.map((m) => ({ value: m.value, label: m.labelKey ? t(m.labelKey) : m.value }));
+  const translated = (list: { value: string; label: string }[]) => list.map((o) => ({ value: o.value, label: t(o.label) }));
   const [config, setConfig] = useState<AiDefaults>({
     aiContentModel: DEFAULTS.content,
     aiContentMaxTokens: 4096,
@@ -122,7 +126,7 @@ export function AIDefaultsPanel() {
     });
     setSaving(false);
     setSaved(true);
-    toast.success("AI defaults saved");
+    toast.success(t("settings.aiDefaults.saved"));
     setTimeout(() => setSaved(false), 2500);
     window.dispatchEvent(new CustomEvent("cms:settings-saved"));
   }
@@ -135,7 +139,7 @@ export function AIDefaultsPanel() {
   }, []);
 
   if (loading) {
-    return <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Loading…</p>;
+    return <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("settings.common.loading")}</p>;
   }
 
   return (
@@ -143,30 +147,30 @@ export function AIDefaultsPanel() {
       <SettingsCard>
       {/* Content — cheap/fast text tasks */}
       <div style={{ marginBottom: "2rem" }}>
-        <SectionHeading>Content (SEO, Rewrite, Proofread)</SectionHeading>
+        <SectionHeading>{t("settings.aiDefaults.contentHeading")}</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-          Used for SEO optimization, text rewriting, proofreading, and link fixing. Haiku is fast and affordable for these tasks.
+          {t("settings.aiDefaults.contentHint")}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
-              Model
+              {t("settings.aiDefaults.model")}
             </label>
             <CustomSelect
               value={config.aiContentModel}
               onChange={(v) => setConfig((c) => ({ ...c, aiContentModel: v }))}
-              options={MODEL_OPTIONS}
+              options={modelOptions}
             />
           </div>
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
-              Max tokens
+              {t("settings.aiDefaults.maxTokens")}
             </label>
             <CustomSelect
               value={String(config.aiContentMaxTokens)}
               onChange={(v) => setConfig((c) => ({ ...c, aiContentMaxTokens: parseInt(v, 10) }))}
-              options={TOKEN_OPTIONS}
+              options={translated(TOKEN_OPTIONS)}
             />
           </div>
         </div>
@@ -174,30 +178,30 @@ export function AIDefaultsPanel() {
 
       {/* Code — smart tasks */}
       <div style={{ marginBottom: "2rem" }}>
-        <SectionHeading>Code (Interactives, Generate, Agents)</SectionHeading>
+        <SectionHeading>{t("settings.aiDefaults.codeHeading")}</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-          Used for HTML interactives, content generation, and AI agent creation. Sonnet is recommended — best balance of quality and cost.
+          {t("settings.aiDefaults.codeHint")}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
-              Model
+              {t("settings.aiDefaults.model")}
             </label>
             <CustomSelect
               value={config.aiCodeModel}
               onChange={(v) => setConfig((c) => ({ ...c, aiCodeModel: v }))}
-              options={MODEL_OPTIONS}
+              options={modelOptions}
             />
           </div>
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
-              Max tokens (interactives)
+              {t("settings.aiDefaults.maxTokensInteractives")}
             </label>
             <CustomSelect
               value={String(config.aiInteractivesMaxTokens)}
               onChange={(v) => setConfig((c) => ({ ...c, aiInteractivesMaxTokens: parseInt(v, 10) }))}
-              options={TOKEN_OPTIONS}
+              options={translated(TOKEN_OPTIONS)}
             />
           </div>
         </div>
@@ -205,20 +209,20 @@ export function AIDefaultsPanel() {
 
       {/* Premium — highest quality */}
       <div style={{ marginBottom: "2rem" }}>
-        <SectionHeading>Premium (Brand Voice)</SectionHeading>
+        <SectionHeading>{t("settings.aiDefaults.premiumHeading")}</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-          Used for brand voice analysis and translation. Opus delivers the highest quality for nuanced creative work.
+          {t("settings.aiDefaults.premiumHint")}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
-              Model
+              {t("settings.aiDefaults.model")}
             </label>
             <CustomSelect
               value={config.aiPremiumModel}
               onChange={(v) => setConfig((c) => ({ ...c, aiPremiumModel: v }))}
-              options={MODEL_OPTIONS}
+              options={modelOptions}
             />
           </div>
         </div>
@@ -226,43 +230,43 @@ export function AIDefaultsPanel() {
 
       {/* Chat — full-screen AI assistant */}
       <div style={{ marginBottom: "2rem" }}>
-        <SectionHeading>Chat (AI Assistant)</SectionHeading>
+        <SectionHeading>{t("settings.aiDefaults.chatHeading")}</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-          Used for the full-screen Chat mode. Higher token limits and more tool iterations allow complex multi-step tasks like creating multiple posts with scheduling.
+          {t("settings.aiDefaults.chatHint")}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
-              Model
+              {t("settings.aiDefaults.model")}
             </label>
             <CustomSelect
               value={config.aiChatModel}
               onChange={(v) => setConfig((c) => ({ ...c, aiChatModel: v }))}
-              options={MODEL_OPTIONS}
+              options={modelOptions}
             />
           </div>
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
-              Max tokens per response
+              {t("settings.aiDefaults.maxTokensPerResponse")}
             </label>
             <CustomSelect
               value={String(config.aiChatMaxTokens)}
               onChange={(v) => setConfig((c) => ({ ...c, aiChatMaxTokens: parseInt(v, 10) }))}
-              options={CHAT_TOKEN_OPTIONS}
+              options={translated(CHAT_TOKEN_OPTIONS)}
             />
           </div>
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
-              Max tool iterations per message
+              {t("settings.aiDefaults.maxToolIterations")}
             </label>
             <CustomSelect
               value={String(config.aiChatMaxToolIterations)}
               onChange={(v) => setConfig((c) => ({ ...c, aiChatMaxToolIterations: parseInt(v, 10) }))}
-              options={ITERATION_OPTIONS}
+              options={translated(ITERATION_OPTIONS)}
             />
             <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.3rem" }}>
-              Each tool call (search, create, schedule) counts as one iteration. Complex tasks may need 25+.
+              {t("settings.aiDefaults.iterationsHint")}
             </p>
           </div>
         </div>
@@ -270,7 +274,7 @@ export function AIDefaultsPanel() {
 
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", borderRadius: "8px", background: "color-mix(in srgb, var(--status-warning) 8%, transparent)", border: "1px solid color-mix(in srgb, var(--status-warning) 20%, transparent)", marginBottom: "1.25rem", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
         <AlertTriangle style={{ width: "0.875rem", height: "0.875rem", color: "var(--status-warning)", flexShrink: 0 }} />
-        <span>Changing models affects AI quality and cost. Higher-tier models produce better results but cost more per request. The built-in defaults are recommended for most use cases.</span>
+        <span>{t("settings.aiDefaults.warning")}</span>
       </div>
       </SettingsCard>
     </form>

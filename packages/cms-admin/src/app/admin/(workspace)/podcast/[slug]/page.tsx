@@ -10,12 +10,21 @@
  * har præcis de samme muligheder som denne side. Kunne cms-admin gå udenom,
  * ville der være to veje ind i motoren hvoraf kun den ene er prøvet.
  */
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState, type ReactNode } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useHeaderData } from "@/lib/header-data-context";
+import { useT } from "@/lib/i18n-context";
+
+/** Renders a translated sentence whose {placeholders} are React nodes. */
+function withParts(text: string, parts: Record<string, ReactNode>): ReactNode[] {
+  return text.split(/(\{\w+\})/).map((p, i) => {
+    const m = p.match(/^\{(\w+)\}$/);
+    return <Fragment key={i}>{m && m[1] in parts ? parts[m[1]] : p}</Fragment>;
+  });
+}
 
 type Tilstand = "kladde" | "manuskript-klar" | "godkendt" | "indspillet" | "udgivet";
 type Replik = { speaker: string; text: string };
@@ -34,11 +43,11 @@ type Tjek = { navn: string; ok: boolean; detalje: string };
 type Estimat = { tegn: number; prisUsd: number; prisDkk: string; kursMaalt: string; kursKilde: "opslag" | "reserve"; kurs: number; minutter: number };
 
 const STATUS: Record<Tilstand, string> = {
-  kladde: "○ Kladde",
-  "manuskript-klar": "◔ Manuskript klar",
-  godkendt: "★ Godkendt",
-  indspillet: "♪ Indspillet",
-  udgivet: "● Udgivet",
+  kladde: "tools.podcast.status.kladde",
+  "manuskript-klar": "tools.podcast.status.manuskriptKlar",
+  godkendt: "tools.podcast.status.godkendt",
+  indspillet: "tools.podcast.status.indspillet",
+  udgivet: "tools.podcast.status.udgivet",
 };
 
 /** De fem danske stemmer @broberg/ai-sdk kender. Navnene er SDK'ets egne
@@ -60,6 +69,7 @@ const knap = (primaer: boolean, slukket = false): React.CSSProperties => ({
 });
 
 export default function PodcastAfsnitPage() {
+  const t = useT();
   const slug = String(useParams().slug ?? "");
   const { user } = useHeaderData();
   const maaSkrive = !!user?.permissions?.includes("podcast.edit");
@@ -102,15 +112,15 @@ export default function PodcastAfsnitPage() {
       if (!r.ok) {
         // Beskeden fra serveren VISES ordret. Den navngiver linjen; en
         // omskrivning her ville tage det eneste brugbare ud af den.
-        setManusFejl(j.error ?? `Filen blev afvist (HTTP ${r.status}).`);
+        setManusFejl(j.error ?? t("tools.podcast.fileRejected", { status: r.status }));
         return;
       }
-      setManusOk(`${j.antal} replikker lagt op. Godkendelsen er trukket tilbage — læs igennem og godkend igen.`);
+      setManusOk(t("tools.podcast.uploadOk", { n: j.antal ?? 0 }));
       // LÆS TILBAGE fra serveren frem for at tro på svaret: det er dokumentet
       // på skærmen der skal vise det nye, ikke vores egen hukommelse om det.
       await hent();
     } catch (e) {
-      setManusFejl(e instanceof Error ? e.message : "filen kunne ikke læses");
+      setManusFejl(e instanceof Error ? e.message : t("tools.podcast.fileUnreadable"));
     } finally {
       setUploader(false);
     }
@@ -148,7 +158,7 @@ export default function PodcastAfsnitPage() {
       await hent();
       return true;
     } catch (e) {
-      setFejl(e instanceof Error ? e.message : "Noget gik galt");
+      setFejl(e instanceof Error ? e.message : t("tools.podcast.somethingWrong"));
       return false;
     } finally {
       setArbejder(null);
@@ -159,30 +169,30 @@ export default function PodcastAfsnitPage() {
   const godkendt = tilstand === "godkendt";
   const harLyd = !!afsnit?.data.lydUrl;
 
-  if (henter) return <div style={{ padding: "1.5rem" }} data-testid="podcast-afsnit-henter">Henter…</div>;
+  if (henter) return <div style={{ padding: "1.5rem" }} data-testid="podcast-afsnit-henter">{t("tools.podcast.loading")}</div>;
 
   return (
     <div data-testid="podcast-afsnit-root">
       <ActionBar>
-        <ActionBarBreadcrumb items={["Podcast", afsnit?.data.titel || slug]} />
+        <ActionBarBreadcrumb items={[t("tools.podcast.title"), afsnit?.data.titel || slug]} />
       </ActionBar>
 
       <div style={{ padding: "1.5rem", display: "grid", gap: "1.5rem", gridTemplateColumns: "minmax(0,1fr) 20rem" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: ".75rem", marginBottom: "1rem" }}>
             <span data-testid="podcast-afsnit-status" style={{ fontSize: ".8rem", color: "var(--muted-foreground)" }}>
-              {STATUS[tilstand]}
+              {t(STATUS[tilstand])}
             </span>
             {afsnit?.data.artikelSlug && (
               <span style={{ fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-                fra: {afsnit.data.artikelSlug}
+                {t("tools.podcast.from", { slug: afsnit.data.artikelSlug })}
               </span>
             )}
           </div>
 
-          <h2 style={{ fontSize: ".95rem", margin: "0 0 .25rem" }}>Manuskript</h2>
+          <h2 style={{ fontSize: ".95rem", margin: "0 0 .25rem" }}>{t("tools.podcast.script")}</h2>
           <p style={{ color: "var(--muted-foreground)", fontSize: ".8rem", margin: "0 0 1rem" }}>
-            {replikker.length} replikker · {replikker.reduce((n, r) => n + r.text.length, 0).toLocaleString("da-DK")} tegn
+            {t("tools.podcast.lineStats", { lines: replikker.length, chars: replikker.reduce((n, r) => n + r.text.length, 0).toLocaleString("da-DK") })}
           </p>
 
           {replikker.length === 0 ? (
@@ -190,8 +200,7 @@ export default function PodcastAfsnitPage() {
               border: "1px dashed var(--border)", borderRadius: 8, padding: "1.5rem",
               color: "var(--muted-foreground)", fontSize: ".85rem", lineHeight: 1.6,
             }}>
-              Der er ingen replikker endnu. Skriv dem selv nedenfor, eller lad motoren skrive
-              manuskriptet ud fra en artikel.
+              {t("tools.podcast.noLines")}
             </p>
           ) : (
             <div style={{ display: "grid", gap: ".6rem" }} data-testid="podcast-replikker">
@@ -224,10 +233,10 @@ export default function PodcastAfsnitPage() {
                 onClick={() => void kald("gem", "", { replikker }, "PATCH")}
                 style={knap(true, arbejder === "gem")}
               >
-                {arbejder === "gem" ? "Gemmer…" : "Gem manuskript"}
+                {arbejder === "gem" ? t("tools.podcast.saving") : t("tools.podcast.saveScript")}
               </button>
               <span style={{ fontSize: ".75rem", color: "var(--muted-foreground)", alignSelf: "center" }}>
-                En rettelse trækker godkendelsen tilbage.
+                {t("tools.podcast.editRevokes")}
               </span>
             </div>
           )}
@@ -236,16 +245,16 @@ export default function PodcastAfsnitPage() {
         {/* ── Sidepanel: værter, før studiet, pris, handlinger ─────────── */}
         <aside style={{ display: "grid", gap: "1.25rem", alignContent: "start" }}>
           <section>
-            <h3 style={{ fontSize: ".8rem", margin: "0 0 .6rem" }}>Værterne</h3>
+            <h3 style={{ fontSize: ".8rem", margin: "0 0 .6rem" }}>{t("tools.podcast.hosts")}</h3>
             <div style={{ display: "grid", gap: ".5rem" }}>
               <label style={{ display: "grid", gap: ".2rem", fontSize: ".75rem", color: "var(--muted-foreground)" }}>
-                Aidan · forklarer
+                {t("tools.podcast.aidanRole")}
                 <span data-testid="podcast-stemme-aidan">
                   <CustomSelect options={STEMMER} value={aidan} onChange={setAidan} disabled={!maaSkrive} />
                 </span>
               </label>
               <label style={{ display: "grid", gap: ".2rem", fontSize: ".75rem", color: "var(--muted-foreground)" }}>
-                Airina · spørger på lytterens vegne
+                {t("tools.podcast.airinaRole")}
                 <span data-testid="podcast-stemme-airina">
                   <CustomSelect options={STEMMER} value={airina} onChange={setAirina} disabled={!maaSkrive} />
                 </span>
@@ -255,20 +264,20 @@ export default function PodcastAfsnitPage() {
 
           <section>
             <h3 style={{ fontSize: ".8rem", margin: "0 0 .6rem" }}>
-              Før studiet{" "}
+              {t("tools.podcast.beforeStudio")}{" "}
               <span style={{ color: "var(--muted-foreground)", fontWeight: 400 }}>
-                {tjek.filter((t) => t.ok).length} af {tjek.length}
+                {t("tools.podcast.checksOf", { ok: tjek.filter((c) => c.ok).length, total: tjek.length })}
               </span>
             </h3>
             <ul data-testid="podcast-foer-studiet" style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: ".45rem" }}>
-              {tjek.map((t) => (
-                <li key={t.navn} style={{ display: "grid", gridTemplateColumns: "1rem 1fr", gap: ".4rem", fontSize: ".78rem" }}>
-                  <span aria-hidden="true" style={{ color: t.ok ? "#0d7a5f" : "var(--muted-foreground)" }}>{t.ok ? "✓" : "•"}</span>
+              {tjek.map((c) => (
+                <li key={c.navn} style={{ display: "grid", gridTemplateColumns: "1rem 1fr", gap: ".4rem", fontSize: ".78rem" }}>
+                  <span aria-hidden="true" style={{ color: c.ok ? "#0d7a5f" : "var(--muted-foreground)" }}>{c.ok ? "✓" : "•"}</span>
                   <span>
-                    {t.navn}
-                    {t.detalje && (
+                    {c.navn}
+                    {c.detalje && (
                       <span style={{ display: "block", color: "var(--muted-foreground)", fontSize: ".72rem", marginTop: ".1rem" }}>
-                        {t.detalje}
+                        {c.detalje}
                       </span>
                     )}
                   </span>
@@ -279,12 +288,12 @@ export default function PodcastAfsnitPage() {
 
           {estimat && (
             <section>
-              <h3 style={{ fontSize: ".8rem", margin: "0 0 .6rem" }}>Hvad det koster</h3>
+              <h3 style={{ fontSize: ".8rem", margin: "0 0 .6rem" }}>{t("tools.podcast.whatItCosts")}</h3>
               <dl data-testid="podcast-pris" style={{ margin: 0, fontSize: ".78rem", display: "grid", gap: ".3rem" }}>
                 {[
-                  ["Tegn i manuskriptet", estimat.tegn.toLocaleString("da-DK")],
-                  ["Denne indspilning", estimat.prisDkk],
-                  ["Anslået længde", `~${estimat.minutter} min`],
+                  [t("tools.podcast.charsInScript"), estimat.tegn.toLocaleString("da-DK")],
+                  [t("tools.podcast.thisRecording"), estimat.prisDkk],
+                  [t("tools.podcast.estimatedLength"), t("tools.podcast.minutes", { n: estimat.minutter })],
                 ].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between" }}>
                     <dt style={{ color: "var(--muted-foreground)" }}>{k}</dt>
@@ -300,9 +309,7 @@ export default function PodcastAfsnitPage() {
                 data-testid="podcast-pris-kurs"
                 style={{ margin: ".5rem 0 0", fontSize: ".68rem", color: "var(--muted-foreground)" }}
               >
-                Faktureres i dollars (${estimat.prisUsd.toFixed(2)}) — omregnet til kroner efter
-                kursen den {estimat.kursMaalt}
-                {estimat.kursKilde === "reserve" ? " (sidst kendte — kursen kunne ikke slås op)" : ""}.
+                {t(estimat.kursKilde === "reserve" ? "tools.podcast.billedNoteReserve" : "tools.podcast.billedNote", { usd: estimat.prisUsd.toFixed(2), date: estimat.kursMaalt })}
               </p>
             </section>
           )}
@@ -313,7 +320,7 @@ export default function PodcastAfsnitPage() {
               linjen — «ugyldigt format» ville tvinge ham til selv at lede. */}
           {replikker.length > 0 && (
             <section style={{ display: "grid", gap: ".45rem" }}>
-              <h3 style={{ fontSize: ".8rem", margin: 0 }}>Manuskriptet som fil</h3>
+              <h3 style={{ fontSize: ".8rem", margin: 0 }}>{t("tools.podcast.scriptAsFile")}</h3>
               <a
                 href={`/api/podcast/${slug}/manuskript`}
                 download
@@ -325,7 +332,7 @@ export default function PodcastAfsnitPage() {
                   fontSize: ".78rem", textDecoration: "none", justifyContent: "center",
                 }}
               >
-                ↓ Hent manuskript
+                {t("tools.podcast.downloadScript")}
               </a>
               {maaSkrive && (
                 <>
@@ -339,7 +346,7 @@ export default function PodcastAfsnitPage() {
                       opacity: uploader ? 0.6 : 1,
                     }}
                   >
-                    {uploader ? "Læser filen…" : "↑ Læg rettet manuskript op"}
+                    {uploader ? t("tools.podcast.readingFile") : t("tools.podcast.uploadScript")}
                     <input
                       type="file"
                       accept=".txt,text/plain"
@@ -384,7 +391,7 @@ export default function PodcastAfsnitPage() {
                 onClick={() => void kald("godkend", "/state", { tilstand: "godkendt" })}
                 style={knap(false, arbejder === "godkend")}
               >
-                ★ Godkend manuskript
+                {t("tools.podcast.approveScript")}
               </button>
             )}
 
@@ -396,12 +403,11 @@ export default function PodcastAfsnitPage() {
                   onClick={() => setBekraeft(true)}
                   style={knap(true, !godkendt || arbejder !== null)}
                 >
-                  ♪ Indspil{estimat ? ` for ${estimat.prisDkk}` : ""}
+                  {estimat ? t("tools.podcast.recordFor", { price: estimat.prisDkk }) : t("tools.podcast.record")}
                 </button>
                 {!godkendt && (
                   <p data-testid="podcast-indspil-hjaelp" style={{ margin: 0, fontSize: ".72rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
-                    «Indspil» er slukket indtil manuskriptet er godkendt. Indspilning bruger rigtige
-                    penge og tager minutter.
+                    {t("tools.podcast.recordDisabledHint")}
                   </p>
                 )}
               </>
@@ -415,8 +421,7 @@ export default function PodcastAfsnitPage() {
                 background: "var(--muted)", display: "grid", gap: ".6rem",
               }}>
                 <p style={{ margin: 0, fontSize: ".8rem", lineHeight: 1.5 }}>
-                  Indspil afsnittet med stemmerne <b>{aidan}</b> og <b>{airina}</b>? Beløbet trækkes
-                  hos udbyderen når indspilningen starter — også hvis du kasserer resultatet.
+                  {withParts(t("tools.podcast.confirmRecord"), { aidan: <b>{aidan}</b>, airina: <b>{airina}</b> })}
                 </p>
                 <div style={{ display: "flex", gap: ".4rem" }}>
                   <button
@@ -425,14 +430,14 @@ export default function PodcastAfsnitPage() {
                     onClick={async () => {
                       const ok = await kald("indspil", "/record", { stemmer: { aidan, airina } });
                       setBekraeft(false);
-                      if (ok) setBeskedOk("Afsnittet er indspillet.");
+                      if (ok) setBeskedOk(t("tools.podcast.recorded"));
                     }}
                     style={{
                       fontSize: ".78rem", padding: ".35rem .7rem", borderRadius: 4, border: "none",
                       background: "var(--primary)", color: "var(--primary-foreground)", cursor: "pointer",
                     }}
                   >
-                    {arbejder === "indspil" ? "Indspiller…" : `Ja, indspil${estimat ? ` for ${estimat.prisDkk}` : ""}`}
+                    {arbejder === "indspil" ? t("tools.podcast.recording") : estimat ? t("tools.podcast.yesRecordFor", { price: estimat.prisDkk }) : t("tools.podcast.yesRecord")}
                   </button>
                   <button
                     data-testid="podcast-bekraeft-nej"
@@ -443,7 +448,7 @@ export default function PodcastAfsnitPage() {
                       color: "var(--foreground)", cursor: "pointer",
                     }}
                   >
-                    Nej
+                    {t("tools.podcast.no")}
                   </button>
                 </div>
               </div>
@@ -455,7 +460,7 @@ export default function PodcastAfsnitPage() {
                 <audio controls src={afsnit!.data.lydUrl} data-testid="podcast-afspiller" style={{ width: "100%" }} />
                 {typeof afsnit!.data.faktiskPrisUsd === "number" && (
                   <p style={{ margin: 0, fontSize: ".72rem", color: "var(--muted-foreground)" }}>
-                    Kostede {kurs ? `${(afsnit!.data.faktiskPrisUsd * kurs).toFixed(2).replace(".", ",")} kr` : `$${afsnit!.data.faktiskPrisUsd.toFixed(2)}`}.
+                    {t("tools.podcast.cost", { amount: kurs ? `${(afsnit!.data.faktiskPrisUsd * kurs).toFixed(2).replace(".", ",")} kr` : `$${afsnit!.data.faktiskPrisUsd.toFixed(2)}` })}
                   </p>
                 )}
                 {maaSkrive && tilstand !== "udgivet" && (
@@ -465,7 +470,7 @@ export default function PodcastAfsnitPage() {
                     onClick={() => void kald("udgiv", "/state", { tilstand: "udgivet" })}
                     style={knap(true, arbejder === "udgiv")}
                   >
-                    ● Udgiv afsnittet
+                    {t("tools.podcast.publish")}
                   </button>
                 )}
               </section>
@@ -481,7 +486,7 @@ export default function PodcastAfsnitPage() {
             )}
 
             <Link href="/admin/podcast?fane=afsnit" data-testid="podcast-tilbage" style={{ fontSize: ".75rem", color: "var(--muted-foreground)" }}>
-              ← Alle afsnit
+              {t("tools.podcast.allEpisodes")}
             </Link>
           </section>
         </aside>

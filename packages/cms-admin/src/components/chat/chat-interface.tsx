@@ -7,6 +7,7 @@ import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
 import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy, Brain, Plus, Search, Download, Upload, Package } from "lucide-react";
 import { useHeaderData } from "@/lib/header-data-context";
+import { useT } from "@/lib/i18n-context";
 import { peekQuickAction } from "@broberg/cms-chat-client";
 
 interface ChatInterfaceProps {
@@ -36,6 +37,7 @@ interface MemoryItem {
 type DrawerTab = "conversations" | "memory";
 
 export function ChatInterface({ collections, activeSiteId, visible }: ChatInterfaceProps) {
+  const t = useT();
   // Unique ID for this browser tab — used to skip self-broadcast reloads from SSE sync.
   const tabId = useRef(safeUUID());
   const [messages, setMessages] = useState<ChatMessageUI[]>([]);
@@ -193,11 +195,11 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         });
 
         if (!response.ok) {
-          const err = await response.json().catch(() => ({ error: "Chat request failed" }));
+          const err = await response.json().catch(() => ({ error: t("chat.chatInterface.requestFailedChat") }));
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
-                ? { ...m, content: `Error: ${err.error ?? "Request failed"}`, isStreaming: false }
+                ? { ...m, content: t("chat.chatInterface.errorPrefix", { error: err.error ?? t("chat.chatInterface.requestFailed") }), isStreaming: false }
                 : m
             )
           );
@@ -240,7 +242,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId
-                ? { ...m, content: m.content || "Connection lost. Please try again.", isStreaming: false }
+                ? { ...m, content: m.content || t("chat.chatInterface.connectionLost"), isStreaming: false }
                 : m
             )
           );
@@ -258,7 +260,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
       // Save conversation (use ref to get latest messages including streamed AI response)
       saveConversation(conversationId, messagesRef.current);
     },
-    [messages, conversationId]
+    [messages, conversationId, t]
   );
 
   function handleSSEEvent(assistantId: string, event: string, data: any) {
@@ -716,7 +718,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                       transition: "all 150ms",
                     }}
                   >
-                    Chats
+                    {t("chat.chatInterface.tabChats")}
                   </button>
                   <button
                     data-testid="chat-drawer-tab-memory"
@@ -730,7 +732,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     }}
                   >
                     <Brain style={{ width: "14px", height: "14px" }} />
-                    Memory
+                    {t("chat.chatInterface.tabMemory")}
                     {memoryCount > 0 && (
                       <span style={{
                         fontSize: "0.6rem", padding: "1px 5px", borderRadius: "8px",
@@ -769,7 +771,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                         value={convSearch}
                         onChange={(e) => setConvSearch(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") searchChats(); }}
-                        placeholder="Search chats..."
+                        placeholder={t("chat.chatInterface.searchChats")}
                         style={{
                           flex: 1, border: "none", outline: "none", background: "transparent",
                           fontSize: "0.75rem", color: "var(--foreground)", fontFamily: "inherit",
@@ -794,7 +796,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     const sorted = [...conversations].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
                     return sorted.length === 0 ? (
                       <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                        {convSearch.trim() ? "No chats match your search" : "No previous chats"}
+                        {convSearch.trim() ? t("chat.chatInterface.noChatsMatch") : t("chat.chatInterface.noChats")}
                       </div>
                     ) : (
                       sorted.map((c) => (
@@ -840,24 +842,24 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                   border: "1px solid var(--border)", backgroundColor: "var(--muted)",
                 }}>
                   <div style={{ fontWeight: 600, marginBottom: "6px" }}>
-                    Import from {importPreview.manifest?.siteName ?? "unknown site"}
+                    {t("chat.chatInterface.importFrom", { site: importPreview.manifest?.siteName ?? t("chat.chatInterface.unknownSite") })}
                   </div>
                   <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginBottom: "8px" }}>
                     {importPreview.manifest?.exportedAt
-                      ? `Exported ${new Date(importPreview.manifest.exportedAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
+                      ? t("chat.chatInterface.exportedAt", { date: new Date(importPreview.manifest.exportedAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) })
                       : ""}
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "3px", fontSize: "0.7rem", marginBottom: "8px" }}>
                     <div>
-                      <strong>{importPreview.chats.new}</strong> new chats
+                      <strong>{importPreview.chats.new}</strong> {t("chat.chatInterface.newChats")}
                       {importPreview.chats.existing > 0 && (
-                        <span style={{ color: "var(--muted-foreground)" }}> ({importPreview.chats.existing} already exist, will skip)</span>
+                        <span style={{ color: "var(--muted-foreground)" }}> {t("chat.chatInterface.chatsExistSkip", { count: importPreview.chats.existing })}</span>
                       )}
                     </div>
                     <div>
-                      <strong>{importPreview.memories.new}</strong> new memories
+                      <strong>{importPreview.memories.new}</strong> {t("chat.chatInterface.newMemories")}
                       {importPreview.memories.existing > 0 && (
-                        <span style={{ color: "var(--muted-foreground)" }}> ({importPreview.memories.existing} duplicates, will skip)</span>
+                        <span style={{ color: "var(--muted-foreground)" }}> {t("chat.chatInterface.memoriesDupSkip", { count: importPreview.memories.existing })}</span>
                       )}
                     </div>
                   </div>
@@ -871,7 +873,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                         cursor: "pointer",
                       }}
                     >
-                      Merge {importPreview.chats.new + importPreview.memories.new} items
+                      {t("chat.chatInterface.mergeItems", { count: importPreview.chats.new + importPreview.memories.new })}
                     </button>
                     <button
                       data-testid="chat-drawer-import-cancel"
@@ -882,7 +884,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                         color: "var(--muted-foreground)", cursor: "pointer",
                       }}
                     >
-                      Cancel
+                      {t("chat.chatInterface.cancel")}
                     </button>
                   </div>
                 </div>
@@ -894,9 +896,9 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                   backgroundColor: "color-mix(in srgb, rgb(74 222 128) 10%, transparent)",
                   color: "rgb(74 222 128)",
                 }}>
-                  Imported {importResult.chats.imported} chats, {importResult.memories.added} memories
-                  {(importResult.chats.skipped > 0 || importResult.memories.skipped > 0) &&
-                    ` (skipped ${importResult.chats.skipped + importResult.memories.skipped} duplicates)`}
+                  {(importResult.chats.skipped > 0 || importResult.memories.skipped > 0)
+                    ? t("chat.chatInterface.importedSkipped", { chats: importResult.chats.imported, memories: importResult.memories.added, skipped: importResult.chats.skipped + importResult.memories.skipped })
+                    : t("chat.chatInterface.imported", { chats: importResult.chats.imported, memories: importResult.memories.added })}
                 </div>
               )}
               {/* Export/Import buttons */}
@@ -913,7 +915,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     }}
                   >
                     <Download style={{ width: "13px", height: "13px" }} />
-                    Export all
+                    {t("chat.chatInterface.exportAll")}
                   </button>
                   <button
                     data-testid="chat-drawer-import-all"
@@ -926,7 +928,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     }}
                   >
                     <Upload style={{ width: "13px", height: "13px" }} />
-                    Import .zip
+                    {t("chat.chatInterface.importZip")}
                   </button>
                 </div>
               )}
@@ -959,7 +961,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
           data-testid="chat-input-thinking-toggle"
           type="button"
           onClick={() => { const next = !showThinking; setShowThinking(next); localStorage.setItem("cms-chat-show-thinking", String(next)); }}
-          title={showThinking ? "Hide thinking process" : "Show thinking process"}
+          title={showThinking ? t("chat.chatInterface.hideThinking") : t("chat.chatInterface.showThinking")}
           style={{
             display: "inline-flex", alignItems: "center", gap: "4px",
             padding: "2px 8px", borderRadius: "4px", fontSize: "0.65rem",
@@ -969,7 +971,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
             fontWeight: 500, transition: "all 150ms",
           }}
         >
-          <span style={{ fontSize: "0.7rem" }}>💭</span> Thinking
+          <span style={{ fontSize: "0.7rem" }}>💭</span> {t("chat.chatInterface.thinking")}
         </button>
       </ChatInput>
     </div>
@@ -980,6 +982,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
   id: string; title: string; updatedAt: string; isActive: boolean; starred?: boolean;
   onLoad: () => void; onRename: (t: string) => void; onDelete: () => void; onStar: () => void;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(title);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -1111,7 +1114,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           >
             <Star style={{ width: "13px", height: "13px", ...(starred ? { color: "var(--brand)", fill: "var(--brand)" } : {}) }} />
-            {starred ? "Unstar" : "Star"}
+            {starred ? t("chat.chatInterface.unstar") : t("chat.chatInterface.star")}
           </button>
           <button
             data-testid="chat-history-menu-copy-id"
@@ -1121,7 +1124,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           >
             <Copy style={{ width: "13px", height: "13px" }} />
-            Copy ID
+            {t("chat.chatInterface.copyId")}
           </button>
           <button
             data-testid="chat-history-menu-rename"
@@ -1131,19 +1134,19 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           >
             <Pencil style={{ width: "13px", height: "13px" }} />
-            Rename
+            {t("chat.chatInterface.rename")}
           </button>
           {confirmDelete ? (
             <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "5px 12px" }}>
-              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Delete?</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("chat.chatInterface.deleteConfirm")}</span>
               <button data-testid="chat-history-delete-confirm-yes" onClick={(e) => { e.stopPropagation(); onDelete(); setMenuOpen(false); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                   border: "none", background: "var(--destructive)", color: "#fff",
-                  cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                  cursor: "pointer", lineHeight: 1 }}>{t("chat.chatInterface.yes")}</button>
               <button data-testid="chat-history-delete-confirm-no" onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                   border: "1px solid var(--border)", background: "transparent",
-                  color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                  color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("chat.chatInterface.no")}</button>
             </div>
           ) : (
             <button
@@ -1154,7 +1157,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
             >
               <Trash2 style={{ width: "13px", height: "13px" }} />
-              Delete
+              {t("chat.chatInterface.delete")}
             </button>
           )}
         </div>
@@ -1183,6 +1186,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
   onExport: () => void;
   onImport: () => void;
 }) {
+  const t = useT();
   const [addMode, setAddMode] = useState(false);
   const [addValue, setAddValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -1206,7 +1210,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") onSearch(); }}
-            placeholder="Search memories..."
+            placeholder={t("chat.chatInterface.searchMemories")}
             style={{
               flex: 1, border: "none", outline: "none", background: "transparent",
               fontSize: "0.75rem", color: "var(--foreground)", fontFamily: "inherit",
@@ -1216,7 +1220,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
         <button
           data-testid="chat-memory-add-button"
           onClick={() => setAddMode(true)}
-          title="Add memory"
+          title={t("chat.chatInterface.addMemory")}
           style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             width: "30px", height: "30px", borderRadius: "6px",
@@ -1229,7 +1233,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
         <button
           data-testid="chat-memory-import-button"
           onClick={onImport}
-          title="Import memories"
+          title={t("chat.chatInterface.importMemories")}
           style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             width: "30px", height: "30px", borderRadius: "6px",
@@ -1242,7 +1246,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
         <button
           data-testid="chat-memory-export-button"
           onClick={onExport}
-          title="Export memories"
+          title={t("chat.chatInterface.exportMemories")}
           style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             width: "30px", height: "30px", borderRadius: "6px",
@@ -1270,7 +1274,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
               }
               if (e.key === "Escape") { setAddValue(""); setAddMode(false); }
             }}
-            placeholder="Type a fact to remember..."
+            placeholder={t("chat.chatInterface.factPlaceholder")}
             style={{
               flex: 1, fontSize: "0.75rem", padding: "5px 8px", borderRadius: "6px",
               border: "1px solid var(--primary)", backgroundColor: "var(--background)",
@@ -1292,7 +1296,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
               fontSize: "0.7rem", fontWeight: 500, cursor: "pointer",
             }}
           >
-            Save
+            {t("chat.chatInterface.save")}
           </button>
           <button
             data-testid="chat-memory-add-cancel"
@@ -1303,7 +1307,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
               fontSize: "0.7rem", cursor: "pointer", color: "var(--muted-foreground)",
             }}
           >
-            Cancel
+            {t("chat.chatInterface.cancel")}
           </button>
         </div>
       )}
@@ -1312,7 +1316,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
       <div style={{ flex: 1, overflowY: "auto" }}>
         {memories.length === 0 ? (
           <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-            {search.trim() ? "No memories match your search" : "No memories yet. Chat will learn over time."}
+            {search.trim() ? t("chat.chatInterface.noMemoriesMatch") : t("chat.chatInterface.noMemories")}
           </div>
         ) : (
           memories.map((m) => (
@@ -1325,6 +1329,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
 }
 
 function MemoryRow({ memory, onDelete }: { memory: MemoryItem; onDelete: () => void }) {
+  const t = useT();
   const [confirm, setConfirm] = useState(false);
 
   return (
@@ -1347,7 +1352,7 @@ function MemoryRow({ memory, onDelete }: { memory: MemoryItem; onDelete: () => v
             </span>
             {memory.hitCount > 0 && (
               <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)" }}>
-                {memory.hitCount}x used
+                {t("chat.chatInterface.timesUsed", { count: memory.hitCount })}
               </span>
             )}
           </div>
@@ -1361,15 +1366,15 @@ function MemoryRow({ memory, onDelete }: { memory: MemoryItem; onDelete: () => v
         <div style={{ flexShrink: 0 }}>
           {confirm ? (
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("chat.chatInterface.removeConfirm")}</span>
               <button data-testid="chat-memory-delete-confirm-yes" onClick={onDelete}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                   border: "none", background: "var(--destructive)", color: "#fff",
-                  cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                  cursor: "pointer", lineHeight: 1 }}>{t("chat.chatInterface.yes")}</button>
               <button data-testid="chat-memory-delete-confirm-no" onClick={() => setConfirm(false)}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                   border: "1px solid var(--border)", background: "transparent",
-                  color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                  color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("chat.chatInterface.no")}</button>
             </div>
           ) : (
             <button

@@ -1,1 +1,44 @@
-{}
+{
+  "yes": "Ja",
+  "no": "Nej",
+  "edit": "Redigér",
+  "preview": "Forhåndsvisning",
+  "cancel": "Annuller",
+  "close": "Luk",
+  "dateInput": {
+    "openCalendar": "Åbn kalender",
+    "formatHint": "Brug ÅÅÅÅ-MM-DD",
+    "previousMonth": "Forrige måned",
+    "nextMonth": "Næste måned",
+    "today": "I dag",
+    "clear": "Ryd",
+    "weekdayInitials": "M T O T F L S",
+    "months": {
+      "january": "Januar",
+      "february": "Februar",
+      "march": "Marts",
+      "april": "April",
+      "may": "Maj",
+      "june": "Juni",
+      "july": "Juli",
+      "august": "August",
+      "september": "September",
+      "october": "Oktober",
+      "november": "November",
+      "december": "December"
+    }
+  },
+  "timeInput": {
+    "placeholder": "TT:MM",
+    "formatHint": "Brug TT:MM (00:00 – 23:59)"
+  },
+  "help": {
+    "loading": "Indlæser…",
+    "learnMore": "Læs mere i dokumentationen"
+  },
+  "sidebar": {
+    "title": "Sidebjælke",
+    "description": "Viser sidebjælken på mobil.",
+    "toggle": "Vis/skjul sidebjælke"
+  }
+}

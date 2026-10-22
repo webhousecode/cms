@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { Gauge, RefreshCw, Monitor, Smartphone, ChevronDown, ChevronRight, TrendingDown, TrendingUp, Sparkles, Check, Wrench, Download } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { TabTitle } from "@/lib/tabs-context";
+import { useT } from "@/lib/i18n-context";
 import { scoreColor, SCORE_COLOR_MAP, type LighthouseResult, type ScoreHistoryEntry } from "@/lib/lighthouse/types";
 
 export default function LighthousePage() {
+  const t = useT();
   const [mobile, setMobile] = useState<LighthouseResult | null>(null);
   const [desktop, setDesktop] = useState<LighthouseResult | null>(null);
   const [history, setHistory] = useState<ScoreHistoryEntry[]>([]);
@@ -52,11 +54,11 @@ export default function LighthousePage() {
       const histRes = await fetch("/api/admin/lighthouse/history");
       setHistory(await histRes.json());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Scan failed");
+      setError(err instanceof Error ? err.message : t("tools.lighthouse.scanFailed"));
     } finally {
       setScanning(false);
     }
-  }, []);
+  }, [t]);
 
   const handleOptimize = useCallback(async () => {
     setOptimizing(true);
@@ -71,11 +73,11 @@ export default function LighthousePage() {
       if (!res.ok) throw new Error(data.error);
       setOptimizeResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Optimize failed");
+      setError(err instanceof Error ? err.message : t("tools.lighthouse.optimizeFailed"));
     } finally {
       setOptimizing(false);
     }
-  }, [mobile, desktop]);
+  }, [mobile, desktop, t]);
 
   const hasResults = !!(mobile?.scores || desktop?.scores);
   const hasIssues = (mobile?.opportunities?.length ?? 0) + (mobile?.diagnostics?.length ?? 0) + (desktop?.opportunities?.length ?? 0) + (desktop?.diagnostics?.length ?? 0) > 0;
@@ -107,7 +109,7 @@ export default function LighthousePage() {
             <button
               data-testid="lighthouse-export-button"
               onClick={handleExport}
-              title="Download a Markdown report ready to paste into Claude/ChatGPT or hand to a developer"
+              title={t("tools.lighthouse.exportTitle")}
               style={{
                 height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
                 padding: "0 0.75rem", borderRadius: 6,
@@ -118,7 +120,7 @@ export default function LighthousePage() {
               }}
             >
               <Download style={{ width: 13, height: 13 }} />
-              Export report
+              {t("tools.lighthouse.exportReport")}
             </button>
           )}
           {hasIssues && (
@@ -137,7 +139,7 @@ export default function LighthousePage() {
               }}
             >
               <Sparkles style={{ width: 13, height: 13, color: "var(--brand)" }} />
-              {optimizing ? "Optimizing..." : "Optimize"}
+              {optimizing ? t("tools.lighthouse.optimizing") : t("tools.lighthouse.optimize")}
             </button>
           )}
           <button
@@ -154,7 +156,7 @@ export default function LighthousePage() {
             }}
           >
             <RefreshCw style={{ width: 13, height: 13, animation: scanning ? "spin 1s linear infinite" : "none" }} />
-            {scanning ? "Scanning both..." : "Run Scan"}
+            {scanning ? t("tools.lighthouse.scanning") : t("tools.lighthouse.runScan")}
           </button>
           </div>
         }
@@ -178,8 +180,8 @@ export default function LighthousePage() {
         {hasResults ? (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "2rem" }}>
-              <StrategyCard label="Mobile" icon={<Smartphone style={{ width: 15, height: 15 }} />} result={mobile} history={history} strategy="mobile" />
-              <StrategyCard label="Desktop" icon={<Monitor style={{ width: 15, height: 15 }} />} result={desktop} history={history} strategy="desktop" />
+              <StrategyCard label={t("tools.lighthouse.mobile")} icon={<Smartphone style={{ width: 15, height: 15 }} />} result={mobile} history={history} strategy="mobile" />
+              <StrategyCard label={t("tools.lighthouse.desktop")} icon={<Monitor style={{ width: 15, height: 15 }} />} result={desktop} history={history} strategy="desktop" />
             </div>
 
             {/* ── Optimize Results ── */}
@@ -187,7 +189,7 @@ export default function LighthousePage() {
               <div style={{ marginBottom: "2rem", padding: "1rem", borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)" }}>
                 <div style={{ fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <Sparkles style={{ width: 15, height: 15, color: "var(--brand)" }} />
-                  Optimization Report — {optimizeResult.fixedCount} fixed, {optimizeResult.manualCount} need manual attention
+                  {t("tools.lighthouse.optimizationReport", { fixed: optimizeResult.fixedCount, manual: optimizeResult.manualCount })}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                   {optimizeResult.fixes.map((fix) => (
@@ -207,7 +209,7 @@ export default function LighthousePage() {
                           color: fix.status === "fixed" ? "#22c55e" : "#ffa400",
                           fontWeight: 600,
                         }}>
-                          {fix.status === "fixed" ? "AUTO-FIXED" : "MANUAL"}
+                          {fix.status === "fixed" ? t("tools.lighthouse.autoFixed") : t("tools.lighthouse.manual")}
                         </span>
                       </div>
                       <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
@@ -239,16 +241,16 @@ export default function LighthousePage() {
             background: "var(--card)",
           }}>
             <Gauge style={{ width: 32, height: 32, color: "var(--muted-foreground)", margin: "0 auto 0.75rem" }} />
-            <div style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.25rem" }}>No scans yet</div>
+            <div style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "0.25rem" }}>{t("tools.lighthouse.noScans")}</div>
             <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-              Run your first scan to see performance, accessibility, SEO, and best practices — for both mobile and desktop.
+              {t("tools.lighthouse.noScansHint")}
             </div>
             <button data-testid="lighthouse-first-scan-button" onClick={handleScan} disabled={scanning} style={{
               padding: "0.5rem 1.25rem", borderRadius: 6, border: "none",
               background: "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.82rem",
               fontWeight: 600, cursor: "pointer",
             }}>
-              Run first scan
+              {t("tools.lighthouse.runFirstScan")}
             </button>
           </div>
         ) : null}
@@ -408,13 +410,14 @@ function StrategyCard({ label, icon, result, history, strategy }: {
   history: ScoreHistoryEntry[];
   strategy: "mobile" | "desktop";
 }) {
+  const t = useT();
   if (!result?.scores) {
     return (
       <div style={{ padding: "1.5rem", borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)", opacity: 0.5, textAlign: "center" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.35rem", fontSize: "0.78rem", fontWeight: 600, color: "var(--muted-foreground)" }}>
           {icon} {label}
         </div>
-        <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>No data yet</div>
+        <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>{t("tools.lighthouse.noData")}</div>
       </div>
     );
   }
@@ -446,7 +449,7 @@ function StrategyCard({ label, icon, result, history, strategy }: {
                 {value}
               </div>
               <div style={{ fontSize: "0.65rem", fontWeight: 600 }}>
-                {key === "bestPractices" ? "Best Pr." : key === "seo" ? "SEO" : key.charAt(0).toUpperCase() + key.slice(1)}
+                {t(`tools.lighthouse.score.${key}`)}
               </div>
               {diff !== 0 && (
                 <div style={{ fontSize: "0.6rem", color: diff > 0 ? "#0cce6b" : "#ff4e42", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.1rem" }}>
@@ -477,6 +480,7 @@ function StrategyCard({ label, icon, result, history, strategy }: {
 function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | null; desktop: LighthouseResult | null }) {
   const [expandOpps, setExpandOpps] = useState(true);
   const [expandDiag, setExpandDiag] = useState(false);
+  const t = useT();
 
   // Merge and deduplicate opportunities from both
   const allOpps = new Map<string, { title: string; savingsMs?: number; score: number | null; source: string }>();
@@ -513,7 +517,7 @@ function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | 
             cursor: "pointer", color: "var(--foreground)", fontSize: "0.82rem", fontWeight: 600, padding: 0, marginBottom: "0.5rem",
           }}>
             {expandOpps ? <ChevronDown style={{ width: 14, height: 14 }} /> : <ChevronRight style={{ width: 14, height: 14 }} />}
-            Opportunities ({opps.length})
+            {t("tools.lighthouse.opportunities", { n: opps.length })}
           </button>
           {expandOpps && (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
@@ -527,11 +531,11 @@ function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | 
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: opp.score !== null && opp.score < 0.5 ? "#ff4e42" : "#ffa400", flexShrink: 0 }} />
                     {opp.title}
-                    <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", background: "var(--muted)", padding: "1px 4px", borderRadius: 3 }}>{opp.source}</span>
+                    <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", background: "var(--muted)", padding: "1px 4px", borderRadius: 3 }}>{opp.source === "desktop" ? t("tools.lighthouse.desktop") : t("tools.lighthouse.mobile")}</span>
                   </div>
                   {opp.savingsMs && (
                     <span style={{ color: "var(--muted-foreground)", fontSize: "0.72rem", whiteSpace: "nowrap" }}>
-                      save {(opp.savingsMs / 1000).toFixed(1)}s
+                      {t("tools.lighthouse.save", { s: (opp.savingsMs / 1000).toFixed(1) })}
                     </span>
                   )}
                 </div>
@@ -548,7 +552,7 @@ function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | 
             cursor: "pointer", color: "var(--foreground)", fontSize: "0.82rem", fontWeight: 600, padding: 0, marginBottom: "0.5rem",
           }}>
             {expandDiag ? <ChevronDown style={{ width: 14, height: 14 }} /> : <ChevronRight style={{ width: 14, height: 14 }} />}
-            Diagnostics ({diags.length})
+            {t("tools.lighthouse.diagnostics", { n: diags.length })}
           </button>
           {expandDiag && (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
@@ -574,21 +578,22 @@ function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | 
 // ── History Table ──
 
 function HistoryTable({ history }: { history: ScoreHistoryEntry[] }) {
+  const t = useT();
   return (
     <div>
       <div style={{ fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>
-        Score History ({history.length} scans)
+        {t("tools.lighthouse.scoreHistory", { n: history.length })}
       </div>
       <div style={{ padding: "0.75rem", borderRadius: 8, border: "1px solid var(--border)", background: "var(--card)", overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.72rem" }}>
           <thead>
             <tr>
-              <th style={thStyle}>Date</th>
-              <th style={thStyle}>Strategy</th>
-              <th style={thStyle}>Perf</th>
-              <th style={thStyle}>Access</th>
-              <th style={thStyle}>SEO</th>
-              <th style={thStyle}>Best Pr.</th>
+              <th style={thStyle}>{t("tools.lighthouse.thDate")}</th>
+              <th style={thStyle}>{t("tools.lighthouse.thStrategy")}</th>
+              <th style={thStyle}>{t("tools.lighthouse.thPerf")}</th>
+              <th style={thStyle}>{t("tools.lighthouse.thAccess")}</th>
+              <th style={thStyle}>{t("tools.lighthouse.thSeo")}</th>
+              <th style={thStyle}>{t("tools.lighthouse.thBestPractices")}</th>
             </tr>
           </thead>
           <tbody>
@@ -598,7 +603,7 @@ function HistoryTable({ history }: { history: ScoreHistoryEntry[] }) {
                 <td style={tdStyle}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: "0.2rem" }}>
                     {entry.strategy === "mobile" ? <Smartphone style={{ width: 10, height: 10 }} /> : <Monitor style={{ width: 10, height: 10 }} />}
-                    {entry.strategy}
+                    {entry.strategy === "desktop" ? t("tools.lighthouse.desktop") : t("tools.lighthouse.mobile")}
                   </span>
                 </td>
                 <td style={tdStyle}><ScoreBadge score={entry.scores.performance} /></td>
@@ -634,6 +639,7 @@ function PsiKeySetup() {
   const [key, setKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const t = useT();
 
   async function handleSave() {
     if (!key.trim()) return;
@@ -649,19 +655,19 @@ function PsiKeySetup() {
 
   return (
     <div style={{ marginTop: "0.75rem", padding: "0.75rem", borderRadius: 6, background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: "0.78rem" }}>
-      <div style={{ fontWeight: 600, marginBottom: "0.35rem" }}>Set up your own PageSpeed Insights API key</div>
+      <div style={{ fontWeight: 600, marginBottom: "0.35rem" }}>{t("tools.lighthouse.psiTitle")}</div>
       <div style={{ color: "var(--muted-foreground)", marginBottom: "0.5rem", lineHeight: 1.5 }}>
-        Get a free key (25,000 scans/day):
+        {t("tools.lighthouse.psiFree")}
       </div>
       <ol style={{ margin: "0 0 0.5rem 1.25rem", padding: 0, color: "var(--muted-foreground)", lineHeight: 1.7 }}>
-        <li><a data-testid="lighthouse-setup-psi-api-link" href="https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com" target="_blank" rel="noopener" style={{ color: "var(--brand)" }}>Enable PageSpeed Insights API</a></li>
-        <li><a data-testid="lighthouse-setup-api-credentials-link" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style={{ color: "var(--brand)" }}>Create API Key</a></li>
-        <li>Paste below</li>
+        <li><a data-testid="lighthouse-setup-psi-api-link" href="https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com" target="_blank" rel="noopener" style={{ color: "var(--brand)" }}>{t("tools.lighthouse.psiEnable")}</a></li>
+        <li><a data-testid="lighthouse-setup-api-credentials-link" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style={{ color: "var(--brand)" }}>{t("tools.lighthouse.psiCreate")}</a></li>
+        <li>{t("tools.lighthouse.psiPaste")}</li>
       </ol>
       <div style={{ display: "flex", gap: "0.4rem" }}>
-        <input data-testid="lighthouse-api-key-input" type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="AIzaSy..." style={{ flex: 1, padding: "0.35rem 0.6rem", borderRadius: 5, border: "1px solid var(--border)", background: "var(--background)", fontSize: "0.78rem", color: "var(--foreground)", outline: "none" }} />
+        <input data-testid="lighthouse-api-key-input" type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder={t("tools.lighthouse.psiPlaceholder")} style={{ flex: 1, padding: "0.35rem 0.6rem", borderRadius: 5, border: "1px solid var(--border)", background: "var(--background)", fontSize: "0.78rem", color: "var(--foreground)", outline: "none" }} />
         <button data-testid="lighthouse-api-key-save-button" onClick={handleSave} disabled={saving || !key.trim() || saved} style={{ padding: "0.35rem 0.75rem", borderRadius: 5, border: "none", background: saved ? "#0cce6b" : "var(--brand)", color: "var(--brand-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: saving ? "wait" : "pointer", opacity: saving || !key.trim() ? 0.6 : 1 }}>
-          {saved ? "Saved ✓" : "Save key"}
+          {saved ? t("tools.lighthouse.savedKey") : t("tools.lighthouse.saveKey")}
         </button>
       </div>
     </div>

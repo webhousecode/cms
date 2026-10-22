@@ -6,6 +6,7 @@ import { LOCALE_FLAGS } from "@/lib/locale";
 import { TabTitle } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n-context";
 import type { SeoDocSummary } from "@/app/api/admin/seo/route";
 import type { KeywordAnalysis } from "@/lib/seo/keywords";
 
@@ -30,6 +31,7 @@ function densityColor(density: number): string {
 }
 
 export default function SeoPage() {
+  const t = useT();
   const [data, setData] = useState<SeoOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [optimizing, setOptimizing] = useState(false);
@@ -93,13 +95,13 @@ export default function SeoPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.error ?? "Failed to add keyword");
+        toast.error(err.error ?? t("tools.seo.addFailed"));
       } else {
         setNewKeyword("");
         loadKeywords();
       }
     } catch {
-      toast.error("Failed to add keyword");
+      toast.error(t("tools.seo.addFailed"));
     }
     setAddingKeyword(false);
   }
@@ -114,14 +116,14 @@ export default function SeoPage() {
       setConfirmRemove(null);
       loadKeywords();
     } catch {
-      toast.error("Failed to remove keyword");
+      toast.error(t("tools.seo.removeFailed"));
     }
   }
 
   async function handleExport(format: "csv" | "json") {
     try {
       const res = await fetch(`/api/admin/seo/export?format=${format}`);
-      if (!res.ok) { toast.error("Export failed"); return; }
+      if (!res.ok) { toast.error(t("tools.seo.exportFailed")); return; }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -129,9 +131,9 @@ export default function SeoPage() {
       a.download = `seo-report.${format}`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success(`Downloaded seo-report.${format}`);
+      toast.success(t("tools.seo.downloaded", { file: `seo-report.${format}` }));
     } catch {
-      toast.error("Export failed");
+      toast.error(t("tools.seo.exportFailed"));
     }
   }
 
@@ -160,13 +162,13 @@ export default function SeoPage() {
             } else if (event.type === "error") {
               setOptimizeProgress((p) => ({ ...p, done: event.done }));
             } else if (event.type === "done") {
-              toast.success(`Optimized ${event.done} documents`);
+              toast.success(t("tools.seo.optimizedDocs", { n: event.done }));
             }
           } catch { /* skip bad lines */ }
         }
       }
     } catch {
-      toast.error("Bulk optimize failed");
+      toast.error(t("tools.seo.bulkFailed"));
     }
     setOptimizing(false);
     loadData();
@@ -174,7 +176,7 @@ export default function SeoPage() {
   }
 
   async function optimizeSingle(collection: string, slug: string) {
-    const toastId = toast.loading(`Optimizing ${slug}...`);
+    const toastId = toast.loading(t("tools.seo.optimizingSlug", { slug }));
     try {
       const res = await fetch("/api/admin/seo/optimize-bulk", {
         method: "POST",
@@ -191,10 +193,10 @@ export default function SeoPage() {
           buffer += decoder.decode(value, { stream: true });
         }
       }
-      toast.success(`Optimized ${slug}`, { id: toastId });
+      toast.success(t("tools.seo.optimizedSlug", { slug }), { id: toastId });
       loadData();
     } catch {
-      toast.error("Failed", { id: toastId });
+      toast.error(t("tools.seo.failed"), { id: toastId });
     }
   }
 
@@ -205,7 +207,7 @@ export default function SeoPage() {
 
   return (
     <div data-testid="seo-root">
-      <TabTitle value="SEO" />
+      <TabTitle value={t("tools.seo.title")} />
       <ActionBar helpArticleId="seo-dashboard-intro" actions={
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           <ActionButton
@@ -213,7 +215,7 @@ export default function SeoPage() {
             onClick={() => handleExport("csv")}
             icon={<Download style={{ width: 14, height: 14 }} />}
           >
-            Export CSV
+            {t("tools.seo.exportCsv")}
           </ActionButton>
           <ActionButton
             variant="primary"
@@ -221,22 +223,22 @@ export default function SeoPage() {
             disabled={optimizing || !data || data.optimized === data.total}
             icon={optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
           >
-            {optimizing ? `Optimizing ${optimizeProgress.done}/${optimizeProgress.total}...` : `Optimize All (${data ? data.total - data.optimized : 0})`}
+            {optimizing ? t("tools.seo.optimizingProgress", { done: optimizeProgress.done, total: optimizeProgress.total }) : t("tools.seo.optimizeAll", { n: data ? data.total - data.optimized : 0 })}
           </ActionButton>
         </div>
       }>
-        <ActionBarBreadcrumb items={["Tools", "SEO"]} /></ActionBar>
+        <ActionBarBreadcrumb items={[t("tools.common.tools"), t("tools.seo.title")]} /></ActionBar>
 
       {loading ? (
-        <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>Loading SEO data...</div>
+        <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>{t("tools.seo.loading")}</div>
       ) : !data ? (
-        <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>Failed to load SEO data</div>
+        <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>{t("tools.seo.loadFailed")}</div>
       ) : (
         <div style={{ padding: "1.25rem" }}>
           {/* Summary cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-              <p style={lbl}>Average Score</p>
+              <p style={lbl}>{t("tools.seo.avgScore")}</p>
               <p style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "monospace", color: scoreColor(data.avgScore), margin: 0 }}>
                 {data.avgScore}
               </p>
@@ -245,33 +247,33 @@ export default function SeoPage() {
               </div>
             </div>
             <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-              <p style={lbl}>Documents</p>
+              <p style={lbl}>{t("tools.seo.documents")}</p>
               <p style={{ fontSize: "2rem", fontWeight: 800, fontFamily: "monospace", margin: 0 }}>{data.total}</p>
               <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0" }}>
-                {data.optimized} optimized
+                {t("tools.seo.optimizedCount", { n: data.optimized })}
               </p>
             </div>
             <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
-              <p style={lbl}>Issues</p>
+              <p style={lbl}>{t("tools.seo.issues")}</p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.25rem" }}>
                 {data.issues.missingTitle > 0 && (
                   <p style={{ fontSize: "0.75rem", color: "#f87171", margin: 0 }}>
-                    {data.issues.missingTitle} missing meta title
+                    {t("tools.seo.missingTitle", { n: data.issues.missingTitle })}
                   </p>
                 )}
                 {data.issues.missingDesc > 0 && (
                   <p style={{ fontSize: "0.75rem", color: "#f87171", margin: 0 }}>
-                    {data.issues.missingDesc} missing meta description
+                    {t("tools.seo.missingDesc", { n: data.issues.missingDesc })}
                   </p>
                 )}
                 {data.issues.missingOg > 0 && (
                   <p style={{ fontSize: "0.75rem", color: "var(--brand)", margin: 0 }}>
-                    {data.issues.missingOg} missing OG image
+                    {t("tools.seo.missingOg", { n: data.issues.missingOg })}
                   </p>
                 )}
                 {data.issues.missingTitle === 0 && data.issues.missingDesc === 0 && data.issues.missingOg === 0 && (
                   <p style={{ fontSize: "0.75rem", color: "#4ade80", margin: 0, display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                    <CheckCircle2 style={{ width: 12, height: 12 }} /> All good
+                    <CheckCircle2 style={{ width: 12, height: 12 }} /> {t("tools.seo.allGood")}
                   </p>
                 )}
               </div>
@@ -294,7 +296,7 @@ export default function SeoPage() {
                   marginBottom: "-1px",
                 }}
               >
-                {tab === "documents" ? `Documents (${data.total})` : `Keywords (${keywordData?.analyses?.length ?? 0})`}
+                {tab === "documents" ? t("tools.seo.tabDocuments", { n: data.total }) : t("tools.seo.tabKeywords", { n: keywordData?.analyses?.length ?? 0 })}
               </button>
             ))}
           </div>
@@ -313,7 +315,7 @@ export default function SeoPage() {
                     type="text"
                     value={newKeyword}
                     onChange={(e) => setNewKeyword(e.target.value)}
-                    placeholder="Add keyword..."
+                    placeholder={t("tools.seo.addKeywordPlaceholder")}
                     style={{
                       padding: "0.25rem 0.5rem", fontSize: "0.75rem", borderRadius: "4px",
                       border: "1px solid var(--border)", background: "var(--background)",
@@ -333,25 +335,25 @@ export default function SeoPage() {
                       fontSize: "0.7rem", fontWeight: 600,
                     }}
                   >
-                    <Plus style={{ width: 12, height: 12 }} /> Add
+                    <Plus style={{ width: 12, height: 12 }} /> {t("tools.seo.add")}
                   </button>
                 </form>
               </div>
 
               {keywordLoading ? (
-                <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Loading keywords...</p>
+                <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{t("tools.seo.loadingKeywords")}</p>
               ) : !keywordData?.analyses?.length ? (
                 <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>
-                  No tracked keywords yet. Add keywords above to track coverage across your content.
+                  {t("tools.seo.noKeywords")}
                 </p>
               ) : (
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                      <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>Keyword</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 80 }}>Type</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 60 }}>Docs</th>
-                      <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 120 }}>Coverage</th>
+                      <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>{t("tools.seo.thKeyword")}</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 80 }}>{t("tools.seo.thType")}</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 60 }}>{t("tools.seo.thDocs")}</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 120 }}>{t("tools.seo.thCoverage")}</th>
                       <th style={{ textAlign: "right", padding: "0.5rem 0.75rem", width: 80 }}></th>
                     </tr>
                   </thead>
@@ -372,7 +374,7 @@ export default function SeoPage() {
                               color: kw.target === "primary" ? "var(--brand)" : kw.target === "secondary" ? "#4ade80" : "#a78bfa",
                               fontWeight: 600, textTransform: "uppercase",
                             }}>
-                              {kw.target}
+                              {t(`tools.seo.target.${kw.target}`)}
                             </span>
                           </td>
                           <td style={{ textAlign: "center", padding: "0.5rem", fontFamily: "monospace" }}>
@@ -394,19 +396,19 @@ export default function SeoPage() {
                           <td style={{ textAlign: "right", padding: "0.5rem 0.75rem" }}>
                             {confirmRemove === kw.keyword ? (
                               <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
-                                <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                                <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("tools.common.removeConfirm")}</span>
                                 <button
                                   type="button"
                                   data-testid={`keyword-confirm-yes-${kw.keyword}`}
                                   onClick={(e) => { e.stopPropagation(); handleRemoveKeyword(kw.keyword); }}
                                   style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
-                                >Yes</button>
+                                >{t("tools.common.yes")}</button>
                                 <button
                                   type="button"
                                   data-testid={`keyword-confirm-no-${kw.keyword}`}
                                   onClick={(e) => { e.stopPropagation(); setConfirmRemove(null); }}
                                   style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
-                                >No</button>
+                                >{t("tools.common.no")}</button>
                               </span>
                             ) : (
                               <button
@@ -430,11 +432,11 @@ export default function SeoPage() {
                               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.72rem" }}>
                                 <thead>
                                   <tr>
-                                    <th style={{ textAlign: "left", padding: "0.375rem 0.5rem", color: "var(--muted-foreground)", fontWeight: 500 }}>Document</th>
-                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Title</th>
-                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Desc</th>
-                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Content</th>
-                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 70 }}>Density</th>
+                                    <th style={{ textAlign: "left", padding: "0.375rem 0.5rem", color: "var(--muted-foreground)", fontWeight: 500 }}>{t("tools.seo.thDocument")}</th>
+                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>{t("tools.seo.thTitle")}</th>
+                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>{t("tools.seo.thDesc")}</th>
+                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>{t("tools.seo.thContent")}</th>
+                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 70 }}>{t("tools.seo.thDensity")}</th>
                                   </tr>
                                 </thead>
                                 <tbody>
@@ -477,7 +479,7 @@ export default function SeoPage() {
           <div>
           {siteLocales.length > 1 && (
             <div style={{ display: "flex", gap: "0.25rem", marginBottom: "0.75rem", alignItems: "center" }}>
-              {[{ value: "all", label: "All" }, ...siteLocales.map((l) => ({ value: l, label: `${LOCALE_FLAGS[l] ?? ""} ${l.toUpperCase()}` }))].map((opt) => (
+              {[{ value: "all", label: t("tools.seo.all") }, ...siteLocales.map((l) => ({ value: l, label: `${LOCALE_FLAGS[l] ?? ""} ${l.toUpperCase()}` }))].map((opt) => (
                 <button
                   key={opt.value}
                   type="button"
@@ -502,12 +504,12 @@ export default function SeoPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>Document</th>
-                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 60 }}>Score</th>
-                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 50 }}>Title</th>
-                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 50 }}>Desc</th>
-                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 50 }}>OG</th>
-                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 80 }}>Keywords</th>
+                <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>{t("tools.seo.thDocument")}</th>
+                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 60 }}>{t("tools.seo.thScore")}</th>
+                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 50 }}>{t("tools.seo.thTitle")}</th>
+                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 50 }}>{t("tools.seo.thDesc")}</th>
+                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 50 }}>{t("tools.seo.thOg")}</th>
+                <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 80 }}>{t("tools.seo.thKeywords")}</th>
                 <th style={{ textAlign: "right", padding: "0.5rem 0.75rem", width: 120 }}></th>
               </tr>
             </thead>
@@ -555,7 +557,7 @@ export default function SeoPage() {
                           fontSize: "0.65rem", fontWeight: 600,
                         }}
                       >
-                        <Sparkles style={{ width: 10, height: 10 }} /> Optimize
+                        <Sparkles style={{ width: 10, height: 10 }} /> {t("tools.seo.optimize")}
                       </button>
                     )}
                   </td>

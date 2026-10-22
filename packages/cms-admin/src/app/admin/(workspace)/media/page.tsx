@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { toast } from "sonner";
+import { useT } from "@/lib/i18n-context";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 type MediaType = "image" | "audio" | "video" | "document" | "interactive" | "other";
@@ -46,6 +47,7 @@ type UploadJob = { name: string; done: boolean; error?: boolean };
 
 /* ─── Main component ─────────────────────────────────────────── */
 export default function MediaPage() {
+  const t = useT();
   const siteRole = useSiteRole();
   const readOnly = siteRole === null || siteRole === "viewer";
   const [allFiles, setAllFiles] = useState<MediaFile[]>([]);
@@ -224,10 +226,10 @@ export default function MediaPage() {
         try {
           await fetch("/api/upload", { method: "POST", body: fd });
           setJobs((prev) => prev.map((j, idx) => idx === i ? { ...j, done: true } : j));
-          toast.success("Media uploaded", { description: file.name });
+          toast.success(t("pages.media.toastUploaded"), { description: file.name });
         } catch {
           setJobs((prev) => prev.map((j, idx) => idx === i ? { ...j, done: true, error: true } : j));
-          toast.error("Upload failed");
+          toast.error(t("pages.media.toastUploadFailed"));
         }
       })
     );
@@ -328,7 +330,7 @@ export default function MediaPage() {
     } else {
       // F206.7: a 409 (name taken, also by a file in the trash) used to vanish here.
       const { error } = (await res.json().catch(() => ({}))) as { error?: string };
-      toast.error("Rename failed", { description: error ?? `HTTP ${res.status}` });
+      toast.error(t("pages.media.toastRenameFailed"), { description: error ?? `HTTP ${res.status}` });
     }
     setRenaming(null);
   }
@@ -350,10 +352,10 @@ export default function MediaPage() {
   /* ── Uploading in progress count ──────────────────────────── */
   const pendingJobs = jobs.filter((j) => !j.done).length;
   const uploadLabel = pendingJobs > 0
-    ? `Uploading ${pendingJobs}/${jobs.length}…`
+    ? t("pages.media.uploading", { pending: pendingJobs, total: jobs.length })
     : jobs.length > 0
-    ? `Done (${jobs.length} files)`
-    : "Upload";
+    ? t("pages.media.uploadDone", { count: jobs.length })
+    : t("pages.media.upload");
 
   /* ─── Render ─────────────────────────────────────────────── */
   return (
@@ -377,11 +379,11 @@ export default function MediaPage() {
         >
           <Upload style={{ width: "3rem", height: "3rem", color: "var(--primary)", marginBottom: "1rem" }} />
           <p style={{ fontSize: "1.25rem", fontWeight: 600, color: "white" }}>
-            Drop files to upload
+            {t("pages.media.dropToUpload")}
             {(folder || newFolder) && <span style={{ color: "var(--primary)" }}> → {folder || newFolder}</span>}
           </p>
           <p style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.5)", marginTop: "0.5rem" }}>
-            Multiple files supported
+            {t("pages.media.multipleSupported")}
           </p>
         </div>
       )}
@@ -393,12 +395,12 @@ export default function MediaPage() {
           {!readOnly && selecting ? (
             <>
               <span style={{ fontSize: "0.75rem", color: "var(--foreground)", fontWeight: 500 }}>
-                {selected.size} selected
+                {t("pages.media.selectedCount", { count: selected.size })}
               </span>
               {selected.size > 0 && !confirmBulk && (
                 <>
                   <ActionButton variant="secondary" onClick={() => setConfirmBulk(true)} icon={<Trash2 style={{ width: 14, height: 14, color: "var(--destructive)" }} />}>
-                    Delete
+                    {t("pages.media.delete")}
                   </ActionButton>
 
                   {/* Analyze selected */}
@@ -407,7 +409,7 @@ export default function MediaPage() {
                     onClick={() => setShowBatchAnalyze(true)}
                     icon={<Sparkles style={{ width: 14, height: 14 }} />}
                   >
-                    Analyze
+                    {t("pages.media.analyze")}
                   </ActionButton>
 
                   {/* Optimize selected */}
@@ -423,42 +425,42 @@ export default function MediaPage() {
                       if (res.ok) {
                         const d = await res.json() as { processed: number; skipped: number; errors: number; savedMB: number };
                         const { toast } = await import("sonner");
-                        toast.success(`Optimized ${d.processed} of ${selected.size} selected (${d.savedMB} MB saved)`);
+                        toast.success(t("pages.media.toastOptimizedSelected", { processed: d.processed, selected: selected.size, savedMB: d.savedMB }));
                       }
                     }}
                     icon={<Zap style={{ width: 14, height: 14 }} />}
                   >
-                    Optimize
+                    {t("pages.media.optimize")}
                   </ActionButton>
                 </>
               )}
               {confirmBulk && (
                 <>
-                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("pages.media.remove")}</span>
                   <button data-testid="media-bulk-delete-yes" onClick={bulkDelete}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                       border: "none", background: "var(--destructive)", color: "#fff",
-                      cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      cursor: "pointer", lineHeight: 1 }}>{t("pages.media.yes")}</button>
                   <button data-testid="media-bulk-delete-no" onClick={() => setConfirmBulk(false)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                       border: "1px solid var(--border)", background: "transparent",
-                      color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                      color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("pages.media.no")}</button>
                 </>
               )}
               <ActionButton variant="secondary" onClick={() => {
                 // Select all visible files
                 setSelected(new Set(filtered.map((f) => f.url)));
               }} data-testid="media-select-all">
-                All
+                {t("pages.media.all")}
               </ActionButton>
               <ActionButton variant="secondary" onClick={() => { setSelecting(false); setSelected(new Set()); setConfirmBulk(false); }} data-testid="media-select-cancel">
-                Cancel
+                {t("pages.media.cancel")}
               </ActionButton>
             </>
           ) : !readOnly ? (
             <>
               <ActionButton variant="secondary" onClick={() => setSelecting(true)} icon={<CheckSquare style={{ width: 14, height: 14 }} />}>
-                Select
+                {t("pages.media.select")}
               </ActionButton>
 
               {/* AI Batch Analyze */}
@@ -467,7 +469,7 @@ export default function MediaPage() {
                 onClick={() => setShowBatchAnalyze(true)}
                 icon={<Sparkles style={{ width: 14, height: 14 }} />}
               >
-                Analyze All
+                {t("pages.media.analyzeAll")}
               </ActionButton>
 
               {/* F44: Batch optimize (WebP variants) */}
@@ -478,12 +480,12 @@ export default function MediaPage() {
                   if (res.ok) {
                     const d = await res.json() as { processed: number; skipped: number; errors: number; savedMB: number };
                     const { toast } = await import("sonner");
-                    toast.success(`Optimized ${d.processed} images (${d.savedMB} MB saved)${d.skipped ? `, ${d.skipped} skipped` : ""}${d.errors ? `, ${d.errors} errors` : ""}`);
+                    toast.success(`${t("pages.media.toastOptimizedAll", { processed: d.processed, savedMB: d.savedMB })}${d.skipped ? t("pages.media.toastOptimizedAllSkipped", { skipped: d.skipped }) : ""}${d.errors ? t("pages.media.toastOptimizedAllErrors", { errors: d.errors }) : ""}`);
                   }
                 }}
                 icon={<Zap style={{ width: 14, height: 14 }} />}
               >
-                Optimize All
+                {t("pages.media.optimizeAll")}
               </ActionButton>
             </>
           ) : null}
@@ -501,7 +503,7 @@ export default function MediaPage() {
                   border: "none", cursor: "pointer", color: view === v ? "var(--foreground)" : "var(--muted-foreground)",
                   display: "flex", alignItems: "center",
                 }}
-                title={v === "grid" ? "Grid view" : "List view"}
+                title={v === "grid" ? t("pages.media.gridView") : t("pages.media.listView")}
               >
                 {v === "grid" ? <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} /> : <List style={{ width: "0.875rem", height: "0.875rem" }} />}
               </button>
@@ -523,7 +525,7 @@ export default function MediaPage() {
                     border: "none", cursor: "pointer",
                     color: thumbSize === s ? "var(--foreground)" : "var(--muted-foreground)",
                   }}
-                  title={`${s === "S" ? "Small" : s === "M" ? "Medium" : "Large"} thumbnails`}
+                  title={s === "S" ? t("pages.media.thumbSmall") : s === "M" ? t("pages.media.thumbMedium") : t("pages.media.thumbLarge")}
                 >
                   {s}
                 </button>
@@ -555,7 +557,7 @@ export default function MediaPage() {
           )}
         </>}
       >
-        <ActionBarBreadcrumb items={["Media"]} /></ActionBar>
+        <ActionBarBreadcrumb items={[t("pages.media.breadcrumb")]} /></ActionBar>
 
       {/* ── Body: sidebar + content ── */}
       <div style={{ display: "flex", flex: 1 }}>
@@ -567,12 +569,13 @@ export default function MediaPage() {
           position: "sticky", top: 0, alignSelf: "flex-start", maxHeight: "100vh", overflowY: "auto",
         }}>
           <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.5rem", paddingLeft: "0.25rem" }}>
-            Folders
+            {t("pages.media.folders")}
           </p>
 
           {/* All */}
           <FolderBtn
-            label="All files"
+            label={t("pages.media.allFiles")}
+            testKey="All files"
             count={allFiles.length}
             active={folder === ""}
             icon={<LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} />}
@@ -581,7 +584,8 @@ export default function MediaPage() {
           {/* Root (unfiled) */}
           {allFiles.some((f) => f.folder === "") && (
             <FolderBtn
-              label="Unfiled"
+              label={t("pages.media.unfiled")}
+              testKey="Unfiled"
               count={allFiles.filter((f) => f.folder === "").length}
               active={folder === "__root__"}
               icon={<Folder style={{ width: "0.875rem", height: "0.875rem" }} />}
@@ -602,7 +606,7 @@ export default function MediaPage() {
           {/* Type filter */}
           <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
             <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem", paddingLeft: "0.25rem" }}>
-              Type
+              {t("pages.media.type")}
             </p>
             {(() => {
               // Pre-filter by folder + AI (but NOT type) so counts reflect active filters
@@ -626,35 +630,35 @@ export default function MediaPage() {
                 typeCounts.set(mt, (typeCounts.get(mt) ?? 0) + 1);
               }
               const TYPE_LABELS: Record<string, string> = {
-                image: "Images", svg: "SVG", audio: "Audio", video: "Video",
-                document: "Documents", interactive: "Interactives", other: "Other",
+                image: "pages.media.types.image", svg: "pages.media.types.svg", audio: "pages.media.types.audio", video: "pages.media.types.video",
+                document: "pages.media.types.document", interactive: "pages.media.types.interactive", other: "pages.media.types.other",
               };
               const typeList = [
-                { value: "", label: "All types" },
+                { value: "", label: t("pages.media.types.all") },
                 ...Array.from(typeCounts.entries())
                   .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([value]) => ({ value, label: TYPE_LABELS[value] ?? value })),
+                  .map(([value]) => ({ value, label: TYPE_LABELS[value] ? t(TYPE_LABELS[value]) : value })),
               ];
               return typeList;
-            })().map((t) => {
-              const count = t.value ? filtered.filter((f) => f.mediaType === t.value).length : filtered.length;
-              if (t.value && count === 0) return null;
+            })().map((ty) => {
+              const count = ty.value ? filtered.filter((f) => f.mediaType === ty.value).length : filtered.length;
+              if (ty.value && count === 0) return null;
               return (
                 <button
-                  key={t.value}
-                  data-testid={`media-type-filter-${t.value || "all"}`}
+                  key={ty.value}
+                  data-testid={`media-type-filter-${ty.value || "all"}`}
                   type="button"
-                  onClick={() => setTypeFilter(t.value)}
+                  onClick={() => setTypeFilter(ty.value)}
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
                     padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", cursor: "pointer",
-                    background: typeFilter === t.value ? "var(--secondary)" : "transparent",
-                    color: typeFilter === t.value ? "var(--foreground)" : "var(--muted-foreground)",
+                    background: typeFilter === ty.value ? "var(--secondary)" : "transparent",
+                    color: typeFilter === ty.value ? "var(--foreground)" : "var(--muted-foreground)",
                     fontSize: "0.8rem", marginBottom: "0.125rem",
                   }}
                   className="hover:bg-secondary/50"
                 >
-                  <span>{t.label}</span>
+                  <span>{ty.label}</span>
                   <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{count}</span>
                 </button>
               );
@@ -664,40 +668,40 @@ export default function MediaPage() {
           {/* AI filter */}
           <div style={{ marginTop: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
             <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
-              AI Analysis
+              {t("pages.media.aiAnalysis")}
             </p>
             {([
-              { value: "" as const, label: "All" },
-              { value: "analyzed" as const, label: "Analyzed" },
-              { value: "not-analyzed" as const, label: "Not analyzed" },
-              { value: "ai-generated" as const, label: "AI generated" },
-            ]).map((t) => {
-              const count = t.value === ""
+              { value: "" as const, label: "pages.media.all" },
+              { value: "analyzed" as const, label: "pages.media.aiFilter.analyzed" },
+              { value: "not-analyzed" as const, label: "pages.media.aiFilter.notAnalyzed" },
+              { value: "ai-generated" as const, label: "pages.media.aiFilter.aiGenerated" },
+            ]).map((af) => {
+              const count = af.value === ""
                 ? allFiles.filter((f) => f.isImage).length
-                : t.value === "analyzed"
+                : af.value === "analyzed"
                   ? allFiles.filter((f) => f.isImage && aiAnalyzedSet.has(f.folder ? `${f.folder}/${f.name}` : f.name)).length
-                  : t.value === "ai-generated"
+                  : af.value === "ai-generated"
                     ? allFiles.filter((f) => f.isImage && aiGeneratedSet.has(f.folder ? `${f.folder}/${f.name}` : f.name)).length
                     : allFiles.filter((f) => f.isImage && !aiAnalyzedSet.has(f.folder ? `${f.folder}/${f.name}` : f.name)).length;
               return (
                 <button
-                  key={t.value}
-                  data-testid={`media-ai-filter-${t.value || "all"}`}
+                  key={af.value}
+                  data-testid={`media-ai-filter-${af.value || "all"}`}
                   type="button"
-                  onClick={() => setAiFilter(t.value)}
+                  onClick={() => setAiFilter(af.value)}
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
                     padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", cursor: "pointer",
-                    background: aiFilter === t.value ? "var(--secondary)" : "transparent",
-                    color: aiFilter === t.value ? "var(--foreground)" : "var(--muted-foreground)",
+                    background: aiFilter === af.value ? "var(--secondary)" : "transparent",
+                    color: aiFilter === af.value ? "var(--foreground)" : "var(--muted-foreground)",
                     fontSize: "0.8rem", marginBottom: "0.125rem",
                   }}
                   className="hover:bg-secondary/50"
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                    {t.value === "analyzed" && <Sparkles style={{ width: 10, height: 10, color: "var(--brand)" }} />}
-                    {t.value === "ai-generated" && <Zap style={{ width: 10, height: 10, color: "#a855f7" }} />}
-                    {t.label}
+                    {af.value === "analyzed" && <Sparkles style={{ width: 10, height: 10, color: "var(--brand)" }} />}
+                    {af.value === "ai-generated" && <Zap style={{ width: 10, height: 10, color: "#a855f7" }} />}
+                    {t(af.label)}
                   </span>
                   <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{count}</span>
                 </button>
@@ -709,7 +713,7 @@ export default function MediaPage() {
           {allTags.length > 0 && (
             <div style={{ marginTop: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
               <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
-                Tags
+                {t("pages.media.tags")}
               </p>
               <button
                 data-testid="media-tag-filter-all"
@@ -724,25 +728,25 @@ export default function MediaPage() {
                 }}
                 className="hover:bg-secondary/50"
               >
-                <span>All</span>
+                <span>{t("pages.media.all")}</span>
               </button>
-              {allTags.map((t) => (
+              {allTags.map((tg) => (
                 <button
-                  key={t.tag}
-                  data-testid={`media-tag-filter-${t.tag}`}
+                  key={tg.tag}
+                  data-testid={`media-tag-filter-${tg.tag}`}
                   type="button"
-                  onClick={() => setTagFilter(tagFilter === t.tag ? "" : t.tag)}
+                  onClick={() => setTagFilter(tagFilter === tg.tag ? "" : tg.tag)}
                   style={{
                     display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
                     padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", cursor: "pointer",
-                    background: tagFilter === t.tag ? "var(--secondary)" : "transparent",
-                    color: tagFilter === t.tag ? "var(--foreground)" : "var(--muted-foreground)",
+                    background: tagFilter === tg.tag ? "var(--secondary)" : "transparent",
+                    color: tagFilter === tg.tag ? "var(--foreground)" : "var(--muted-foreground)",
                     fontSize: "0.8rem", marginBottom: "0.125rem",
                   }}
                   className="hover:bg-secondary/50"
                 >
-                  <span>{t.tag}</span>
-                  <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{t.count}</span>
+                  <span>{tg.tag}</span>
+                  <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{tg.count}</span>
                 </button>
               ))}
             </div>
@@ -751,29 +755,29 @@ export default function MediaPage() {
           {/* Sort */}
           <div style={{ marginTop: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
             <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
-              Sort by
+              {t("pages.media.sortBy")}
             </p>
             {([
-              { value: "newest" as const, label: "Newest first" },
-              { value: "oldest" as const, label: "Oldest first" },
-              { value: "name" as const, label: "Name" },
-              { value: "size" as const, label: "Size" },
-            ]).map((t) => (
+              { value: "newest" as const, label: "pages.media.sort.newest" },
+              { value: "oldest" as const, label: "pages.media.sort.oldest" },
+              { value: "name" as const, label: "pages.media.sort.name" },
+              { value: "size" as const, label: "pages.media.sort.size" },
+            ]).map((so) => (
               <button
-                key={t.value}
-                data-testid={`media-sort-${t.value}`}
+                key={so.value}
+                data-testid={`media-sort-${so.value}`}
                 type="button"
-                onClick={() => setSortBy(t.value)}
+                onClick={() => setSortBy(so.value)}
                 style={{
                   display: "flex", alignItems: "center", width: "100%",
                   padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", cursor: "pointer",
-                  background: sortBy === t.value ? "var(--secondary)" : "transparent",
-                  color: sortBy === t.value ? "var(--foreground)" : "var(--muted-foreground)",
+                  background: sortBy === so.value ? "var(--secondary)" : "transparent",
+                  color: sortBy === so.value ? "var(--foreground)" : "var(--muted-foreground)",
                   fontSize: "0.8rem", marginBottom: "0.125rem",
                 }}
                 className="hover:bg-secondary/50"
               >
-                {t.label}
+                {t(so.label)}
               </button>
             ))}
           </div>
@@ -792,7 +796,7 @@ export default function MediaPage() {
                   type="text"
                   value={query}
                   onChange={(e) => setQueryDebounced(e.target.value)}
-                  placeholder="Search…"
+                  placeholder={t("pages.media.searchPlaceholder")}
                   style={{ width: "100%", paddingLeft: "2rem", paddingRight: query ? "2rem" : "0.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", fontSize: "0.8rem", color: "var(--foreground)", outline: "none", boxSizing: "border-box" }}
                 />
                 {query && (
@@ -811,7 +815,7 @@ export default function MediaPage() {
             </div>
           </div>
           {loading ? (
-            <div style={{ padding: "2rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Loading…</div>
+            <div style={{ padding: "2rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>{t("pages.media.loading")}</div>
           ) : filtered.length === 0 ? (
             <EmptyState query={query} onUpload={() => inputRef.current?.click()} />
           ) : (
@@ -830,7 +834,7 @@ export default function MediaPage() {
                     type="button"
                     onClick={() => setPage(1)}
                     disabled={currentPage === 1}
-                    title="First page"
+                    title={t("pages.media.firstPage")}
                     style={{ padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: currentPage === 1 ? "not-allowed" : "pointer", opacity: currentPage === 1 ? 0.4 : 1, fontSize: "0.7rem", fontFamily: "monospace" }}
                   >
                     1
@@ -845,7 +849,7 @@ export default function MediaPage() {
                     <ChevronLeft style={{ width: "0.875rem", height: "0.875rem" }} />
                   </button>
                   <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-                    {currentPage} / {totalPages} &nbsp;·&nbsp; {sorted.length} files
+                    {t("pages.media.pagination", { page: currentPage, pages: totalPages, count: sorted.length })}
                   </span>
                   <button
                     data-testid="media-pagination-next"
@@ -861,7 +865,7 @@ export default function MediaPage() {
                     type="button"
                     onClick={() => setPage(totalPages)}
                     disabled={currentPage === totalPages}
-                    title="Last page"
+                    title={t("pages.media.lastPage")}
                     style={{ padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.4 : 1, fontSize: "0.7rem", fontFamily: "monospace" }}
                   >
                     {totalPages}
@@ -963,12 +967,12 @@ function VideoThumb({ file }: { file: MediaFile }) {
 
 /* ─── Sub-components ─────────────────────────────────────────── */
 
-function FolderBtn({ label, count, active, icon, onClick }: {
-  label: string; count: number; active: boolean; icon: React.ReactNode; onClick: () => void;
+function FolderBtn({ label, testKey, count, active, icon, onClick }: {
+  label: string; testKey?: string; count: number; active: boolean; icon: React.ReactNode; onClick: () => void;
 }) {
   return (
     <button
-      data-testid={`media-folder-${label.toLowerCase().replace(/\s+/g, "-")}`}
+      data-testid={`media-folder-${(testKey ?? label).toLowerCase().replace(/\s+/g, "-")}`}
       type="button"
       onClick={onClick}
       style={{
@@ -987,10 +991,11 @@ function FolderBtn({ label, count, active, icon, onClick }: {
 }
 
 function EmptyState({ query, onUpload }: { query: string; onUpload: () => void }) {
+  const t = useT();
   return (
     <div data-testid="media-empty-state" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1rem", padding: "4rem 2rem", color: "var(--muted-foreground)" }}>
       <Upload style={{ width: "2.5rem", height: "2.5rem", opacity: 0.3 }} />
-      <p style={{ fontSize: "0.875rem" }}>{query ? `No files matching "${query}"` : "No files yet"}</p>
+      <p style={{ fontSize: "0.875rem" }}>{query ? t("pages.media.noFilesMatching", { query }) : t("pages.media.noFilesYet")}</p>
       {!query && (
         <button
           data-testid="media-empty-upload-btn"
@@ -998,7 +1003,7 @@ function EmptyState({ query, onUpload }: { query: string; onUpload: () => void }
           onClick={onUpload}
           style={{ fontSize: "0.8rem", padding: "0.5rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer" }}
         >
-          Upload files or drag &amp; drop
+          {t("pages.media.uploadOrDrop")}
         </button>
       )}
     </div>
@@ -1024,6 +1029,7 @@ type ViewProps = {
 };
 
 function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGeneratedSet, aiMetaMap, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect, thumbMinWidth = "180px" }: ViewProps) {
+  const t = useT();
   return (
     <div style={{ padding: "1.25rem", display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${thumbMinWidth}, 1fr))`, gap: "0.875rem" }}>
       {files.map((file) => {
@@ -1081,7 +1087,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
 
             {/* AI analyzed badge */}
             {isAiAnalyzed && (file.isImage || file.mediaType === "video") && (
-              <span title="AI analyzed" style={{
+              <span title={t("pages.media.aiAnalyzed")} style={{
                 position: "absolute", bottom: "calc(28% + 0.375rem)", right: "0.375rem",
                 background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)",
                 color: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center",
@@ -1097,8 +1103,8 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
               <span
                 title={
                   aiMetaMap[aiKey]?.generatedPrompt
-                    ? `AI generated — prompt: ${aiMetaMap[aiKey]?.generatedPrompt}`
-                    : "AI generated image"
+                    ? t("pages.media.aiGeneratedPrompt", { prompt: aiMetaMap[aiKey]?.generatedPrompt ?? "" })
+                    : t("pages.media.aiGeneratedImage")
                 }
                 style={{
                   position: "absolute",
@@ -1119,7 +1125,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                 }}
               >
                 <Zap style={{ width: "0.6rem", height: "0.6rem" }} />
-                AI
+                {t("pages.media.aiBadge")}
               </span>
             )}
 
@@ -1131,7 +1137,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                 color: "white", fontSize: "0.6rem", fontFamily: "monospace",
                 padding: "1px 5px", borderRadius: "9999px", pointerEvents: "none",
               }}>
-                {usages.length} {usages.length === 1 ? "use" : "uses"}
+                {usages.length === 1 ? t("pages.media.usesOne", { count: usages.length }) : t("pages.media.usesOther", { count: usages.length })}
               </span>
             )}
 
@@ -1157,21 +1163,21 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                     {(file.isImage || file.mediaType === "video") && (
                       <DropdownMenuItem onClick={() => onOpen(file)}>
                         <ZoomIn className="mr-2 h-4 w-4 text-muted-foreground" />
-                        View
+                        {t("pages.media.view")}
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem onClick={() => onRename(file)}>
                       <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
-                      Rename
+                      {t("pages.media.rename")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onCopy(file.url)}>
                       {copied === file.url ? <Check className="mr-2 h-4 w-4 text-green-400" /> : <Copy className="mr-2 h-4 w-4 text-muted-foreground" />}
-                      Copy URL
+                      {t("pages.media.copyUrl")}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onDelete(file)} disabled={deleting === file.url} className="text-destructive focus:text-destructive">
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
+                      {t("pages.media.delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -1185,14 +1191,15 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
 }
 
 function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGeneratedSet, aiMetaMap, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect }: ViewProps) {
+  const t = useT();
   return (
     <div style={{ overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border)" }}>
             {selecting && <th style={{ padding: "0.5rem 0.5rem 0.5rem 1rem", width: "2rem" }} />}
-            {["File", "Folder", "Size", "Date", "AI", "Used in", ""].map((h) => (
-              <th key={h} style={{ padding: "0.5rem 1rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h}</th>
+            {["pages.media.columns.file", "pages.media.columns.folder", "pages.media.columns.size", "pages.media.columns.date", "pages.media.columns.ai", "pages.media.columns.usedIn", ""].map((h) => (
+              <th key={h} style={{ padding: "0.5rem 1rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h ? t(h) : ""}</th>
             ))}
           </tr>
         </thead>
@@ -1230,8 +1237,8 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                     <span
                       title={
                         aiMetaMap[aiKey]?.generatedPrompt
-                          ? `AI generated — prompt: ${aiMetaMap[aiKey]?.generatedPrompt}`
-                          : "AI generated image"
+                          ? t("pages.media.aiGeneratedPrompt", { prompt: aiMetaMap[aiKey]?.generatedPrompt ?? "" })
+                          : t("pages.media.aiGeneratedImage")
                       }
                       style={{
                         display: "inline-flex",
@@ -1249,7 +1256,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                       }}
                     >
                       <Zap style={{ width: "0.55rem", height: "0.55rem" }} />
-                      AI
+                      {t("pages.media.aiBadge")}
                     </span>
                   )}
                 </td>
@@ -1260,7 +1267,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                 <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatDate(file.createdAt)}</td>
                 <td style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>
                   {isAiAnalyzed && (file.isImage || file.mediaType === "video") ? (
-                    <span title="AI analyzed"><Sparkles style={{ width: "0.75rem", height: "0.75rem", color: "var(--brand)" }} /></span>
+                    <span title={t("pages.media.aiAnalyzed")}><Sparkles style={{ width: "0.75rem", height: "0.75rem", color: "var(--brand)" }} /></span>
                   ) : (
                     <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", opacity: 0.4 }}>—</span>
                   )}
@@ -1271,7 +1278,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                       fontSize: "0.7rem", fontFamily: "monospace",
                       color: "var(--foreground)", opacity: 0.7,
                     }}>
-                      {usages.length} {usages.length === 1 ? "doc" : "docs"}
+                      {usages.length === 1 ? t("pages.media.docsOne", { count: usages.length }) : t("pages.media.docsOther", { count: usages.length })}
                     </span>
                   ) : (
                     <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", opacity: 0.4 }}>—</span>
@@ -1280,17 +1287,17 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                 <td style={{ padding: "0.5rem 1rem" }}>
                   <div style={{ display: "flex", gap: "0.375rem", justifyContent: "flex-end" }}>
                     {file.isImage && (
-                      <ActionBtn title="View full size" onClick={() => onOpen(file)} small>
+                      <ActionBtn title={t("pages.media.viewFullSize")} onClick={() => onOpen(file)} small>
                         <ZoomIn style={{ width: "0.75rem", height: "0.75rem" }} />
                       </ActionBtn>
                     )}
-                    <ActionBtn title="Rename" onClick={() => onRename(file)} small>
+                    <ActionBtn title={t("pages.media.rename")} onClick={() => onRename(file)} small>
                       <Pencil style={{ width: "0.75rem", height: "0.75rem" }} />
                     </ActionBtn>
-                    <ActionBtn title="Copy URL" onClick={() => onCopy(file.url)} small>
+                    <ActionBtn title={t("pages.media.copyUrl")} onClick={() => onCopy(file.url)} small>
                       {copied === file.url ? <Check style={{ width: "0.75rem", height: "0.75rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.75rem", height: "0.75rem" }} />}
                     </ActionBtn>
-                    <ActionBtn title="Delete" onClick={() => onDelete(file)} disabled={deleting === file.url} destructive small>
+                    <ActionBtn title={t("pages.media.delete")} onClick={() => onDelete(file)} disabled={deleting === file.url} destructive small>
                       <Trash2 style={{ width: "0.75rem", height: "0.75rem" }} />
                     </ActionBtn>
                   </div>
@@ -1315,6 +1322,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
   onDelete: (file: MediaFile) => void;
   onTagsChanged?: () => void;
 }) {
+  const t = useT();
   const file = files[index];
   const hasPrev = index > 0;
   const hasNext = index < files.length - 1;
@@ -1396,7 +1404,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
           href={file.url}
           target="_blank"
           rel="noopener noreferrer"
-          title="Open original"
+          title={t("pages.media.openOriginal")}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: "pointer", textDecoration: "none" }}
           className="hover:text-white hover:bg-white/10 transition-colors"
           onClick={(e) => e.stopPropagation()}
@@ -1406,14 +1414,14 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         <button
           data-testid="media-lightbox-download"
           type="button"
-          title={`Download ${file.name}`}
+          title={t("pages.media.downloadNamed", { name: file.name })}
           onClick={(e) => { e.stopPropagation(); downloadFile(); }}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: "pointer" }}
           className="hover:text-white hover:bg-white/10 transition-colors"
         >
           <Download style={{ width: "0.875rem", height: "0.875rem" }} />
         </button>
-        <button data-testid="media-lightbox-copy-url" type="button" title="Copy URL" onClick={(e) => { e.stopPropagation(); onCopy(file.url); }}
+        <button data-testid="media-lightbox-copy-url" type="button" title={t("pages.media.copyUrl")} onClick={(e) => { e.stopPropagation(); onCopy(file.url); }}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: copied === file.url ? "#4ade80" : "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: "pointer" }}
           className="hover:text-white hover:bg-white/10 transition-colors"
         >
@@ -1421,13 +1429,13 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         </button>
         {file.mediaType !== "video" && (
           <div style={{ display: "flex", alignItems: "center", gap: "2px", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "6px", padding: "1px" }}>
-            <button data-testid="media-lightbox-rotate-left" type="button" title="Rotate left" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
+            <button data-testid="media-lightbox-rotate-left" type="button" title={t("pages.media.rotateLeft")} disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
               style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "4px", color: "rgba(255,255,255,0.7)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
               className="hover:text-white hover:bg-white/15 transition-colors"
             >
               <RotateCcw style={{ width: "0.875rem", height: "0.875rem" }} />
             </button>
-            <button data-testid="media-lightbox-rotate-right" type="button" title="Rotate right" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(90); }}
+            <button data-testid="media-lightbox-rotate-right" type="button" title={t("pages.media.rotateRight")} disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(90); }}
               style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "4px", color: "rgba(255,255,255,0.7)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
               className="hover:text-white hover:bg-white/15 transition-colors"
             >
@@ -1435,13 +1443,13 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
             </button>
           </div>
         )}
-        <button data-testid="media-lightbox-delete" type="button" title="Delete" onClick={(e) => { e.stopPropagation(); onDelete(file); }}
+        <button data-testid="media-lightbox-delete" type="button" title={t("pages.media.delete")} onClick={(e) => { e.stopPropagation(); onDelete(file); }}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.4)", border: "none", background: "transparent", cursor: "pointer" }}
           className="hover:text-red-400 hover:bg-white/10 transition-colors"
         >
           <Trash2 style={{ width: "0.875rem", height: "0.875rem" }} />
         </button>
-        <button data-testid="media-lightbox-close" type="button" title="Close (Esc)" onClick={onClose}
+        <button data-testid="media-lightbox-close" type="button" title={t("pages.media.closeEsc")} onClick={onClose}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: "pointer" }}
           className="hover:text-white hover:bg-white/10 transition-colors"
         >
@@ -1534,6 +1542,7 @@ interface LightboxAIMeta {
 const aiMetaCache = new Map<string, LightboxAIMeta>();
 
 function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
+  const t = useT();
   const [meta, setMeta] = useState<LightboxAIMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -1570,7 +1579,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error ?? "Analysis failed");
+        setError(data.error ?? t("pages.media.aiPanel.analysisFailed"));
         setAnalyzing(false);
         return;
       }
@@ -1583,7 +1592,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
       aiMetaCache.set(imageUrl, updated);
       setMeta(updated);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Analysis failed");
+      setError(err instanceof Error ? err.message : t("pages.media.aiPanel.analysisFailed"));
     }
     setAnalyzing(false);
   }
@@ -1595,7 +1604,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
   }
 
   const CopyIcon = ({ text, field }: { text: string; field: string }) => (
-    <button data-testid={`media-ai-copy-${field}`} type="button" title={`Copy ${field}`} onClick={() => copyText(text, field)}
+    <button data-testid={`media-ai-copy-${field}`} type="button" title={t("pages.media.aiPanel.copyField", { field })} onClick={() => copyText(text, field)}
       style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: 4, border: "none", background: "transparent", cursor: "pointer", color: copiedField === field ? "#4ade80" : "rgba(255,255,255,0.4)", flexShrink: 0 }}>
       {copiedField === field ? <Check style={{ width: 12, height: 12 }} /> : <Copy style={{ width: 12, height: 12 }} />}
     </button>
@@ -1605,10 +1614,10 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
     <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "1rem", overflowY: "auto" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
         <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", display: "flex", alignItems: "center", gap: "0.375rem" }}>
-          <Sparkles style={{ width: 14, height: 14 }} /> AI Analysis
+          <Sparkles style={{ width: 14, height: 14 }} /> {t("pages.media.aiAnalysis")}
         </span>
         {hasAiData && !analyzing && (
-          <button data-testid="media-ai-reanalyze" type="button" title="Re-analyze" onClick={runAnalysis}
+          <button data-testid="media-ai-reanalyze" type="button" title={t("pages.media.aiPanel.reanalyze")} onClick={runAnalysis}
             style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "rgba(255,255,255,0.4)" }}>
             <RefreshCw style={{ width: 12, height: 12 }} />
           </button>
@@ -1617,23 +1626,23 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
 
       {loading && (
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>
-          <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> Loading…
+          <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> {t("pages.media.loading")}
         </div>
       )}
 
       {!loading && !hasAiData && !analyzing && (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", paddingTop: "2rem" }}>
-          <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>No AI analysis yet.</p>
+          <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>{t("pages.media.aiPanel.noAnalysis")}</p>
           <button data-testid="media-ai-analyze-btn" type="button" onClick={runAnalysis}
             style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--brand)", color: "var(--brand-foreground)", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>
-            <Sparkles style={{ width: 14, height: 14 }} /> Analyze
+            <Sparkles style={{ width: 14, height: 14 }} /> {t("pages.media.analyze")}
           </button>
         </div>
       )}
 
       {analyzing && (
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", justifyContent: "center", paddingTop: "2rem" }}>
-          <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> Analyzing…
+          <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> {t("pages.media.aiPanel.analyzing")}
         </div>
       )}
 
@@ -1678,7 +1687,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
           {/* Caption */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-              <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>Caption</span>
+              <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>{t("pages.media.aiPanel.caption")}</span>
               {displayCaption && <CopyIcon text={displayCaption} field="caption" />}
             </div>
             <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.5 }}>{displayCaption ?? "—"}</p>
@@ -1687,7 +1696,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
           {/* Alt-text */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-              <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>Alt-text</span>
+              <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>{t("pages.media.aiPanel.altText")}</span>
               {displayAlt && <CopyIcon text={displayAlt} field="alt" />}
             </div>
             <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.85)", margin: 0, fontFamily: "monospace", lineHeight: 1.5 }}>{displayAlt ?? "—"}</p>
@@ -1696,7 +1705,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
           {/* Tags */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-              <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>Tags</span>
+              <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>{t("pages.media.tags")}</span>
               {meta.tags.length > 0 && <CopyIcon text={meta.tags.join(", ")} field="tags" />}
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
@@ -1721,6 +1730,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
 
 /* ─── Lightbox Tag Panel ─────────────────────────────────────── */
 function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsChanged?: () => void }) {
+  const t = useT();
   const [tags, setTags] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -1755,21 +1765,21 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
     const raw = (value ?? input).trim().toLowerCase();
     if (!raw) { setInput(""); return; }
     // Support comma-separated list (from paste or typing)
-    const parts = raw.split(",").map((t) => t.trim()).filter(Boolean);
-    const unique = parts.filter((t) => !tags.includes(t));
+    const parts = raw.split(",").map((p) => p.trim()).filter(Boolean);
+    const unique = parts.filter((p) => !tags.includes(p));
     if (unique.length > 0) saveTags([...tags, ...unique]);
     setInput("");
   }
 
   function removeTag(tag: string) {
-    saveTags(tags.filter((t) => t !== tag));
+    saveTags(tags.filter((x) => x !== tag));
     setConfirmRemove(null);
   }
 
   return (
     <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
       <p style={{ fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>
-        Tags
+        {t("pages.media.tags")}
       </p>
       {loading ? null : (
         <>
@@ -1779,11 +1789,11 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
                 {tag}
                 {confirmRemove === tag ? (
                   <>
-                    <span style={{ fontSize: "0.6rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                    <span style={{ fontSize: "0.6rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("pages.media.remove")}</span>
                     <button data-testid={`media-tag-remove-yes-${tag}`} onClick={() => removeTag(tag)}
-                      style={{ fontSize: "0.55rem", padding: "0.05rem 0.25rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      style={{ fontSize: "0.55rem", padding: "0.05rem 0.25rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>{t("pages.media.yes")}</button>
                     <button data-testid={`media-tag-remove-no-${tag}`} onClick={() => setConfirmRemove(null)}
-                      style={{ fontSize: "0.55rem", padding: "0.05rem 0.25rem", borderRadius: "3px", border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                      style={{ fontSize: "0.55rem", padding: "0.05rem 0.25rem", borderRadius: "3px", border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer", lineHeight: 1 }}>{t("pages.media.no")}</button>
                   </>
                 ) : (
                   <button data-testid={`media-tag-remove-${tag}`} onClick={() => setConfirmRemove(tag)}
@@ -1807,7 +1817,7 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
                 const text = e.clipboardData.getData("text");
                 if (text.includes(",")) { e.preventDefault(); addTag(text); }
               }}
-              placeholder="Add tag…"
+              placeholder={t("pages.media.tagPanel.addTag")}
               style={{
                 flex: 1, padding: "0.25rem 0.4rem", borderRadius: "5px",
                 border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)",
@@ -1829,6 +1839,7 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
 
 /* ─── Lightbox EXIF Panel ────────────────────────────────────── */
 function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
+  const t = useT();
   const [exif, setExif] = useState<{
     make?: string; model?: string; date?: string;
     gpsLat?: number; gpsLon?: number; gpsAlt?: number;
@@ -1875,37 +1886,37 @@ function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
   return (
     <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
       <p style={{ fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>
-        EXIF Data
+        {t("pages.media.exif.title")}
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
         {exif.make && exif.model && (
-          <div style={row}><span style={lbl}>Camera</span><span style={val}>{exif.make} {exif.model}</span></div>
+          <div style={row}><span style={lbl}>{t("pages.media.exif.camera")}</span><span style={val}>{exif.make} {exif.model}</span></div>
         )}
         {exif.date && (
-          <div style={row}><span style={lbl}>Date</span><span style={val}>{new Date(exif.date).toLocaleDateString("da-DK", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
+          <div style={row}><span style={lbl}>{t("pages.media.exif.date")}</span><span style={val}>{new Date(exif.date).toLocaleDateString("da-DK", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
         )}
         {exif.width && exif.height && (
-          <div style={row}><span style={lbl}>Size</span><span style={val}>{exif.width} × {exif.height}</span></div>
+          <div style={row}><span style={lbl}>{t("pages.media.exif.size")}</span><span style={val}>{exif.width} × {exif.height}</span></div>
         )}
         {exif.lens && (
-          <div style={row}><span style={lbl}>Lens</span><span style={{ ...val, fontSize: "0.68rem" }}>{exif.lens}</span></div>
+          <div style={row}><span style={lbl}>{t("pages.media.exif.lens")}</span><span style={{ ...val, fontSize: "0.68rem" }}>{exif.lens}</span></div>
         )}
         {exif.fNumber && (
-          <div style={row}><span style={lbl}>Aperture</span><span style={val}>f/{exif.fNumber}</span></div>
+          <div style={row}><span style={lbl}>{t("pages.media.exif.aperture")}</span><span style={val}>{t("pages.media.exif.apertureValue", { value: exif.fNumber })}</span></div>
         )}
         {exif.exposureTime && (
-          <div style={row}><span style={lbl}>Shutter</span><span style={val}>{exif.exposureTime < 1 ? `1/${Math.round(1 / exif.exposureTime)}` : `${exif.exposureTime}s`}</span></div>
+          <div style={row}><span style={lbl}>{t("pages.media.exif.shutter")}</span><span style={val}>{exif.exposureTime < 1 ? `1/${Math.round(1 / exif.exposureTime)}` : `${exif.exposureTime}s`}</span></div>
         )}
         {exif.iso && (
-          <div style={row}><span style={lbl}>ISO</span><span style={val}>{exif.iso}</span></div>
+          <div style={row}><span style={lbl}>{t("pages.media.exif.iso")}</span><span style={val}>{exif.iso}</span></div>
         )}
         {exif.focalLength && (
-          <div style={row}><span style={lbl}>Focal length</span><span style={val}>{exif.focalLength}mm</span></div>
+          <div style={row}><span style={lbl}>{t("pages.media.exif.focalLength")}</span><span style={val}>{t("pages.media.exif.focalLengthValue", { value: exif.focalLength })}</span></div>
         )}
         {exif.gpsLat != null && exif.gpsLon != null && (
           <>
             <div style={row}>
-              <span style={lbl}>GPS</span>
+              <span style={lbl}>{t("pages.media.exif.gps")}</span>
               <a
                 data-testid="media-exif-gps-link"
                 href={`https://maps.google.com/?q=${exif.gpsLat},${exif.gpsLon}`}
@@ -1919,7 +1930,7 @@ function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
             </div>
             {geoName && (
               <div style={row}>
-                <span style={lbl}>Location</span>
+                <span style={lbl}>{t("pages.media.exif.location")}</span>
                 <span style={{ ...val, fontSize: "0.68rem" }}>{geoName}</span>
               </div>
             )}
@@ -1937,6 +1948,7 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
     document.addEventListener("keydown", onKey);
@@ -1952,7 +1964,7 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
         <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
           <FileWarning style={{ width: "1.25rem", height: "1.25rem", color: inUse ? "rgb(239 68 68)" : "var(--muted-foreground)", flexShrink: 0, marginTop: "1px" }} />
           <div>
-            <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>{inUse ? "Image is in use" : "Delete file?"}</p>
+            <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>{inUse ? t("pages.media.deleteDialog.inUse") : t("pages.media.deleteDialog.deleteFile")}</p>
             <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace", wordBreak: "break-all", marginTop: "0.2rem" }}>{file.name}</p>
           </div>
         </div>
@@ -1961,7 +1973,11 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
         {inUse && (
           <div style={{ background: "rgb(239 68 68 / 0.07)", border: "1px solid rgb(239 68 68 / 0.2)", borderRadius: "8px", padding: "0.75rem" }}>
             <p style={{ fontSize: "0.8rem", color: "rgb(239 68 68)", marginBottom: "0.5rem" }}>
-              This file is referenced in <strong>{usages.length}</strong> {usages.length === 1 ? "document" : "documents"}. Deleting it will break those pages.
+              {(() => {
+                // One whole sentence per plural form; the count is bolded in place.
+                const [before, after] = t(usages.length === 1 ? "pages.media.deleteDialog.referencedOne" : "pages.media.deleteDialog.referencedOther", { count: "\u0000" }).split("\u0000");
+                return <>{before}<strong>{usages.length}</strong>{after}</>;
+              })()}
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.25rem" }}>
               {usages.map((u) => (
@@ -1983,15 +1999,15 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
         )}
 
         {!inUse && (
-          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>This file will be moved to trash. You can restore it later.</p>
+          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{t("pages.media.deleteDialog.moveToTrashInfo")}</p>
         )}
 
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
           <button data-testid="media-delete-cancel" type="button" onClick={onCancel} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
-            Cancel
+            {t("pages.media.cancel")}
           </button>
           <button data-testid="media-delete-confirm" type="button" onClick={onConfirm} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "white", cursor: "pointer", fontSize: "0.875rem" }}>
-            {inUse ? "Trash anyway" : "Move to trash"}
+            {inUse ? t("pages.media.deleteDialog.trashAnyway") : t("pages.media.deleteDialog.moveToTrash")}
           </button>
         </div>
       </div>
@@ -2005,6 +2021,7 @@ function RenameDialog({ file, onConfirm, onCancel }: {
   onConfirm: (newName: string) => void;
   onCancel: () => void;
 }) {
+  const t = useT();
   // Split into base name and extension
   const lastDot = file.name.lastIndexOf(".");
   const baseName = lastDot > 0 ? file.name.slice(0, lastDot) : file.name;
@@ -2037,7 +2054,7 @@ function RenameDialog({ file, onConfirm, onCancel }: {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <Pencil style={{ width: "1.25rem", height: "1.25rem", color: "var(--muted-foreground)", flexShrink: 0 }} />
-          <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>Rename file</p>
+          <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>{t("pages.media.renameDialog.title")}</p>
         </div>
 
         <div>
@@ -2069,7 +2086,7 @@ function RenameDialog({ file, onConfirm, onCancel }: {
 
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
           <button data-testid="media-rename-cancel" type="button" onClick={onCancel} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
-            Cancel
+            {t("pages.media.cancel")}
           </button>
           <button
             data-testid="media-rename-confirm"
@@ -2078,7 +2095,7 @@ function RenameDialog({ file, onConfirm, onCancel }: {
             disabled={!isValid}
             style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", cursor: isValid ? "pointer" : "not-allowed", fontSize: "0.875rem", opacity: isValid ? 1 : 0.5 }}
           >
-            Rename
+            {t("pages.media.rename")}
           </button>
         </div>
       </div>
@@ -2091,6 +2108,7 @@ type BatchState = "idle" | "running" | "done";
 type BatchLogEntry = { kind: "result" | "error"; filename: string; message: string };
 
 function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; selectedFiles?: string[] }) {
+  const t = useT();
   const [state, setState] = useState<BatchState>("idle");
   const [overwriteSetting, setOverwriteSetting] = useState<"ask" | "skip" | "overwrite">("ask");
   const [overwriteChoice, setOverwriteChoice] = useState<boolean>(false);
@@ -2204,8 +2222,8 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
           <Sparkles style={{ width: "1.25rem", height: "1.25rem", color: "var(--brand)", flexShrink: 0 }} />
           <p style={{ fontWeight: 600, fontSize: "0.9rem", flex: 1 }}>
             {selectedFiles && selectedFiles.length > 0
-              ? `AI Analyze ${selectedFiles.length} Selected`
-              : "AI Analyze All Images"}
+              ? t("pages.media.batch.titleSelected", { count: selectedFiles.length })
+              : t("pages.media.batch.titleAll")}
           </p>
           <button data-testid="media-batch-analyze-close-header" type="button" onClick={onClose} style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
             <X style={{ width: "1rem", height: "1rem" }} />
@@ -2216,8 +2234,7 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
         {state === "idle" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-              Analyzes all images using AI vision. Each image gets a caption, alt-text, and tags.
-              Uses a 2-second delay between calls to respect rate limits.
+              {t("pages.media.batch.intro")}
             </p>
             {overwriteSetting === "ask" && (
               <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--foreground)", cursor: "pointer" }}>
@@ -2228,17 +2245,17 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
                   onChange={(e) => setOverwriteChoice(e.target.checked)}
                   style={{ accentColor: "var(--brand)" }}
                 />
-                Re-analyze images that already have AI data
+                {t("pages.media.batch.overwrite")}
               </label>
             )}
             {overwriteSetting === "skip" && (
               <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontStyle: "italic" }}>
-                Already-analyzed images will be skipped (configured in Site Settings).
+                {t("pages.media.batch.skipInfo")}
               </p>
             )}
             {overwriteSetting === "overwrite" && (
               <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontStyle: "italic" }}>
-                All images will be re-analyzed, including existing (configured in Site Settings).
+                {t("pages.media.batch.overwriteInfo")}
               </p>
             )}
           </div>
@@ -2246,10 +2263,10 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
 
         {(state === "running" || state === "done") && (
           <div style={{ display: "flex", gap: "1rem", fontSize: "0.75rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>
-            <span>Total: {total}</span>
-            <span>Skipped: {skipped}</span>
-            <span style={{ color: "#4ade80" }}>Analyzed: {analyzed}</span>
-            {failed > 0 && <span style={{ color: "#f87171" }}>Failed: {failed}</span>}
+            <span>{t("pages.media.batch.total", { count: total })}</span>
+            <span>{t("pages.media.batch.skipped", { count: skipped })}</span>
+            <span style={{ color: "#4ade80" }}>{t("pages.media.batch.analyzed", { count: analyzed })}</span>
+            {failed > 0 && <span style={{ color: "#f87171" }}>{t("pages.media.batch.failed", { count: failed })}</span>}
           </div>
         )}
 
@@ -2296,7 +2313,7 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
         {/* Done message */}
         {state === "done" && (
           <p style={{ fontSize: "0.8rem", color: "#4ade80", fontWeight: 500 }}>
-            Done. {analyzed} images analyzed{failed > 0 ? `, ${failed} failed` : ""}.
+            {failed > 0 ? t("pages.media.batch.doneWithFailed", { count: analyzed, failed }) : t("pages.media.batch.done", { count: analyzed })}
           </p>
         )}
 
@@ -2305,21 +2322,21 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
           {state === "idle" && (
             <>
               <button data-testid="media-batch-analyze-cancel" type="button" onClick={onClose} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
-                Cancel
+                {t("pages.media.cancel")}
               </button>
               <button data-testid="media-batch-analyze-start" type="button" onClick={runBatch} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--brand)", color: "var(--brand-foreground)", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                <Sparkles style={{ width: 14, height: 14 }} /> Start Analysis
+                <Sparkles style={{ width: 14, height: 14 }} /> {t("pages.media.batch.start")}
               </button>
             </>
           )}
           {state === "running" && (
             <button data-testid="media-batch-analyze-stop" type="button" onClick={stop} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
-              Stop
+              {t("pages.media.batch.stop")}
             </button>
           )}
           {state === "done" && (
             <button data-testid="media-batch-analyze-close" type="button" onClick={onClose} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", cursor: "pointer", fontSize: "0.875rem" }}>
-              Close
+              {t("pages.media.batch.close")}
             </button>
           )}
         </div>

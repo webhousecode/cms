@@ -29,6 +29,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, X } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   /** Stable id per row — composite of agentId + index works fine since rows don't repeat in normal use */
@@ -41,6 +42,7 @@ interface Props {
 }
 
 export function SortableWorkflowSteps({ steps, onReorder, onRemove, onCollectionChange }: Props) {
+  const t = useT();
   const sensors = useSensors(
     useSensor(PointerSensor, {
       // Require a small drag distance before starting so an accidental
@@ -62,7 +64,7 @@ export function SortableWorkflowSteps({ steps, onReorder, onRemove, onCollection
   if (steps.length === 0) {
     return (
       <p className="text-xs text-muted-foreground italic mb-2">
-        No steps yet — add agents below.
+        {t("agents.sortableWorkflowSteps.empty")}
       </p>
     );
   }
@@ -103,6 +105,7 @@ function SortableStep({
   onRemove: () => void;
   onCollectionChange?: (value: string) => void;
 }) {
+  const t = useT();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style: React.CSSProperties = {
@@ -123,7 +126,7 @@ function SortableStep({
         type="button"
         {...attributes}
         {...listeners}
-        title="Drag to reorder"
+        title={t("agents.sortableWorkflowSteps.drag")}
         className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch-none"
         style={{ background: "transparent", border: "none", padding: 0 }}
       >
@@ -137,8 +140,8 @@ function SortableStep({
           type="text"
           value={overrideCollection ?? ""}
           onChange={(e) => onCollectionChange(e.target.value)}
-          placeholder="collection (optional)"
-          title="Override the agent's default target collection for this step"
+          placeholder={t("agents.sortableWorkflowSteps.collectionPlaceholder")}
+          title={t("agents.sortableWorkflowSteps.collectionTitle")}
           className="text-[0.7rem] font-mono px-1.5 py-0.5 rounded border border-border bg-background"
           style={{ width: "11rem" }}
           onPointerDown={(e) => e.stopPropagation()}
@@ -148,7 +151,7 @@ function SortableStep({
         data-testid={`workflow-step-remove-${id}`}
         type="button"
         onClick={onRemove}
-        title="Remove step"
+        title={t("agents.sortableWorkflowSteps.remove")}
         className="text-xs px-1.5 py-0.5 rounded text-destructive hover:bg-destructive/10"
       >
         <X className="w-3.5 h-3.5" />

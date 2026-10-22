@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle, AlertTriangle, X, Upload, FileArchive, Loader2 } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 interface ImportResult {
   success: boolean;
@@ -52,6 +53,7 @@ function formatBytes(b: number): string {
 const CHUNK_SIZE = 4 * 1024 * 1024;
 
 export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
+  const t = useT();
   const [phase, setPhase] = useState<Phase>("uploading");
   const [uploaded, setUploaded] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -97,17 +99,17 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
           } else {
             try {
               const data = JSON.parse(xhr.responseText);
-              reject(new Error(data.error ?? `Chunk ${index} failed (HTTP ${xhr.status})`));
+              reject(new Error(data.error ?? t("integrations.beamImport.chunkFailed", { index, status: xhr.status })));
             } catch {
-              reject(new Error(`Chunk ${index} failed (HTTP ${xhr.status})`));
+              reject(new Error(t("integrations.beamImport.chunkFailed", { index, status: xhr.status })));
             }
           }
         });
-        xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
-        xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));
+        xhr.addEventListener("error", () => reject(new Error(t("integrations.beamImport.networkError"))));
+        xhr.addEventListener("abort", () => reject(new Error(t("integrations.beamImport.uploadCancelled"))));
 
         chunk.arrayBuffer().then((buf) => {
-          if (cancelled) { reject(new Error("Cancelled")); return; }
+          if (cancelled) { reject(new Error(t("integrations.beamImport.cancelled"))); return; }
           const qs = new URLSearchParams({ action: "chunk", uploadId, index: String(index) });
           xhr.open("POST", `/api/admin/beam/import?${qs.toString()}`);
           xhr.setRequestHeader("Content-Type", "application/octet-stream");
@@ -153,7 +155,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
         });
         const data = await finalRes.json().catch(() => ({}));
         if (!finalRes.ok || !data.success) {
-          setError(data.error ?? `Finalize failed (HTTP ${finalRes.status})`);
+          setError(data.error ?? t("integrations.beamImport.finalizeFailed", { status: finalRes.status }));
           setPhase("error");
           return;
         }
@@ -204,10 +206,10 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
               : phase === "uploading" ? <Upload style={{ width: 18, height: 18, color: "var(--brand)" }} />
               : <Loader2 style={{ width: 18, height: 18, color: "var(--brand)" }} className="animate-spin" />}
             <h2 style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>
-              {phase === "done" ? "Import complete"
-                : phase === "error" ? "Import failed"
-                : phase === "uploading" ? "Uploading file"
-                : "Processing on server"}
+              {phase === "done" ? t("integrations.beamImport.titleDone")
+                : phase === "error" ? t("integrations.beamImport.titleFailed")
+                : phase === "uploading" ? t("integrations.beamImport.titleUploading")
+                : t("integrations.beamImport.titleProcessing")}
             </h2>
           </div>
           <button
@@ -215,7 +217,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
             type="button"
             onClick={onClose}
             disabled={phase === "uploading" || phase === "processing"}
-            title={phase === "uploading" || phase === "processing" ? "Cannot close while import is running" : "Close"}
+            title={phase === "uploading" || phase === "processing" ? t("integrations.beamImport.cannotClose") : t("integrations.beamImport.close")}
             style={{
               background: "none", border: "none", color: "var(--muted-foreground)",
               cursor: phase === "uploading" || phase === "processing" ? "not-allowed" : "pointer",
@@ -238,7 +240,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
         {phase === "uploading" && (
           <>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem" }}>
-              <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Sending to server</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{t("integrations.beamImport.sendingToServer")}</span>
               <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>
                 {formatBytes(uploaded)} / {formatBytes(file.size)} ({uploadPct}%)
               </span>
@@ -265,8 +267,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
           }}>
             <Loader2 style={{ width: 16, height: 16 }} className="animate-spin" />
             <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>
-              Server is unpacking the archive, validating checksums, and installing site files.
-              This usually takes 5–30 seconds.
+              {t("integrations.beamImport.processingInfo")}
             </div>
           </div>
         )}
@@ -283,21 +284,21 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
               marginBottom: "0.75rem",
             }}>
               <div style={{ fontWeight: 600, marginBottom: "0.4rem" }}>
-                Site &ldquo;{result.siteName}&rdquo; imported successfully
+                {t("integrations.beamImport.importedSuccessfully", { name: result.siteName })}
               </div>
               <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.2rem 0.75rem" }}>
-                <span>Site ID:</span><span style={{ fontFamily: "monospace" }}>{result.siteId}</span>
-                <span>Content files:</span><span>{result.stats.contentFiles}</span>
-                <span>Media files:</span><span>{result.stats.mediaFiles}</span>
-                <span>Data files:</span><span>{result.stats.dataFiles}</span>
-                <span>Total size:</span><span>{formatBytes(result.stats.totalSizeBytes)}</span>
+                <span>{t("integrations.beamImport.siteId")}</span><span style={{ fontFamily: "monospace" }}>{result.siteId}</span>
+                <span>{t("integrations.beamImport.contentFiles")}</span><span>{result.stats.contentFiles}</span>
+                <span>{t("integrations.beamImport.mediaFiles")}</span><span>{result.stats.mediaFiles}</span>
+                <span>{t("integrations.beamImport.dataFiles")}</span><span>{result.stats.dataFiles}</span>
+                <span>{t("integrations.beamImport.totalSize")}</span><span>{formatBytes(result.stats.totalSizeBytes)}</span>
                 {result.checksumErrors > 0 && (
-                  <><span style={{ color: "var(--destructive)" }}>Checksum errors:</span><span style={{ color: "var(--destructive)" }}>{result.checksumErrors}</span></>
+                  <><span style={{ color: "var(--destructive)" }}>{t("integrations.beamImport.checksumErrors")}</span><span style={{ color: "var(--destructive)" }}>{result.checksumErrors}</span></>
                 )}
               </div>
               {result.secretsRequired.length > 0 && (
                 <div style={{ marginTop: "0.5rem", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-                  ⚠ Re-enter these secrets in Site Settings: {result.secretsRequired.join(", ")}
+                  ⚠ {t("integrations.beamImport.secretsRequired", { secrets: result.secretsRequired.join(", ") })}
                 </div>
               )}
             </div>
@@ -312,7 +313,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
                 cursor: "pointer",
               }}
             >
-              Done
+              {t("integrations.beamImport.done")}
             </button>
           </>
         )}
@@ -329,7 +330,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
               color: "var(--destructive)",
               marginBottom: "0.75rem",
             }}>
-              {error ?? "Unknown error"}
+              {error ?? t("integrations.beamImport.unknownError")}
             </div>
             <button
               data-testid="beam-import-error-close-button"
@@ -342,7 +343,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
                 cursor: "pointer",
               }}
             >
-              Close
+              {t("integrations.beamImport.close")}
             </button>
           </>
         )}

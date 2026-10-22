@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import type { FieldConfig } from "@webhouse/cms";
 import { Textarea } from "@/components/ui/textarea";
 import { injectWysiwyg } from "@/lib/wysiwyg-inject";
+import { useT } from "@/lib/i18n-context";
 import {
   Eye,
   Pencil,
@@ -61,6 +62,7 @@ const ICON_SIZE = { width: "13px", height: "13px" };
 
 /* ── Empty state: upload / paste ─────────────────────────────────────── */
 function EmptyState({ onChange, locked }: { onChange: (html: string) => void; locked?: boolean }) {
+  const t = useT();
   const [pasteValue, setPasteValue] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -105,7 +107,7 @@ function EmptyState({ onChange, locked }: { onChange: (html: string) => void; lo
         }}
       >
         <Upload style={{ width: "24px", height: "24px", opacity: 0.5 }} />
-        <span>Drop an HTML file here or click to upload</span>
+        <span>{t("editor.htmldocEditor.dropFile")}</span>
         <input
           data-testid="htmldoc-file-input"
           ref={fileRef}
@@ -121,14 +123,14 @@ function EmptyState({ onChange, locked }: { onChange: (html: string) => void; lo
       </div>
 
       <div style={{ color: "var(--muted-foreground)", fontSize: "0.75rem", textAlign: "center" }}>
-        Or paste HTML below:
+        {t("editor.htmldocEditor.orPaste")}
       </div>
 
       <Textarea
         data-testid="htmldoc-paste-textarea"
         value={pasteValue}
         onChange={(e) => setPasteValue(e.target.value)}
-        placeholder="Paste HTML here..."
+        placeholder={t("editor.htmldocEditor.pastePlaceholder")}
         disabled={locked}
         rows={6}
         className="resize-y font-mono text-xs"
@@ -152,7 +154,7 @@ function EmptyState({ onChange, locked }: { onChange: (html: string) => void; lo
             cursor: "pointer",
           }}
         >
-          Use this HTML
+          {t("editor.htmldocEditor.useThisHtml")}
         </button>
       )}
     </div>
@@ -161,6 +163,7 @@ function EmptyState({ onChange, locked }: { onChange: (html: string) => void; lo
 
 /* ── Main component ──────────────────────────────────────────────────── */
 export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
+  const t = useT();
   const [mode, setMode] = useState<EditMode>("preview");
   const [fullscreen, setFullscreen] = useState(false);
   const [codeValue, setCodeValue] = useState(value);
@@ -268,15 +271,15 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: "Request failed" }));
-        setAiError((data as { error?: string }).error ?? "Request failed");
+        const data = await res.json().catch(() => ({}));
+        setAiError((data as { error?: string }).error ?? t("editor.htmldocEditor.requestFailed"));
         setAiLoading(false);
         return;
       }
 
       const reader = res.body?.getReader();
       if (!reader) {
-        setAiError("No response stream");
+        setAiError(t("editor.htmldocEditor.noResponseStream"));
         setAiLoading(false);
         return;
       }
@@ -291,7 +294,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
         setAiPreview(accumulated);
       }
     } catch (err) {
-      setAiError(err instanceof Error ? err.message : "AI request failed");
+      setAiError(err instanceof Error ? err.message : t("editor.htmldocEditor.aiRequestFailed"));
     } finally {
       setAiLoading(false);
     }
@@ -371,7 +374,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
               {m === "visual" && <Pencil style={ICON_SIZE} />}
               {m === "ai" && <Sparkles style={ICON_SIZE} />}
               {m === "code" && <Code2 style={ICON_SIZE} />}
-              {m === "preview" ? "Preview" : m === "visual" ? "Visual Edit" : m === "ai" ? "AI Edit" : "Code"}
+              {m === "preview" ? t("editor.htmldocEditor.modePreview") : m === "visual" ? t("editor.htmldocEditor.modeVisual") : m === "ai" ? t("editor.htmldocEditor.modeAi") : t("editor.htmldocEditor.modeCode")}
             </button>
           ))}
         </div>
@@ -382,13 +385,13 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
             {!wysiwygReady && (
               <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
                 <Loader2 style={{ ...ICON_SIZE, animation: "spin 1s linear infinite" }} />
-                Loading...
+                {t("editor.htmldocEditor.loading")}
               </span>
             )}
             {wysiwygReady && !editing && !dirty && (
               <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
                 <MousePointerClick style={ICON_SIZE} />
-                Click any text to edit
+                {t("editor.htmldocEditor.clickToEdit")}
               </span>
             )}
             {dirty && (
@@ -405,7 +408,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                   }}
                 >
                   <RotateCcw style={{ width: "11px", height: "11px" }} />
-                  Reset
+                  {t("editor.htmldocEditor.reset")}
                 </button>
                 <button
                   data-testid="htmldoc-visual-save-button"
@@ -421,7 +424,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                   }}
                 >
                   {saving ? <Loader2 style={{ ...ICON_SIZE, animation: "spin 1s linear infinite" }} /> : <Save style={{ width: "11px", height: "11px" }} />}
-                  Save
+                  {t("editor.htmldocEditor.save")}
                 </button>
               </>
             )}
@@ -443,7 +446,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
             cursor: "pointer",
             display: "flex",
           }}
-          title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+          title={fullscreen ? t("editor.htmldocEditor.exitFullscreen") : t("editor.htmldocEditor.fullscreen")}
         >
           {fullscreen ? <Minimize2 style={ICON_SIZE} /> : <Maximize2 style={ICON_SIZE} />}
         </button>
@@ -546,7 +549,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
               }}
             >
               <Sparkles style={{ width: "12px", height: "12px", color: "var(--primary)" }} />
-              AI Edit
+              {t("editor.htmldocEditor.modeAi")}
             </div>
 
             {/* Status / response area */}
@@ -561,13 +564,13 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
             >
               {!aiPreview && !aiLoading && !aiError && (
                 <p style={{ margin: 0 }}>
-                  Describe what you want to change in the HTML document. The AI will modify it and show you a preview.
+                  {t("editor.htmldocEditor.aiIntro")}
                 </p>
               )}
               {aiLoading && (
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <Loader2 style={{ width: "14px", height: "14px", animation: "spin 1s linear infinite" }} />
-                  <span>Generating...</span>
+                  <span>{t("editor.htmldocEditor.generating")}</span>
                 </div>
               )}
               {aiError && (
@@ -579,7 +582,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--foreground)" }}>
                     <Check style={{ width: "14px", height: "14px", color: "hsl(142 76% 36%)" }} />
-                    <span>Changes ready — preview updated on the left.</span>
+                    <span>{t("editor.htmldocEditor.changesReady")}</span>
                   </div>
                   <div style={{ display: "flex", gap: "0.4rem" }}>
                     <button
@@ -595,7 +598,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                       }}
                     >
                       <Check style={{ width: "12px", height: "12px" }} />
-                      Apply
+                      {t("editor.htmldocEditor.apply")}
                     </button>
                     <button
                       data-testid="htmldoc-ai-revert-button"
@@ -610,7 +613,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                       }}
                     >
                       <X style={{ width: "12px", height: "12px" }} />
-                      Revert
+                      {t("editor.htmldocEditor.revert")}
                     </button>
                   </div>
                 </div>
@@ -630,7 +633,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                 data-testid="htmldoc-ai-instruction-textarea"
                 value={aiInstruction}
                 onChange={(e) => setAiInstruction(e.target.value)}
-                placeholder="e.g. Make the hero section use a dark blue gradient..."
+                placeholder={t("editor.htmldocEditor.aiPlaceholder")}
                 disabled={locked || aiLoading}
                 rows={2}
                 onKeyDown={(e) => {

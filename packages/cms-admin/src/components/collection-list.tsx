@@ -11,6 +11,7 @@ import { LOCALE_FLAGS } from "@/lib/locale";
 import { PreviewThumb, NoPreviewPlaceholder } from "@/components/preview-thumb";
 import { useHeaderData } from "@/lib/header-data-context";
 import { docPath, type LocaleStrategy } from "@/lib/doc-url";
+import { useT } from "@/lib/i18n-context";
 
 export type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "published" | "draft" | "scheduled" | "expired" | "trashed";
@@ -64,7 +65,7 @@ function buildColumns(fields: FieldConfig[], titleField: string) {
   return extra;
 }
 
-function renderCellValue(field: FieldConfig, value: unknown): React.ReactNode {
+function renderCellValue(field: FieldConfig, value: unknown, t: ReturnType<typeof useT>): React.ReactNode {
   if (value === undefined || value === null || value === "") {
     return <span style={{ opacity: 0.3, fontSize: "0.8rem" }}>—</span>;
   }
@@ -83,14 +84,14 @@ function renderCellValue(field: FieldConfig, value: unknown): React.ReactNode {
       );
     }
     case "boolean":
-      return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{value ? "Yes" : "No"}</span>;
+      return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{value ? t("common.yes") : t("common.no")}</span>;
     case "date":
       return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatDate(String(value))}</span>;
     case "relation":
-      if (Array.isArray(value)) return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{value.length} items</span>;
+      if (Array.isArray(value)) return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{t("misc.collectionList.itemCount", { count: value.length })}</span>;
       return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{String(value)}</span>;
     case "array":
-      if (Array.isArray(value)) return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{value.length} items</span>;
+      if (Array.isArray(value)) return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{t("misc.collectionList.itemCount", { count: value.length })}</span>;
       return <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{String(value)}</span>;
     default: {
       const str = String(value);
@@ -118,6 +119,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
   cloning: boolean;
   previewUrl?: string;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [confirmTrash, setConfirmTrash] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -165,7 +167,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--foreground)", textDecoration: "none" }}
             className="hover:bg-secondary"
           >
-            <Pencil style={{ width: "0.8rem", height: "0.8rem" }} /> Edit
+            <Pencil style={{ width: "0.8rem", height: "0.8rem" }} /> {t("common.edit")}
           </Link>
           {previewUrl && (
             <button
@@ -175,7 +177,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
               style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--foreground)", background: "none", border: "none", cursor: "pointer", width: "100%" }}
               className="hover:bg-secondary"
             >
-              <ExternalLink style={{ width: "0.8rem", height: "0.8rem" }} /> Preview
+              <ExternalLink style={{ width: "0.8rem", height: "0.8rem" }} /> {t("common.preview")}
             </button>
           )}
           <button
@@ -186,7 +188,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             className="hover:bg-secondary"
           >
             <Globe style={{ width: "0.8rem", height: "0.8rem" }} />
-            {doc.status === "published" ? "Unpublish" : "Publish"}
+            {doc.status === "published" ? t("misc.collectionList.unpublish") : t("misc.collectionList.publish")}
           </button>
           <button
             data-testid={`collection-row-clone-${doc.slug}`}
@@ -196,7 +198,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--foreground)", background: "none", border: "none", cursor: "pointer", width: "100%", opacity: cloning ? 0.5 : 1 }}
             className="hover:bg-secondary"
           >
-            <Copy style={{ width: "0.8rem", height: "0.8rem" }} /> {cloning ? "Cloning…" : "Clone"}
+            <Copy style={{ width: "0.8rem", height: "0.8rem" }} /> {cloning ? t("misc.collectionList.cloning") : t("misc.collectionList.clone")}
           </button>
           <button
             data-testid={`collection-row-favorite-${doc.slug}`}
@@ -218,24 +220,24 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             className="hover:bg-secondary"
           >
             <Heart style={{ width: "0.8rem", height: "0.8rem" }} fill={isFav ? "#ef4444" : "none"} strokeWidth={isFav ? 0 : 1.75} />
-            {isFav ? "Remove from favorites" : "Add to favorites"}
+            {isFav ? t("misc.collectionList.removeFavorite") : t("misc.collectionList.addFavorite")}
           </button>
           <div style={{ height: "1px", background: "var(--border)", margin: "0.25rem 0" }} />
           {confirmTrash ? (
             <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.6rem" }}>
-              <span style={{ fontSize: "0.75rem", color: "var(--destructive)", fontWeight: 500, flex: 1 }}>Move to trash?</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--destructive)", fontWeight: 500, flex: 1 }}>{t("misc.collectionList.moveToTrashConfirm")}</span>
               <button
                 type="button"
                 data-testid="collection-trash-confirm"
                 onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onTrash(e); setOpen(false); setConfirmTrash(false); }}
                 style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem", borderRadius: "4px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1, fontWeight: 500 }}
-              >Yes</button>
+              >{t("common.yes")}</button>
               <button
                 data-testid="collection-trash-cancel"
                 type="button"
                 onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmTrash(false); }}
                 style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
-              >No</button>
+              >{t("common.no")}</button>
             </div>
           ) : (
             <button
@@ -245,7 +247,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
               style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--destructive)", background: "none", border: "none", cursor: "pointer", width: "100%" }}
               className="hover:bg-destructive/10"
             >
-              <FileX style={{ width: "0.8rem", height: "0.8rem" }} /> Move to trash
+              <FileX style={{ width: "0.8rem", height: "0.8rem" }} /> {t("misc.collectionList.moveToTrash")}
             </button>
           )}
         </div>
@@ -258,6 +260,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
 /* ─── Main component ──────────────────────────────────────────── */
 
 export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix, urlPattern, localeStrategy = "prefix-other", defaultLocale, siteLocales }: Props) {
+  const t = useT();
   const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilterRaw] = useState<StatusFilter>(() => {
@@ -273,6 +276,8 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   const router = useRouter();
 
   const extraColumns = buildColumns(fields, titleField);
+  const statusLabel = (s: string) =>
+    s === "published" || s === "draft" || s === "expired" || s === "trashed" ? t(`misc.collectionList.status.${s}`) : s;
 
   // Resolve preview base URL for grid view thumbnails — uses shared context
   const { siteConfig } = useHeaderData();
@@ -314,12 +319,12 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   };
 
   const allFilterOptions: { value: StatusFilter; label: string; count: number; color: string }[] = [
-    { value: "all",       label: "All",       count: docs.filter((d) => d.status !== "trashed").length, color: "var(--muted-foreground)" },
-    { value: "published", label: "Published", count: counts.published, color: "rgb(74 222 128)" },
-    { value: "draft",     label: "Draft",     count: counts.draft,     color: "rgb(234 179 8)" },
-    { value: "scheduled", label: "Scheduled", count: counts.scheduled, color: "rgb(139 92 246)" },
-    { value: "expired",   label: "Expired",   count: counts.expired,   color: "rgb(239 68 68)" },
-    { value: "trashed",   label: "Trashed",   count: counts.trashed,   color: "rgb(239 68 68)" },
+    { value: "all",       label: t("misc.collectionList.filterAll"),       count: docs.filter((d) => d.status !== "trashed").length, color: "var(--muted-foreground)" },
+    { value: "published", label: t("misc.collectionList.filterPublished"), count: counts.published, color: "rgb(74 222 128)" },
+    { value: "draft",     label: t("misc.collectionList.filterDraft"),     count: counts.draft,     color: "rgb(234 179 8)" },
+    { value: "scheduled", label: t("misc.collectionList.filterScheduled"), count: counts.scheduled, color: "rgb(139 92 246)" },
+    { value: "expired",   label: t("misc.collectionList.filterExpired"),   count: counts.expired,   color: "rgb(239 68 68)" },
+    { value: "trashed",   label: t("misc.collectionList.filterTrashed"),   count: counts.trashed,   color: "rgb(239 68 68)" },
   ];
   const filterOptions = allFilterOptions.filter((f) => f.value === "all" || f.count > 0);
 
@@ -433,8 +438,8 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   if (docs.length === 0) {
     return (
       <div style={{ textAlign: "center", padding: "5rem 0", color: "var(--muted-foreground)" }}>
-        <p style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>No items yet</p>
-        <p style={{ fontSize: "0.875rem" }}>Create your first item to get started.</p>
+        <p style={{ fontSize: "1.1rem", marginBottom: "0.5rem" }}>{t("misc.collectionList.emptyTitle")}</p>
+        <p style={{ fontSize: "0.875rem" }}>{t("misc.collectionList.emptyHint")}</p>
       </div>
     );
   }
@@ -463,7 +468,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search…"
+            placeholder={t("misc.collectionList.searchPlaceholder")}
             style={{ width: "100%", paddingLeft: "2rem", paddingRight: "0.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", fontSize: "0.8rem", color: "var(--foreground)", outline: "none", boxSizing: "border-box" }}
           />
         </div>
@@ -492,8 +497,8 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
           <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", alignItems: "center" }}>
             <Languages style={{ width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)", marginRight: "0.15rem" }} />
             {[
-              { value: "all", label: "All" },
-              { value: "source", label: "Source" },
+              { value: "all", label: t("misc.collectionList.filterAll") },
+              { value: "source", label: t("misc.collectionList.filterSource") },
               ...siteLocales.map((l) => ({ value: l, label: `${LOCALE_FLAGS[l] ?? ""} ${l.toUpperCase()}` })),
             ].map((opt) => (
               <button
@@ -520,7 +525,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
       {/* Empty state after filter */}
       {filtered.length === 0 && (
         <div style={{ textAlign: "center", padding: "3rem 0", color: "var(--muted-foreground)", fontSize: "0.875rem" }}>
-          No items match your filters.
+          {t("misc.collectionList.noMatches")}
         </div>
       )}
 
@@ -582,12 +587,12 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "700px" }}>
             <thead>
               <tr>
-                <SortTh label="Title" sk="title" />
-                <SortTh label="Status" sk="status" />
+                <SortTh label={t("misc.collectionList.colTitle")} sk="title" />
+                <SortTh label={t("misc.collectionList.colStatus")} sk="status" />
                 {extraColumns.map((col) => (
                   <SortTh key={col.name} label={col.label ?? col.name} sk={col.name} />
                 ))}
-                <SortTh label="Updated" sk="updatedAt" />
+                <SortTh label={t("misc.collectionList.colUpdated")} sk="updatedAt" />
                 <th style={{ ...thStyle, width: "2.5rem" }} />
               </tr>
             </thead>
@@ -637,11 +642,11 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
 
                     {/* Status */}
                     <td style={{ padding: "0.625rem 0.75rem", whiteSpace: "nowrap" }}>
-                      <button data-testid={`collection-status-toggle-${doc.slug}`} type="button" onClick={(e) => !readOnly && toggleStatus(e, doc)} title={readOnly ? doc.status : doc.status === "published" ? "Click to unpublish" : "Click to publish"} style={{ background: "none", border: "none", cursor: readOnly ? "default" : "pointer", padding: 0 }}>
+                      <button data-testid={`collection-status-toggle-${doc.slug}`} type="button" onClick={(e) => !readOnly && toggleStatus(e, doc)} title={readOnly ? statusLabel(doc.status) : doc.status === "published" ? t("misc.collectionList.clickToUnpublish") : t("misc.collectionList.clickToPublish")} style={{ background: "none", border: "none", cursor: readOnly ? "default" : "pointer", padding: 0 }}>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                           {isScheduled ? (
                             <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 gap-1">
-                              <Clock style={{ width: "0.65rem", height: "0.65rem" }} /> scheduled
+                              <Clock style={{ width: "0.65rem", height: "0.65rem" }} /> {t("misc.collectionList.statusScheduled")}
                             </Badge>
                           ) : (
                             <Badge variant="outline" className={
@@ -653,11 +658,11 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                                 ? "bg-red-500/10 text-red-400 border-red-500/20"
                                 : "bg-status-warning/10 text-status-warning border-status-warning/20 hover:bg-status-warning/20"
                             }>
-                              {doc.status}
+                              {statusLabel(doc.status)}
                             </Badge>
                           )}
                           {hasExpiry && (
-                            <span title={`Expires: ${doc.unpublishAt!.replace("T", " ").slice(0, 16)}`}>
+                            <span title={t("misc.collectionList.expires", { date: doc.unpublishAt!.replace("T", " ").slice(0, 16) })}>
                               <Clock style={{ width: "0.7rem", height: "0.7rem", color: "rgb(239 68 68)" }} />
                             </span>
                           )}
@@ -668,7 +673,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                     {/* Dynamic columns */}
                     {extraColumns.map((col) => (
                       <td key={col.name} style={{ padding: "0.625rem 0.75rem" }}>
-                        {renderCellValue(col, doc.data[col.name])}
+                        {renderCellValue(col, doc.data[col.name], t)}
                       </td>
                     ))}
 

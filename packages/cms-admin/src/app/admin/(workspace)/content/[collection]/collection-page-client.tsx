@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { TabTitle } from "@/lib/tabs-context";
 import { SchemaDriftBanner } from "@/components/schema-drift-banner";
 import { CollectionListPage } from "@/components/collection-list-page";
+import { useT } from "@/lib/i18n-context";
 
 interface FieldConfig {
   name: string;
@@ -42,6 +43,7 @@ export function CollectionPageClient({
   collection, collectionLabel, titleField, fields,
   readOnly, urlPrefix, urlPattern, localeStrategy, schemaEnabled, defaultLocale, siteLocales,
 }: Props) {
+  const t = useT();
   const [docs, setDocs] = useState<Doc[] | null>(null);
   const [driftFields, setDriftFields] = useState<string[]>([]);
 
@@ -80,7 +82,7 @@ export function CollectionPageClient({
       )}
       {docs === null ? (
         <div style={{ padding: "2rem", color: "var(--muted-foreground)", fontSize: "0.875rem" }}>
-          Loading documents...
+          {t("tools.collectionPage.loadingDocuments")}
         </div>
       ) : (
         <CollectionListPage
