@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, dirname, resolve } from "node:path";
 import { getSessionUser, type UserRole } from "@/lib/auth";
-import { requirePermission } from "@/lib/permissions";
+import { requireInstanceAdmin, isInstanceAdmin, requirePermissionOnSite, siteAdminUpdateAllowed } from "@/lib/instance-admin";
 import { CAPABILITY_PROFILES } from "@/lib/capabilities-shared";
 import { getAccessibleSiteIds } from "@/lib/team-access";
 import {
@@ -72,10 +72,19 @@ export async function GET() {
   return NextResponse.json({ mode: "multi-site", registry: filteredRegistry });
 }
 
-/** POST /api/cms/registry — create/bootstrap registry or add org/site (admin only) */
+/**
+ * Security W41 NY-K3 — the registry is the whole instance: every org, every
+ * site and the file paths the server loads code from. This used to need only
+ * settings.edit on the ACTIVE site and then acted on the org/site named in the
+ * body, so any customer's site admin could re-point another tenant's config
+ * (code execution via jiti), make themselves its only admin, or delete orgs.
+ * Now: instance admin for everything, except two edits a site's own admin
+ * makes from Site Settings — update-site on a site where they hold
+ * settings.edit (paths unchanged) and update-org name/type on an org where
+ * they administer a site.
+ */
+/** POST /api/cms/registry — create/bootstrap registry or add org/site */
 export async function POST(request: NextRequest) {
-  const denied = await requirePermission("settings.edit"); if (denied) return denied;
-
   const body = await request.json() as {
     action: "bootstrap" | "add-org" | "add-site" | "update-org" | "update-site";
     orgName?: string;
@@ -86,6 +95,32 @@ export async function POST(request: NextRequest) {
     site?: SiteEntry;
     updates?: Partial<SiteEntry>;
   };
+
+  if (body.action === "update-site" && !(await isInstanceAdmin())) {
+    if (!body.orgId || !body.siteId) return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    const denied = await requirePermissionOnSite("settings.edit", body.orgId, body.siteId); if (denied) return denied;
+    const reg = await loadRegistry();
+    const current = reg?.orgs.find((o) => o.id === body.orgId)?.sites.find((s) => s.id === body.siteId);
+    if (!current) return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    if (!siteAdminUpdateAllowed(current, (body.updates ?? {}) as Record<string, unknown>)) {
+      return NextResponse.json({ error: "Only the CMS instance admin can change a site's paths" }, { status: 403 });
+    }
+  } else if (body.action === "update-org" && !(await isInstanceAdmin())) {
+    if (!body.orgId) return NextResponse.json({ error: "orgId required" }, { status: 400 });
+    const reg = await loadRegistry();
+    const org = reg?.orgs.find((o) => o.id === body.orgId);
+    if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
+    let orgAdmin = false;
+    for (const site of org.sites) {
+      if (!(await requirePermissionOnSite("settings.edit", org.id, site.id))) { orgAdmin = true; break; }
+    }
+    if (!orgAdmin) return NextResponse.json({ error: "No access to that organization" }, { status: 403 });
+    if (body.orgPlan !== undefined && body.orgPlan !== org.plan) {
+      return NextResponse.json({ error: "Only the CMS instance admin can change an organization's plan" }, { status: 403 });
+    }
+  } else {
+    const denied = await requireInstanceAdmin(); if (denied) return denied;
+  }
 
   if (body.action === "bootstrap") {
     const existing = await loadRegistry();
@@ -209,9 +244,9 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 }
 
-/** DELETE /api/cms/registry — remove org or site (admin only) */
+/** DELETE /api/cms/registry — remove org or site (instance admin only — W41 NY-K3) */
 export async function DELETE(request: NextRequest) {
-  const denied = await requirePermission("settings.edit"); if (denied) return denied;
+  const denied = await requireInstanceAdmin(); if (denied) return denied;
 
   const { searchParams } = request.nextUrl;
   const orgId = searchParams.get("orgId");
@@ -230,9 +265,9 @@ export async function DELETE(request: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-/** PUT /api/cms/registry — update full registry (admin only) */
+/** PUT /api/cms/registry — update full registry (instance admin only — W41 NY-K3) */
 export async function PUT(request: NextRequest) {
-  const denied = await requirePermission("settings.edit"); if (denied) return denied;
+  const denied = await requireInstanceAdmin(); if (denied) return denied;
 
   const registry = await request.json() as Registry;
   await saveRegistry(registry);

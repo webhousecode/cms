@@ -148,10 +148,11 @@ describe("F208 registry route", () => {
     const team = JSON.stringify([{ userId: "owner", role: "admin" }, { userId: "editor", role: "editor" }]);
     await fs.writeFile(teamFile, team);
 
-    vi.doMock("@/lib/permissions", () => ({ requirePermission: async () => null }));
+    // The caller is the instance admin (W41: add-site is instance-level), so
+    // this isolates F208's duplicate-id refusal.
     vi.doMock("@/lib/auth", () => ({
-      getSessionUser: async () => ({ sub: "attacker", id: "attacker", email: "a@b.c" }),
-      getUsers: async () => [],
+      getSessionUser: async () => ({ sub: "owner", id: "owner", email: "o@b.c" }),
+      getUsers: async () => [{ id: "owner", role: "admin" }],
     }));
     const { POST } = await import("../../app/api/cms/registry/route");
     const req = new Request("http://x/api/cms/registry", {
@@ -164,6 +165,31 @@ describe("F208 registry route", () => {
     });
     const res = await POST(req as never);
     expect(res.status).toBe(409);
+    expect(await fs.readFile(teamFile, "utf-8")).toBe(team);
+  });
+
+  it("3b · W41 NY-K3 — a site admin who is not the instance admin cannot add-site at all", async () => {
+    const projDir = path.join(dir, "proj2");
+    const teamFile = path.join(projDir, "_data", "team.json");
+    await fs.mkdir(path.dirname(teamFile), { recursive: true });
+    const team = JSON.stringify([{ userId: "owner", role: "admin" }]);
+    await fs.writeFile(teamFile, team);
+
+    vi.doMock("@/lib/auth", () => ({
+      getSessionUser: async () => ({ sub: "customer", id: "customer", email: "c@b.c", role: "admin" }),
+      getUsers: async () => [{ id: "customer", role: "editor" }],
+    }));
+    const { POST } = await import("../../app/api/cms/registry/route");
+    const req = new Request("http://x/api/cms/registry", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "add-site",
+        orgId: "org-b",
+        site: { id: "brand-new", name: "Mine", adapter: "filesystem", configPath: path.join(projDir, "cms.config.ts") },
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(403);
     expect(await fs.readFile(teamFile, "utf-8")).toBe(team);
   });
 });

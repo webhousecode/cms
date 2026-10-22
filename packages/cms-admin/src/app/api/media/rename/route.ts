@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
+import { isCodeUpload, CODE_UPLOAD_REFUSED } from "@/lib/code-path-policy";
 
 /**
  * POST /api/media/rename
@@ -32,6 +33,9 @@ export async function POST(req: NextRequest) {
     if (!sanitized || sanitized === "." || sanitized === "..") {
       return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
     }
+
+    // Security W41 C5 — renaming photo.jpg to x.ts is an upload of code too.
+    if (isCodeUpload(sanitized)) return NextResponse.json({ error: CODE_UPLOAD_REFUSED }, { status: 415 });
 
     const adapter = await getMediaAdapter();
     const result = await adapter.renameFile(folder ?? "", oldName, sanitized, { replace: replace === true });

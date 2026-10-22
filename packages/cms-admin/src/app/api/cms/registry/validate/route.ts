@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { validateSite } from "@webhouse/cms";
 import path from "path";
+import { requirePermission } from "@/lib/permissions";
+import { configLoadAllowed } from "@/lib/code-path-policy";
+
+/** Security W41 C5 — settings.edit, and only the active site's own config
+ *  (an arbitrary path loaded by jiti = code execution). */
+async function guardConfigLoad(configPath: string): Promise<Response | null> {
+  const denied = await requirePermission("settings.edit"); if (denied) return denied;
+  const { getActiveSitePaths } = await import("@/lib/site-paths");
+  const { isInstanceAdmin } = await import("@/lib/instance-admin");
+  let active: string | null = null;
+  try { active = (await getActiveSitePaths()).configPath; } catch { active = null; }
+  if (!configLoadAllowed(configPath, active, { instanceAdmin: await isInstanceAdmin() })) {
+    return NextResponse.json({ error: "Only the active site's own config can be loaded" }, { status: 403 });
+  }
+  return null;
+}
 
 /**
  * POST /api/cms/registry/validate
@@ -22,6 +38,7 @@ export async function POST(request: NextRequest) {
     if (configPath.startsWith("github://")) {
       return NextResponse.json({ valid: true, errors: [], warnings: [] });
     }
+    const guarded = await guardConfigLoad(configPath); if (guarded) return guarded;
 
     // Load config via jiti
     const absolutePath = path.isAbsolute(configPath)

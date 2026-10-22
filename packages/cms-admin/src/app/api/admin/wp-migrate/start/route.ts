@@ -10,13 +10,13 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "node:path";
 import { migrateWordPressSite } from "@/lib/wp-migration/create-site";
 import type { WpProbeResult } from "@/lib/wp-migration/probe";
-import { getSiteRole } from "@/lib/require-role";
+import { requireInstanceAdmin } from "@/lib/instance-admin";
 
 export async function POST(request: NextRequest) {
-  const role = await getSiteRole();
-  if (role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
-  }
+  // Security W41 NY-K5 — this creates a site (registry + a generated
+  // cms.config.ts the server loads) in the org named in the body: an
+  // instance-level act, not a site admin's.
+  const denied = await requireInstanceAdmin(); if (denied) return denied;
 
   try {
     const { probeResult, orgId, siteName } = await request.json() as {

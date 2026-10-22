@@ -77,7 +77,10 @@ export async function migrateWordPressSite(
     mkdirSync(colDir, { recursive: true });
 
     const cmsDoc = wpDocToCmsJson(doc, colName);
-    writeFileSync(path.join(colDir, `${doc.slug}.json`), JSON.stringify(cmsDoc, null, 2), "utf-8");
+    // Security W41 NY-K5 — the slug comes from the remote WordPress server;
+    // "../../x" must not choose where the file lands.
+    const fileSlug = slugify(doc.slug) || `doc-${i}`;
+    writeFileSync(path.join(colDir, `${fileSlug}.json`), JSON.stringify(cmsDoc, null, 2), "utf-8");
     imported++;
     onProgress?.({ phase: "writing", current: i + 1, total: documents.length, currentItem: doc.title });
   }
@@ -120,7 +123,7 @@ export async function migrateWordPressSite(
 
 // ── Collection mapping ──
 
-interface CollectionDef {
+export interface CollectionDef {
   name: string;
   label: string;
   urlPrefix: string;
@@ -182,17 +185,26 @@ function mapTypeToCollection(type: string, probe: WpProbeResult): string {
   if (type === "page") return "pages";
   // CPT: find matching collection name
   const cpt = probe.contentCounts.customPostTypes.find((c) => c.slug === type);
-  return cpt ? slugify(cpt.name) : type;
+  return slugify(cpt ? cpt.name : type) || "items";
 }
 
 // ── Config generation ──
 
-function generateCmsConfig(collections: CollectionDef[], probe: WpProbeResult): string {
+/**
+ * Security W41 NY-K5 — every value below comes from the remote WordPress site
+ * and lands in a .ts file the server then LOADS. A newline in probe.url broke
+ * out of the comment; a quote in a label broke out of the string: code
+ * execution. Strings are emitted with JSON.stringify, comment text on one line.
+ */
+const lit = (v: unknown): string => JSON.stringify(String(v ?? ""));
+const oneLine = (v: unknown): string => String(v ?? "").replace(/[\r\n\u2028\u2029]+/g, " ").replace(/\*\//g, "* /");
+
+export function generateCmsConfig(collections: CollectionDef[], probe: WpProbeResult): string {
   const lines: string[] = [
     `import { defineConfig, defineCollection } from '@webhouse/cms';`,
     ``,
-    `// Auto-generated from WordPress site: ${probe.url}`,
-    `// Theme: ${probe.theme.name} | Builder: ${probe.pageBuilder}`,
+    `// Auto-generated from WordPress site: ${oneLine(probe.url)}`,
+    `// Theme: ${oneLine(probe.theme.name)} | Builder: ${oneLine(probe.pageBuilder)}`,
     `// Generated: ${new Date().toISOString()}`,
     ``,
     `export default defineConfig({`,
@@ -202,9 +214,9 @@ function generateCmsConfig(collections: CollectionDef[], probe: WpProbeResult): 
 
   for (const col of collections) {
     lines.push(`    defineCollection({`);
-    lines.push(`      name: '${col.name}',`);
-    lines.push(`      label: '${col.label}',`);
-    lines.push(`      urlPrefix: '${col.urlPrefix}',`);
+    lines.push(`      name: ${lit(col.name)},`);
+    lines.push(`      label: ${lit(col.label)},`);
+    lines.push(`      urlPrefix: ${lit(col.urlPrefix)},`);
     lines.push(`      fields: [`);
     lines.push(`        { name: 'title', type: 'text', required: true },`);
     lines.push(`        { name: 'content', type: 'richtext' },`);

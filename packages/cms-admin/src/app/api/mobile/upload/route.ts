@@ -1,4 +1,5 @@
 import { findLanHost } from "@/lib/lan-host";
+import { isCodeUpload, CODE_UPLOAD_REFUSED } from "@/lib/code-path-policy";
 import { NextRequest, NextResponse } from "next/server";
 import os from "os";
 import { join } from "node:path";
@@ -62,6 +63,8 @@ export async function POST(req: NextRequest) {
 
     // Sanitize filename, add short hash to avoid collisions
     const hash = Math.random().toString(36).slice(2, 6);
+    // Security W41 C5 — never store a file the server could load as code.
+    if (isCodeUpload(file.name)) return NextResponse.json({ error: CODE_UPLOAD_REFUSED }, { status: 415 });
     const originalName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
     const dotIdx = originalName.lastIndexOf(".");
     const filename = dotIdx > 0
