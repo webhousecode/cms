@@ -55,6 +55,27 @@ export function bidRedirectUriFor(
   return `https://${name}${new URL(defaultUri).pathname}`;
 }
 
+/**
+ * F210.5 — the BID client for the address a login started on. A committed
+ * brand with its own client (BID shows that brand's dialog) uses it once BOTH
+ * its env vars are set; otherwise the default client, so nothing breaks before
+ * the secrets land. Same exact-host rule as bidRedirectUriFor.
+ */
+export function bidClientFor(
+  host: string | null | undefined,
+  base: { clientId: string; clientSecret?: string },
+  env: NodeJS.ProcessEnv = process.env,
+  packs: BrandPack[] = BRAND_PACKS,
+): { clientId: string; clientSecret?: string } {
+  const fallback = { clientId: base.clientId, clientSecret: base.clientSecret };
+  if (!host) return fallback;
+  const name = host.trim().toLowerCase().replace(/:\d+$/, "");
+  const own = packs.find((p) => p.hosts.includes(name))?.bidClient;
+  const clientId = own && env[own.idEnv];
+  const clientSecret = own && env[own.secretEnv];
+  return clientId && clientSecret ? { clientId, clientSecret } : fallback;
+}
+
 // Config comes from process env, which is the same for every request and every
 // tenant — caching it is not per-request state. One client per callback
 // address (webhouse.app + each committed customer address), never per request.
@@ -64,7 +85,7 @@ export function getBid(host?: string | null): { config: SsoConfig; sso: SsoClien
   const redirectUri = bidRedirectUriFor(host, base.redirectUri);
   let entry = _bid.get(redirectUri);
   if (!entry) {
-    const config = { ...base, redirectUri };
+    const config = { ...base, redirectUri, ...bidClientFor(host, base) };
     entry = { config, sso: createSsoClient(config) };
     _bid.set(redirectUri, entry);
   }

@@ -30,6 +30,10 @@ export interface BrandPack {
    *  under /brands/<id>/ with the @font-face rules (never a third-party URL —
    *  that would send every visitor's address to the font host). */
   font?: { family: string; stylesheet: string };
+  /** F210.5 — this brand's own BID client, as the NAMES of the env vars that
+   *  hold it (never the values). BID designs its login dialog per client, so
+   *  each brand gets one. Unset env → the default client (ship dark). */
+  bidClient?: { idEnv: string; secretEnv: string };
 }
 
 export const DEFAULT_BRAND: BrandPack = {
@@ -56,6 +60,9 @@ export const BRAND_PACKS: BrandPack[] = [
     colorDark: "#5FB3B3",
     // Manrope is fysio.work's heading/button/menu face (their CSS, 22/10-2026).
     font: { family: "Manrope", stylesheet: "/brands/fysio-work/fonts.css" },
+    // BID client «cms-fysio-work» (made by the bid session 22/10-2026), whose
+    // dialog carries fysio.work's logo, icon and colours.
+    bidClient: { idEnv: "BID_CLIENT_ID_FYSIO_WORK", secretEnv: "BID_CLIENT_SECRET_FYSIO_WORK" },
   },
 ];
 
