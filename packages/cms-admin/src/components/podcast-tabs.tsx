@@ -25,14 +25,15 @@ import { Mic, Megaphone, Volume2 } from "lucide-react";
 import { AfsnitFane } from "@/components/podcast/afsnit-fane";
 import { ReklamerFane } from "@/components/podcast/reklamer-fane";
 import { UdtaleFane } from "@/components/podcast/udtale-fane";
+import { useT } from "@/lib/i18n-context";
 
 export const FANER = ["afsnit", "reklamer", "udtale"] as const;
 export type FaneId = (typeof FANER)[number];
 
 const ETIKET: { id: FaneId; tekst: string; ikon: React.ReactNode }[] = [
-  { id: "afsnit", tekst: "Afsnit", ikon: <Mic size={13} /> },
-  { id: "reklamer", tekst: "Reklamer", ikon: <Megaphone size={13} /> },
-  { id: "udtale", tekst: "Udtale", ikon: <Volume2 size={13} /> },
+  { id: "afsnit", tekst: "episodes", ikon: <Mic size={13} /> },
+  { id: "reklamer", tekst: "ads", ikon: <Megaphone size={13} /> },
+  { id: "udtale", tekst: "pronunciation", ikon: <Volume2 size={13} /> },
 ];
 
 /** En ukendt ?fane= er ikke en fejl værd at vise — den lander på den første. */
@@ -41,6 +42,7 @@ export function laesFane(vaerdi: string | null | undefined): FaneId {
 }
 
 export function PodcastTabs() {
+  const t = useT();
   const router = useRouter();
   const params = useSearchParams();
   const fane = laesFane(params?.get("fane"));
@@ -66,7 +68,7 @@ export function PodcastTabs() {
             }`}
           >
             {f.ikon}
-            {f.tekst}
+            {t(`tools.podcast.tabs.${f.tekst}`)}
           </button>
         ))}
       </div>

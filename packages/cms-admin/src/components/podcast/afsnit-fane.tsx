@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Mic, Plus } from "lucide-react";
 import { useHeaderData } from "@/lib/header-data-context";
+import { useT } from "@/lib/i18n-context";
 
 type Tilstand = "kladde" | "manuskript-klar" | "godkendt" | "indspillet" | "udgivet";
 
@@ -30,21 +31,22 @@ type Afsnit = {
   };
 };
 
-/** Mockup'ens fem tilstande med deres tegn. Rækkefølgen er maskinens. */
+/** Mockup'ens fem tilstande med deres tegn. Rækkefølgen er maskinens.
+ *  `tekst` er en katalognøgle — oversættes når den vises. */
 const TILSTAND: Record<Tilstand, { tegn: string; tekst: string; farve: string }> = {
-  kladde: { tegn: "○", tekst: "Kladde", farve: "var(--muted-foreground)" },
-  "manuskript-klar": { tegn: "◔", tekst: "Manuskript klar", farve: "var(--foreground)" },
-  godkendt: { tegn: "★", tekst: "Godkendt — klar til studiet", farve: "#b8860b" },
-  indspillet: { tegn: "♪", tekst: "Indspillet", farve: "#0d7a5f" },
-  udgivet: { tegn: "●", tekst: "Udgivet", farve: "#0d7a5f" },
+  kladde: { tegn: "○", tekst: "stateKladde", farve: "var(--muted-foreground)" },
+  "manuskript-klar": { tegn: "◔", tekst: "stateManuskriptKlar", farve: "var(--foreground)" },
+  godkendt: { tegn: "★", tekst: "stateGodkendt", farve: "#b8860b" },
+  indspillet: { tegn: "♪", tekst: "stateIndspillet", farve: "#0d7a5f" },
+  udgivet: { tegn: "●", tekst: "stateUdgivet", farve: "#0d7a5f" },
 };
 
 /** Groft minut-tal ud fra tegn, samme takt som motorens estimat (900 tegn/min).
  *  Vises som «~11 min» — et cirka-tal, og det siges med tilden. */
-function anslaaMinutter(replikker: { text: string }[]): string {
+function anslaaMinutter(replikker: { text: string }[]): number | null {
   const tegn = replikker.reduce((n, r) => n + r.text.length, 0);
-  if (!tegn) return "—";
-  return `~${Math.max(1, Math.round(tegn / 900))} min`;
+  if (!tegn) return null;
+  return Math.max(1, Math.round(tegn / 900));
 }
 
 const felt: React.CSSProperties = {
@@ -53,6 +55,7 @@ const felt: React.CSSProperties = {
 };
 
 export function AfsnitFane() {
+  const t = useT();
   const [afsnit, setAfsnit] = useState<Afsnit[]>([]);
   const [henter, setHenter] = useState(true);
   const [fejl, setFejl] = useState<string | null>(null);
@@ -92,7 +95,7 @@ export function AfsnitFane() {
       setOpretter(false);
       setNySlug(""); setNyTitel(""); setNyNummer(""); setNySaeson("");
     } catch (err) {
-      setOpretFejl(err instanceof Error ? err.message : "Kunne ikke oprette afsnittet");
+      setOpretFejl(err instanceof Error ? err.message : t("tools.podcast.episodesTab.createFailed"));
     } finally {
       setGemmer(false);
     }
@@ -123,14 +126,14 @@ export function AfsnitFane() {
               color: "var(--foreground)", cursor: "pointer",
             }}
           >
-            <Plus style={{ width: 14, height: 14 }} /> Nyt afsnit
+            <Plus style={{ width: 14, height: 14 }} /> {t("tools.podcast.episodesTab.newEpisode")}
           </button>
         </div>
       )}
 
       <div>
         <p style={{ color: "var(--muted-foreground)", margin: "0 0 1.5rem", fontSize: ".9rem" }}>
-          Ét afsnit pr. artikel. Nyeste øverst.
+          {t("tools.podcast.episodesTab.intro")}
         </p>
 
         {opretter && (
@@ -144,29 +147,29 @@ export function AfsnitFane() {
             }}
           >
             <label style={{ display: "grid", gap: ".25rem", fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-              Navn (slug)
+              {t("tools.podcast.episodesTab.slugLabel")}
               <input
                 autoFocus
                 required
                 value={nySlug}
                 onChange={(e) => setNySlug(e.target.value)}
-                placeholder="afsnit-01"
+                placeholder={t("tools.podcast.episodesTab.slugPlaceholder")}
                 data-testid="podcast-opret-slug"
                 style={felt}
               />
             </label>
             <label style={{ display: "grid", gap: ".25rem", fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-              Titel
+              {t("tools.podcast.episodesTab.titleLabel")}
               <input
                 value={nyTitel}
                 onChange={(e) => setNyTitel(e.target.value)}
-                placeholder="Uden titel"
+                placeholder={t("tools.podcast.episodesTab.untitled")}
                 data-testid="podcast-opret-titel"
                 style={felt}
               />
             </label>
             <label style={{ display: "grid", gap: ".25rem", fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-              Sæson
+              {t("tools.podcast.episodesTab.season")}
               <input
                 type="number" min={1} value={nySaeson}
                 onChange={(e) => setNySaeson(e.target.value)}
@@ -176,7 +179,7 @@ export function AfsnitFane() {
               />
             </label>
             <label style={{ display: "grid", gap: ".25rem", fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-              Nr. i sæsonen <span style={{ opacity: .7 }}>(1-24)</span>
+              {t("tools.podcast.episodesTab.numberInSeason")} <span style={{ opacity: .7 }}>(1-24)</span>
               <input
                 type="number" min={1} max={24} value={nyNummer}
                 onChange={(e) => setNyNummer(e.target.value)}
@@ -195,7 +198,7 @@ export function AfsnitFane() {
                   cursor: gemmer ? "wait" : "pointer", opacity: gemmer ? .7 : 1,
                 }}
               >
-                {gemmer ? "Opretter…" : "Opret"}
+                {gemmer ? t("tools.podcast.episodesTab.creating") : t("tools.podcast.episodesTab.create")}
               </button>
               <button
                 type="button" onClick={() => setOpretter(false)}
@@ -206,7 +209,7 @@ export function AfsnitFane() {
                   color: "var(--foreground)", cursor: "pointer",
                 }}
               >
-                Fortryd
+                {t("tools.podcast.episodesTab.cancel")}
               </button>
             </div>
             {opretFejl && (
@@ -215,15 +218,14 @@ export function AfsnitFane() {
               </p>
             )}
             <p style={{ gridColumn: "1 / -1", margin: 0, color: "var(--muted-foreground)", fontSize: ".75rem" }}>
-              Et afsnit behøver ikke komme fra en artikel. Manuskriptet skriver du selv bagefter —
-              eller lader motoren skrive det ud fra en artikel. 24 afsnit om året er udgangspunktet.
+              {t("tools.podcast.episodesTab.createHint")}
             </p>
           </form>
         )}
 
         {henter ? (
           <p data-testid="podcast-henter" style={{ color: "var(--muted-foreground)" }}>
-            Henter afsnit…
+            {t("tools.podcast.episodesTab.loading")}
           </p>
         ) : fejl ? (
           /* Motoren er ship-dark: mangler sitet sin podcast-samling, siger
@@ -246,9 +248,9 @@ export function AfsnitFane() {
             }}
           >
             <Mic style={{ width: 22, height: 22, opacity: .5, marginBottom: ".5rem" }} />
-            <div>Ingen afsnit endnu.</div>
+            <div>{t("tools.podcast.episodesTab.empty")}</div>
             <div style={{ fontSize: ".85rem", marginTop: ".35rem" }}>
-              Et afsnit laves ud fra en artikel — motoren skriver manuskriptet, du læser det igennem.
+              {t("tools.podcast.episodesTab.emptyHint")}
             </div>
           </div>
         ) : (
@@ -256,14 +258,15 @@ export function AfsnitFane() {
             <thead>
               <tr style={{ textAlign: "left", color: "var(--muted-foreground)", fontSize: ".78rem" }}>
                 <th style={{ padding: ".5rem .6rem", fontWeight: 500 }}>#</th>
-                <th style={{ padding: ".5rem .6rem", fontWeight: 500 }}>Afsnit</th>
-                <th style={{ padding: ".5rem .6rem", fontWeight: 500 }}>Status</th>
-                <th style={{ padding: ".5rem .6rem", fontWeight: 500 }}>Længde</th>
+                <th style={{ padding: ".5rem .6rem", fontWeight: 500 }}>{t("tools.podcast.episodesTab.colEpisode")}</th>
+                <th style={{ padding: ".5rem .6rem", fontWeight: 500 }}>{t("tools.podcast.episodesTab.colStatus")}</th>
+                <th style={{ padding: ".5rem .6rem", fontWeight: 500 }}>{t("tools.podcast.episodesTab.colLength")}</th>
               </tr>
             </thead>
             <tbody>
               {afsnit.map((a) => {
-                const t = TILSTAND[a.data.tilstand] ?? TILSTAND.kladde;
+                const st = TILSTAND[a.data.tilstand] ?? TILSTAND.kladde;
+                const min = anslaaMinutter(a.data.replikker);
                 return (
                   <tr key={a.slug} style={{ borderTop: "1px solid var(--border)" }}>
                     <td style={{ padding: ".7rem .6rem", color: "var(--muted-foreground)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
@@ -282,14 +285,14 @@ export function AfsnitFane() {
                         {a.data.titel || a.slug}
                       </Link>
                       <div style={{ color: "var(--muted-foreground)", fontSize: ".78rem", marginTop: ".15rem" }}>
-                        {a.data.artikelSlug ? `fra: ${a.data.artikelSlug}` : "(ingen artikel valgt endnu)"}
+                        {a.data.artikelSlug ? t("tools.podcast.from", { slug: a.data.artikelSlug }) : t("tools.podcast.episodesTab.noArticle")}
                       </div>
                     </td>
-                    <td style={{ padding: ".7rem .6rem", color: t.farve, whiteSpace: "nowrap" }}>
-                      <span aria-hidden="true">{t.tegn}</span> {t.tekst}
+                    <td style={{ padding: ".7rem .6rem", color: st.farve, whiteSpace: "nowrap" }}>
+                      <span aria-hidden="true">{st.tegn}</span> {t(`tools.podcast.episodesTab.${st.tekst}`)}
                     </td>
                     <td style={{ padding: ".7rem .6rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-                      {anslaaMinutter(a.data.replikker)}
+                      {min === null ? "—" : t("tools.podcast.minutes", { n: min })}
                     </td>
                   </tr>
                 );

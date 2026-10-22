@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import path from "node:path";
 import { scanTree, scanSource } from "@/i18n/scan-hardcoded";
 
-const HARDCODED_BASELINE = 108;
+const HARDCODED_BASELINE = 61;
 
 describe("hardcoded UI text ratchet", () => {
   it(`no more than ${HARDCODED_BASELINE} hard-coded texts remain (the number only falls)`, () => {

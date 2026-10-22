@@ -16,6 +16,7 @@
 import { useEffect, useState } from "react";
 import { Megaphone, Plus } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { useT } from "@/lib/i18n-context";
 
 type Sponsor = {
   slug: string;
@@ -38,11 +39,11 @@ type Sponsor = {
  *  ikke — hører man værten sælge noget, er det ikke en reklame, det er værten
  *  der bryder rollen. Det er Christians eget krav. */
 const STEMMER = [
-  { value: "mads", label: "Mads (mand)" },
-  { value: "soren", label: "Søren (mand)" },
-  { value: "noam", label: "Noam (mand)" },
-  { value: "camilla", label: "Camilla (kvinde)" },
-  { value: "jesper", label: "Jesper — Aidans egen, undgå til reklamer" },
+  { value: "mads", label: "voiceMads" },
+  { value: "soren", label: "voiceSoren" },
+  { value: "noam", label: "voiceNoam" },
+  { value: "camilla", label: "voiceCamilla" },
+  { value: "jesper", label: "voiceJesper" },
 ];
 
 const felt: React.CSSProperties = {
@@ -54,14 +55,16 @@ const felt: React.CSSProperties = {
   fontSize: ".85rem",
 };
 
-function sek(n?: number): string {
+function sek(n: number | undefined, t: ReturnType<typeof useT>): string {
   if (!n) return "—";
   const m = Math.floor(n / 60);
   const s = Math.round(n % 60);
-  return m ? `${m}:${String(s).padStart(2, "0")}` : `${s} sek`;
+  return m ? `${m}:${String(s).padStart(2, "0")}` : t("tools.podcast.adsTab.seconds", { n: s });
 }
 
 export function ReklamerFane() {
+  const t = useT();
+  const stemmer = STEMMER.map((s) => ({ value: s.value, label: t(`tools.podcast.adsTab.${s.label}`) }));
   const [liste, setListe] = useState<Sponsor[]>([]);
   const [henter, setHenter] = useState(true);
   const [fejl, setFejl] = useState<string | null>(null);
@@ -79,14 +82,14 @@ export function ReklamerFane() {
    *  valutakurs ved siden af motorens. Kaldet koster ingenting. */
   const [nyPris, setNyPris] = useState<string>("");
   useEffect(() => {
-    const t = nyManus.trim();
-    if (!t) { setNyPris(""); return; }
+    const tekst = nyManus.trim();
+    if (!tekst) { setNyPris(""); return; }
     const id = setTimeout(async () => {
       try {
         const r = await fetch("/api/podcast/estimate", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ tekst: t }),
+          body: JSON.stringify({ tekst }),
         });
         const j = (await r.json()) as { estimat?: { prisDkk?: string } };
         if (r.ok && j.estimat?.prisDkk) setNyPris(j.estimat.prisDkk);
@@ -104,7 +107,7 @@ export function ReklamerFane() {
       setListe(d.sponsorer ?? []);
       setFejl(null);
     } catch (e) {
-      setFejl(e instanceof Error ? e.message : "kunne ikke hente arkivet");
+      setFejl(e instanceof Error ? e.message : t("tools.podcast.adsTab.loadFailed"));
     } finally {
       setHenter(false);
     }
@@ -137,7 +140,7 @@ export function ReklamerFane() {
       setNyManus("");
       await hent();
     } catch (e) {
-      setFejl(e instanceof Error ? e.message : "kunne ikke oprette");
+      setFejl(e instanceof Error ? e.message : t("tools.podcast.adsTab.createFailed"));
     } finally {
       setGemmer(false);
     }
@@ -158,7 +161,7 @@ export function ReklamerFane() {
       if (!r.ok) throw new Error(d.error ?? `HTTP ${r.status}`);
       await hent();
     } catch (e) {
-      setFejl(e instanceof Error ? e.message : "indtalingen fejlede");
+      setFejl(e instanceof Error ? e.message : t("tools.podcast.adsTab.recordFailed"));
     } finally {
       setIndtaler(null);
     }
@@ -179,14 +182,13 @@ export function ReklamerFane() {
             fontSize: ".82rem", cursor: "pointer",
           }}
         >
-          <Plus size={14} /> Nyt indslag
+          <Plus size={14} /> {t("tools.podcast.adsTab.newSpot")}
         </button>
       </div>
 
       <div>
         <p style={{ color: "var(--muted-foreground)", fontSize: ".85rem", margin: "0 0 1rem" }}>
-          Et indslag kan bruges i flere afsnit. Lyden kommer enten fra en fil du uploader,
-          eller ved at vi indtaler manuskriptet.
+          {t("tools.podcast.adsTab.intro")}
         </p>
 
         {fejl && (
@@ -211,32 +213,32 @@ export function ReklamerFane() {
             }}
           >
             <input
-              data-testid="sponsor-ny-slug" style={felt} placeholder="slug — fx broberg-efteraar"
+              data-testid="sponsor-ny-slug" style={felt} placeholder={t("tools.podcast.adsTab.slugPlaceholder")}
               value={nySlug} onChange={(e) => setNySlug(e.target.value)}
             />
             <input
-              data-testid="sponsor-ny-titel" style={felt} placeholder="Titel — fx «Efterårskampagne, 30 sek»"
+              data-testid="sponsor-ny-titel" style={felt} placeholder={t("tools.podcast.adsTab.titlePlaceholder")}
               value={nyTitel} onChange={(e) => setNyTitel(e.target.value)}
             />
             <input
-              data-testid="sponsor-ny-sponsor" style={felt} placeholder="Sponsorens navn"
+              data-testid="sponsor-ny-sponsor" style={felt} placeholder={t("tools.podcast.adsTab.sponsorPlaceholder")}
               value={nySponsor} onChange={(e) => setNySponsor(e.target.value)}
             />
             <textarea
               data-testid="sponsor-ny-manuskript" style={{ ...felt, minHeight: 110, resize: "vertical" }}
-              placeholder="Manuskript — kun hvis vi skal indtale det. Uploader du selv en fil, kan feltet stå tomt."
+              placeholder={t("tools.podcast.adsTab.scriptPlaceholder")}
               value={nyManus} onChange={(e) => setNyManus(e.target.value)}
             />
             <div style={{ display: "flex", alignItems: "center", gap: ".6rem" }}>
-              <span style={{ fontSize: ".8rem", color: "var(--muted-foreground)" }}>Stemme</span>
+              <span style={{ fontSize: ".8rem", color: "var(--muted-foreground)" }}>{t("tools.podcast.adsTab.voice")}</span>
               {/* CustomSelect, ikke native <select> — husets regel. Den tager
                   ikke data-testid, så ankeret sidder på indpakningen. */}
               <span data-testid="sponsor-ny-stemme">
-                <CustomSelect value={nyStemme} onChange={setNyStemme} options={STEMMER} />
+                <CustomSelect value={nyStemme} onChange={setNyStemme} options={stemmer} />
               </span>
               {nyManus.trim().length > 0 && (
                 <span style={{ fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-                  {nyManus.trim().length} tegn · {nyPris ? ` · ca. ${nyPris} at indtale` : ""}
+                  {t("tools.podcast.adsTab.chars", { n: nyManus.trim().length })}{nyPris ? ` · ${t("tools.podcast.adsTab.priceToVoice", { price: nyPris })}` : ""}
                 </span>
               )}
             </div>
@@ -251,7 +253,7 @@ export function ReklamerFane() {
                   opacity: !nySlug.trim() ? 0.5 : 1,
                 }}
               >
-                {gemmer ? "Gemmer…" : "Opret"}
+                {gemmer ? t("tools.podcast.adsTab.saving") : t("tools.podcast.adsTab.create")}
               </button>
               <button
                 type="button" data-testid="sponsor-annuller" onClick={() => setOpretter(false)}
@@ -261,14 +263,14 @@ export function ReklamerFane() {
                   cursor: "pointer",
                 }}
               >
-                Fortryd
+                {t("tools.podcast.adsTab.cancel")}
               </button>
             </div>
           </div>
         )}
 
         {henter ? (
-          <p style={{ color: "var(--muted-foreground)", fontSize: ".85rem" }}>Henter arkivet…</p>
+          <p style={{ color: "var(--muted-foreground)", fontSize: ".85rem" }}>{t("tools.podcast.adsTab.loading")}</p>
         ) : liste.length === 0 ? (
           <div
             data-testid="sponsor-tomt"
@@ -278,7 +280,7 @@ export function ReklamerFane() {
             }}
           >
             <Megaphone size={22} style={{ opacity: 0.5, marginBottom: ".5rem" }} />
-            <p style={{ margin: 0 }}>Der er ingen sponsorindslag endnu.</p>
+            <p style={{ margin: 0 }}>{t("tools.podcast.adsTab.empty")}</p>
           </div>
         ) : (
           <div data-testid="sponsor-liste" style={{ display: "grid", gap: ".9rem" }}>
@@ -297,9 +299,9 @@ export function ReklamerFane() {
                     <div style={{ fontSize: ".8rem", color: "var(--muted-foreground)", marginTop: ".15rem" }}>
                       {s.data.sponsor || "—"}
                       {" · "}
-                      {s.data.kilde === "tale" ? `indtalt (${s.data.stemme ?? "?"})` : s.data.kilde === "upload" ? "uploadet" : "ingen lyd"}
+                      {s.data.kilde === "tale" ? t("tools.podcast.adsTab.voiced", { voice: s.data.stemme ?? "?" }) : s.data.kilde === "upload" ? t("tools.podcast.adsTab.uploaded") : t("tools.podcast.adsTab.noAudio")}
                       {" · "}
-                      {sek(s.data.sekunder)}
+                      {sek(s.data.sekunder, t)}
                     </div>
                   </div>
                   <div style={{ fontSize: ".78rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
@@ -307,10 +309,10 @@ export function ReklamerFane() {
                         fejlede — det er IKKE det samme som «ingen afsnit», og
                         må derfor ikke vises som 0. */}
                     {s.brugtI === null
-                      ? "brug ukendt"
+                      ? t("tools.podcast.adsTab.usageUnknown")
                       : s.brugtI.length === 0
-                        ? "ikke i brug"
-                        : `i ${s.brugtI.length} afsnit`}
+                        ? t("tools.podcast.adsTab.notInUse")
+                        : t("tools.podcast.adsTab.inEpisodes", { n: s.brugtI.length })}
                   </div>
                 </div>
 
@@ -332,7 +334,7 @@ export function ReklamerFane() {
                     {bekraeft === s.slug ? (
                       <>
                         <span style={{ fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-                          Indtal{s.prisDkk ? ` for ${s.prisDkk}` : ""}?
+                          {s.prisDkk ? t("tools.podcast.adsTab.confirmRecordFor", { price: s.prisDkk }) : t("tools.podcast.adsTab.confirmRecord")}
                         </span>
                         <button
                           type="button" data-testid="sponsor-indtal-ja"
@@ -342,7 +344,7 @@ export function ReklamerFane() {
                             background: "var(--primary)", color: "var(--primary-foreground)", cursor: "pointer",
                           }}
                         >
-                          Ja
+                          {t("tools.podcast.adsTab.yes")}
                         </button>
                         <button
                           type="button" data-testid="sponsor-indtal-nej"
@@ -353,7 +355,7 @@ export function ReklamerFane() {
                             color: "var(--foreground)", cursor: "pointer",
                           }}
                         >
-                          Nej
+                          {t("tools.podcast.adsTab.no")}
                         </button>
                       </>
                     ) : (
@@ -369,12 +371,12 @@ export function ReklamerFane() {
                           opacity: s.data.manuskript ? 1 : 0.5,
                         }}
                       >
-                        {indtaler === s.slug ? "Indtaler…" : "Indtal manuskriptet"}
+                        {indtaler === s.slug ? t("tools.podcast.adsTab.recording") : t("tools.podcast.adsTab.recordScript")}
                       </button>
                     )}
                     {!s.data.manuskript && (
                       <span style={{ fontSize: ".78rem", color: "var(--muted-foreground)" }}>
-                        Upload en lydfil i Media, eller skriv et manuskript her.
+                        {t("tools.podcast.adsTab.noScriptHint")}
                       </span>
                     )}
                   </div>

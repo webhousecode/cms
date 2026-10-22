@@ -15,8 +15,9 @@
  * KLIENT AF API'ET. Ingen import fra lib/podcast/* — samme grænse som de andre
  * podcast-skærme, så et site-panel udenfor får den samme, testede vej.
  */
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Plus, Volume2 } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 type Raekke = { word: string; alias?: string; ipa?: string };
 
@@ -30,6 +31,7 @@ const felt: React.CSSProperties = {
 };
 
 export function UdtaleFane() {
+  const t = useT();
   const [raekker, setRaekker] = useState<Raekke[]>([]);
   const [sendes, setSendes] = useState<{ word: string; alias: string }[]>([]);
   const [henter, setHenter] = useState(true);
@@ -50,7 +52,7 @@ export function UdtaleFane() {
       setSendes(j.sendes ?? []);
       setFejl(null);
     } catch (e) {
-      setFejl(e instanceof Error ? e.message : "kunne ikke hente ordbogen");
+      setFejl(e instanceof Error ? e.message : t("tools.podcast.pronunciationTab.loadFailed"));
     } finally {
       setHenter(false);
     }
@@ -77,7 +79,7 @@ export function UdtaleFane() {
       setSendes(j.sendes ?? []);
       setKvittering(besked);
     } catch (e) {
-      setFejl(e instanceof Error ? e.message : "kunne ikke gemme");
+      setFejl(e instanceof Error ? e.message : t("tools.podcast.pronunciationTab.saveFailed"));
     } finally {
       setGemmer(false);
     }
@@ -87,28 +89,28 @@ export function UdtaleFane() {
     const word = nytOrd.trim();
     const alias = nyLyd.trim();
     if (!word || !alias) {
-      setFejl("både ordet og lydskriften skal udfyldes");
+      setFejl(t("tools.podcast.pronunciationTab.bothRequired"));
       return;
     }
     // Samme ord to gange ville give to regler der kæmper om samme tekst.
     const uden = raekker.filter((r) => r.word.toLowerCase() !== word.toLowerCase());
-    await gem([...uden, { word, alias }], `«${word}» siges nu «${alias}»`);
+    await gem([...uden, { word, alias }], t("tools.podcast.pronunciationTab.added", { word, alias }));
     setNytOrd("");
     setNyLyd("");
   }
 
   async function fjern(word: string) {
     setBekraeft(null);
-    await gem(raekker.filter((r) => r.word !== word), `«${word}» er fjernet`);
+    await gem(raekker.filter((r) => r.word !== word), t("tools.podcast.pronunciationTab.removed", { word }));
   }
 
   return (
     <div data-testid="podcast-fane-udtale-indhold">
       <div style={{ maxWidth: 860 }} data-testid="udtale-root">
         <p style={{ color: "var(--muted-foreground)", fontSize: ".85rem", margin: "0 0 1rem", lineHeight: 1.55 }}>
-          Ord stemmerne siger galt, skrevet som de skal <em>lyde</em>. Teksten i manuskriptet
-          ændres ikke — kun udtalen. Hører du et nyt ord blive sagt forkert, er én række her
-          hele rettelsen.
+          {t("tools.podcast.pronunciationTab.intro").split("{sound}").map((del, i) => (
+            <Fragment key={i}>{i > 0 && <em>{t("tools.podcast.pronunciationTab.soundWord")}</em>}{del}</Fragment>
+          ))}
         </p>
 
         {fejl && (
@@ -147,15 +149,15 @@ export function UdtaleFane() {
             data-testid="udtale-nyt-ord"
             value={nytOrd}
             onChange={(e) => setNytOrd(e.target.value)}
-            placeholder="Ordet, som det staves"
+            placeholder={t("tools.podcast.pronunciationTab.wordPlaceholder")}
             style={{ ...felt, flex: "1 1 200px" }}
           />
-          <span style={{ color: "var(--muted-foreground)", fontSize: ".85rem" }}>siges</span>
+          <span style={{ color: "var(--muted-foreground)", fontSize: ".85rem" }}>{t("tools.podcast.pronunciationTab.said")}</span>
           <input
             data-testid="udtale-ny-lyd"
             value={nyLyd}
             onChange={(e) => setNyLyd(e.target.value)}
-            placeholder="…som det skal lyde"
+            placeholder={t("tools.podcast.pronunciationTab.soundPlaceholder")}
             style={{ ...felt, flex: "1 1 200px" }}
           />
           <button
@@ -170,22 +172,22 @@ export function UdtaleFane() {
               fontSize: ".82rem", cursor: gemmer ? "wait" : "pointer", opacity: gemmer ? 0.6 : 1,
             }}
           >
-            <Plus size={14} /> {gemmer ? "Gemmer…" : "Tilføj"}
+            <Plus size={14} /> {gemmer ? t("tools.podcast.pronunciationTab.saving") : t("tools.podcast.pronunciationTab.add")}
           </button>
         </div>
 
         {henter ? (
-          <p style={{ color: "var(--muted-foreground)", fontSize: ".85rem" }}>Henter…</p>
+          <p style={{ color: "var(--muted-foreground)", fontSize: ".85rem" }}>{t("tools.podcast.pronunciationTab.loading")}</p>
         ) : raekker.length === 0 ? (
           <p data-testid="udtale-tom" style={{ color: "var(--muted-foreground)", fontSize: ".85rem" }}>
-            Ordbogen er tom. Stemmerne udtaler alt som det staves.
+            {t("tools.podcast.pronunciationTab.empty")}
           </p>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: ".85rem" }}>
             <thead>
               <tr style={{ textAlign: "left", color: "var(--muted-foreground)" }}>
-                <th style={{ padding: ".4rem .5rem", fontWeight: 500 }}>Ord</th>
-                <th style={{ padding: ".4rem .5rem", fontWeight: 500 }}>Siges</th>
+                <th style={{ padding: ".4rem .5rem", fontWeight: 500 }}>{t("tools.podcast.pronunciationTab.colWord")}</th>
+                <th style={{ padding: ".4rem .5rem", fontWeight: 500 }}>{t("tools.podcast.pronunciationTab.colSaid")}</th>
                 <th style={{ padding: ".4rem .5rem", fontWeight: 500, width: 140 }} />
               </tr>
             </thead>
@@ -204,26 +206,26 @@ export function UdtaleFane() {
                         // En IPA-række GEMMES, men ElevenLabs kan ikke bruge den.
                         // Uden denne linje ville den se aktiv ud for evigt.
                         <span style={{ marginLeft: ".5rem", fontSize: ".72rem" }}>
-                          (lydskrift mangler — sendes ikke)
+                          {t("tools.podcast.pronunciationTab.notSent")}
                         </span>
                       )}
                     </td>
                     <td style={{ padding: ".5rem", textAlign: "right" }}>
                       {bekraeft === r.word ? (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: ".3rem" }}>
-                          <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Fjern?</span>
+                          <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("tools.podcast.pronunciationTab.removeConfirm")}</span>
                           <button
                             data-testid={`udtale-fjern-ja-${r.word.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                             onClick={() => void fjern(r.word)}
                             style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                               border: "none", background: "var(--destructive)", color: "#fff",
-                              cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                              cursor: "pointer", lineHeight: 1 }}>{t("common.yes")}</button>
                           <button
                             data-testid={`udtale-fjern-nej-${r.word.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                             onClick={() => setBekraeft(null)}
                             style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                               border: "1px solid var(--border)", background: "transparent",
-                              color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                              color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>{t("common.no")}</button>
                         </span>
                       ) : (
                         <button
@@ -236,7 +238,7 @@ export function UdtaleFane() {
                             fontSize: ".72rem", cursor: "pointer",
                           }}
                         >
-                          Fjern
+                          {t("tools.podcast.pronunciationTab.remove")}
                         </button>
                       )}
                     </td>
@@ -249,9 +251,7 @@ export function UdtaleFane() {
 
         <p style={{ color: "var(--muted-foreground)", fontSize: ".78rem", marginTop: "1.5rem", lineHeight: 1.6 }}>
           <Volume2 size={12} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
-          Ordbogen gælder sponsorindslag og værtens overgangsreplik. Afsnittenes egne
-          replikker kan endnu ikke få den — dialog-motoren hos udbyderen tager ingen
-          ordbog. Det er meldt videre.
+          {t("tools.podcast.pronunciationTab.footer")}
         </p>
       </div>
     </div>
