@@ -59,9 +59,9 @@ export function resolveUiLocale(input: {
 }
 
 /** Translate for one request. Missing in `locale` → English → the key itself. */
-export function getT(locale: UiLocale) {
+export function getT(locale: UiLocale, messages: Record<UiLocale, Dict> = MESSAGES) {
   return (key: string, vars?: Record<string, string | number>) =>
-    translate(MESSAGES, locale, key, vars, { fallbackLocale: SOURCE_LOCALE });
+    translate(messages, locale, key, vars, { fallbackLocale: SOURCE_LOCALE });
 }
 
 /** Only what the browser needs: the active language and the English fallback. */

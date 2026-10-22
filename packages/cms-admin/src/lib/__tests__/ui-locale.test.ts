@@ -46,6 +46,11 @@ describe("getT", () => {
     expect(en).toBe("Admin language");
   });
 
+  it("a text not yet translated to Danish shows the English text, not its key", () => {
+    const messages = { en: { greet: { hello: "Hello" } }, da: { greet: {} } };
+    expect(getT("da", messages)("greet.hello")).toBe("Hello");
+  });
+
   it("an unknown key shows the key, never an empty string", () => {
     expect(getT("da")("does.not.exist")).toBe("does.not.exist");
   });
