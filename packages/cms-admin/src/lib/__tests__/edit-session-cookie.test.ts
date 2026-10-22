@@ -37,7 +37,9 @@ describe("editSession token as a COOKIE", () => {
   it("cannot open the admin or a non-document API", async () => {
     const { proxy } = await import("../../proxy");
     const cookie = `cms-session=${await editToken()}`;
-    for (const p of ["/admin", "/api/admin/backups?site=sanneandersen", "/api/cms/registry/export-schema?site=sanneandersen"]) {
+    // No ?site=: the proxy would answer 404 for a site this machine's registry lacks (CI has none),
+    // and that would pass for the wrong reason.
+    for (const p of ["/admin", "/api/admin/backups", "/api/cms/registry/export-schema"]) {
       const res = await proxy(new NextRequest(`https://webhouse.app${p}`, { headers: { cookie } }));
       expect(res.status, p).toBe(403);
     }
