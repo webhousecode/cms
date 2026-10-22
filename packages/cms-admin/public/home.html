@@ -527,6 +527,18 @@ nav.scrolled {
 .mcp-card.public .card-label { color: #28c840; background: rgba(40,200,64,0.08); }
 .mcp-card.auth .card-label { color: var(--gold); background: rgba(247,187,46,0.08); }
 
+/* ===== WHITE-LABEL SECTION ===== */
+.wl-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 48px;
+}
+@media (max-width: 900px) { .wl-grid { grid-template-columns: 1fr; } }
+.wl-card p { color: var(--grey-400); margin: 12px 0 0; line-height: 1.6; font-size: 15px; }
+.wl-card .card-label { color: var(--gold); background: rgba(247,187,46,0.08); }
+.wl-actions { display: flex; justify-content: center; margin-top: 40px; }
+
 /* ===== STATS BAR ===== */
 .stats {
   display: flex;
@@ -653,6 +665,7 @@ footer .footer-links a:hover { color: var(--gold); }
     <a data-testid="landing-nav-features-link" href="#features">Features</a>
     <a data-testid="landing-nav-architecture-link" href="#architecture">Architecture</a>
     <a data-testid="landing-nav-mcp-link" href="#mcp">MCP</a>
+    <a data-testid="landing-nav-white-label-link" href="#white-label">White-label</a>
     <a data-testid="landing-nav-docs-link" href="https://docs.webhouse.app" target="_blank">Docs</a>
     <a data-testid="landing-nav-github-link" href="https://github.com/webhousecode/cms" target="_blank">GitHub</a>
     <a data-testid="landing-nav-login-link" href="/login">Log In</a>
@@ -671,6 +684,7 @@ footer .footer-links a:hover { color: var(--gold); }
   <a data-testid="landing-mobile-features-link" href="#features" class="mobile-nav-link">Features</a>
   <a data-testid="landing-mobile-architecture-link" href="#architecture" class="mobile-nav-link">Architecture</a>
   <a data-testid="landing-mobile-mcp-link" href="#mcp" class="mobile-nav-link">MCP</a>
+  <a data-testid="landing-mobile-white-label-link" href="#white-label" class="mobile-nav-link">White-label</a>
   <a data-testid="landing-mobile-docs-link" href="https://docs.webhouse.app" target="_blank" class="mobile-nav-link">Docs</a>
   <a data-testid="landing-mobile-github-link" href="https://github.com/webhousecode/cms" target="_blank">GitHub</a>
   <a data-testid="landing-mobile-login-link" href="/login">Log In</a>
@@ -832,6 +846,35 @@ footer .footer-links a:hover { color: var(--gold); }
         trigger_build · get_build_status
       </div>
     </div>
+  </div>
+</section>
+
+<!-- WHITE-LABEL -->
+<section class="section" id="white-label" data-testid="landing-white-label-section">
+  <div class="section-label reveal">White-label</div>
+  <h2 class="section-title reveal reveal-delay-1">Your brand.<br>Our engine.</h2>
+  <p class="section-desc reveal reveal-delay-2">Offer the whole CMS as your own product. Your customers sign in on your address and see your name, your logo and your colours — while one platform keeps it running, secure and up to date.</p>
+
+  <div class="wl-grid">
+    <div class="mcp-card wl-card reveal">
+      <span class="card-label">YOUR ADDRESS</span>
+      <h3>cms.yourbrand.com</h3>
+      <p>The admin lives on your own domain, with a sign-in page that carries your logo, icon and colours.</p>
+    </div>
+    <div class="mcp-card wl-card reveal reveal-delay-1">
+      <span class="card-label">YOUR LOOK</span>
+      <h3>Logo, colours, typeface</h3>
+      <p>Every screen follows your brand — menus, buttons, highlights and fonts. Your customers see your product, not ours.</p>
+    </div>
+    <div class="mcp-card wl-card reveal reveal-delay-2">
+      <span class="card-label">ONE PLATFORM</span>
+      <h3>We run it, you sell it</h3>
+      <p>Updates, security and backups are handled for you. You focus on your customers; the AI-native engine underneath keeps improving.</p>
+    </div>
+  </div>
+
+  <div class="wl-actions reveal reveal-delay-3">
+    <a data-testid="landing-white-label-contact-button" href="mailto:info@webhouse.net?subject=White-label%20webhouse.app" class="btn-secondary">Talk to us about white-label →</a>
   </div>
 </section>
 
