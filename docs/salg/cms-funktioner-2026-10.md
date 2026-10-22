@@ -107,3 +107,41 @@ Til fysio.work's modulside «Website». Skrevet til en klinikejer. Målt i koden
 3. Login fra fysio.work skal føre direkte videre til CMS'et uden nyt login.
 
 fysio.work får besked i samme øjeblik adressen virker.
+
+---
+
+# Tilføjelse: AI-agenterne og den dybe integration (22/10)
+
+Christians ramme: *et AI-native enterprise CMS, hvor AI-agenter stort set kan bygge indholdet løbende.* Målt i koden samme dag. Samme mærker: **LIVE · PÅ VEJ · IKKE**.
+
+## AI-agenter der arbejder for klinikken
+
+| Funktion | Status | Hvad det betyder |
+|---|---|---|
+| Faste agenter: tekstforfatter, SEO-optimering, GEO-optimering (synlighed i AI-søgning), oversætter, indholds-opfrisker | LIVE | Hver agent har sin opgave og kan sættes til at arbejde på klinikkens indhold |
+| Egne agenter med egen opgavebeskrivelse | LIVE | Klinikken kan få en agent der fx skriver om nye hold hver uge |
+| Agenter der kører af sig selv efter plan (dagligt/ugentligt, tidspunkt, antal pr. kørsel) | LIVE | Indholdet holdes friskt uden at nogen skal huske det |
+| Godkendelse før udgivelse | LIVE | Alt agenterne laver lander i en godkendelseskø. Intet går live uden et menneskes ja |
+| Budgetloft pr. agent (dag/uge/måned) | LIVE | AI-forbruget kan ikke løbe løbsk |
+| AI-assistent i CMS'et der kan udføre handlinger (oprette, rette, oversætte, SEO-tjekke) | LIVE | Over 60 værktøjer. Skriv hvad du vil have gjort, og den gør det — med samme rettigheder som brugeren |
+| MCP-adgang: eksterne AI-værktøjer (fx Claude) kan arbejde i CMS'et med nøgle | LIVE | 38 værktøjer med adgangsnøgle + en offentlig læse-adgang til udgivet indhold |
+| Agenter der selv bestiller illustrationer til nye artikler | PÅ VEJ | |
+| Alle AI-modeller kører i EU (Mistral, Paris) | LIVE | Ingen klinikdata til USA |
+
+## Integration med fysio.work-platformen
+
+| Funktion | Status | Hvad det betyder |
+|---|---|---|
+| Indholds-API med adgangsnøgler begrænset til ét site og bestemte rettigheder | LIVE | fysio.work kan læse og skrive klinikkens indhold maskinelt |
+| Strukturerede data på sitet (behandlere, ydelser, priser, hold, åbningstider) | LIVE | Opsættes som samlinger med egne felter, redigerbare i CMS'et |
+| …holdt automatisk opdateret fra bookingsystemet | DELVIS | Virker ved at **fysio.work skubber** data ind via API'et, når de ændres. CMS'et har **ingen indbygget forbindelse** der selv henter fra et bookingsystem — det er integrationsarbejde pr. platform |
+| Udgående webhooks ved ændringer (indhold, agenter, udgivelse, medier) | LIVE | fysio.work kan få besked i samme øjeblik noget ændres |
+| «Byg nu» — sitet bygges om automatisk når indhold udgives | LIVE | Ændringer når ud på hjemmesiden uden manuelt arbejde |
+| Fælles login med BID | LIVE | Samme login som resten af platformen |
+| Gå direkte fra fysio.work til CMS'et uden nyt login | PÅ VEJ | Del af white-label (cms.fysio.work) |
+| Indlejring af moduler (booking, patientassistent) | DELVIS | Kan indlejres som interaktive elementer på siderne. Ingen færdige blokke til netop booking eller patientassistent |
+| AI-chat for besøgende på hjemmesiden | LIVE andre steder | Kører i dag på broberg.ai (samtaler gemmes 90 dage). Ikke sat op til klinik-sites endnu |
+
+## Hvad det betyder samlet
+
+Dybden ligger i, at platform og hjemmeside taler sammen via API, webhooks og ét login: fysio.work kan holde klinikkens data ajour på sitet, og agenterne kan løbende skrive, oversætte og optimere — altid med en klinikmedarbejders godkendelse før det går live. Det der **ikke** findes færdigt i dag er en indbygget forbindelse direkte til et bookingsystem og færdige booking-/assistent-blokke; det skal bygges som en del af integrationen.
