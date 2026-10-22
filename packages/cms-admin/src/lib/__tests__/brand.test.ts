@@ -98,6 +98,20 @@ describe("F210.1 brandCss", () => {
     expect(light).toContain("--sidebar-accent-foreground:#0E4F5C");
   });
 
+  // F210.7 — Christian: «Skrifttypen skal også kunne følge det style sheet som
+  // "kunden" kommer med». The UI typeface comes from the brand pack.
+  it("a brand with a typeface sets --font-sans; without one the font is untouched", () => {
+    const withFont = brandCss({ ...FYSIO, font: { family: "Manrope", stylesheet: "/brands/fysio-work/fonts.css" } });
+    expect(withFont).toContain('--font-sans:"Manrope", ui-sans-serif, system-ui, sans-serif');
+    expect(brandCss(FYSIO)).not.toContain("--font-sans");
+    expect(brandCss(DEFAULT_BRAND)).toBe("");
+  });
+
+  it("refuses a typeface name or stylesheet that could break out of the <style>/<link>", () => {
+    expect(() => brandCss({ ...FYSIO, font: { family: 'X";}</style><script>', stylesheet: "/brands/x/fonts.css" } })).toThrow(/font/);
+    expect(() => brandCss({ ...FYSIO, font: { family: "Manrope", stylesheet: "https://fonts.googleapis.com/css2" } })).toThrow(/font/);
+  });
+
   it("refuses a colour that is not a plain hex value (it lands inside a <style> tag)", () => {
     expect(() => brandCss({ ...FYSIO, color: "red;}</style><script>" })).toThrow(/hex/);
     expect(() => brandCss({ ...FYSIO, colorForeground: "url(x)" })).toThrow(/hex/);

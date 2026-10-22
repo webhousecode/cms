@@ -26,6 +26,10 @@ export interface BrandPack {
   colorDarkForeground?: string;
   /** F211 — admin language for a user who has not chosen one (e.g. "da"). */
   defaultLocale?: string;
+  /** F210.7 — the UI typeface: its family name and a SELF-HOSTED stylesheet
+   *  under /brands/<id>/ with the @font-face rules (never a third-party URL —
+   *  that would send every visitor's address to the font host). */
+  font?: { family: string; stylesheet: string };
 }
 
 export const DEFAULT_BRAND: BrandPack = {
@@ -50,6 +54,8 @@ export const BRAND_PACKS: BrandPack[] = [
     color: "#0E4F5C",
     colorForeground: "#FFFFFF",
     colorDark: "#5FB3B3",
+    // Manrope is fysio.work's heading/button/menu face (their CSS, 22/10-2026).
+    font: { family: "Manrope", stylesheet: "/brands/fysio-work/fonts.css" },
   },
 ];
 
@@ -140,6 +146,17 @@ function onDarkVars(onDark: string): string {
  * "dark"; the light rule comes after with the same specificity, so it wins on
  * light themes. `html` raises both above the plain selectors in globals.css.
  */
+const FONT_FAMILY = /^[A-Za-z0-9 -]{1,64}$/;
+const FONT_STYLESHEET = /^\/brands\/[a-z0-9-]+\/[a-z0-9-]+\.css$/;
+
+/** The brand's typeface, checked — it lands inside a <style> and a <link>. */
+export function brandFont(brand: BrandPack): { family: string; stylesheet: string } | null {
+  if (!brand.font) return null;
+  if (!FONT_FAMILY.test(brand.font.family)) throw new Error(`brand font family must be a plain name, got ${JSON.stringify(brand.font.family)}`);
+  if (!FONT_STYLESHEET.test(brand.font.stylesheet)) throw new Error(`brand font stylesheet must be a self-hosted /brands/<id>/<name>.css, got ${JSON.stringify(brand.font.stylesheet)}`);
+  return brand.font;
+}
+
 export function brandCss(brand: BrandPack): string {
   if (brand.id === DEFAULT_BRAND.id) return "";
   const light = hex(brand.color, "color");
@@ -148,5 +165,8 @@ export function brandCss(brand: BrandPack): string {
   const darkFg = brand.colorDarkForeground
     ? hex(brand.colorDarkForeground, "colorDarkForeground")
     : brand.colorDark ? readableOn(dark) : lightFg;
-  return `html:root,html[data-theme^="dark"]{${vars(dark, darkFg, 15)};${onDarkVars(dark)}}html[data-theme^="light"]{${vars(light, lightFg, 12)};${onDarkVars(dark)}}`;
+  const font = brandFont(brand);
+  // html:root beats the next/font class that sets Geist's --font-sans on <html>.
+  const fontCss = font ? `html:root{--font-sans:"${font.family}", ui-sans-serif, system-ui, sans-serif}` : "";
+  return `html:root,html[data-theme^="dark"]{${vars(dark, darkFg, 15)};${onDarkVars(dark)}}html[data-theme^="light"]{${vars(light, lightFg, 12)};${onDarkVars(dark)}}${fontCss}`;
 }

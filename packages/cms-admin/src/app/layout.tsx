@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/pwa-register";
 import { UpmetricsProvider } from "@/components/upmetrics-provider";
-import { brandForRequest, brandCss } from "@/lib/brand";
+import { brandForRequest, brandCss, brandFont } from "@/lib/brand";
 import { BrandProvider } from "@/lib/brand-context";
 import { I18nProvider } from "@/lib/i18n-context";
 import { clientMessages, resolveUiLocale, type UiLocale } from "@/i18n/locale";
@@ -58,6 +58,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const brand = await currentBrand();
   const css = brandCss(brand);
+  const font = brandFont(brand);
   const locale = await currentUiLocale(brand.defaultLocale);
   // translate="no" + notranslate: webhouse.app is an app UI, not translatable
   // content. Browser auto-translation (Google Translate) mutates React-managed
@@ -67,6 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale} translate="no" suppressHydrationWarning className={cn("notranslate font-sans", geist.variable)}>
       {css ? (
         <head>
+          {font && <link rel="stylesheet" href={font.stylesheet} data-brand-font={brand.id} />}
           <style data-brand={brand.id} dangerouslySetInnerHTML={{ __html: css }} />
         </head>
       ) : null}
