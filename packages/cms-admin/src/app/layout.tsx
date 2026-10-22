@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -11,8 +11,8 @@ import { UpmetricsProvider } from "@/components/upmetrics-provider";
 import { brandForRequest, brandCss, brandFont } from "@/lib/brand";
 import { BrandProvider } from "@/lib/brand-context";
 import { I18nProvider } from "@/lib/i18n-context";
-import { clientMessages, resolveUiLocale, type UiLocale } from "@/i18n/locale";
-import { getSessionUser, getUserById } from "@/lib/auth";
+import { clientMessages, type UiLocale } from "@/i18n/locale";
+import { getRequestLocale } from "@/i18n/server";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -21,16 +21,9 @@ async function currentBrand() {
   return brandForRequest(await headers());
 }
 
-/** F211 — the admin language for this request: the user's choice → the
- *  brand's default → the browser → English. Read per request, never cached. */
+/** F211 — the admin language for this request (shared with server components). */
 async function currentUiLocale(brandDefault: string | undefined): Promise<UiLocale> {
-  const h = await headers();
-  let user: string | null = null;
-  try {
-    const session = await getSessionUser(await cookies());
-    if (session) user = (await getUserById(session.id))?.uiLocale ?? null;
-  } catch { /* signed out or unreadable session → automatic */ }
-  return resolveUiLocale({ user, brand: brandDefault, acceptLanguage: h.get("accept-language") });
+  return getRequestLocale(brandDefault);
 }
 
 export async function generateMetadata(): Promise<Metadata> {

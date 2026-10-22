@@ -1,0 +1,10 @@
+{
+  "language": {
+    "heading": "Language",
+    "label": "Admin language",
+    "hint": "The language of menus, buttons and messages in the admin. Your content is not translated.",
+    "automatic": "Automatic",
+    "saved": "Language saved",
+    "error": "Could not save the language — try again"
+  }
+}

@@ -3,7 +3,7 @@
  * language of a site's content; that is F48 and lib/locale.ts.
  *
  * English is the source language of the catalog; Danish is the first
- * translation. A new language is a new messages/<code>.json plus one entry in
+ * translation. A new language is a new messages/<code>/ folder plus one entry in
  * UI_LOCALES — no other code changes.
  *
  * Everything here is pure: the request decides the locale and passes it in.
@@ -11,8 +11,7 @@
  * languages must never see each other's choice.
  */
 import { translate, type Dict } from "@broberg/i18n";
-import en from "./messages/en.json";
-import da from "./messages/da.json";
+import { en, da } from "./messages";
 
 export const UI_LOCALES = ["en", "da"] as const;
 export type UiLocale = (typeof UI_LOCALES)[number];
