@@ -265,6 +265,9 @@ importers:
       '@broberg/deploy-core':
         specifier: 0.6.0
         version: 0.6.0
+      '@broberg/i18n':
+        specifier: 0.3.1
+        version: 0.3.1(@broberg/ai-sdk@0.50.1)
       '@broberg/mail':
         specifier: 0.16.0
         version: 0.16.0
@@ -1058,6 +1061,15 @@ packages:
 
   '@broberg/deploy-core@0.6.0':
     resolution: {integrity: sha512-WFis0WP7xyK52vlc25DMPXFLJFadin2kZQRvaoOk/I/ex+8+jjdgr0EcVuHQvnNaVm03eSO17WuS73btAxEFnA==}
+
+  '@broberg/i18n@0.3.1':
+    resolution: {integrity: sha512-pLyiujbKjSa4ZONrZ+C7M56eXUOwRDtFk9H5sgBYcI3/V9xCzNEX2cIRlfvM2ljR4pbpN/3SSaAN8oyGgL4sfw==}
+    hasBin: true
+    peerDependencies:
+      '@broberg/ai-sdk': '>=0.56.0'
+    peerDependenciesMeta:
+      '@broberg/ai-sdk':
+        optional: true
 
   '@broberg/lens-engine@0.11.0':
     resolution: {integrity: sha512-8rLh7wx+QtbQDW8sEPBULsY/zBZ2n6lkxBNzkLSb2FUM9OjFytvnyvXjpkdXJIks8RSxGwXKErYOQD4fuLSDHg==}
@@ -6838,6 +6850,10 @@ snapshots:
   '@broberg/consent-cookie@0.6.0': {}
 
   '@broberg/deploy-core@0.6.0': {}
+
+  '@broberg/i18n@0.3.1(@broberg/ai-sdk@0.50.1)':
+    optionalDependencies:
+      '@broberg/ai-sdk': 0.50.1
 
   '@broberg/lens-engine@0.11.0':
     dependencies:

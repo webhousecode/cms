@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyToken, verifyPassword, updateUser, createToken, COOKIE_NAME, getUsers } from "@/lib/auth";
+import { isUiLocale } from "@/i18n/locale";
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -14,6 +15,7 @@ export async function GET(request: NextRequest) {
     email: user.email,
     showLogoIcon: user.showLogoIcon ?? false,
     showCloseAllTabs: user.showCloseAllTabs ?? false,
+    uiLocale: isUiLocale(user.uiLocale) ? user.uiLocale : null,
   });
 }
 
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest) {
     const payload = await verifyToken(token);
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { name, email, currentPassword, newPassword, zoom, lastActiveOrg, lastActiveSite, showLogoIcon, showCloseAllTabs } = (await request.json()) as {
+    const { name, email, currentPassword, newPassword, zoom, lastActiveOrg, lastActiveSite, showLogoIcon, showCloseAllTabs, uiLocale } = (await request.json()) as {
       name?: string;
       email?: string;
       currentPassword?: string;
@@ -35,7 +37,13 @@ export async function POST(request: NextRequest) {
       lastActiveSite?: string;
       showLogoIcon?: boolean;
       showCloseAllTabs?: boolean;
+      uiLocale?: string | null;
     };
+
+    // F211 — only a supported admin language, or null for automatic.
+    if (uiLocale !== undefined && uiLocale !== null && !isUiLocale(uiLocale)) {
+      return NextResponse.json({ error: "Unsupported language" }, { status: 400 });
+    }
 
     // Password change requires current password verification
     if (newPassword) {
@@ -60,11 +68,12 @@ export async function POST(request: NextRequest) {
       ...(lastActiveSite !== undefined ? { lastActiveSite } : {}),
       ...(showLogoIcon !== undefined ? { showLogoIcon } : {}),
       ...(showCloseAllTabs !== undefined ? { showCloseAllTabs } : {}),
+      ...(uiLocale !== undefined ? { uiLocale } : {}),
     }, payload.email);
 
     // Re-issue JWT with updated name/email
     const newToken = await createToken(updated);
-    const response = NextResponse.json({ ok: true, name: updated.name, email: updated.email });
+    const response = NextResponse.json({ ok: true, name: updated.name, email: updated.email, uiLocale: isUiLocale(updated.uiLocale) ? updated.uiLocale : null });
     response.cookies.set(COOKIE_NAME, newToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

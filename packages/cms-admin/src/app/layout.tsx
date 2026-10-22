@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -10,12 +10,27 @@ import { PwaRegister } from "@/components/pwa-register";
 import { UpmetricsProvider } from "@/components/upmetrics-provider";
 import { brandForRequest, brandCss } from "@/lib/brand";
 import { BrandProvider } from "@/lib/brand-context";
+import { I18nProvider } from "@/lib/i18n-context";
+import { clientMessages, resolveUiLocale, type UiLocale } from "@/i18n/locale";
+import { getSessionUser, getUserById } from "@/lib/auth";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 /** F210 — the brand follows the address the CMS is opened on. */
 async function currentBrand() {
   return brandForRequest(await headers());
+}
+
+/** F211 — the admin language for this request: the user's choice → the
+ *  brand's default → the browser → English. Read per request, never cached. */
+async function currentUiLocale(brandDefault: string | undefined): Promise<UiLocale> {
+  const h = await headers();
+  let user: string | null = null;
+  try {
+    const session = await getSessionUser(await cookies());
+    if (session) user = (await getUserById(session.id))?.uiLocale ?? null;
+  } catch { /* signed out or unreadable session → automatic */ }
+  return resolveUiLocale({ user, brand: brandDefault, acceptLanguage: h.get("accept-language") });
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -43,12 +58,13 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const brand = await currentBrand();
   const css = brandCss(brand);
+  const locale = await currentUiLocale(brand.defaultLocale);
   // translate="no" + notranslate: webhouse.app is an app UI, not translatable
   // content. Browser auto-translation (Google Translate) mutates React-managed
   // text nodes and then crashes the whole app with removeChild/insertBefore
   // NotFoundError — reproduced by editors using ⌘K search on a Danish Chrome.
   return (
-    <html lang="en" translate="no" suppressHydrationWarning className={cn("notranslate font-sans", geist.variable)}>
+    <html lang={locale} translate="no" suppressHydrationWarning className={cn("notranslate font-sans", geist.variable)}>
       {css ? (
         <head>
           <style data-brand={brand.id} dangerouslySetInnerHTML={{ __html: css }} />
@@ -56,6 +72,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       ) : null}
       <body>
         <BrandProvider brand={brand}>
+        <I18nProvider locale={locale} messages={clientMessages(locale)}>
         <UpmetricsProvider />
         <ThemeProvider
           attribute="data-theme"
@@ -68,6 +85,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Toaster position="bottom-right" />
           <PwaRegister />
         </ThemeProvider>
+        </I18nProvider>
         </BrandProvider>
       </body>
     </html>

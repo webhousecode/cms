@@ -35,6 +35,7 @@ export interface User {
   lastActiveSite?: string; // last active site ID (persists across devices)
   showLogoIcon?: boolean; // false = wordmark (default), true = eye icon
   showCloseAllTabs?: boolean; // show "Close all" pill in tab bar (global pref)
+  uiLocale?: string; // F211 — admin language chosen by the user; absent = automatic
   passkeys?: StoredPasskey[]; // F59 WebAuthn credentials
   webauthnChallenge?: string; // transient challenge for registration/login
   totp?: TotpConfig; // F59 phase 4 — Authenticator app 2FA
@@ -180,7 +181,7 @@ export async function createToken(user: User): Promise<string> {
 
 export async function updateUser(
   id: string,
-  patch: { name?: string; email?: string; password?: string; zoom?: number; role?: UserRole; lastActiveOrg?: string; lastActiveSite?: string; showLogoIcon?: boolean; showCloseAllTabs?: boolean },
+  patch: { name?: string; email?: string; password?: string; zoom?: number; role?: UserRole; lastActiveOrg?: string; lastActiveSite?: string; showLogoIcon?: boolean; showCloseAllTabs?: boolean; uiLocale?: string | null },
   /** Fallback email for lookup if id doesn't match (stale JWT) */
   fallbackEmail?: string,
 ): Promise<User> {
@@ -202,6 +203,9 @@ export async function updateUser(
   if (patch.lastActiveSite !== undefined) user.lastActiveSite = patch.lastActiveSite;
   if (patch.showLogoIcon !== undefined) user.showLogoIcon = patch.showLogoIcon;
   if (patch.showCloseAllTabs !== undefined) user.showCloseAllTabs = patch.showCloseAllTabs;
+  // F211 — null clears the choice (back to automatic).
+  if (patch.uiLocale === null) delete user.uiLocale;
+  else if (patch.uiLocale !== undefined) user.uiLocale = patch.uiLocale;
 
   users[idx] = user;
   const filePath = await getUsersFilePath();

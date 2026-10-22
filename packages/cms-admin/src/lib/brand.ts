@@ -24,6 +24,8 @@ export interface BrandPack {
   colorDark?: string;
   /** Text colour on `colorDark`; computed for contrast when absent. */
   colorDarkForeground?: string;
+  /** F211 — admin language for a user who has not chosen one (e.g. "da"). */
+  defaultLocale?: string;
 }
 
 export const DEFAULT_BRAND: BrandPack = {

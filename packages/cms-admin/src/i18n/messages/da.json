@@ -1,0 +1,12 @@
+{
+  "account": {
+    "language": {
+      "heading": "Sprog",
+      "label": "Sprog i admin",
+      "hint": "Sproget i menuer, knapper og beskeder i admin. Dit indhold bliver ikke oversat.",
+      "automatic": "Automatisk",
+      "saved": "Sproget er gemt",
+      "error": "Kunne ikke gemme sproget — prøv igen"
+    }
+  }
+}

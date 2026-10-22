@@ -7,6 +7,7 @@ import { Check, Eye, EyeOff, AlertTriangle, Copy, RefreshCw, Zap, Send } from "l
 import { switchSite } from "@/lib/switch-context";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { AdminLanguageSection } from "./admin-language-section";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 
@@ -1551,6 +1552,8 @@ export function GeneralSettingsPanel() {
 	return (
 		<div className="space-y-8">
 			<ProfileSection />
+			<div style={{ height: "1px", background: "var(--border)" }} />
+			<AdminLanguageSection />
 			<div style={{ height: "1px", background: "var(--border)" }} />
 			<UserPreferencesSection />
 		</div>
