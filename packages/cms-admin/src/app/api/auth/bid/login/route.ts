@@ -4,7 +4,7 @@ import { redirectTo } from "@/lib/redirect";
 import { getSessionUser } from "@/lib/auth";
 import {
   BID_FLOW_COOKIE, BID_FLOW_COOKIE_MAX_AGE, BID_FLOW_MAX_AGE,
-  getBid, isBidConfigured, safeReturnTo, type BidFlow,
+  getBid, isBidConfigured, requestHost, safeReturnTo, type BidFlow,
 } from "@/lib/bid";
 
 /**
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     linkUserId = session.sub;
   }
 
-  const { config, sso } = getBid();
+  const { config, sso } = getBid(requestHost(request.headers));
   const prompt = request.nextUrl.searchParams.get("prompt");
   const start = await sso.beginLogin(prompt === "login" || prompt === "none" ? { prompt } : undefined);
   const flow: BidFlow = {

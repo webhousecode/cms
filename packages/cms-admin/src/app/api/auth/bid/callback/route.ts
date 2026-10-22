@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { verifyValue } from "@broberg/sso";
 import { redirectTo } from "@/lib/redirect";
 import { COOKIE_NAME, createToken, getSessionUser, getUserById, getUsers, saveUser } from "@/lib/auth";
-import { BID_FLOW_COOKIE, BID_FLOW_MAX_AGE, BID_ID_TOKEN_COOKIE, getBid, isBidConfigured, type BidFlow } from "@/lib/bid";
+import { BID_FLOW_COOKIE, BID_FLOW_MAX_AGE, BID_ID_TOKEN_COOKIE, getBid, isBidConfigured, requestHost, type BidFlow } from "@/lib/bid";
 import { resolveBidUser } from "@/lib/bid-resolve";
 
 /**
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   };
   if (!isBidConfigured()) return fail("not_configured");
 
-  const { config, sso } = getBid();
+  const { config, sso } = getBid(requestHost(request.headers));
   const flowCookie = request.cookies.get(BID_FLOW_COOKIE)?.value;
   if (!flowCookie) return fail("no_login_in_progress");
 

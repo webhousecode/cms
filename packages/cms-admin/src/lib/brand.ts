@@ -68,9 +68,14 @@ export function resolveBrand(host: string | null | undefined, packs: BrandPack[]
   return packs.find((p) => p.hosts.includes(name)) ?? DEFAULT_BRAND;
 }
 
+/** The address a request was made on (Fly forwards it as x-forwarded-host). */
+export function requestHost(headers: { get(name: string): string | null }): string | null {
+  return headers.get("x-forwarded-host") ?? headers.get("host");
+}
+
 /** The brand for an incoming request — the address it was opened on. */
 export function brandForRequest(headers: { get(name: string): string | null }): BrandPack {
-  return resolveBrand(headers.get("x-forwarded-host") ?? headers.get("host"));
+  return resolveBrand(requestHost(headers));
 }
 
 const HEX =/^#[0-9a-fA-F]{6}$/;
