@@ -9,6 +9,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { addSite, loadRegistry, findSite } from "../site-registry";
+import { isSafeId } from "../active-site-cookie";
 import { SECRET_FIELDS, ORG_SETTINGS_SECRET_FIELDS, clearRedactedSecrets } from "./types";
 import type { BeamManifest, BeamImportResult } from "./types";
 
@@ -47,6 +48,10 @@ export async function importBeamArchive(
   // ── 2. Determine site ID and target directory ──
   const siteId = options?.newSiteId ?? manifest.site.id ?? randomUUID();
   const siteName = manifest.site.name ?? "Imported Site";
+  // Security W41 NY-K2 — the id comes from the ARCHIVE and becomes a directory
+  // that overwrite=true deletes: "..", "../x" or another tenant's id must not.
+  if (!isSafeId(siteId)) throw new Error(`Invalid site id in archive: ${JSON.stringify(siteId)}`);
+  if (!isSafeId(targetOrgId)) throw new Error(`Invalid org id: ${JSON.stringify(targetOrgId)}`);
 
   // Find a place for the site under the active project directory
   const { getBeamSitesDir } = await import("./paths");
@@ -57,6 +62,10 @@ export async function importBeamArchive(
   const registry = await loadRegistry();
   if (registry) {
     const existing = findSite(registry, targetOrgId, siteId);
+    // A site with this id in ANOTHER org is never overwritten from here.
+    if (!existing && registry.orgs.some((o) => o.id !== targetOrgId && o.sites.some((s) => s.id === siteId))) {
+      throw new Error(`Site id "${siteId}" belongs to another organization`);
+    }
     if (existing && !options?.overwrite) {
       throw new Error(`Site "${siteId}" already exists in org "${targetOrgId}". Use overwrite option.`);
     }

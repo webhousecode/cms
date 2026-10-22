@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateAndConsumeBeamToken } from "@/lib/beam/tokens";
 import { createBeamSession, updateBeamSession } from "@/lib/beam/session";
 import { getActiveSitePaths } from "@/lib/site-paths";
+import { isSafeId } from "@/lib/active-site-cookie";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,6 +22,12 @@ export async function POST(request: NextRequest) {
         { error: "Missing required fields: token, beamId, siteName, orgId" },
         { status: 400 },
       );
+    }
+
+    // Security W41 NY-K2 — siteId becomes beam-sites/<siteId>; ".." made every
+    // later file land in the admin data dir (users.json, registry).
+    if (!isSafeId(siteId ?? beamId) || !isSafeId(orgId) || !isSafeId(beamId)) {
+      return NextResponse.json({ error: "Invalid siteId, orgId or beamId" }, { status: 400 });
     }
 
     // Validate beam token. F138-C: tokens.validateAndConsumeBeamToken

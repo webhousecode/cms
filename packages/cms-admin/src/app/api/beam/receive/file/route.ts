@@ -55,7 +55,13 @@ export async function POST(request: NextRequest) {
 
     // Determine target directory — .beam-sites under the project directory
     const { getBeamSitesDir } = await import("@/lib/beam/paths");
-    const siteDir = path.join(await getBeamSitesDir(), session.siteId);
+    const beamRoot = path.resolve(await getBeamSitesDir());
+    const siteDir = path.join(beamRoot, session.siteId);
+    // Security W41 NY-K2 — the traversal guard below compares against siteDir,
+    // which the sender chose; siteDir itself must be a direct child of beam-sites.
+    if (path.dirname(path.resolve(siteDir)) !== beamRoot) {
+      return NextResponse.json({ error: "Invalid site id" }, { status: 400 });
+    }
 
     // Resolve target path based on prefix
     let targetPath: string;

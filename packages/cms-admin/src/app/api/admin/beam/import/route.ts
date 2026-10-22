@@ -16,7 +16,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { importBeamArchive } from "@/lib/beam/import";
-import { getSiteRole } from "@/lib/require-role";
+import { requireInstanceAdmin } from "@/lib/instance-admin";
 import { getBeamTmpDir } from "@/lib/beam/paths";
 import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import path from "node:path";
@@ -36,10 +36,9 @@ function chunkPath(baseDir: string, uploadId: string, index: number): string {
 }
 
 export async function POST(request: NextRequest) {
-  const role = await getSiteRole();
-  if (role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
-  }
+  // Security W41 NY-K2 — importing registers a site in the org named in the
+  // query and can overwrite (rm -rf) a site directory: instance-level.
+  const denied = await requireInstanceAdmin(); if (denied) return denied;
 
   const url = new URL(request.url);
   const action = url.searchParams.get("action");

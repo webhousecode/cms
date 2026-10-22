@@ -21,7 +21,12 @@ vi.mock("../access-tokens", async (orig) => {
   return {
     ...actual,
     verifyAccessToken: vi.fn(async (raw: string) =>
-      raw === "wh_trail"
+      raw === "wh_orphan"
+        ? {
+            id: "t-orphan", name: "orphan", hash: "h", userId: "orphan", createdAt: "2026-10-02T00:00:00Z",
+            displayPrefix: null, ipFilters: [], permissions: ["*"], resources: [],
+          }
+        : raw === "wh_trail"
         ? {
             id: "t-trail", name: "trail — site agent", hash: "h", userId: "u", createdAt: "2026-10-02T00:00:00Z",
             displayPrefix: null, ipFilters: [],
@@ -33,13 +38,24 @@ vi.mock("../access-tokens", async (orig) => {
   };
 });
 
+// W41 C7 — the token also acts only where its OWNER is on the team. Owner "u"
+// is a CMS-wide editor on trail's team; "orphan" owns a token but is on no team.
+vi.mock("../auth", async (orig) => {
+  const actual = await orig<typeof import("../auth")>();
+  return { ...actual, getUsers: vi.fn(async () => [{ id: "u", email: "u@x", role: "editor" }, { id: "orphan", email: "o@x", role: "editor" }]) };
+});
+vi.mock("../team", async (orig) => {
+  const actual = await orig<typeof import("../team")>();
+  return { ...actual, getTeamMembersForSite: vi.fn(async (_o: string, site: string) => (site === "trail" ? [{ userId: "u", role: "editor" }] : [])) };
+});
+
 beforeAll(() => {
   process.env.CMS_JWT_SECRET = "x".repeat(64);
 });
 
-async function hit(path: string, method = "PATCH", cookie = "") {
+async function hit(path: string, method = "PATCH", cookie = "", token = "wh_trail") {
   const { proxy } = await import("../../proxy");
-  const headers: Record<string, string> = { authorization: "Bearer wh_trail" };
+  const headers: Record<string, string> = { authorization: `Bearer ${token}` };
   if (cookie) headers.cookie = cookie;
   return proxy(new NextRequest(`https://webhouse.app${path}`, { method, headers }));
 }
@@ -73,5 +89,14 @@ describe("proxy: a trail-only token naming no site", () => {
   it("is refused instead of landing on the registry's default site", async () => {
     const res = await hit("/api/admin/site-config", "POST");
     expect(res.status).toBe(403);
+  });
+});
+
+describe("proxy: W41 C7 — a full-access token whose owner is on no team", () => {
+  it("is refused on every site, though the token itself names none", async () => {
+    for (const site of ["trail", "sanneandersen"]) {
+      const res = await hit(`/api/admin/backups?site=${site}`, "GET", "", "wh_orphan");
+      expect(res.status).toBe(403);
+    }
   });
 });

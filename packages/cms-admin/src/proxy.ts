@@ -348,6 +348,21 @@ export async function proxy(request: NextRequest) {
   // Public API prefixes forward here, AFTER ?site= resolution above — the
   // route itself (or the handler it calls) enforces its own auth, if any
   // (e.g. F30 forms: honeypot + rate-limit, no login).
+  // Security W41 C3 — the mobile API names its tenant in ?orgId=&siteId= and
+  // used to verify only the JWT signature. Membership (and viewer = read-only)
+  // is decided here for every /api/mobile/* route, so a new one inherits it.
+  if (pathname.startsWith("/api/mobile/")) {
+    const { checkMobileSiteAccess } = await import("./lib/mobile-site-access");
+    const auth = request.headers.get("authorization");
+    const decision = await checkMobileSiteAccess({
+      method: request.method,
+      orgId: request.nextUrl.searchParams.get("orgId"),
+      siteId: request.nextUrl.searchParams.get("siteId"),
+      bearer: auth && /^Bearer\s+/i.test(auth) ? auth.replace(/^Bearer\s+/i, "").trim() : null,
+    });
+    if (decision) return NextResponse.json({ error: decision.error }, { status: decision.status });
+  }
+
   if (isPublicPrefix) return forwardOk();
 
   // F157: CORS preflight (OPTIONS) on /api/cms/{collection}/{slug},
@@ -411,6 +426,23 @@ export async function proxy(request: NextRequest) {
             console.warn(`[token-scope] ${enforce ? "DENY" : "would-deny"} token=${tokenEntry.id} (${tokenEntry.name}) ${request.method} ${pathname} site=${request.nextUrl.searchParams.get("site") ?? "-"} kind=${decision.kind}: ${decision.reason}`);
             if (enforce) {
               return NextResponse.json({ error: `Access token not allowed: ${decision.reason}` }, { status: 403 });
+            }
+          }
+          // Security W41 C7 — the token acts only where its OWNER could act.
+          {
+            const { loadRegistry, findSiteOrgId } = await import("./lib/site-registry");
+            const registry = await loadRegistry();
+            if (registry) {
+              const siteId = request.nextUrl.searchParams.get("site") ?? request.cookies.get("cms-active-site")?.value ?? registry.defaultSiteId;
+              const orgId = siteId ? findSiteOrgId(registry, siteId) : null;
+              const { getUsers } = await import("./lib/auth");
+              const { getTeamMembersForSite } = await import("./lib/team");
+              const { tokenOwnerMayAct } = await import("./lib/token-owner");
+              const team = orgId && siteId ? await getTeamMembersForSite(orgId, siteId) : null;
+              if (!tokenOwnerMayAct(tokenEntry.userId, await getUsers(), team)) {
+                console.warn(`[token-scope] DENY token=${tokenEntry.id} (${tokenEntry.name}) ${request.method} ${pathname} site=${siteId ?? "-"} kind=owner-not-member`);
+                return NextResponse.json({ error: "Access token not allowed: its owner has no access to that site" }, { status: 403 });
+              }
             }
           }
           const jwt = await new SignJWT({

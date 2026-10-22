@@ -4,6 +4,8 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "path";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { verifyPreviewToken } from "@/lib/preview-token";
+import { serverBuildsAllowed } from "@/lib/build/server-build-policy";
+import { upstreamTarget, distDirAllowed } from "@/lib/preview-proxy-policy";
 
 /**
  * GET /api/mobile/preview-proxy?upstream=http://localhost:3034&path=/
@@ -157,6 +159,23 @@ export async function GET(req: NextRequest) {
   const filePath = req.nextUrl.searchParams.get("path") ?? "/";
   const token = req.nextUrl.searchParams.get("tok");
 
+  // Security W41 C4 — a local dev tool. A server that runs no site code
+  // (webhouse.app) has no localhost dev servers or dist/ to relay.
+  if (!serverBuildsAllowed()) {
+    return NextResponse.json({ error: "Preview proxy is not available on this server" }, { status: 404 });
+  }
+  if (upstream && !upstreamTarget(upstream, filePath)) {
+    return NextResponse.json({ error: "Upstream must be a localhost dev server, and the path must stay on it" }, { status: 400 });
+  }
+  if (distDir) {
+    const { loadRegistry } = await import("@/lib/site-registry");
+    const registry = await loadRegistry();
+    const configPaths = registry ? registry.orgs.flatMap((o) => o.sites.map((s) => s.configPath)) : [process.env.CMS_CONFIG_PATH ?? ""];
+    if (!distDirAllowed(distDir, configPaths)) {
+      return NextResponse.json({ error: "dir must be a registered site's dist/" }, { status: 400 });
+    }
+  }
+
   // Auth: accept signed URL token (for iframes) OR Bearer JWT (for API calls)
   const payload = upstream ?? distDir ?? "";
   const tokenValid = verifyPreviewToken(token, payload);
@@ -180,8 +199,7 @@ export async function GET(req: NextRequest) {
   if (upstream) {
     try {
       // Ensure upstream base has trailing slash so URL resolution preserves the path
-      const base = upstream.endsWith("/") ? upstream : upstream + "/";
-      const upstreamUrl = filePath === "/" ? base : new URL(filePath.replace(/^\//, ""), base).toString();
+      const upstreamUrl = upstreamTarget(upstream, filePath)!;
       const res = await fetch(upstreamUrl, {
         signal: AbortSignal.timeout(8000),
         headers: {

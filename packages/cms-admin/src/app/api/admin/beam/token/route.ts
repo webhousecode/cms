@@ -8,13 +8,12 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { generateBeamToken, listActiveBeamTokens } from "@/lib/beam/tokens";
-import { getSiteRole } from "@/lib/require-role";
+import { requireInstanceAdmin } from "@/lib/instance-admin";
 
 export async function POST(request: NextRequest) {
-  const role = await getSiteRole();
-  if (role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
-  }
+  // Security W41 NY-K2 — a beam token lets its holder create a site on THIS
+  // instance (any org): an instance-level grant, not a site admin's.
+  const denied = await requireInstanceAdmin(); if (denied) return denied;
 
   try {
     const body = await request.json().catch(() => ({}));
@@ -33,10 +32,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  const role = await getSiteRole();
-  if (role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
-  }
+  // Security W41 NY-K2 — a beam token lets its holder create a site on THIS
+  // instance (any org): an instance-level grant, not a site admin's.
+  const denied = await requireInstanceAdmin(); if (denied) return denied;
 
   try {
     const tokens = await listActiveBeamTokens();
