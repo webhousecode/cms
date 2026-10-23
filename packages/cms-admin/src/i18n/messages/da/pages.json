@@ -757,6 +757,14 @@
     "siteNotFound": "site ikke fundet",
     "returnNotAllowed": "return-adressen er ikke tilladt",
     "unauthorized": "Ikke logget ind",
-    "lensReadOnly": "Lens-sessionen er skrivebeskyttet — mint med skrivenøglen for at få en redigeringssession"
+    "lensReadOnly": "Lens-sessionen er skrivebeskyttet — mint med skrivenøglen for at få en redigeringssession",
+    "pageTitle": "{product} — Du er logget ind",
+    "heading": "Du er logget ind",
+    "lead": "Du er nu forbundet til {product}. Gå tilbage til dit website og klik på en hvilken som helst tekst for at redigere den — {autosave}.",
+    "autosave": "ændringer gemmes automatisk",
+    "closeNote": "Du kan roligt lukke dette vindue nu",
+    "backToSite": "Tilbage til dit website",
+    "closeWindow": "Luk vindue",
+    "poweredBy": "Powered by {product}"
   }
 }

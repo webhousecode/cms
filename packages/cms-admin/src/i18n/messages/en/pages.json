@@ -757,6 +757,14 @@
     "siteNotFound": "site not found",
     "returnNotAllowed": "return origin not allowed",
     "unauthorized": "Unauthorized",
-    "lensReadOnly": "Lens session is read-only — mint with the write key to get an edit session"
+    "lensReadOnly": "Lens session is read-only — mint with the write key to get an edit session",
+    "pageTitle": "{product} — You're signed in",
+    "heading": "You're signed in",
+    "lead": "You're now connected to {product}. Go back to your website and click any text to edit it — {autosave}.",
+    "autosave": "changes are saved automatically",
+    "closeNote": "You can close this window now",
+    "backToSite": "Back to your website",
+    "closeWindow": "Close window",
+    "poweredBy": "Powered by {product}"
   }
 }
