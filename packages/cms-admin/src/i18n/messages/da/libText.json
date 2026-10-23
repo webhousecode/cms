@@ -496,12 +496,12 @@
     }
   },
   "podcastStore": {
-    "missingCollection": "dette site har ingen «{collection}»-samling. Podcast-motoren er slået fra indtil den er erklæret i cms.config.ts — se docs/features/F189-podcast-engine-api.md for skemaet. Motoren opretter den ikke selv: en ugyldig config tager hele sitet ned, og vejen tilbage går gennem den samme config.",
+    "missingCollection": "Podcast er ikke slået til for dette site. Kontakt din administrator, hvis du vil bruge det.",
     "missingAfterWrite": "afsnittet «{slug}» findes ikke efter skrivningen",
     "alreadyExists": "afsnittet «{slug}» findes allerede"
   },
   "podcastSponsors": {
-    "missingCollection": "dette site har ingen «{collection}»-samling. Sponsorindslag er slået fra indtil den er erklæret i cms.config.ts — se docs/features/F191-sponsorindslag.md for skemaet.",
+    "missingCollection": "Sponsorindslag er ikke slået til for dette site. Kontakt din administrator, hvis du vil bruge det.",
     "missingAfterWrite": "indslaget «{slug}» findes ikke efter skrivningen",
     "paused": "indslaget er sat på pause",
     "noAudio": "indslaget har ingen lyd endnu",

@@ -6,6 +6,7 @@
   "cancel": "Annuller",
   "close": "Luk",
   "dateInput": {
+    "placeholder": "ÅÅÅÅ-MM-DD",
     "openCalendar": "Åbn kalender",
     "formatHint": "Brug ÅÅÅÅ-MM-DD",
     "previousMonth": "Forrige måned",

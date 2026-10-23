@@ -496,12 +496,12 @@
     }
   },
   "podcastStore": {
-    "missingCollection": "this site has no «{collection}» collection. The podcast engine is off until it is declared in cms.config.ts — see docs/features/F189-podcast-engine-api.md for the schema. The engine does not create it itself: an invalid config takes the whole site down, and the way back goes through the same config.",
+    "missingCollection": "Podcasts are not switched on for this site. Contact your administrator if you want to use them.",
     "missingAfterWrite": "the episode «{slug}» does not exist after the write",
     "alreadyExists": "the episode «{slug}» already exists"
   },
   "podcastSponsors": {
-    "missingCollection": "this site has no «{collection}» collection. Sponsor spots are off until it is declared in cms.config.ts — see docs/features/F191-sponsorindslag.md for the schema.",
+    "missingCollection": "Sponsor spots are not switched on for this site. Contact your administrator if you want to use them.",
     "missingAfterWrite": "the spot «{slug}» does not exist after the write",
     "paused": "the spot is paused",
     "noAudio": "the spot has no audio yet",

@@ -75,8 +75,12 @@ export type StoreSvar<T> = { ok: true; vaerdi: T } | { ok: false; grund: string 
 /**
  * Findes `podcast`-samlingen i dette sites config?
  *
- * Beskeden er halvdelen af værdien: en nøgen «Unknown collection» tvinger den
- * næste til at gætte hvad der mangler. Denne fortæller det.
+ * Beskeden vises for kunden (også på white-label-sites), så den er almindeligt
+ * sprog uden filstier. Til den næste udvikler: motoren er slået fra indtil
+ * `podcast`-samlingen er erklæret i sitets cms.config.ts (skema:
+ * docs/features/F189-podcast-engine-api.md). Den opretter den ikke selv: en
+ * ugyldig config tager hele sitet ned, og vejen tilbage går gennem den samme
+ * config.
  */
 export async function kraevPodcastSamling(): Promise<StoreSvar<true>> {
   const config = await getAdminConfig();

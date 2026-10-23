@@ -116,11 +116,16 @@ describe("ship-dark — motoren opretter ikke samlingen selv", () => {
     expect(store.match(/kraevPodcastSamling\(\)/g)?.length ?? 0).toBeGreaterThanOrEqual(4);
   });
 
-  it("beskeden siger hvad der mangler OG hvorfor vi ikke gør det selv", () => {
+  it("kunden får almindeligt sprog — udvikleren får hvorfor i koden", () => {
+    // Beskeden vises på kundens (evt. white-label) admin; filstier og
+    // config-navne hører hjemme i kommentaren ved tjekket, ikke på skærmen.
     expect(store).toContain(PODCAST_SAMLING);
     expect(store).toContain("libText.podcastStore.missingCollection");
-    expect(daLib.podcastStore.missingCollection).toMatch(/opretter den ikke selv/);
-    expect(daLib.podcastStore.missingCollection).toMatch(/tager hele sitet ned/);
+    expect(store).toMatch(/opretter den ikke selv/);
+    for (const msg of [daLib.podcastStore.missingCollection, daLib.podcastSponsors.missingCollection]) {
+      expect(msg).toMatch(/^[A-ZÆØÅ]/);
+      expect(msg).not.toMatch(/cms\.config|docs\/|\.md\b/);
+    }
   });
 
   it("skrivningen LÆSER TILBAGE fra et frisk opslag", () => {

@@ -6,6 +6,7 @@
   "cancel": "Cancel",
   "close": "Close",
   "dateInput": {
+    "placeholder": "YYYY-MM-DD",
     "openCalendar": "Open calendar",
     "formatHint": "Use YYYY-MM-DD",
     "previousMonth": "Previous month",

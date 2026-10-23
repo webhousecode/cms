@@ -65,7 +65,7 @@ export function CustomDateInput({
   value,
   onChange,
   disabled = false,
-  placeholder = "YYYY-MM-DD",
+  placeholder,
   min,
   max,
   style,
@@ -165,7 +165,7 @@ export function CustomDateInput({
           autoComplete="off"
           spellCheck={false}
           value={draft}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t("common.dateInput.placeholder")}
           disabled={disabled}
           onChange={handleChange}
           onFocus={() => setFocused(true)}
