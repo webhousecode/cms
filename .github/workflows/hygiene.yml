@@ -1,0 +1,21 @@
+# Image hygiene (cardmem F401) — rebuilt without cache, scanned, deployed only when
+# no critical vulnerability WITH a fix is found. Started at night (02–05 Danish time)
+# by cardmem, or by hand. WRITTEN BY CARDMEM from the project's registered Fly apps:
+# change the apps in cardmem, not here — this file is overwritten.
+name: hygiene
+on:
+  workflow_dispatch:
+    inputs:
+      reason: { type: choice, options: [nightly, manual], default: manual }
+permissions: { contents: read, id-token: write }
+jobs:
+  hygiene:
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - { app: webhouse-app, config: fly.toml }
+    uses: broberg-ai/components/.github/workflows/image-hygiene.yml@v1.0.3
+    with: { app: "${{ matrix.app }}", config: "${{ matrix.config }}", reason: "${{ inputs.reason }}", engine-ref: v1.0.3 }
+    secrets: inherit
