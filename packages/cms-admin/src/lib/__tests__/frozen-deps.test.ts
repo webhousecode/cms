@@ -48,6 +48,12 @@ const LEDGER: Record<string, string> = {
     "the whole span is 0.3.0 flipping `live`'s default to false, which we were " +
     "already immune to — we pass it explicitly. The gate tests ran UNCHANGED " +
     "and green on 0.7.1, which is what proves the behaviour is the same.",
+  "@broberg/mail-core":
+    "Exact-pinned 0.9.2 on 2026-10-23 (components F023.9) — the mail shell. " +
+    "0.9.2 is a security fix: fontSans/fontSerif became an allowlist because ';' " +
+    "could inject CSS. We were not exposed (our fonts are constants in " +
+    "lib/mail/brand.ts, never tenant data), but the old range had resolved to " +
+    "0.9.0. Exact so a later minor is read before it ships.",
   "@broberg/i18n":
     "Exact-pinned 0.3.1 on 2026-10-22 (F211.1) — the admin's own language. Exact " +
     "on purpose: we use only its pure translate() + missingKeys(), and 0.3.0 → " +
