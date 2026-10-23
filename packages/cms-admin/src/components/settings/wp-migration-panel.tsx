@@ -140,7 +140,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
               data-testid="wp-url-input"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
+              placeholder="https://example.com" // i18n-ignore: placeholder example value (URL / identifier), not prose
               onKeyDown={(e) => e.key === "Enter" && handleProbe()}
               style={{
                 flex: 1, padding: "0.45rem 0.75rem", borderRadius: 6,

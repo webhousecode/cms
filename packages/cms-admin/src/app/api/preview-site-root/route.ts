@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { readFile } from "fs/promises";
 import path from "path";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Serve dist/index.html for the root path of the preview site.
@@ -20,7 +21,7 @@ export async function GET(_req: NextRequest) {
     });
   } catch {
     return NextResponse.json(
-      { error: "No dist/index.html found. Run build first." },
+      { error: (await getServerTSafe())("errApi.preview.noDistIndex") },
       { status: 404 },
     );
   }

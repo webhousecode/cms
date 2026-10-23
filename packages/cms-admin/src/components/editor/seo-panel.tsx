@@ -56,11 +56,11 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
   // Calculate score whenever fields change
   const recalc = useCallback(() => {
     const current: SeoFields = { metaTitle, metaDescription: metaDesc, keywords, ogImage, robots, jsonLd: jsonLd ?? undefined, jsonLdTemplate: jsonLdTemplate || undefined };
-    const result = calculateSeoScore(doc, current);
+    const result = calculateSeoScore(doc, current, undefined, undefined, t);
     setScore(result);
-    const geo = calculateGeoScore(doc as { slug: string; data: Record<string, unknown>; updatedAt?: string }, current);
+    const geo = calculateGeoScore(doc as { slug: string; data: Record<string, unknown>; updatedAt?: string }, current, t);
     setGeoScore(geo);
-  }, [doc, metaTitle, metaDesc, keywords, ogImage, robots, jsonLd, jsonLdTemplate]);
+  }, [doc, metaTitle, metaDesc, keywords, ogImage, robots, jsonLd, jsonLdTemplate, t]);
 
   useEffect(() => { recalc(); }, [recalc]);
 
@@ -155,7 +155,7 @@ Return ONLY the JSON, no explanation.`,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: `Meta title: ${metaTitle}\n\nMeta description: ${metaDesc}\n\nContent excerpt: ${content.slice(0, 2000)}`,
+          text: `Meta title: ${metaTitle}\n\nMeta description: ${metaDesc}\n\nContent excerpt: ${content.slice(0, 2000)}`, // i18n-ignore: text sent to the model
           instruction: `Rewrite the meta title and meta description to optimize for the keyword "${rewriteKeyword.trim()}".
 
 Rules:
@@ -477,7 +477,7 @@ Rules:
                 }}
                 options={[
                   { value: "", label: t("editor.seoPanel.none") },
-                  ...JSON_LD_TEMPLATES.map((t) => ({ value: t.id, label: `${t.label} — ${t.description}` })),
+                  ...JSON_LD_TEMPLATES.map((tpl) => ({ value: tpl.id, label: `${t(tpl.label)} — ${t(tpl.description)}` })),
                 ]}
               />
               {jsonLdTemplate && (() => {
@@ -494,13 +494,13 @@ Rules:
                     {visibleFields.map((f) => (
                       <div key={f.key}>
                         <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", margin: "0 0 0.15rem", fontWeight: 500 }}>
-                          {f.label}{f.required ? " *" : ""}
+                          {t(f.label)}{f.required ? " *" : ""}
                         </p>
                         <input
                           data-testid={`seo-jsonld-field-${f.key}`}
                           type="text"
                           value={jsonLdValues[f.key] ?? ""}
-                          placeholder={f.placeholder}
+                          placeholder={t(f.placeholder)}
                           onChange={(e) => {
                             const next = { ...jsonLdValues, [f.key]: e.target.value };
                             setJsonLdValues(next);

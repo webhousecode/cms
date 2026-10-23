@@ -8,6 +8,7 @@ import {
   isDnsApiConfigured,
   parseCustomDomain,
 } from "@/lib/deploy/dns-client";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/admin/deploy/dns/cname
@@ -16,6 +17,7 @@ import {
  * panel to show "✓ verified", "needs creation", "wrong target" etc.
  */
 export async function GET() {
+  const t = await getServerTSafe();
   const denied = await requirePermission("deploy.trigger");
   if (denied) return denied;
 
@@ -82,7 +84,7 @@ export async function GET() {
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "DNS check failed" },
+      { error: err instanceof Error ? err.message : t("errAdmin.deploy.dnsCheckFailed") },
       { status: 500 },
     );
   }
@@ -95,12 +97,13 @@ export async function GET() {
  * Idempotent — safe to click multiple times.
  */
 export async function POST() {
+  const t = await getServerTSafe();
   const denied = await requirePermission("deploy.trigger");
   if (denied) return denied;
 
   if (!isDnsApiConfigured()) {
     return NextResponse.json(
-      { error: "DNS API not configured. Set DNS_API_URL and DNS_API_KEY in .env.local." },
+      { error: t("errAdmin.deploy.dnsApiNotConfiguredEnv") },
       { status: 503 },
     );
   }
@@ -109,13 +112,13 @@ export async function POST() {
     const config = await readSiteConfig();
     const domain = config.deployCustomDomain?.trim();
     if (!domain) {
-      return NextResponse.json({ error: "No custom domain configured." }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.deploy.noCustomDomain") }, { status: 400 });
     }
 
     const { subdomain, zone, managed } = await parseCustomDomain(domain);
     if (!managed) {
       return NextResponse.json(
-        { error: `Zone "${zone}" is not managed by the DNS API. Create the CNAME manually at your registrar.` },
+        { error: t("errAdmin.deploy.zoneNotManaged", { zone }) },
         { status: 400 },
       );
     }
@@ -129,7 +132,7 @@ export async function POST() {
     );
     if (!expected) {
       return NextResponse.json(
-        { error: "Could not determine CNAME target — make sure the deploy provider is configured." },
+        { error: t("errAdmin.deploy.noCnameTarget") },
         { status: 400 },
       );
     }
@@ -146,7 +149,7 @@ export async function POST() {
     });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "CNAME creation failed" },
+      { error: err instanceof Error ? err.message : t("errAdmin.deploy.cnameFailed") },
       { status: 500 },
     );
   }

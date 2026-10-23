@@ -7,14 +7,16 @@
 "use client";
 
 import { Code, LayoutList } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 export function ModeToggle({ mode, onToggle }: { mode: "ui" | "json"; onToggle: () => void }) {
+  const t = useT();
   return (
     <button
       data-testid="mode-toggle-button"
       type="button"
       onClick={onToggle}
-      title={mode === "ui" ? "Switch to JSON" : "Switch to UI"}
+      title={mode === "ui" ? t("editor.modeToggle.switchToJson") : t("editor.modeToggle.switchToUi")}
       style={{
         display: "inline-flex",
         alignItems: "center",

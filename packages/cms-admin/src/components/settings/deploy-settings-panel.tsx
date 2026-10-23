@@ -438,8 +438,8 @@ export function DeploySettingsPanel() {
     : t("integrations.deploy.off");
   const deployProviders = [
     { value: "off", label: offLabel },
-    { value: "vercel", label: "Vercel" },
-    { value: "netlify", label: "Netlify" },
+    { value: "vercel", label: "Vercel" }, // i18n-ignore: provider brand name
+    { value: "netlify", label: "Netlify" }, // i18n-ignore: provider brand name
     { value: "cloudflare-pages", label: t("integrations.deploy.cfPagesDirect") },
     { value: "github-pages", label: "GitHub Pages" },
     { value: "flyio-live", label: t("integrations.deploy.flyLiveInstant") },
@@ -460,13 +460,13 @@ export function DeploySettingsPanel() {
 
   const providerLabel: Record<string, string> = {
     "github-pages": "GitHub Pages",
-    vercel: "Vercel",
-    netlify: "Netlify",
+    vercel: "Vercel", // i18n-ignore: provider brand name
+    netlify: "Netlify", // i18n-ignore: provider brand name
     flyio: t("integrations.deploy.flyRebuild"),
-    "flyio-live": "Fly.io Live",
+    "flyio-live": "Fly.io Live", // i18n-ignore: provider brand name
     "fly-ephemeral": t("integrations.deploy.flyEphemeral"),
     cloudflare: t("integrations.deploy.cfWebhook"),
-    "cloudflare-pages": "Cloudflare Pages",
+    "cloudflare-pages": "Cloudflare Pages", // i18n-ignore: product name
     custom: t("integrations.deploy.customWebhook"),
   };
 
@@ -605,6 +605,7 @@ export function DeploySettingsPanel() {
               {config.deployProvider === "custom" && t("integrations.deploy.hookCustom")}
             </p>
             <input data-testid="deploy-input-1" type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
+              /* i18n-ignore: example value placeholder */
               placeholder="https://api.vercel.com/v1/integrations/deploy/..." style={inputStyle} />
           </div>
         )}
@@ -652,6 +653,7 @@ export function DeploySettingsPanel() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.hookAlt")}</label>
             <input data-testid="deploy-input-5" type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
+              /* i18n-ignore: example value placeholder */
               placeholder="https://..." style={inputStyle} />
           </div>
         )}
@@ -664,11 +666,13 @@ export function DeploySettingsPanel() {
                 {t("integrations.deploy.regionHelp")}
               </p>
               <input data-testid="deploy-input-6" type="text" value={config.deployFlyLiveRegion} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveRegion: e.target.value }))}
+                /* i18n-ignore: example value placeholder (Fly region code) */
                 placeholder="arn" style={inputStyle} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("integrations.deploy.volumeName")}</label>
               <input data-testid="deploy-input-7" type="text" value={config.deployFlyLiveVolumeName} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveVolumeName: e.target.value }))}
+                /* i18n-ignore: example value placeholder */
                 placeholder="site_data" style={inputStyle} />
             </div>
             {config.deployFlyLiveSyncSecret && (
@@ -718,6 +722,7 @@ export function DeploySettingsPanel() {
                 → {t("integrations.deploy.cfAccountIdPath")}
               </p>
               <input data-testid="deploy-input-9" type="text" value={config.deployCloudflareAccountId} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareAccountId: e.target.value }))}
+                /* i18n-ignore: example value placeholder */
                 placeholder="abcdef0123456789..." style={inputStyle} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -726,6 +731,7 @@ export function DeploySettingsPanel() {
                 {t("integrations.deploy.projectNameHelp")}
               </p>
               <input data-testid="deploy-input-10" type="text" value={config.deployCloudflareProjectName} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareProjectName: e.target.value }))}
+                /* i18n-ignore: example value placeholder */
                 placeholder="my-site" style={inputStyle} />
             </div>
           </>
@@ -774,6 +780,7 @@ export function DeploySettingsPanel() {
               <span style={{ fontFamily: "monospace" }}>{flyLiveStatus.volumeName}</span>
               {flyLiveStatus.url && (
                 <>
+                  {/* i18n-ignore: URL acronym */}
                   <span style={{ color: "var(--muted-foreground)" }}>URL</span>
                   <a data-testid="fly-live-url-link" href={flyLiveStatus.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{flyLiveStatus.url}</a>
                 </>
@@ -959,7 +966,9 @@ export function DeploySettingsPanel() {
           <SettingsCard>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
               {effectiveProvider === "github-pages"
+                /* i18n-ignore: DNS record type */
                 ? <>{fillNodes(t("integrations.deploy.domainIntroGithub"), { url: <code style={{ fontSize: "0.7rem" }}>username.github.io/repo/</code>, cname: <strong>CNAME</strong> })}</>
+                /* i18n-ignore: DNS record type */
                 : <>{fillNodes(t("integrations.deploy.domainIntro"), { cname: <strong>CNAME</strong> })}</>
               }
             </p>
@@ -968,6 +977,7 @@ export function DeploySettingsPanel() {
               borderRadius: "5px", background: "var(--background)", border: "1px solid var(--border)",
               color: "var(--foreground)", lineHeight: 1.6,
             }}>
+              {/* i18n-ignore: DNS record type */}
               <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.dnsType")}</span> CNAME<br />
               <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.dnsName")}</span> {dnsStatus?.subdomain ?? "your-subdomain"}<br />
               <span style={{ color: "var(--muted-foreground)" }}>{t("integrations.deploy.dnsTarget")}</span> {dnsStatus?.expectedTarget ?? (
@@ -976,10 +986,10 @@ export function DeploySettingsPanel() {
                   : effectiveProvider === "vercel"
                   ? "cname.vercel-dns.com."
                   : effectiveProvider === "cloudflare-pages"
-                  ? `${config.deployCloudflareProjectName || "your-project"}.pages.dev.`
+                  ? `${config.deployCloudflareProjectName || "your-project"}.pages.dev.` // i18n-ignore: example hostname (DNS target)
                   : effectiveProvider === "netlify"
-                  ? `${config.deployAppName || "your-site"}.netlify.app.`
-                  : `${config.deployAppName || "app"}.fly.dev.`
+                  ? `${config.deployAppName || "your-site"}.netlify.app.` // i18n-ignore: example hostname (DNS target)
+                  : `${config.deployAppName || "app"}.fly.dev.` // i18n-ignore: example hostname (DNS target)
               )}
             </div>
             <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
@@ -998,7 +1008,7 @@ export function DeploySettingsPanel() {
 
             {/* Suggestion chip — only when no value is set yet */}
             {!config.deployCustomDomain && (() => {
-              const suggested = `${(config.deployAppName.split("/")[1] ?? "my-site").replace(/-site$/, "")}.webhouse.app`;
+              const suggested = `${(config.deployAppName.split("/")[1] ?? "my-site").replace(/-site$/, "")}.webhouse.app`; // i18n-ignore: example hostname (DNS target)
               return (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.65rem", color: "var(--muted-foreground)" }}>
                   <span>{t("integrations.deploy.suggestion")}</span>
@@ -1316,6 +1326,7 @@ export function DeploySettingsPanel() {
               <span>{t("integrations.deploy.status")}</span>
               <span>{t("integrations.deploy.time")}</span>
               <span>{t("integrations.deploy.duration")}</span>
+              {/* i18n-ignore: URL acronym */}
               <span>URL</span>
             </div>
             {deploys.slice(0, 10).map((d) => (

@@ -303,7 +303,7 @@ export default function AgentDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          description: `Template based on ${name}`,
+          description: t("pages.agentEdit.templateDescription", { name }),
           payload: {
             name,
             role,

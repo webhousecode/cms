@@ -22,6 +22,8 @@
  * approval signal.
  */
 
+import { getT } from "@/i18n/locale";
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
 import crypto from "crypto";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import path from "path";
@@ -101,13 +103,13 @@ export function getQrSession(id: string): QrSession | null {
   return s;
 }
 
-export function approveQrSession(id: string, userId: string): QrSession {
+export function approveQrSession(id: string, userId: string, t: Translate = getT("en")): QrSession {
   const s = SESSIONS.get(id);
-  if (!s) throw new Error("Session not found");
-  if (s.status !== "pending") throw new Error(`Session is ${s.status}`);
+  if (!s) throw new Error(t("system.auth.qrNotFound"));
+  if (s.status !== "pending") throw new Error(t("system.auth.qrStatus", { status: s.status }));
   if (s.expiresAt < Date.now()) {
     s.status = "expired";
-    throw new Error("Session expired");
+    throw new Error(t("system.auth.qrExpired"));
   }
   s.status = "approved";
   s.approvedUserId = userId;
@@ -115,10 +117,10 @@ export function approveQrSession(id: string, userId: string): QrSession {
   return s;
 }
 
-export function rejectQrSession(id: string): QrSession {
+export function rejectQrSession(id: string, t: Translate = getT("en")): QrSession {
   const s = SESSIONS.get(id);
-  if (!s) throw new Error("Session not found");
-  if (s.status !== "pending") throw new Error(`Session is ${s.status}`);
+  if (!s) throw new Error(t("system.auth.qrNotFound"));
+  if (s.status !== "pending") throw new Error(t("system.auth.qrStatus", { status: s.status }));
   s.status = "rejected";
   return s;
 }

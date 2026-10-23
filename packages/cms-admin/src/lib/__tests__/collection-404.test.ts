@@ -54,7 +54,8 @@ describe("unknown collection is a client error, not a server error", () => {
 
   it("answers 404 with a collection-specific message, not 500", () => {
     const helper = src.slice(src.indexOf("async function collectionMissing("));
-    expect(helper).toContain('"Collection not found"');
+    // F211.2 — the text lives in the catalog; the route names its key.
+    expect(helper).toContain('"errCms.shared.collectionNotFound"');
     expect(helper).toContain("status: 404");
   });
 

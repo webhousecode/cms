@@ -58,7 +58,7 @@ async function tryTokenAuth(permission: string): Promise<Response | null | "no-b
   const { verifyAccessToken, evaluateToken } = await import("./access-tokens");
   const token = await verifyAccessToken(raw);
   if (!token) {
-    return NextResponse.json({ error: "Invalid access token" }, { status: 401 });
+    return NextResponse.json({ error: (await serverT())("system.auth.invalidAccessToken") }, { status: 401 });
   }
 
   // All non-site-specific admin surfaces live under "org:*". Per-site routes
@@ -69,7 +69,7 @@ async function tryTokenAuth(permission: string): Promise<Response | null | "no-b
   const result = evaluateToken(token, mapped as never, "org:*", ip, new Date());
   if (!result.allow) {
     return NextResponse.json(
-      { error: "Forbidden", reason: result.reason ?? "token denied", permission: mapped },
+      { error: (await serverT())("system.auth.forbidden"), reason: result.reason ?? "token denied", permission: mapped }, // i18n-ignore: "token denied" is a machine reason field; the human text is in error
       { status: 403 },
     );
   }
@@ -90,7 +90,7 @@ export async function requirePermission(permission: string): Promise<Response | 
   // No Bearer — fall through to session + role check (existing behaviour)
   const role = await getSiteRole();
   if (!role) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: (await serverT())("system.auth.unauthorized") }, { status: 401 });
   }
   const granted = ROLE_PERMISSIONS[role] ?? [];
   if (hasPermission(granted, permission)) return null;
@@ -111,7 +111,12 @@ export async function requirePermission(permission: string): Promise<Response | 
   } catch { /* logging must not block */ }
 
   return NextResponse.json(
-    { error: "Forbidden", permission, role },
+    { error: (await serverT())("system.auth.forbidden"), permission, role },
     { status: 403 },
   );
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

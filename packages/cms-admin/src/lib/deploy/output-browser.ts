@@ -14,6 +14,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { getActiveSitePaths } from "../site-paths";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface DeployEntry {
   name: string;
@@ -78,7 +79,7 @@ function safeResolve(deployRoot: string, rel: string): string {
   // Containment check: abs MUST start with deployRoot + path.sep (or equal it)
   const rootWithSep = deployRoot.endsWith(path.sep) ? deployRoot : deployRoot + path.sep;
   if (abs !== deployRoot && !abs.startsWith(rootWithSep)) {
-    throw new Error(`Path escapes deploy root: ${rel}`);
+    throw new Error(`Path escapes deploy root: ${rel}`); // i18n-ignore: path-traversal security guard, only reached by a crafted request
   }
   return abs;
 }
@@ -124,7 +125,7 @@ export async function readFile(rel: string): Promise<ReadFileResult | null> {
   try { stat = statSync(abs); } catch { return null; }
   if (!stat.isFile()) return null;
   if (stat.size > MAX_FILE_BYTES) {
-    throw new Error(`File too large to preview (${stat.size} bytes > ${MAX_FILE_BYTES})`);
+    throw new Error((await getServerTSafe())("deployText.outputBrowser.tooLarge", { size: stat.size, max: MAX_FILE_BYTES }));
   }
   const buffer = readFileSync(abs);
   const ext = path.extname(abs).toLowerCase();

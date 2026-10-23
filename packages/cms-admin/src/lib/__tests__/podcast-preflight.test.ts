@@ -11,7 +11,11 @@
  */
 import { describe, it, expect } from "vitest";
 import { estimat, foerFlyvning, PRIS_PR_1000_TEGN_USD } from "../podcast/preflight";
+import { getT } from "../../i18n/locale";
 import type { Replik } from "../podcast/manuscript";
+
+// F211.2 — teksterne følger admin-sproget; prøverne her læser den danske udgave.
+const foerFlyvningDa = (a: Parameters<typeof foerFlyvning>[0]) => foerFlyvning(a, getT("da"));
 
 const replik = (tekst: string): Replik => ({ speaker: "aidan", text: tekst });
 const manuskript = (tegn: number): Replik[] => [replik("x".repeat(tegn))];
@@ -53,7 +57,7 @@ const grundlag = {
 
 describe("foerFlyvning — alt der kan fejle NÅR vi trykker, spurgt FØR", () => {
   it("alt i orden → klar", () => {
-    const f = foerFlyvning(grundlag);
+    const f = foerFlyvningDa(grundlag);
     expect(f.klar).toBe(true);
     expect(f.tjek.every((t) => t.ok)).toBe(true);
   });
@@ -61,7 +65,7 @@ describe("foerFlyvning — alt der kan fejle NÅR vi trykker, spurgt FØR", () =
   it("IPA-rækker fanges og NAVNGIVES — den målte forhindring", () => {
     // ElevenLabs-adapteren KASTER på ipa. Fanget her koster det ingenting;
     // fanget under indspilningen er pengene brugt.
-    const f = foerFlyvning({
+    const f = foerFlyvningDa({
       ...grundlag,
       udtaler: [
         { word: "harness", ipa: "ˈhɑːnəs" },
@@ -79,7 +83,7 @@ describe("foerFlyvning — alt der kan fejle NÅR vi trykker, spurgt FØR", () =
   });
 
   it("en ordbog med KUN alias består", () => {
-    const f = foerFlyvning({ ...grundlag, udtaler: [{ word: "SaaS", alias: "sas" }] });
+    const f = foerFlyvningDa({ ...grundlag, udtaler: [{ word: "SaaS", alias: "sas" }] });
     expect(f.tjek.find((x) => x.navn === "Udtale-ordbogen er ren")!.ok).toBe(true);
   });
 
@@ -88,7 +92,7 @@ describe("foerFlyvning — alt der kan fejle NÅR vi trykker, spurgt FØR", () =
     // grønt ud, og hele tjeklisten ville være pynt.
     const { levendeStemmer, ...udenOpslag } = grundlag;
     void levendeStemmer;
-    const f = foerFlyvning(udenOpslag);
+    const f = foerFlyvningDa(udenOpslag);
     const t = f.tjek.find((x) => x.navn === "Stemmerne svarer")!;
     expect(t.ok).toBe(false);
     expect(t.detalje).toMatch(/ikke slået op/);
@@ -96,24 +100,24 @@ describe("foerFlyvning — alt der kan fejle NÅR vi trykker, spurgt FØR", () =
   });
 
   it("en DØD stemme fanges og navngives", () => {
-    const f = foerFlyvning({ ...grundlag, levendeStemmer: ["soren"] });
+    const f = foerFlyvningDa({ ...grundlag, levendeStemmer: ["soren"] });
     const t = f.tjek.find((x) => x.navn === "Stemmerne svarer")!;
     expect(t.ok).toBe(false);
     expect(t.detalje).toContain("camilla");
   });
 
   it("én stemme er ikke en samtale", () => {
-    const f = foerFlyvning({ ...grundlag, stemmer: ["soren"] });
+    const f = foerFlyvningDa({ ...grundlag, stemmer: ["soren"] });
     expect(f.tjek.find((x) => x.navn === "Begge stemmer er valgt")!.ok).toBe(false);
   });
 
   it("et tomt manuskript fanges", () => {
-    const f = foerFlyvning({ ...grundlag, replikker: [] });
+    const f = foerFlyvningDa({ ...grundlag, replikker: [] });
     expect(f.tjek.find((x) => x.navn === "Manuskriptet har indhold")!.ok).toBe(false);
   });
 
   it("uden godkendelse er intet klar — også når alt andet er grønt", () => {
-    const f = foerFlyvning({ ...grundlag, godkendt: false });
+    const f = foerFlyvningDa({ ...grundlag, godkendt: false });
     expect(f.klar).toBe(false);
     expect(f.tjek.find((x) => x.navn === "Din godkendelse")!.ok).toBe(false);
     // De øvrige er stadig grønne: tjeklisten skal vise HVAD der mangler,
@@ -128,12 +132,12 @@ describe("foerFlyvning — alt der kan fejle NÅR vi trykker, spurgt FØR", () =
       { godkendt: false },
       { udtaler: [{ word: "x", ipa: "y" }] },
     ]) {
-      expect(foerFlyvning({ ...grundlag, ...brudt }).klar, JSON.stringify(brudt)).toBe(false);
+      expect(foerFlyvningDa({ ...grundlag, ...brudt }).klar, JSON.stringify(brudt)).toBe(false);
     }
   });
 
   it("hvert fejlende tjek bærer en detalje man kan handle på", () => {
-    const f = foerFlyvning({ replikker: [], stemmer: [], godkendt: false });
+    const f = foerFlyvningDa({ replikker: [], stemmer: [], godkendt: false });
     for (const t of f.tjek.filter((x) => !x.ok)) {
       expect(t.detalje.length, t.navn).toBeGreaterThan(10);
     }

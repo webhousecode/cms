@@ -212,7 +212,7 @@ export async function getActiveOrgId(): Promise<string | null> {
 async function orgSettingsPath(orgId: string): Promise<string> {
   const { getAdminDataDir } = await import("./site-registry");
   // Security W41 C1 — the org id becomes a file name; never a dot or slash.
-  if (!isSafeId(orgId)) throw new Error(`invalid org id: ${JSON.stringify(orgId)}`);
+  if (!isSafeId(orgId)) throw new Error(`invalid org id: ${JSON.stringify(orgId)}`); // i18n-ignore: internal security guard (unsafe id), not a user-facing message
   const adminDir = getAdminDataDir();
   return path.join(adminDir, "_data", "org-settings", `${orgId}.json`);
 }

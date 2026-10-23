@@ -33,8 +33,8 @@ const EVENT_COLORS: Record<EventType, string> = {
 
 const COLLECTION_COLORS = ["rgb(251 146 60)", "rgb(74 222 128)", "rgb(244 114 182)", "rgb(96 165 250)", "rgb(168 85 247)", "rgb(234 179 8)", "rgb(45 212 191)"];
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // i18n-ignore: catalog keys, rendered via t(tools.calendar.weekdays.*)
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]; // i18n-ignore: catalog keys, rendered via t(tools.calendar.months.*)
 
 /* ─── Helpers ────────────────────────────────────────────────── */
 

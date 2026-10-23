@@ -5,6 +5,7 @@ import { requireToken, isTokenAuth } from "@/lib/require-token";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import type { Resource } from "@/lib/access-tokens";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Resolve the org for a given siteId by searching the registry. Needed
@@ -22,8 +23,9 @@ async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteI
 
 /** GET /api/admin/deploy — list recent deploys for the target site. */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const siteId = req.nextUrl.searchParams.get("site");
-  const resource: Resource = siteId ? `site:${siteId}` : "site:*";
+  const resource: Resource = siteId ? `site:${siteId}` : "site:*"; // i18n-ignore: token resource identifier
 
   const auth = await requireToken(req, "deploy:read", resource);
   if (auth instanceof NextResponse) return auth;
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ deploys });
     } catch (err) {
       return NextResponse.json(
-        { error: err instanceof Error ? err.message : "Failed to list deploys" },
+        { error: err instanceof Error ? err.message : t("errAdmin.deploy.listFailed") },
         { status: 500 },
       );
     }
@@ -43,7 +45,7 @@ export async function GET(req: NextRequest) {
   // Token auth + explicit siteId → scope the call to that site.
   if (siteId && isTokenAuth(auth)) {
     const ctx = await resolveOrgForSite(siteId);
-    if (!ctx) return NextResponse.json({ error: `Site "${siteId}" not found` }, { status: 404 });
+    if (!ctx) return NextResponse.json({ error: t("errAdmin.common.siteNotFound", { site: siteId }) }, { status: 404 });
     return withSiteContext(ctx, run);
   }
   return run();
@@ -55,8 +57,9 @@ export async function GET(req: NextRequest) {
  *  Token auth:   requires `?site=<siteId>` and `deploy:trigger` on it.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const siteId = req.nextUrl.searchParams.get("site");
-  const resource: Resource = siteId ? `site:${siteId}` : "site:*";
+  const resource: Resource = siteId ? `site:${siteId}` : "site:*"; // i18n-ignore: token resource identifier
 
   const auth = await requireToken(req, "deploy:trigger", resource);
   if (auth instanceof NextResponse) return auth;
@@ -68,7 +71,7 @@ export async function POST(req: NextRequest) {
     const denied = await denyViewers(); if (denied) return denied;
   } else if (!siteId) {
     return NextResponse.json(
-      { error: "Token-based deploy requires ?site=<siteId>" },
+      { error: t("errAdmin.deploy.tokenNeedsSite") },
       { status: 400 },
     );
   }
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
           provider: "unknown",
           status: "error",
           timestamp: new Date().toISOString(),
-          error: err instanceof Error ? err.message : "Deploy failed unexpectedly",
+          error: err instanceof Error ? err.message : t("errAdmin.deploy.failedUnexpectedly"),
         },
         { status: 500 },
       );
@@ -93,7 +96,7 @@ export async function POST(req: NextRequest) {
 
   if (siteId && isTokenAuth(auth)) {
     const ctx = await resolveOrgForSite(siteId);
-    if (!ctx) return NextResponse.json({ error: `Site "${siteId}" not found` }, { status: 404 });
+    if (!ctx) return NextResponse.json({ error: t("errAdmin.common.siteNotFound", { site: siteId }) }, { status: 404 });
     return withSiteContext(ctx, run);
   }
   return run();

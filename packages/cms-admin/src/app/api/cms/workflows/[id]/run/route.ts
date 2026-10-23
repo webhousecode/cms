@@ -12,25 +12,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runWorkflow } from "@/lib/workflow-runner";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getServerTSafe();
   const denied = await denyViewers();
   if (denied) return denied;
   const { id } = await params;
 
   const body = (await request.json().catch(() => ({}))) as { prompt?: string };
   if (!body.prompt?.trim()) {
-    return NextResponse.json({ error: "prompt is required" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.shared.promptIsRequired") }, { status: 400 });
   }
 
   try {
     const result = await runWorkflow(id, body.prompt.trim());
     return NextResponse.json(result);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to run workflow";
+    const msg = err instanceof Error ? err.message : t("errCms.workflows.runFailed");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -30,7 +30,8 @@ describe("two Lens keys — look-only and look-and-save", () => {
     expect(proxy).toContain("payload.lens === true && payload.lensWrite !== true");
     const guard = proxy.slice(proxy.indexOf("const lensReadOnly ="));
     expect(guard).toContain('"POST", "PUT", "PATCH", "DELETE"');
-    expect(guard).toContain("Lens session is read-only");
+    // F211.2 — the refusal text lives in the catalog (system.proxy.lensReadOnly).
+    expect(guard).toContain("system.proxy.lensReadOnly");
   });
 });
 

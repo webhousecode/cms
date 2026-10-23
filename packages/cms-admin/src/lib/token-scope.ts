@@ -105,7 +105,7 @@ export function decideTokenRequest(input: {
   now?: Date;
 }): TokenDecision {
   const resources = normalizeResources(input.token.resources);
-  if (resources === null) return { allow: false, reason: "token has an unreadable resource list", kind: "malformed" };
+  if (resources === null) return { allow: false, reason: "token has an unreadable resource list", kind: "malformed" }; // i18n-ignore: machine reason code for API-token callers
   const token: StoredToken = { ...input.token, resources, ipFilters: input.token.ipFilters ?? [] };
   const perms = token.permissions ?? [];
 
@@ -113,7 +113,7 @@ export function decideTokenRequest(input: {
   // a site outside the token's list is never legitimate. Checked after the route
   // table it only covered mapped routes, and every unmapped one stayed open.
   if (input.site !== null) {
-    const siteCheck = evaluateToken({ ...token, permissions: ["*"] }, "content:read", `site:${input.site}`, input.clientIp, input.now);
+    const siteCheck = evaluateToken({ ...token, permissions: ["*"] }, "content:read", `site:${input.site}`, input.clientIp, input.now); // i18n-ignore: resource identifier
     if (!siteCheck.allow && siteCheck.reason?.startsWith("resource")) {
       return { allow: false, reason: siteCheck.reason, kind: "site-mismatch" };
     }
@@ -129,10 +129,10 @@ export function decideTokenRequest(input: {
 
   if (need === null) {
     if (perms.includes("*")) return { allow: true, permission: "*" };
-    return { allow: false, reason: `route ${input.method} ${input.pathname} requires a full-access token`, kind: "unmapped" };
+    return { allow: false, reason: `route ${input.method} ${input.pathname} requires a full-access token`, kind: "unmapped" }; // i18n-ignore: machine reason code for API-token callers
   }
 
-  const resource: Resource = need.scope === "site" ? (input.site ? `site:${input.site}` : "site:*") : "org:*";
+  const resource: Resource = need.scope === "site" ? (input.site ? `site:${input.site}` : "site:*") : "org:*"; // i18n-ignore: resource identifier
   // "any" still runs the TTL + IP checks: it is evaluated as a full-access copy
   // of the token, so the permission named here is never the deciding factor.
   const permission: Permission = need.permission === "any" ? "content:read" : need.permission;

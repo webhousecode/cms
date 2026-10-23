@@ -24,7 +24,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    const qs = filter !== "all" ? `?status=${filter}` : "";
+    const qs = filter !== "all" ? `?status=${filter}` : ""; // i18n-ignore: URL query string
     fetch(`/api/admin/forms/${name}/submissions${qs}`)
       .then((r) => r.json())
       .then((d: { submissions: Submission[] }) => setSubs(d.submissions ?? []))

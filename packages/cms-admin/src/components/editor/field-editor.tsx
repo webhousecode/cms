@@ -454,7 +454,7 @@ function useOptionNoteData(
 export function FieldEditor({ field, value, onChange, locked, blocksConfig, documentLocale }: Props) {
   const t = useT();
   const strVal = String(value ?? "");
-  const testId = `field-${field.type}-${field.name}`;
+  const testId = `field-${field.type}-${field.name}`; // i18n-ignore: data-testid value
   // Called unconditionally — hooks cannot live inside the switch below — and it
   // no-ops for every field whose options carry no note.
   const noteData = useOptionNoteData(field.options, documentLocale);
@@ -513,7 +513,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
             className={cn(
               "w-10 h-5 rounded-full transition-colors relative cursor-pointer",
               value ? "bg-primary" : "bg-secondary border border-border",
-              locked && "opacity-40 cursor-not-allowed"
+              locked && "opacity-40 cursor-not-allowed" // i18n-ignore: CSS class names
             )}
           >
             <span

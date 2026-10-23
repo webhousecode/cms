@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
 import { readSiteConfig, writeSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * `POST /api/inline-edit/toggle` — body `{ enabled: boolean }`.
@@ -21,14 +22,15 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403, headers: CORS_HEADERS });
+    return NextResponse.json({ error: t("errApi.inlineEdit.adminOnly") }, { status: 403, headers: CORS_HEADERS });
   }
 
   const body = (await request.json().catch(() => null)) as { enabled?: boolean } | null;
   if (typeof body?.enabled !== "boolean") {
-    return NextResponse.json({ error: "enabled (boolean) is required" }, { status: 400, headers: CORS_HEADERS });
+    return NextResponse.json({ error: t("errApi.inlineEdit.enabledRequired") }, { status: 400, headers: CORS_HEADERS });
   }
 
   await writeSiteConfig({ inlineEditEnabled: body.enabled });

@@ -11,7 +11,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ ok: boolean; 
   const config = await readSiteConfig();
   const apiKey = config.resendApiKey || process.env.RESEND_API_KEY;
   if (!apiKey) {
-    return { ok: false, error: "Resend API key not configured. Go to Settings → Email." };
+    return { ok: false, error: (await (await import("@/i18n/server")).getServerTSafe())("system.lib.resendKeyMissing") };
   }
   const fromEmail = config.emailFrom || "noreply@webhouse.app";
   const fromName = config.emailFromName || "webhouse.app";
@@ -50,7 +50,7 @@ export async function renderInviteEmail(opts: {
   const { brandForSite } = await import("./mail/brand");
   const { renderInvite } = await import("./mail/render");
   return {
-    subject: `You've been invited to ${opts.siteName}`,
+    subject: `You've been invited to ${opts.siteName}`, // i18n-ignore: e-mail subject (F210.4)
     html: renderInvite({ ...opts, brand: brandForSite(config) }),
   };
 }

@@ -5,16 +5,18 @@
  */
 import { NextRequest } from "next/server";
 import { getBeamSession, addBeamListener } from "@/lib/beam/session";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   const beamId = request.nextUrl.searchParams.get("beamId");
   if (!beamId) {
-    return new Response("Missing beamId", { status: 400 });
+    return new Response(t("errAdmin.beam.missingBeamId"), { status: 400 });
   }
 
   const session = getBeamSession(beamId);
   if (!session) {
-    return new Response("Beam session not found", { status: 404 });
+    return new Response(t("errAdmin.beam.sessionNotFound"), { status: 404 });
   }
 
   const encoder = new TextEncoder();
@@ -31,12 +33,12 @@ export async function GET(request: NextRequest) {
         currentFile: session.currentFile,
         error: session.error,
       });
-      controller.enqueue(encoder.encode(`event: progress\ndata: ${initial}\n\n`));
+      controller.enqueue(encoder.encode(`event: progress\ndata: ${initial}\n\n`)); // i18n-ignore: SSE wire format
 
       // Subscribe to updates
       const unsubscribe = addBeamListener(beamId, (event, data) => {
         try {
-          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${data}\n\n`));
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${data}\n\n`)); // i18n-ignore: SSE wire format
           // Close stream when done or error
           const parsed = JSON.parse(data);
           if (parsed.phase === "done" || parsed.phase === "error") {

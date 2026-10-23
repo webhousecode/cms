@@ -1,3 +1,4 @@
+/* i18n-ignore-file: MCP protocol endpoint — tool results, errors and server info are returned to an AI client, not shown to a person */
 import { NextResponse } from "next/server";
 import { PUBLIC_TOOLS } from "@webhouse/cms-mcp-client";
 import { getAdminConfig } from "@/lib/cms";

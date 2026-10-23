@@ -10,7 +10,7 @@ export function SiteIntroCard() {
   const t = useT();
   const { siteConfig } = useHeaderData();
   const [previewUrl, setPreviewUrl] = useState("");
-  const [siteName, setSiteName] = useState("Site");
+  const [siteName, setSiteName] = useState(() => t("dashboard.siteIntroCard.siteFallback"));
   const { openTab } = useTabs();
 
   useEffect(() => {

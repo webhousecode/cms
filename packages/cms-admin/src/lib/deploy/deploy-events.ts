@@ -8,6 +8,8 @@
  * Channel key = `${orgId}:${siteId}` so subscribers only get events for
  * the site they care about.
  */
+
+import { getServerTSafe } from "@/i18n/server";
 export interface DeployEvent {
   type: "page-build";
   orgId: string;
@@ -67,11 +69,12 @@ export function publish(event: DeployEvent): void {
 async function dispatchPush(event: DeployEvent): Promise<void> {
   const { broadcastPush } = await import("../push-send");
   const isBuilt = event.status === "built";
+  const t = await getServerTSafe();
   await broadcastPush({
-    title: isBuilt ? "Site is live 🌐" : "Deploy failed",
+    title: isBuilt ? t("deployText.deployEvents.liveTitle") : t("deployText.deployEvents.failedTitle"),
     body: isBuilt
-      ? (event.url ?? "Your changes are now live on GitHub Pages.")
-      : (event.error ?? "GitHub Pages build errored — see Site Settings → Deploy."),
+      ? (event.url ?? t("deployText.deployEvents.liveBody"))
+      : (event.error ?? t("deployText.deployEvents.failedBody")),
     topic: isBuilt ? "build_succeeded" : "build_failed",
     ...(event.url && { url: event.url }),
     data: {

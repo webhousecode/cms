@@ -6,14 +6,16 @@ import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("agents"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Anthropic API key not configured — add it in Settings → AI" },
+      { error: t("errCms.shared.aiKeyMissing") },
       { status: 503 }
     );
   }
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
     };
 
     if (!role) {
-      return NextResponse.json({ error: "role required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.agents.roleRequired") }, { status: 400 });
     }
 
     const ai = await getAI();
@@ -34,6 +36,7 @@ export async function POST(request: NextRequest) {
     const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
 
     const contentModel = await getModel("content");
+    const agentName = name ?? "Unnamed"; // i18n-ignore: model prompt
     const { text } = await ai.chat({
       ...mistralModel(contentModel),
       maxTokens: 1024,
@@ -42,8 +45,9 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "user",
+          // i18n-ignore: model prompt
           content: `Generate a system prompt for an AI agent with these details:
-- Agent name: ${name ?? "Unnamed"}
+- Agent name: ${agentName}
 - Role: ${role}
 - Target collections: ${collections?.join(", ") ?? "all"}
 
@@ -55,7 +59,7 @@ The prompt should be specific to the role and suitable for content generation in
 
     return NextResponse.json({ prompt: text });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "AI error";
+    const msg = err instanceof Error ? err.message : t("errCms.shared.aiError");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -22,7 +22,7 @@ import { createHash } from "node:crypto";
  *  globals; står den der ikke, renderer siden stadig, men teksten kan hverken
  *  søges eller rettes. Se husets regel om g("felt", "reserve"). */
 export const OVERGANG_RESERVE =
-  "Vi tager lige en kort pause for at høre en besked fra dette afsnits sponsor.";
+  "Vi tager lige en kort pause for at høre en besked fra dette afsnits sponsor."; // i18n-ignore: spoken podcast audio fallback (site content, lives in the site's globals), not admin UI
 
 /**
  * Overgangens identitet: teksten OG stemmen.

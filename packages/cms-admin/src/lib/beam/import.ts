@@ -12,6 +12,7 @@ import { addSite, loadRegistry, findSite } from "../site-registry";
 import { isSafeId } from "../active-site-cookie";
 import { SECRET_FIELDS, ORG_SETTINGS_SECRET_FIELDS, clearRedactedSecrets } from "./types";
 import type { BeamManifest, BeamImportResult } from "./types";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Import a .beam archive into the CMS.
@@ -34,24 +35,25 @@ export async function importBeamArchive(
 ): Promise<BeamImportResult> {
   const JSZip = (await import("jszip")).default;
   const zip = await JSZip.loadAsync(archiveBuffer);
+  const t = await getServerTSafe();
 
   // ── 1. Read and validate manifest ──
   const manifestFile = zip.file("manifest.json");
   if (!manifestFile) {
-    throw new Error("Invalid .beam archive: missing manifest.json");
+    throw new Error(t("deployText.beamImport.missingManifest"));
   }
   const manifest: BeamManifest = JSON.parse(await manifestFile.async("string"));
   if (manifest.version !== 1) {
-    throw new Error(`Unsupported beam version: ${manifest.version}`);
+    throw new Error(t("deployText.beamImport.unsupportedVersion", { version: String(manifest.version) }));
   }
 
   // ── 2. Determine site ID and target directory ──
   const siteId = options?.newSiteId ?? manifest.site.id ?? randomUUID();
-  const siteName = manifest.site.name ?? "Imported Site";
+  const siteName = manifest.site.name ?? (await getServerTSafe())("deployText.beam.importedSiteName");
   // Security W41 NY-K2 — the id comes from the ARCHIVE and becomes a directory
   // that overwrite=true deletes: "..", "../x" or another tenant's id must not.
-  if (!isSafeId(siteId)) throw new Error(`Invalid site id in archive: ${JSON.stringify(siteId)}`);
-  if (!isSafeId(targetOrgId)) throw new Error(`Invalid org id: ${JSON.stringify(targetOrgId)}`);
+  if (!isSafeId(siteId)) throw new Error(t("deployText.beamImport.invalidSiteId", { id: JSON.stringify(siteId) }));
+  if (!isSafeId(targetOrgId)) throw new Error(t("deployText.beamImport.invalidOrgId", { id: JSON.stringify(targetOrgId) }));
 
   // Find a place for the site under the active project directory
   const { getBeamSitesDir } = await import("./paths");
@@ -64,10 +66,10 @@ export async function importBeamArchive(
     const existing = findSite(registry, targetOrgId, siteId);
     // A site with this id in ANOTHER org is never overwritten from here.
     if (!existing && registry.orgs.some((o) => o.id !== targetOrgId && o.sites.some((s) => s.id === siteId))) {
-      throw new Error(`Site id "${siteId}" belongs to another organization`);
+      throw new Error(t("deployText.beamImport.otherOrg", { siteId }));
     }
     if (existing && !options?.overwrite) {
-      throw new Error(`Site "${siteId}" already exists in org "${targetOrgId}". Use overwrite option.`);
+      throw new Error(t("deployText.beamImport.exists", { siteId, orgId: targetOrgId }));
     }
   }
 
@@ -225,9 +227,9 @@ function ensureStorageBlock(configFile: string): void {
     const insertAt = closingMatch.index;
     const block =
       "\n  storage: {\n" +
-      "    adapter: \"filesystem\",\n" +
+      "    adapter: \"filesystem\",\n" + // i18n-ignore: generated cms.config.ts source
       "    filesystem: {\n" +
-      "      contentDir: \"content\",\n" +
+      "      contentDir: \"content\",\n" + // i18n-ignore: generated cms.config.ts source
       "    },\n" +
       "  },";
     patched = source.slice(0, insertAt) + block + source.slice(insertAt);

@@ -8,6 +8,7 @@ import { FormService } from "@/lib/forms/service";
 import { isHoneypotTriggered, hashIp, isRateLimited, HONEYPOT_FIELD, validateTurnstile, TURNSTILE_TEST_SECRET_KEY, EMAIL_PATTERN, PHONE_PATTERN } from "@/lib/forms/spam";
 import { notifyFormSubmission } from "@/lib/forms/notify";
 import { originAllowed } from "@/lib/cors-origin";
+import { getServerTSafe } from "@/i18n/server";
 
 function corsHeaders(origin: string | null, allowed: string[]): Record<string, string> {
   const headers: Record<string, string> = {
@@ -53,6 +54,7 @@ export async function OPTIONS(req: NextRequest) {
  * (native HTML form submit). Rate-limited, honeypot-checked, schema-validated.
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
+  const t = await getServerTSafe();
   const { name } = await params;
   const origin = req.headers.get("origin");
   const allowed = await getAllowedOrigins();
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
   const allForms = await getAllForms();
   const form = allForms.find((f) => f.name === name);
   if (!form) {
-    return NextResponse.json({ error: "Form not found" }, { status: 404, headers: cors });
+    return NextResponse.json({ error: t("errApi.common.formNotFound") }, { status: 404, headers: cors });
   }
 
   // Parse body — support both JSON and form-urlencoded
@@ -72,14 +74,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
     body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   } else {
     const fd = await req.formData().catch(() => null);
-    if (!fd) return NextResponse.json({ error: "Invalid body" }, { status: 400, headers: cors });
+    if (!fd) return NextResponse.json({ error: t("errApi.common.invalidBody") }, { status: 400, headers: cors });
     body = Object.fromEntries(fd.entries());
   }
 
   // Spam: honeypot
   if (form.spam?.honeypot !== false && isHoneypotTriggered(body)) {
     // Return 200 to not tip off bots, but don't store
-    return NextResponse.json({ ok: true, message: form.successMessage ?? "Thank you!" }, { headers: cors });
+    return NextResponse.json({ ok: true, message: form.successMessage ?? t("errApi.common.thankYou") }, { headers: cors });
   }
 
   // Spam: rate limit
@@ -87,7 +89,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
   const ipHash = hashIp(ip);
   const maxPerHour = form.spam?.rateLimit ?? 5;
   if (isRateLimited(ipHash, name, maxPerHour)) {
-    return NextResponse.json({ error: "Too many submissions — try again later" }, { status: 429, headers: cors });
+    return NextResponse.json({ error: t("errApi.forms.tooMany") }, { status: 429, headers: cors });
   }
 
   // Spam: Cloudflare Turnstile — opt-in only (spam.turnstile === true). Unlike
@@ -99,7 +101,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
     const secret = process.env.TURNSTILE_SECRET_KEY || TURNSTILE_TEST_SECRET_KEY;
     const ok = token.length > 0 && (await validateTurnstile(token, secret, ip !== "unknown" ? ip : undefined));
     if (!ok) {
-      return NextResponse.json({ error: "Verification failed — please try again" }, { status: 400, headers: cors });
+      return NextResponse.json({ error: t("errApi.forms.verificationFailed") }, { status: 400, headers: cors });
     }
   }
 
@@ -111,19 +113,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
     // Required-ness is decided by the shared rule (F174), not re-implemented
     // here. This route is where the check was ORIGINALLY written, and it never
     // reached the content write path — a second copy is exactly the bug.
-    errors.push(...requiredFieldErrors([field as RequiredCheckField], body));
+    errors.push(...requiredFieldErrors([field as RequiredCheckField], body, t));
     if (val !== undefined && val !== "") {
       // Built-in format check by field type — runs even without a custom
       // validation.pattern, so "email"/"phone" fields are never accepted
       // unvalidated just because no one configured a regex.
       if (field.type === "email" && !EMAIL_PATTERN.test(String(val))) {
-        errors.push(`${field.label || field.name} is not a valid email address`);
+        errors.push(t("errApi.forms.invalidEmail", { field: field.label || field.name }));
       }
       if (field.type === "phone" && !PHONE_PATTERN.test(String(val))) {
-        errors.push(`${field.label || field.name} is not a valid phone number`);
+        errors.push(t("errApi.forms.invalidPhone", { field: field.label || field.name }));
       }
       if (field.validation?.pattern && !new RegExp(field.validation.pattern).test(String(val))) {
-        errors.push(`${field.label || field.name} is invalid`);
+        errors.push(t("errApi.forms.invalidField", { field: field.label || field.name }));
       }
     }
   }
@@ -151,7 +153,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
   }
 
   return NextResponse.json(
-    { ok: true, message: form.successMessage ?? "Thank you!", id: submission.id },
+    { ok: true, message: form.successMessage ?? t("errApi.common.thankYou"), id: submission.id },
     { headers: cors },
   );
 }

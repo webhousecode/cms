@@ -25,6 +25,7 @@
  */
 
 import { invalidSelectValues, type SelectCheckField } from "@/lib/select-options";
+import { getT } from "@/i18n/locale";
 
 export interface RequiredCheckField {
   name: string;
@@ -60,9 +61,10 @@ export function missingRequiredFields(
 export function requiredFieldErrors(
   fields: RequiredCheckField[],
   data: Record<string, unknown>,
+  t: (key: string, vars?: Record<string, string | number>) => string = getT("en"),
 ): string[] {
   return missingRequiredFields(fields, data).map(
-    (f) => `${f.label || f.name} is required`,
+    (f) => t("system.lib.fieldRequired", { field: f.label || f.name }),
   );
 }
 
@@ -85,9 +87,10 @@ export function checkDocumentRequired(
   fields: RequiredCheckField[],
   mergedData: Record<string, unknown>,
   status: string | undefined,
+  t: (key: string, vars?: Record<string, string | number>) => string = getT("en"),
 ): { ok: true } | { ok: false; errors: string[] } {
   if (status !== "published") return { ok: true };
-  const errors = requiredFieldErrors(fields, mergedData);
+  const errors = requiredFieldErrors(fields, mergedData, t);
   return errors.length ? { ok: false, errors } : { ok: true };
 }
 
@@ -113,10 +116,11 @@ export function checkDocumentSchema(
   mergedData: Record<string, unknown>,
   writtenData: Record<string, unknown>,
   status: string | undefined,
+  t: (key: string, vars?: Record<string, string | number>) => string = getT("en"),
 ): { ok: true } | { ok: false; errors: string[] } {
   const errors = [
-    ...invalidSelectValues(fields, writtenData),
-    ...(status === "published" ? requiredFieldErrors(fields, mergedData) : []),
+    ...invalidSelectValues(fields, writtenData, t),
+    ...(status === "published" ? requiredFieldErrors(fields, mergedData, t) : []),
   ];
   return errors.length ? { ok: false, errors } : { ok: true };
 }

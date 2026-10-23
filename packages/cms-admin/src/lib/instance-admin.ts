@@ -43,9 +43,9 @@ async function currentSession() {
 /** 403 unless the caller is the instance admin. Bearer tokens never qualify. */
 export async function requireInstanceAdmin(): Promise<Response | null> {
   const session = await currentSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: (await serverT())("system.auth.unauthorized") }, { status: 401 });
   if (isInstanceAdminUser(session, await getUsers())) return null;
-  return NextResponse.json({ error: "Only the CMS instance admin can do this" }, { status: 403 });
+  return NextResponse.json({ error: (await serverT())("system.auth.instanceAdminOnly") }, { status: 403 });
 }
 
 export async function isInstanceAdmin(): Promise<boolean> {
@@ -66,9 +66,9 @@ export async function roleOnSite(orgId: string, siteId: string): Promise<UserRol
 export async function requirePermissionOnSite(permission: string, orgId: string, siteId: string): Promise<Response | null> {
   if (await isInstanceAdmin()) return null;
   const role = await roleOnSite(orgId, siteId);
-  if (!role) return NextResponse.json({ error: "No access to that site" }, { status: 403 });
+  if (!role) return NextResponse.json({ error: (await serverT())("system.auth.noSiteAccess") }, { status: 403 });
   if (hasPermission(ROLE_PERMISSIONS[role] ?? [], permission)) return null;
-  return NextResponse.json({ error: "Forbidden", permission }, { status: 403 });
+  return NextResponse.json({ error: (await serverT())("system.auth.forbidden"), permission }, { status: 403 });
 }
 
 /** W41 NY-K3 — registry update-site fields a site's own admin may send. */
@@ -88,3 +88,7 @@ export function siteAdminUpdateAllowed(current: Pick<SiteEntry, "configPath" | "
   return true;
 }
 
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
+}

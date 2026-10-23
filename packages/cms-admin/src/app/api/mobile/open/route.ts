@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/mobile/open?url=webhouseapp://login?...
@@ -12,9 +13,10 @@ import { NextResponse, type NextRequest } from "next/server";
  * from qr-sessions.ts), so exposing this endpoint publicly is safe.
  */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const url = req.nextUrl.searchParams.get("url");
   if (!url || !url.startsWith("webhouseapp://")) {
-    return NextResponse.json({ error: "Missing or invalid url param" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.mobile.invalidUrlParam") }, { status: 400 });
   }
 
   // Security W41 H5 — the url was reflected unescaped: `"` was the only

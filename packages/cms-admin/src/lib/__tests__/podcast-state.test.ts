@@ -64,7 +64,7 @@ describe("NEGATIVE KONTROLLER — det maskinen findes for at nægte", () => {
   it("man kan ikke springe godkendelsen over", () => {
     const svar = maaSkifte("manuskript-klar", "indspillet");
     expect(svar.ok).toBe(false);
-    expect(svar.ok === false && svar.grund).toMatch(/kan ikke gå til/);
+    expect(svar.ok === false && svar.grund).toMatch(/cannot go to/);
   });
 
   it("man kan ikke gå fra kladde direkte til indspillet — «fremad» er ikke en regel", () => {
@@ -82,7 +82,7 @@ describe("NEGATIVE KONTROLLER — det maskinen findes for at nægte", () => {
     for (const t of TILSTANDE) {
       const svar = maaSkifte(t, t);
       expect(svar.ok, t).toBe(false);
-      expect(svar.ok === false && svar.grund).toContain("allerede");
+      expect(svar.ok === false && svar.grund).toContain("already");
     }
   });
 
@@ -108,8 +108,8 @@ describe("maaIndspilles — den ene regel der står mellem et kald og rigtige pe
 
   it("afvisningen siger HVORFOR — og at det koster penge", () => {
     const svar = maaIndspilles("manuskript-klar");
-    expect(svar.ok === false && svar.grund).toMatch(/ikke godkendt/);
-    expect(svar.ok === false && svar.grund).toMatch(/penge/);
+    expect(svar.ok === false && svar.grund).toMatch(/not approved/);
+    expect(svar.ok === false && svar.grund).toMatch(/money/);
   });
 
   it("et allerede indspillet afsnit får en ANDEN besked end et ugodkendt", () => {
@@ -118,7 +118,7 @@ describe("maaIndspilles — den ene regel der står mellem et kald og rigtige pe
     const a = maaIndspilles("indspillet");
     const b = maaIndspilles("kladde");
     expect(a.ok === false && a.grund).not.toBe(b.ok === false && b.grund);
-    expect(a.ok === false && a.grund).toMatch(/allerede indspillet/);
+    expect(a.ok === false && a.grund).toMatch(/already recorded/);
   });
 });
 

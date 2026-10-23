@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import os from "os";
 import QRCode from "qrcode";
 import { createQrSession } from "@/lib/qr-sessions";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * For dev: when the request hits http://localhost the QR would encode an
@@ -13,8 +14,9 @@ import { createQrSession } from "@/lib/qr-sessions";
 
 /** POST /api/auth/qr/session — create a pending QR login session. */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   if (process.env.NEXT_PUBLIC_CMS_ENABLE_QR_LOGIN !== "true") {
-    return NextResponse.json({ error: "QR login is disabled" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.authQr.disabled") }, { status: 404 });
   }
   const ua = req.headers.get("user-agent") ?? undefined;
   const session = createQrSession(ua);
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const approveUrl = `${proto}://${host}/admin/approve/${session.id}`;
+  const approveUrl = `${proto}://${host}/admin/approve/${session.id}`; // i18n-ignore: approval URL
 
   const qrDataUrl = await QRCode.toDataURL(approveUrl, {
     errorCorrectionLevel: "M",

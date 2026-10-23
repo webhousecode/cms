@@ -210,7 +210,7 @@ export async function sendPushNotification(
           title: payload.title,
           body: payload.body,
           url: payload.url ?? "/",
-          tag: `webhouse-${Date.now()}`,
+          tag: `webhouse-${Date.now()}`, // i18n-ignore: notification tag id
           badge: payload.badge,
         });
         // @ts-ignore — typed by web-push if installed

@@ -14,8 +14,10 @@ import {
 } from "@/lib/import-engine";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("import.execute"); if (denied) return denied;
 
   try {
@@ -35,18 +37,18 @@ export async function POST(request: NextRequest) {
     };
 
     if (!content || !format || !mappings || !collection) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.import.missingFields") }, { status: 400 });
     }
 
     const config = await getAdminConfig();
     const colConfig = config.collections.find((c) => c.name === collection);
     if (!colConfig) {
-      return NextResponse.json({ error: `Collection "${collection}" not found` }, { status: 404 });
+      return NextResponse.json({ error: t("errAdmin.import.collectionNotFound", { collection }) }, { status: 404 });
     }
 
     const tf = titleField ?? colConfig.fields[0]?.name ?? "title";
-    const { records } = parseFile(content, format);
-    const rows = applyMappings(records, mappings, tf);
+    const { records } = parseFile(content, format, undefined, t);
+    const rows = applyMappings(records, mappings, tf, t);
 
     const cms = await getAdminCms();
     const result = await executeImport(cms, collection, rows);
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Import failed";
+    const message = err instanceof Error ? err.message : t("errAdmin.import.failed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

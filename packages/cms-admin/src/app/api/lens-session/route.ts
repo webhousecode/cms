@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
 import { resolveLensKey, lensKeysCollide } from "@/lib/lens-keys";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * F151 — Lens mint-endpoint (fleet `mintEndpoint` standard).
@@ -94,11 +95,12 @@ async function resolveActiveSite(
  * look-only key would also hand out write sessions.
  */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const authHeader = request.headers.get("authorization");
   const bearer = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
   const kind = resolveLensKey(bearer);
   if (kind === "none") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.unauthorized") }, { status: 401 });
   }
 
   const body = (await request.json().catch(() => null)) as
@@ -132,8 +134,8 @@ export async function POST(request: NextRequest) {
   const writeSession = wantsWrite && kind === "write";
   if (writeSession) {
     console.log(
-      `[lens] write session minted — flow=${body?.flow ?? "(unnamed)"} ` +
-        `site=${body?.site ?? "(default)"} at ${new Date().toISOString()}`,
+      `[lens] write session minted — flow=${body?.flow ?? "(unnamed)"} ` + // i18n-ignore: server log line
+        `site=${body?.site ?? "(default)"} at ${new Date().toISOString()}`, // i18n-ignore: server log line
     );
   }
 
@@ -183,6 +185,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ cookies, origins: [] });
 }
 
-export function GET() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+export async function GET() {
+  const t = await getServerTSafe();
+  return NextResponse.json({ error: t("errApi.lensSession.methodNotAllowed") }, { status: 405 });
 }

@@ -7,6 +7,7 @@ import { sendEmail, renderInviteEmail } from "@/lib/email";
 import { readSiteConfig } from "@/lib/site-config";
 import { requirePermission } from "@/lib/permissions";
 import type { UserRole } from "@/lib/auth";
+import { getServerTSafe } from "@/i18n/server";
 
 async function requireSiteAdmin() {
   const cookieStore = await cookies();
@@ -19,29 +20,31 @@ async function requireSiteAdmin() {
 }
 
 export async function GET() {
+  const t = await getServerTSafe();
   const session = await requireSiteAdmin();
   if (!session) {
-    return NextResponse.json({ error: "Site admin access required" }, { status: 403 });
+    return NextResponse.json({ error: t("errAdmin.common.siteAdminRequired") }, { status: 403 });
   }
   const invitations = await listInvitations();
   return NextResponse.json({ invitations });
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("users.manage"); if (denied) return denied;
   const session = await requireSiteAdmin();
   if (!session) {
-    return NextResponse.json({ error: "Site admin access required" }, { status: 403 });
+    return NextResponse.json({ error: t("errAdmin.common.siteAdminRequired") }, { status: 403 });
   }
 
   const body = (await request.json()) as { email?: string; role?: UserRole };
   if (!body.email) {
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.invitations.emailRequired") }, { status: 400 });
   }
 
   const role = body.role ?? "editor";
   if (!["admin", "editor", "viewer"].includes(role)) {
-    return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.common.invalidRole") }, { status: 400 });
   }
 
   // Check if user already has access to this site
@@ -50,7 +53,7 @@ export async function POST(request: NextRequest) {
   if (existingUser) {
     const existingMember = await getTeamMember(existingUser.id);
     if (existingMember) {
-      return NextResponse.json({ error: "This user already has access to this site" }, { status: 409 });
+      return NextResponse.json({ error: t("errAdmin.invitations.alreadyMember") }, { status: 409 });
     }
   }
 
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
     const headerStore = await headers();
     const host = headerStore.get("host") ?? "localhost:3010";
     const protocol = host.startsWith("localhost") ? "http" : "https";
-    const inviteUrl = `${protocol}://${host}/admin/invite/${invitation.token}`;
+    const inviteUrl = `${protocol}://${host}/admin/invite/${invitation.token}`; // i18n-ignore: URL
 
     // Try to send email — non-blocking, invite still works via copy-link
     let emailSent = false;
@@ -85,12 +88,12 @@ export async function POST(request: NextRequest) {
       // catch left the admin with "not sent" and no reason at all, which is the
       // same dead end as the old "sent" that had not been.
       emailSent = false;
-      emailError = err instanceof Error ? err.message : "Mailen kunne ikke sendes.";
+      emailError = err instanceof Error ? err.message : t("errAdmin.invitations.mailFailed");
     }
 
     return NextResponse.json({ invitation, emailSent, emailError });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Failed to create invitation";
+    const message = err instanceof Error ? err.message : t("errAdmin.invitations.createFailed");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

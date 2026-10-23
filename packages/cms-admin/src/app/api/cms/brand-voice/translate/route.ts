@@ -4,8 +4,10 @@ import type { BrandVoice } from "@/lib/brand-voice";
 import { denyViewers } from "@/lib/require-role";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getAI, mistralModel, parseJsonLoose } from "@/lib/ai/client";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
 
   const { brandVoice, targetLanguage } = (await request.json()) as {
@@ -22,6 +24,7 @@ export async function POST(request: NextRequest) {
     messages: [
       {
         role: "user",
+        // i18n-ignore: model prompt
         content: `Translate the following Brand Voice JSON document to ${targetLanguage}.
 
 Rules:
@@ -41,9 +44,9 @@ ${JSON.stringify(brandVoice, null, 2)}`,
 
   try {
     const translated = parseJsonLoose(raw) as BrandVoice;
-    if (!translated) throw new Error("null result");
+    if (!translated) throw new Error("null result"); // i18n-ignore: internal exception, caught below and never shown
     return NextResponse.json(translated);
   } catch {
-    return NextResponse.json({ error: "Failed to parse translated JSON", raw }, { status: 500 });
+    return NextResponse.json({ error: t("errCms.brandVoice.parseFailed"), raw }, { status: 500 });
   }
 }

@@ -112,7 +112,7 @@ const VARIANT_STYLES = {
  * Use inside ActionBar's `actions` slot.
  */
 export function ActionButton({ onClick, disabled, variant = "secondary", children, title, icon, testId }: ActionButtonProps) {
-  const derivedTestId = testId ?? (typeof children === "string" ? `btn-${children.toLowerCase().replace(/\s+/g, "-")}` : undefined);
+  const derivedTestId = testId ?? (typeof children === "string" ? `btn-${children.toLowerCase().replace(/\s+/g, "-")}` : undefined); // i18n-ignore: data-testid value
   return (
     <button
       type="button"

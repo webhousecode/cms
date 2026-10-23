@@ -99,7 +99,8 @@
     "cancel": "Annuller",
     "deleting": "Sletter…",
     "delete": "Slet",
-    "fieldName": "feltnavn"
+    "fieldName": "feltnavn",
+    "templateDescription": "Skabelon baseret på {name}"
   },
   "agentNew": {
     "agents": "Agenter",
@@ -210,6 +211,15 @@
       "step2": "6–8 fokuserede spørgsmål, der hver bygger videre på dit forrige svar",
       "step3": "Tager cirka 3 minutter",
       "step4": "Resultatet gemmes og gives automatisk til alle agenter"
+    },
+    "languages": {
+      "English": "Engelsk",
+      "Danish": "Dansk",
+      "German": "Tysk",
+      "French": "Fransk",
+      "Spanish": "Spansk",
+      "Norwegian": "Norsk",
+      "Swedish": "Svensk"
     }
   },
   "interactiveEdit": {
@@ -737,5 +747,16 @@
     "colCollections": "Samlinger",
     "colStatus": "Status",
     "filterAll": "Alle"
+  },
+  "workspaceLayout": {
+    "unknownSite": "Ukendt site",
+    "githubAdminNeeded": "En administrator skal forbinde GitHub til dette site, før du kan få adgang."
+  },
+  "inlineEditConnect": {
+    "siteAndReturnRequired": "site og return skal angives",
+    "siteNotFound": "site ikke fundet",
+    "returnNotAllowed": "return-adressen er ikke tilladt",
+    "unauthorized": "Ikke logget ind",
+    "lensReadOnly": "Lens-sessionen er skrivebeskyttet — mint med skrivenøglen for at få en redigeringssession"
   }
 }

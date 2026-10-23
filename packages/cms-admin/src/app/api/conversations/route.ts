@@ -16,10 +16,12 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { ConversationStore, EmptyConversationError } from "@/lib/conversations/store";
 import { CONVERSATION_TEXT_RETENTION_DAYS } from "@/lib/conversations/retention";
 import type { NewConversationTurn } from "@/lib/conversations/types";
+import { getServerTSafe } from "@/i18n/server";
 
 const ROLES = new Set(["visitor", "assistant"]);
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("conversations.write");
   if (denied) return denied;
 
@@ -27,30 +29,30 @@ export async function POST(req: NextRequest) {
     | { source?: unknown; locale?: unknown; turns?: unknown }
     | null;
   if (!body || typeof body !== "object") {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.invalidBody") }, { status: 400 });
   }
 
   if (typeof body.source !== "string" || body.source.trim() === "") {
-    return NextResponse.json({ error: "source is required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.conversations.sourceRequired") }, { status: 400 });
   }
   if (!Array.isArray(body.turns)) {
-    return NextResponse.json({ error: "turns must be an array" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.conversations.turnsArray") }, { status: 400 });
   }
 
   const turns: NewConversationTurn[] = [];
   for (const raw of body.turns as unknown[]) {
-    const t = raw as Partial<NewConversationTurn>;
-    if (!t || typeof t.text !== "string" || !ROLES.has(String(t.role))) {
+    const turn = raw as Partial<NewConversationTurn>;
+    if (!turn || typeof turn.text !== "string" || !ROLES.has(String(turn.role))) {
       return NextResponse.json(
-        { error: "each turn needs role ('visitor' | 'assistant') and text" },
+        { error: t("errApi.conversations.turnShape") },
         { status: 400 },
       );
     }
     turns.push({
-      role: t.role as NewConversationTurn["role"],
-      text: t.text,
-      ...(typeof t.at === "string" ? { at: t.at } : {}),
-      ...(Array.isArray(t.markers) ? { markers: t.markers.map(String) } : {}),
+      role: turn.role as NewConversationTurn["role"],
+      text: turn.text,
+      ...(typeof turn.at === "string" ? { at: turn.at } : {}),
+      ...(Array.isArray(turn.markers) ? { markers: turn.markers.map(String) } : {}),
     });
   }
 

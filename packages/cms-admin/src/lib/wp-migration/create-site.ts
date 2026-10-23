@@ -79,7 +79,7 @@ export async function migrateWordPressSite(
     const cmsDoc = wpDocToCmsJson(doc, colName);
     // Security W41 NY-K5 — the slug comes from the remote WordPress server;
     // "../../x" must not choose where the file lands.
-    const fileSlug = slugify(doc.slug) || `doc-${i}`;
+    const fileSlug = slugify(doc.slug) || `doc-${i}`; // i18n-ignore: file slug
     writeFileSync(path.join(colDir, `${fileSlug}.json`), JSON.stringify(cmsDoc, null, 2), "utf-8");
     imported++;
     onProgress?.({ phase: "writing", current: i + 1, total: documents.length, currentItem: doc.title });
@@ -140,7 +140,7 @@ function buildCollections(probe: WpProbeResult): CollectionDef[] {
   if (probe.contentCounts.posts > 0) {
     cols.push({
       name: "posts",
-      label: "Posts",
+      label: "Posts", // i18n-ignore: collection label stored in the migrated site's cms.config.ts (site data, renamed in the schema editor)
       urlPrefix: "/blog",
       hasExcerpt: true,
       hasDate: true,
@@ -153,7 +153,7 @@ function buildCollections(probe: WpProbeResult): CollectionDef[] {
   if (probe.contentCounts.pages > 0) {
     cols.push({
       name: "pages",
-      label: "Pages",
+      label: "Pages", // i18n-ignore: collection label stored in the migrated site's cms.config.ts (site data, renamed in the schema editor)
       urlPrefix: "/",
       hasExcerpt: false,
       hasDate: false,
@@ -209,15 +209,15 @@ export function generateCmsConfig(collections: CollectionDef[], probe: WpProbeRe
     ``,
     `export default defineConfig({`,
     `  storage: { adapter: 'filesystem', contentDir: 'content' },`,
-    `  collections: [`,
+    `  collections: [`, // i18n-ignore: generated cms.config.ts source
   ];
 
   for (const col of collections) {
     lines.push(`    defineCollection({`);
-    lines.push(`      name: ${lit(col.name)},`);
-    lines.push(`      label: ${lit(col.label)},`);
+    lines.push(`      name: ${lit(col.name)},`); // i18n-ignore: generated cms.config.ts source
+    lines.push(`      label: ${lit(col.label)},`); // i18n-ignore: generated cms.config.ts source
     lines.push(`      urlPrefix: ${lit(col.urlPrefix)},`);
-    lines.push(`      fields: [`);
+    lines.push(`      fields: [`); // i18n-ignore: generated cms.config.ts source
     lines.push(`        { name: 'title', type: 'text', required: true },`);
     lines.push(`        { name: 'content', type: 'richtext' },`);
     if (col.hasExcerpt) lines.push(`        { name: 'excerpt', type: 'textarea' },`);

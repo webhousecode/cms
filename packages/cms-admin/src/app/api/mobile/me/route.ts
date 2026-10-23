@@ -10,6 +10,7 @@ import { resolvePermissions } from "@/lib/permissions";
 import { loadRegistry } from "@/lib/site-registry";
 import { readSiteConfigForSite } from "@/lib/site-config";
 import { signPreviewToken } from "@/lib/preview-token";
+import { getServerTSafe } from "@/i18n/server";
 
 
 /** Rewrite localhost URLs to LAN IP so mobile devices can reach them. */
@@ -46,7 +47,7 @@ function derivePreviewUrl(
 ): string | undefined {
   // Use LAN IP for the proxy base so the phone can reach it
   const lanHost = rewriteLocalhostUrl(`${reqUrl.protocol}//${reqUrl.host}`) ?? `${reqUrl.protocol}//${reqUrl.host}`;
-  const proxyBase = `${lanHost}/api/mobile/preview-proxy`;
+  const proxyBase = `${lanHost}/api/mobile/preview-proxy`; // i18n-ignore: URL
 
   if (site.previewUrl) {
     // External URLs (Vercel, Netlify, etc.) — phone can reach them directly
@@ -55,7 +56,7 @@ function derivePreviewUrl(
     // Localhost URLs — must proxy through cms-admin with signed token
     const param = site.previewUrl;
     const token = signPreviewToken(param);
-    return `${proxyBase}?upstream=${encodeURIComponent(param)}&tok=${token}`;
+    return `${proxyBase}?upstream=${encodeURIComponent(param)}&tok=${token}`; // i18n-ignore: URL
   }
 
   // No previewUrl — try sirv from dist/
@@ -65,7 +66,7 @@ function derivePreviewUrl(
   if (!existsSync(distDir)) return undefined;
 
   const token = signPreviewToken(distDir);
-  return `${proxyBase}?dir=${encodeURIComponent(distDir)}&tok=${token}`;
+  return `${proxyBase}?dir=${encodeURIComponent(distDir)}&tok=${token}`; // i18n-ignore: URL
 }
 
 function isLocalhostUrl(url: string): boolean {
@@ -76,14 +77,15 @@ function isLocalhostUrl(url: string): boolean {
  * GET /api/mobile/me
  */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   const user = await getUserById(session.id);
   if (!user) {
-    return NextResponse.json({ error: "User no longer exists" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.common.userGone") }, { status: 404 });
   }
 
   const registry = await loadRegistry();
@@ -140,7 +142,7 @@ export async function GET(req: NextRequest) {
               // them via LAN otherwise).
               const target = entry.liveUrl || liveOrPreview;
               if (target && isLocalhostUrl(target)) {
-                const proxyBase = `${lanHost}/api/mobile/preview-proxy`;
+                const proxyBase = `${lanHost}/api/mobile/preview-proxy`; // i18n-ignore: URL
                 const token = signPreviewToken(target);
                 entry.proxyPreviewUrl = `${proxyBase}?upstream=${encodeURIComponent(target)}&tok=${token}`;
               }

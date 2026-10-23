@@ -45,7 +45,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   const [thinkingText, setThinkingText] = useState("");
   const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
   const [conversationId, setConversationId] = useState(() => safeUUID());
-  const [siteName, setSiteName] = useState("your site");
+  const [siteName, setSiteName] = useState(() => t("chat.chatInterface.yourSite"));
   const [showHistory, setShowHistory] = useState(false);
   const [showThinking, setShowThinking] = useState(false);
   useEffect(() => {
@@ -208,7 +208,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         }
 
         const reader = response.body?.getReader();
-        if (!reader) throw new Error("No response body");
+        if (!reader) throw new Error("No response body"); // i18n-ignore: internal exception, the catch shows connectionLost instead
 
         const decoder = new TextDecoder();
         let buffer = "";
@@ -343,7 +343,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   }
 
   async function saveConversation(id: string, msgs: ChatMessageUI[]) {
-    const title = msgs[0]?.content.slice(0, 60) ?? "New conversation";
+    const title = msgs[0]?.content.slice(0, 60) ?? t("chat.chatInterface.newConversation");
     try {
       await fetch("/api/cms/chat/conversations", {
         method: "POST",

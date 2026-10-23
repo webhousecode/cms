@@ -8,8 +8,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { runAudit } from "@/lib/lighthouse/runner";
 import { readSiteConfig } from "@/lib/site-config";
 import { requireCapability } from "@/lib/capabilities";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const capDenied = await requireCapability("quality"); if (capDenied) return capDenied;
   try {
     const body = await request.json().catch(() => ({}));
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
         : "";
       url = config.deployProductionUrl || customDomain || config.previewSiteUrl;
       if (!url) {
-        return NextResponse.json({ error: "No URL provided and no production or preview URL configured" }, { status: 400 });
+        return NextResponse.json({ error: t("errAdmin.lighthouse.noUrl") }, { status: 400 });
       }
     }
 
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     // PSI API cannot audit localhost — reject early with a clear message
     if (/localhost|127\.0\.0\.1|\[::1\]/.test(url)) {
       return NextResponse.json({
-        error: "Cannot audit localhost URLs — PSI API requires a public URL. Configure a production URL in Site Settings → Deploy.",
+        error: t("errAdmin.lighthouse.localhost"),
       }, { status: 400 });
     }
 
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ mobile, desktop });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Scan failed";
+    const message = err instanceof Error ? err.message : t("errAdmin.lighthouse.scanFailed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,3 +1,4 @@
+/* i18n-ignore-file: MCP protocol endpoint — tool results, errors and server info are returned to an AI client, not shown to a person */
 import { type NextRequest, NextResponse } from "next/server";
 import { getTransportSession, checkRateLimit } from "@webhouse/cms-mcp-client";
 

@@ -12,6 +12,12 @@
  * noget, og det opdages først når nogen læser højt for penge.
  */
 
+import { getT } from "@/i18n/locale";
+
+/** Translator; defaults to English when the caller has no request language. */
+type T = ReturnType<typeof getT>;
+const EN: T = getT("en");
+
 /** De to værter. Rollerne står i PROMPTEN, ikke i lyden — se byggManuskriptPrompt. */
 export const VAERTER = ["aidan", "airina"] as const;
 export type Vaert = (typeof VAERTER)[number];
@@ -32,10 +38,10 @@ const MINDST_ANTAL_REPLIKKER = 4;
  * ```json-hegn eller med en indledende sætning. At finde JSON-blokken er en del
  * af opgaven, ikke noget kalderen skal gøre først.
  */
-export function parseManuskript(raa: string): ParseSvar {
+export function parseManuskript(raa: string, t: T = EN): ParseSvar {
   const blok = raa.match(/\[[\s\S]*\]/);
   if (!blok) {
-    return { ok: false, grund: "svaret indeholder ingen JSON-liste" };
+    return { ok: false, grund: t("libText.podcastManuscript.noJsonList") };
   }
 
   let data: unknown;
@@ -44,24 +50,24 @@ export function parseManuskript(raa: string): ParseSvar {
   } catch (err) {
     return {
       ok: false,
-      grund: `JSON-listen kunne ikke læses: ${err instanceof Error ? err.message : "ukendt fejl"}`,
+      grund: t("libText.podcastManuscript.jsonUnreadable", { error: err instanceof Error ? err.message : t("libText.podcastCommon.unknownError") }),
     };
   }
 
   if (!Array.isArray(data)) {
-    return { ok: false, grund: "svaret er ikke en liste" };
+    return { ok: false, grund: t("libText.podcastManuscript.notAList") };
   }
   if (data.length < MINDST_ANTAL_REPLIKKER) {
     return {
       ok: false,
-      grund: `kun ${data.length} replik(ker) — et afsnit er en samtale, ikke et oplæg (mindst ${MINDST_ANTAL_REPLIKKER})`,
+      grund: t("libText.podcastCommon.tooFewLines", { count: data.length, min: MINDST_ANTAL_REPLIKKER }),
     };
   }
 
   const replikker: Replik[] = [];
   for (const [i, r] of data.entries()) {
     if (typeof r !== "object" || r === null) {
-      return { ok: false, grund: `replik ${i} er ikke et objekt` };
+      return { ok: false, grund: t("libText.podcastManuscript.lineNotObject", { index: i }) };
     }
     const { speaker, text } = r as Record<string, unknown>;
     if (typeof speaker !== "string" || !(VAERTER as readonly string[]).includes(speaker)) {
@@ -69,11 +75,11 @@ export function parseManuskript(raa: string): ParseSvar {
       // fejl man skal kunne se årsagen til, ikke gætte sig til.
       return {
         ok: false,
-        grund: `replik ${i} har taleren «${String(speaker)}» — kun ${VAERTER.join(" og ")} findes`,
+        grund: t("libText.podcastManuscript.unknownSpeaker", { index: i, speaker: String(speaker), hosts: VAERTER.join(t("libText.podcastCommon.and")) }),
       };
     }
     if (typeof text !== "string" || text.trim() === "") {
-      return { ok: false, grund: `replik ${i} (${speaker}) har ingen tekst` };
+      return { ok: false, grund: t("libText.podcastManuscript.lineNoText", { index: i, speaker }) };
     }
     replikker.push({ speaker: speaker as Vaert, text: text.trim() });
   }
@@ -85,7 +91,7 @@ export function parseManuskript(raa: string): ParseSvar {
   if (brugte.size < 2) {
     return {
       ok: false,
-      grund: `kun «${[...brugte][0]}» taler — et afsnit med to værter skal have begge`,
+      grund: t("libText.podcastManuscript.oneHostOnly", { speaker: String([...brugte][0]) }),
     };
   }
 
@@ -121,11 +127,11 @@ export type PromptTekster = {
  */
 export const RESERVE_TEKSTER: PromptTekster = {
   aidanRolle:
-    "Aidan forklarer. Han kender stoffet og siger det i almindelige ord, uden at tale ned.",
+    "Aidan forklarer. Han kender stoffet og siger det i almindelige ord, uden at tale ned.", // i18n-ignore: model prompt fallback (podcast role texts sent to the AI)
   airinaRolle:
-    "Airina spørger på lytterens vegne. Hun må afbryde og bede om et konkret eksempel når det bliver for abstrakt.",
+    "Airina spørger på lytterens vegne. Hun må afbryde og bede om et konkret eksempel når det bliver for abstrakt.", // i18n-ignore: model prompt fallback (podcast role texts sent to the AI)
   stil:
-    "Dansk, talesprog, korte sætninger. Ingen opremsninger og ingen overskrifter — det skal kunne siges højt.",
+    "Dansk, talesprog, korte sætninger. Ingen opremsninger og ingen overskrifter — det skal kunne siges højt.", // i18n-ignore: model prompt fallback (podcast role texts sent to the AI)
 };
 
 export function byggManuskriptPrompt(args: {

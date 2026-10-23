@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/github?action=status|orgs|repos&org=...
  * Proxy GitHub API calls using the stored OAuth token.
  */
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   const token = request.cookies.get("github-token")?.value;
   const action = request.nextUrl.searchParams.get("action") ?? "status";
 
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
         fetch("https://api.github.com/user", { headers }),
         fetch("https://api.github.com/user/orgs?per_page=100", { headers }),
       ]);
-      if (!userRes.ok) return NextResponse.json({ error: "Failed to fetch user" }, { status: 401 });
+      if (!userRes.ok) return NextResponse.json({ error: t("errApi.github.fetchUserFailed") }, { status: 401 });
 
       const user = (await userRes.json()) as { login: string; avatar_url: string };
       const orgs = orgsRes.ok
@@ -50,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     if (action === "repos") {
       const org = request.nextUrl.searchParams.get("org");
-      if (!org) return NextResponse.json({ error: "org param required" }, { status: 400 });
+      if (!org) return NextResponse.json({ error: t("errApi.github.orgRequired") }, { status: 400 });
 
       // Check if it's the user's personal account or an org
       const userRes = await fetch("https://api.github.com/user", { headers });
@@ -66,7 +68,7 @@ export async function GET(request: NextRequest) {
       }
 
       const reposRes = await fetch(url, { headers });
-      if (!reposRes.ok) return NextResponse.json({ error: "Failed to fetch repos" }, { status: reposRes.status });
+      if (!reposRes.ok) return NextResponse.json({ error: t("errApi.github.fetchReposFailed") }, { status: reposRes.status });
 
       const repos = (await reposRes.json()) as Array<{
         name: string;
@@ -87,17 +89,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.unknownAction") }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "GitHub API error" }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : t("errApi.github.apiError") }, { status: 500 });
   }
 }
 
 /** POST /api/github — Create repo or seed content */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const token = request.cookies.get("github-token")?.value;
-  if (!token) return NextResponse.json({ error: "Not connected to GitHub" }, { status: 401 });
+  if (!token) return NextResponse.json({ error: t("errApi.github.notConnected") }, { status: 401 });
 
   const headers = {
     Authorization: `Bearer ${token}`,
@@ -115,7 +118,7 @@ export async function POST(request: NextRequest) {
   };
 
   if (body.action === "create-repo") {
-    if (!body.name) return NextResponse.json({ error: "name required" }, { status: 400 });
+    if (!body.name) return NextResponse.json({ error: t("errApi.github.nameRequired") }, { status: 400 });
 
     // Determine if personal or org
     const userRes = await fetch("https://api.github.com/user", { headers });
@@ -303,7 +306,7 @@ Built with [@webhouse/cms](https://github.com/webhousecode/cms) — AI-native co
         method: "PUT",
         headers,
         body: JSON.stringify({
-          message: filePath === "cms.config.ts" ? "chore: initialize CMS site" : `chore: add ${filePath}`,
+          message: filePath === "cms.config.ts" ? "chore: initialize CMS site" : `chore: add ${filePath}`, // i18n-ignore: git commit message
           content: Buffer.from(content).toString("base64"),
           branch: repo.default_branch,
         }),
@@ -321,7 +324,7 @@ Built with [@webhouse/cms](https://github.com/webhousecode/cms) — AI-native co
     });
   }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  return NextResponse.json({ error: t("errApi.common.unknownAction") }, { status: 400 });
 }
 
 /** DELETE /api/github — Disconnect GitHub (clear token cookie) */

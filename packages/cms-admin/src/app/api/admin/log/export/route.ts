@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
   } catch { /* non-fatal */ }
 
   const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-  const filename = `event-log-${stamp}.${format === "json" ? "json" : "csv"}`;
+  const filename = `event-log-${stamp}.${format === "json" ? "json" : "csv"}`; // i18n-ignore: file name
 
   if (format === "json") {
     return new NextResponse(JSON.stringify(entries, null, 2), {

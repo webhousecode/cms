@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { COOKIE_NAME, createToken, getUserById } from "@/lib/auth";
 import { claimQrSession } from "@/lib/qr-sessions";
-import { legacyLoginAllowed, LEGACY_LOGIN_REFUSED } from "@/lib/bid";
+import { legacyLoginAllowed, legacyLoginRefused } from "@/lib/bid";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/auth/qr/claim
@@ -12,15 +13,16 @@ import { legacyLoginAllowed, LEGACY_LOGIN_REFUSED } from "@/lib/bid";
  * replay if a QR/sid leaks.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const body = (await req.json().catch(() => ({}))) as { sessionId?: string };
   if (!body.sessionId) return NextResponse.json({ error: "Missing sessionId" }, { status: 400 });
 
   const claim = claimQrSession(body.sessionId);
-  if (!claim) return NextResponse.json({ error: "Not approved or already claimed" }, { status: 410 });
+  if (!claim) return NextResponse.json({ error: t("errApi.authQr.notApproved") }, { status: 410 });
 
   const user = await getUserById(claim.userId);
-  if (!user) return NextResponse.json({ error: "User no longer exists" }, { status: 404 });
-  if (!legacyLoginAllowed(user)) return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
+  if (!user) return NextResponse.json({ error: t("errApi.common.userGone") }, { status: 404 });
+  if (!legacyLoginAllowed(user)) return NextResponse.json({ error: await legacyLoginRefused(), bid: true }, { status: 403 });
 
   const token = await createToken(user);
   const res = NextResponse.json({ ok: true, email: user.email, name: user.name });

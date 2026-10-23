@@ -5,6 +5,7 @@ import { getActiveSiteEntry } from "@/lib/site-paths";
 import { mintEditSessionToken, isReadOnlyLensSession } from "@/lib/inline-edit-token";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * F157 — headless mint of an inline-edit `editSession` token.
@@ -28,6 +29,7 @@ import { getSessionUser } from "@/lib/auth";
  * allowlist) — exactly what content.edit already permits.
  */
 export async function POST(request: Request) {
+  const t = await getServerTSafe();
   // A `site` in the BODY is not part of the contract — this route takes the
   // target from `?site=` (which proxy.ts resolves into the active-site cookies).
   // Ignoring it silently handed the caller an admin-role token for the REGISTRY
@@ -42,7 +44,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Pass the target site as the ?site= query parameter, not in the body — a body `site` was ignored and would have minted a token for a different site.",
+          t("errApi.inlineEdit.siteInBody"),
       },
       { status: 400 },
     );
@@ -55,24 +57,24 @@ export async function POST(request: Request) {
   const raw = await getSessionUser(await cookies());
   if (isReadOnlyLensSession(raw)) {
     return NextResponse.json(
-      { error: "Lens session is read-only — mint with the write key to get an edit session" },
+      { error: t("errApi.inlineEdit.lensReadOnly") },
       { status: 403 },
     );
   }
 
   const role = await getSiteRole();
   if (!role || !hasPermission(ROLE_PERMISSIONS[role] ?? [], "content.edit")) {
-    return NextResponse.json({ error: "Forbidden — content.edit required" }, { status: 403 });
+    return NextResponse.json({ error: t("errApi.common.forbiddenContentEdit") }, { status: 403 });
   }
 
   const site = await getActiveSiteEntry();
   if (!site) {
-    return NextResponse.json({ error: "site not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.common.siteNotFoundLower") }, { status: 404 });
   }
 
   const session = await getSessionWithSiteRole();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.unauthorized") }, { status: 401 });
   }
 
   const { token, expiresIn } = await mintEditSessionToken({

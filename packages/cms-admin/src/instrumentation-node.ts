@@ -74,7 +74,7 @@ async function publishTick() {
         const org = registry?.orgs.find((o: any) => o.id === orgId);
         const site = org?.sites.find((s: any) => s.id === siteId);
         const port = process.env.PORT ?? "3010";
-        const instanceUrl = `localhost:${port}`;
+        const instanceUrl = `localhost:${port}`; // i18n-ignore: host:port value
         const enriched = actions.map((a: any) => ({
           ...a,
           title: a.title ?? a.slug,

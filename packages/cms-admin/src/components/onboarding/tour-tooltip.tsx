@@ -6,7 +6,6 @@ import { useT } from "@/lib/i18n-context";
 
 interface TourTooltipProps {
   step: TourStep;
-  locale: string;
   currentStep: number;
   totalSteps: number;
   onNext: () => void;
@@ -23,7 +22,6 @@ const GAP = 12;
  */
 export function TourTooltip({
   step,
-  locale,
   currentStep,
   totalSteps,
   onNext,
@@ -34,12 +32,13 @@ export function TourTooltip({
   const [visible, setVisible] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const title = locale === "da" ? step.titleDa : step.title;
-  const body = locale === "da" ? step.bodyDa : step.body;
+  // F211.2 — tour text follows the ADMIN language, not the site's content locale.
+  const title = t(step.titleKey);
+  const body = t(step.bodyKey);
   const isLast = currentStep === totalSteps - 1;
   const buttonLabel = isLast
-    ? locale === "da" ? "Lad os gå!" : "Let's go!"
-    : locale === "da" ? "Forstået" : "Got it";
+    ? t("misc.tourTooltip.letsGo")
+    : t("misc.tourTooltip.gotIt");
 
   // Recalculate position from target selector (provider already ensured it exists)
   useEffect(() => {
@@ -260,31 +259,31 @@ function Arrow({
       Object.assign(style, {
         left: -ARROW_SIZE,
         top: targetRect.top + targetRect.height / 2 - tooltipTop - ARROW_SIZE,
-        borderWidth: `${ARROW_SIZE}px ${ARROW_SIZE}px ${ARROW_SIZE}px 0`,
-        borderColor: "transparent #0D0D0D transparent transparent",
+        borderWidth: `${ARROW_SIZE}px ${ARROW_SIZE}px ${ARROW_SIZE}px 0`, // i18n-ignore: CSS value
+        borderColor: "transparent #0D0D0D transparent transparent", // i18n-ignore: CSS value
       });
       break;
     case "left":
       Object.assign(style, {
         right: -ARROW_SIZE,
         top: targetRect.top + targetRect.height / 2 - tooltipTop - ARROW_SIZE,
-        borderWidth: `${ARROW_SIZE}px 0 ${ARROW_SIZE}px ${ARROW_SIZE}px`,
-        borderColor: "transparent transparent transparent #0D0D0D",
+        borderWidth: `${ARROW_SIZE}px 0 ${ARROW_SIZE}px ${ARROW_SIZE}px`, // i18n-ignore: CSS value
+        borderColor: "transparent transparent transparent #0D0D0D", // i18n-ignore: CSS value
       });
       break;
     case "bottom":
       Object.assign(style, {
         top: -ARROW_SIZE,
         left: targetRect.left + targetRect.width / 2 - tooltipLeft - ARROW_SIZE,
-        borderWidth: `0 ${ARROW_SIZE}px ${ARROW_SIZE}px ${ARROW_SIZE}px`,
-        borderColor: "transparent transparent #0D0D0D transparent",
+        borderWidth: `0 ${ARROW_SIZE}px ${ARROW_SIZE}px ${ARROW_SIZE}px`, // i18n-ignore: CSS value
+        borderColor: "transparent transparent #0D0D0D transparent", // i18n-ignore: CSS value
       });
       break;
     case "top":
       Object.assign(style, {
         bottom: -ARROW_SIZE,
-        left: targetRect.left + targetRect.width / 2 - tooltipLeft - ARROW_SIZE,
-        borderWidth: `${ARROW_SIZE}px ${ARROW_SIZE}px 0 ${ARROW_SIZE}px`,
+        left: targetRect.left + targetRect.width / 2 - tooltipLeft - ARROW_SIZE, // i18n-ignore: CSS value
+        borderWidth: `${ARROW_SIZE}px ${ARROW_SIZE}px 0 ${ARROW_SIZE}px`, // i18n-ignore: CSS value
         borderColor: "#0D0D0D transparent transparent transparent",
       });
       break;

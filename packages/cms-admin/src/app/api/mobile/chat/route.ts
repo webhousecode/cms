@@ -5,6 +5,7 @@ import { getUserById, createToken } from "@/lib/auth";
 import { getSitePathsFor } from "@/lib/site-paths";
 import { FilesystemMediaAdapter } from "@/lib/media/filesystem";
 import { chatJobs, type ChatEvent } from "./_jobs";
+import { getServerTSafe } from "@/i18n/server";
 
 export const maxDuration = 300;
 
@@ -18,15 +19,16 @@ export const maxDuration = 300;
  * Jobs run server-side and survive screen lock / app backgrounding.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   const orgId = req.nextUrl.searchParams.get("orgId");
   const siteId = req.nextUrl.searchParams.get("siteId");
   if (!orgId || !siteId) {
-    return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.orgSiteRequired") }, { status: 400 });
   }
 
   try {
@@ -34,7 +36,7 @@ export async function POST(req: NextRequest) {
     const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
 
     const user = await getUserById(session.id);
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!user) return NextResponse.json({ error: t("errApi.common.userNotFound") }, { status: 404 });
     const sessionJwt = await createToken(user);
 
     // Create job
@@ -43,7 +45,7 @@ export async function POST(req: NextRequest) {
     chatJobs.set(jobId, job);
 
     // Run chat in background (fire-and-forget from the request's perspective)
-    runChatJob(jobId, body, orgId, siteId, sessionJwt, baseUrl).catch((err) => {
+    runChatJob(jobId, body, orgId, siteId, sessionJwt, baseUrl, t).catch((err) => {
       console.error("[mobile/chat] Job error:", err);
       job.events.push({ event: "error", data: { message: String(err) } });
       job.done = true;
@@ -53,7 +55,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ jobId });
   } catch (err) {
     console.error("[mobile/chat] Error:", err);
-    return NextResponse.json({ error: "Chat failed" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.mobile.chatFailed") }, { status: 500 });
   }
 }
 
@@ -64,6 +66,7 @@ async function runChatJob(
   siteId: string,
   sessionJwt: string,
   baseUrl: string,
+  t: Awaited<ReturnType<typeof getServerTSafe>>,
 ) {
   const job = chatJobs.get(jobId);
   if (!job) return;
@@ -157,7 +160,7 @@ async function runChatJob(
       }
     }
   } catch (err) {
-    job.events.push({ event: "error", data: { message: `Stream error: ${err}` } });
+    job.events.push({ event: "error", data: { message: t("errApi.mobile.streamError", { error: String(err) }) } });
   }
 
   job.done = true;

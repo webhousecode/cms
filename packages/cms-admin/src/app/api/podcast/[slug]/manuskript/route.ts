@@ -13,20 +13,22 @@ import { kraevTilladelse, preflight, svar, PODCAST_PERMISSIONS } from "@/lib/pod
 import { hentAfsnit, skrivAfsnit } from "@/lib/podcast/store";
 import { efterManuskriptRettelse } from "@/lib/podcast/state";
 import { tilTekst, fraTekst } from "@/lib/podcast/tekstformat";
+import { getServerTSafe } from "@/i18n/server";
 
 export const OPTIONS = preflight;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.read);
   if (afvist) return afvist.svar;
 
   const { slug } = await params;
   const hentet = await hentAfsnit(slug);
   if (!hentet.ok) return svar(req, { error: hentet.grund }, 409);
-  if (!hentet.vaerdi) return svar(req, { error: `afsnittet «${slug}» findes ikke` }, 404);
+  if (!hentet.vaerdi) return svar(req, { error: t("errApi.podcast.episodeNotFound", { slug }) }, 404);
 
   const d = hentet.vaerdi.data;
-  const tekst = tilTekst(d.replikker, { titel: d.titel, nummer: d.nummer, saeson: d.saeson });
+  const tekst = tilTekst(d.replikker, { titel: d.titel, nummer: d.nummer, saeson: d.saeson }, t);
   // text/plain og et filnavn: browseren skal GEMME den, ikke vise den. En fil
   // der åbner i fanen er en fil man skal kopiere ud af i hånden.
   return new Response(tekst, {
@@ -40,20 +42,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.edit);
   if (afvist) return afvist.svar;
 
   const { slug } = await params;
   const hentet = await hentAfsnit(slug);
   if (!hentet.ok) return svar(req, { error: hentet.grund }, 409);
-  if (!hentet.vaerdi) return svar(req, { error: `afsnittet «${slug}» findes ikke` }, 404);
+  if (!hentet.vaerdi) return svar(req, { error: t("errApi.podcast.episodeNotFound", { slug }) }, 404);
 
   const raa = await req.text();
 
   // VALIDERES FØR NOGET SKRIVES. En fil der er halvt rigtig må ikke skrive en
   // halv samtale: halvt skrevet er værre end ikke skrevet, fordi det ser ud
   // som om der er noget, og det opdages først når nogen læser højt for penge.
-  const laest = fraTekst(raa);
+  const laest = fraTekst(raa, t);
   if (!laest.ok) {
     return svar(req, { error: laest.grund, ...(laest.linje ? { linje: laest.linje } : {}) }, 400);
   }

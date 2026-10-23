@@ -89,7 +89,7 @@ describe("«ikke bygget endnu» er ikke det samme som «ruten findes ikke»", ()
   it("POSITIV KONTROL: den svarer 409, og den svarer stadig noget", () => {
     // Uden denne ville «slet hele fejlgrenen» bestå prøven ovenfor.
     const src = route();
-    const i = src.indexOf("No dist/ directory found");
+    const i = src.indexOf("errApi.preview.noDist"); // F211.2: the message now lives in the errApi catalog
     expect(i, "fejlbeskeden om manglende build er væk").toBeGreaterThan(-1);
     expect(src.slice(i, i + 400)).toMatch(/status:\s*409/);
   });

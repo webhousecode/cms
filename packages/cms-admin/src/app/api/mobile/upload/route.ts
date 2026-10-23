@@ -1,5 +1,5 @@
 import { findLanHost } from "@/lib/lan-host";
-import { isCodeUpload, CODE_UPLOAD_REFUSED } from "@/lib/code-path-policy";
+import { isCodeUpload, codeUploadRefused } from "@/lib/code-path-policy";
 import { NextRequest, NextResponse } from "next/server";
 import os from "os";
 import { join } from "node:path";
@@ -9,6 +9,7 @@ import { getSitePathsFor } from "@/lib/site-paths";
 import { readSiteConfigForSite } from "@/lib/site-config";
 import { FilesystemMediaAdapter } from "@/lib/media/filesystem";
 import { generateVariants, isProcessableImage, extractExif } from "@/lib/media/image-processor";
+import { getServerTSafe } from "@/i18n/server";
 
 /** Write media-meta.json directly (no cookies needed) */
 async function appendMetaDirect(dataDir: string, key: string, data: Record<string, unknown>) {
@@ -35,27 +36,28 @@ async function appendMetaDirect(dataDir: string, key: string, data: Record<strin
  * Currently only supports filesystem adapter sites.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   const orgId = req.nextUrl.searchParams.get("orgId");
   const siteId = req.nextUrl.searchParams.get("siteId");
   if (!orgId || !siteId) {
-    return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.orgSiteRequired") }, { status: 400 });
   }
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   if (!file) {
-    return NextResponse.json({ error: "No file" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.noFile") }, { status: 400 });
   }
 
   try {
     const paths = await getSitePathsFor(orgId, siteId);
     if (!paths) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errApi.common.siteNotFound") }, { status: 404 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -64,7 +66,7 @@ export async function POST(req: NextRequest) {
     // Sanitize filename, add short hash to avoid collisions
     const hash = Math.random().toString(36).slice(2, 6);
     // Security W41 C5 — never store a file the server could load as code.
-    if (isCodeUpload(file.name)) return NextResponse.json({ error: CODE_UPLOAD_REFUSED }, { status: 415 });
+    if (isCodeUpload(file.name)) return NextResponse.json({ error: await codeUploadRefused() }, { status: 415 });
     const originalName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
     const dotIdx = originalName.lastIndexOf(".");
     const filename = dotIdx > 0
@@ -155,6 +157,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("[mobile/upload] Error:", err);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.mobile.uploadFailed") }, { status: 500 });
   }
 }

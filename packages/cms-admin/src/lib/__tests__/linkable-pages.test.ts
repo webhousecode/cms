@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { getT } from "@/i18n/locale";
 import {
   buildLinkablePages,
   matchDoc,
@@ -53,10 +54,12 @@ describe("linkable pages — the sitemap IS the list", () => {
   });
 
   it("lists a page the CMS knows nothing about, with a readable title", () => {
-    const pages = buildLinkablePages(parseSitemapLocs(sitemap(["/en/behind-the-scenes"])), index);
+    const pages = buildLinkablePages(parseSitemapLocs(sitemap(["/en/behind-the-scenes"])), index, getT("da"));
     expect(pages[0]?.path).toBe("/en/behind-the-scenes");
     expect(pages[0]?.title).toBe("Behind the scenes");
     expect(pages[0]?.label).toBe("Side");
+    // F211.2 — the fallback label follows the admin language
+    expect(buildLinkablePages(parseSitemapLocs(sitemap(["/en/behind-the-scenes"])), index)[0]?.label).toBe("Page");
   });
 
   it("de-duplicates and normalises trailing slashes", () => {
@@ -107,7 +110,9 @@ describe("parsing helpers", () => {
 
   it("derives a readable title from a path", () => {
     expect(titleFromPath("/da/behandlinger/ansigts-zoneterapi")).toBe("Ansigts zoneterapi");
-    expect(titleFromPath("/")).toBe("Forside");
+    // F211.2 — English is the source; Danish comes through the catalog.
+    expect(titleFromPath("/")).toBe("Home");
+    expect(titleFromPath("/", getT("da"))).toBe("Forside");
   });
 });
 

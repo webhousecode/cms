@@ -54,12 +54,14 @@ export function generateDockerfile(ctx: DockerfileGenContext): string {
       // Caller passes the path; we just reference it. The actual file
       // is in the source tree and buildah finds it normally.
       throw new Error(
+        // i18n-ignore: internal programming invariant (wrong code path), never a user state
         "Custom framework — caller should use the existing Dockerfile in source/, not generate one.",
       );
     case "static":
       throw new Error(
+        // i18n-ignore: internal programming invariant (wrong code path), never a user state
         "Static sites use F143 build path (cms-admin runs build.ts in-process). " +
-          "F144 builders are only for SSR / dynamic sites.",
+          "F144 builders are only for SSR / dynamic sites.", // i18n-ignore: continuation of the invariant above
       );
   }
 }

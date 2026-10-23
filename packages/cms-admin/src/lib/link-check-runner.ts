@@ -4,6 +4,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import { classifyByShape, normalisePath, sitemapPathsFromXml } from "@/lib/link-check-classify";
 import { probeUrl } from "@/lib/link-check-probe";
 import { getUploadDir } from "@/lib/upload-dir";
+import { getServerTSafe } from "@/i18n/server";
 import fs from "fs/promises";
 import path from "path";
 
@@ -68,13 +69,13 @@ function extractMarkdownImages(markdown: string): Array<{ text: string; url: str
 }
 
 /** Extract the outer link URL from linked-images: [![alt](img)](linkUrl) */
-function extractLinkedImageLinks(markdown: string): Array<{ text: string; url: string }> {
+function extractLinkedImageLinks(markdown: string, label: string): Array<{ text: string; url: string }> {
   const found: Array<{ text: string; url: string }> = [];
   const re = /\[!\[[^\]]*\]\([^)]+\)\]\(([^)\s]+)\)/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(markdown)) !== null) {
     const url = m[1].trim();
-    if (url && !url.startsWith("#")) found.push({ text: "linked image", url });
+    if (url && !url.startsWith("#")) found.push({ text: label, url });
   }
   return found;
 }
@@ -101,6 +102,9 @@ export async function runLinkCheck(
   onResult?: (r: LinkResult) => void,
 ): Promise<LinkCheckResult> {
   const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+  // F211.2 — the requester's admin language; a scheduled run has no request
+  // (and no host to read a brand from), so it falls back to English.
+  const translate = await getServerTSafe();
 
   // Build internal URL map
   const internalMap = new Map<string, true>();
@@ -186,7 +190,7 @@ export async function runLinkCheck(
           allLinks.push({ docCollection: col.name, docSlug: doc.slug, docTitle: title, field: fieldName, kind: "link", ...link });
         }
         // Outer links from linked-images: [![alt](img)](url)
-        for (const link of extractLinkedImageLinks(content)) {
+        for (const link of extractLinkedImageLinks(content, translate("system.linkCheck.linkedImage"))) {
           allLinks.push({ docCollection: col.name, docSlug: doc.slug, docTitle: title, field: fieldName, kind: "link", ...link });
         }
         // Images from richtext — both markdown ![alt](url) and HTML <img src="...">
@@ -236,7 +240,7 @@ export async function runLinkCheck(
     // Extracted to link-check-classify.ts because this is the part that keeps
     // regressing and the runner cannot be unit-tested (it imports the CMS), so
     // a rule left in here is a rule nothing can go red on.
-    const byShape = classifyByShape(raw.kind, url, { isSchemeless, isDangerousUrl });
+    const byShape = classifyByShape(raw.kind, url, { isSchemeless, isDangerousUrl, t: translate });
     if (byShape) {
       push(raw, "other", byShape);
       return;
@@ -257,7 +261,7 @@ export async function runLinkCheck(
             await fs.access(filePath);
             statusFields = { status: "ok" };
           } catch {
-            statusFields = { status: "broken", error: "Image file not found on disk" };
+            statusFields = { status: "broken", error: translate("system.linkCheck.imageNotFound") };
           }
         } else {
           // Unknown internal path format — skip (can't verify)
@@ -293,10 +297,10 @@ export async function runLinkCheck(
             // the container would otherwise condemn every such link.
             statusFields = {
               status: "unverified",
-              error: `Ikke verificeret — sitet svarede ikke (${probe.error ?? "ukendt"}). Linket kan sagtens virke.`,
+              error: translate("system.linkCheck.unverifiedNoAnswer", { cause: probe.error ?? translate("system.linkCheck.unknownCause") }),
             };
           } else {
-            statusFields = { status: "broken", httpStatus: probe.httpStatus, error: "Findes hverken i sitemap, som dokument, eller som en side sitet svarer på" };
+            statusFields = { status: "broken", httpStatus: probe.httpStatus, error: translate("system.linkCheck.notFoundAnywhere") };
           }
         } else {
           // NOT `(${sitemapNote})` here: in this branch the note IS "sitet har
@@ -304,7 +308,7 @@ export async function runLinkCheck(
           // same sentence twice inside one line.
           statusFields = {
             status: "unverified",
-            error: "Ikke verificeret — sitet har ingen offentlig adresse i indstillingerne, så der er ikke noget at spørge. Linket kan sagtens virke.",
+            error: translate("system.linkCheck.unverifiedNoAddress"),
           };
         }
       }

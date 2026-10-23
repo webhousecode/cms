@@ -12,23 +12,25 @@ import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { registerDeviceToken } from "@/lib/push-store";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(req: NextRequest): Promise<Response> {
+  const t = await getServerTSafe();
   const session = await getSessionUser(await cookies());
-  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: t("errAdmin.common.unauthorizedLower") }, { status: 401 });
 
   let body: { subscription?: unknown; deviceLabel?: string };
   try { body = (await req.json()) as typeof body; }
-  catch { return NextResponse.json({ error: "invalid JSON body" }, { status: 400 }); }
+  catch { return NextResponse.json({ error: t("errAdmin.push.invalidJson") }, { status: 400 }); }
 
   const sub = body.subscription;
   if (!sub || typeof sub !== "object") {
-    return NextResponse.json({ error: "subscription object required" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.push.subscriptionRequired") }, { status: 400 });
   }
   // Sanity check the subscription shape
   const s = sub as { endpoint?: string; keys?: { p256dh?: string; auth?: string } };
   if (!s.endpoint || !s.keys?.p256dh || !s.keys?.auth) {
-    return NextResponse.json({ error: "subscription missing endpoint/keys" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.push.subscriptionIncomplete") }, { status: 400 });
   }
 
   // F07 push-store stores the JSON-stringified subscription as the "token"
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     session.id,
     "web",
     JSON.stringify(sub),
-    body.deviceLabel ?? inferDeviceLabel(req),
+    body.deviceLabel ?? inferDeviceLabel(req, t),
   );
 
   return NextResponse.json({
@@ -46,12 +48,12 @@ export async function POST(req: NextRequest): Promise<Response> {
   });
 }
 
-function inferDeviceLabel(req: NextRequest): string {
+function inferDeviceLabel(req: NextRequest, t: (key: string) => string): string {
   const ua = req.headers.get("user-agent") ?? "";
-  if (/Mac/.test(ua)) return /Chrome/.test(ua) ? "Mac · Chrome" : /Safari/.test(ua) ? "Mac · Safari" : "Mac · browser";
-  if (/Windows/.test(ua)) return "Windows · browser";
-  if (/Linux/.test(ua)) return "Linux · browser";
+  if (/Mac/.test(ua)) return /Chrome/.test(ua) ? "Mac · Chrome" : /Safari/.test(ua) ? "Mac · Safari" : t("errAdmin.push.macBrowser");
+  if (/Windows/.test(ua)) return t("errAdmin.push.windowsBrowser");
+  if (/Linux/.test(ua)) return t("errAdmin.push.linuxBrowser");
   if (/iPhone|iPad/.test(ua)) return "iOS · Safari";
-  if (/Android/.test(ua)) return "Android · browser";
-  return "Browser";
+  if (/Android/.test(ua)) return t("errAdmin.push.androidBrowser");
+  return t("errAdmin.push.browser");
 }

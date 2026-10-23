@@ -80,14 +80,14 @@ export function assertMailGateSane(log: (msg: string) => void = console.error): 
   if (!isDeployed || mode === "live") return true;
   const why =
     mode === "disabled"
-      ? "MAIL_DISABLED=1 is set, so NOTHING is sent at all."
-      : `NODE_ENV is "${process.env.NODE_ENV || "unset"}", not "production", ` +
-        "so mail reaches only MAIL_ALLOWLIST + fleet admins. Set MAIL_LIVE=1 " +
-        "to deliver anyway.";
+      ? "MAIL_DISABLED=1 is set, so NOTHING is sent at all." // i18n-ignore: boot log line
+      : `NODE_ENV is "${process.env.NODE_ENV || "unset"}", not "production", ` + // i18n-ignore: boot log line
+        "so mail reaches only MAIL_ALLOWLIST + fleet admins. Set MAIL_LIVE=1 " + // i18n-ignore: boot log line
+        "to deliver anyway."; // i18n-ignore: boot log line
   log(
-    `[mailer] ${process.env.FLY_APP_NAME} BOOTED WITH DELIVERY GATED OFF ` +
-      `(mode="${mode}") — sends will keep reporting success and nothing else ` +
-      `will report this. ${why}`,
+    `[mailer] ${process.env.FLY_APP_NAME} BOOTED WITH DELIVERY GATED OFF ` + // i18n-ignore: boot log line
+      `(mode="${mode}") — sends will keep reporting success and nothing else ` + // i18n-ignore: boot log line
+      `will report this. ${why}`, // i18n-ignore: boot log line
   );
   return false;
 }

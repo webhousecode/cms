@@ -61,11 +61,11 @@ describe("NEGATIVE KONTROLLER — det parseren findes for at nægte", () => {
   };
 
   it("intet JSON i svaret", () => {
-    expect(afvist("Beklager, det kan jeg ikke.")).toMatch(/ingen JSON-liste/);
+    expect(afvist("Beklager, det kan jeg ikke.")).toMatch(/no JSON list/);
   });
 
   it("ugyldigt JSON", () => {
-    expect(afvist("[{speaker: aidan}]")).toMatch(/kunne ikke læses/);
+    expect(afvist("[{speaker: aidan}]")).toMatch(/could not be read/);
   });
 
   it("for få replikker — et afsnit er en samtale, ikke et oplæg", () => {
@@ -73,7 +73,7 @@ describe("NEGATIVE KONTROLLER — det parseren findes for at nægte", () => {
       { speaker: "aidan", text: "en" },
       { speaker: "airina", text: "to" },
     ]);
-    expect(afvist(kort)).toMatch(/kun 2 replik/);
+    expect(afvist(kort)).toMatch(/only 2 line/);
   });
 
   it("en taler vi ikke kender — og fejlen NAVNGIVER ham", () => {
@@ -95,7 +95,7 @@ describe("NEGATIVE KONTROLLER — det parseren findes for at nægte", () => {
       { speaker: "aidan", text: "tre" },
       { speaker: "airina", text: "fire" },
     ]);
-    expect(afvist(tom)).toMatch(/ingen tekst/);
+    expect(afvist(tom)).toMatch(/has no text/);
   });
 
   it("KUN ÉN taler — et oplæg med en talerangivelse på", () => {
@@ -108,16 +108,16 @@ describe("NEGATIVE KONTROLLER — det parseren findes for at nægte", () => {
       { speaker: "aidan", text: "tre" },
       { speaker: "aidan", text: "fire" },
     ]);
-    expect(afvist(monolog)).toMatch(/kun «aidan» taler/);
+    expect(afvist(monolog)).toMatch(/only «aidan» speaks/);
   });
 
   it("et objekt i stedet for en liste", () => {
-    expect(afvist('{"speaker":"aidan","text":"en"}')).toMatch(/ingen JSON-liste/);
+    expect(afvist('{"speaker":"aidan","text":"en"}')).toMatch(/no JSON list/);
   });
 
   it("en replik der slet ikke er et objekt", () => {
     const skrald = JSON.stringify(["aidan siger noget", "airina svarer", "tre", "fire"]);
-    expect(afvist(skrald)).toMatch(/ikke et objekt/);
+    expect(afvist(skrald)).toMatch(/is not an object/);
   });
 });
 

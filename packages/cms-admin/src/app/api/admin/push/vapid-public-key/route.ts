@@ -8,15 +8,17 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET(): Promise<Response> {
+  const t = await getServerTSafe();
   const session = await getSessionUser(await cookies());
-  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: t("errAdmin.common.unauthorizedLower") }, { status: 401 });
 
   const publicKey = process.env.VAPID_PUBLIC_KEY;
   if (!publicKey) {
     return NextResponse.json(
-      { configured: false, error: "VAPID_PUBLIC_KEY not set on cms-admin" },
+      { configured: false, error: t("errAdmin.push.vapidMissing") },
       { status: 503 },
     );
   }

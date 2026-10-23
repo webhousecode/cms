@@ -131,7 +131,7 @@ export default function SeoPage() {
       a.download = `seo-report.${format}`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success(t("tools.seo.downloaded", { file: `seo-report.${format}` }));
+      toast.success(t("tools.seo.downloaded", { file: `seo-report.${format}` })); // i18n-ignore: download file name
     } catch {
       toast.error(t("tools.seo.exportFailed"));
     }

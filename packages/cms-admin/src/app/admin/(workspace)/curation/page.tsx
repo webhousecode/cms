@@ -98,7 +98,7 @@ function renderMarkdown(md: string): string {
     }
     closeList();
     if (!inPara) { out.push('<p style="margin:0.75rem 0;line-height:1.7;">'); inPara = true; }
-    else { out.push("<br />"); }
+    else { out.push("<br />"); } // i18n-ignore: HTML markup
     out.push(inline(line));
   }
   closePara(); closeList();

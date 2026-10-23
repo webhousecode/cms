@@ -7,6 +7,7 @@ import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
 import { getAI, mistralModel } from "@/lib/ai/client";
+import { getServerTSafe } from "@/i18n/server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -17,19 +18,20 @@ type Ctx = { params: Promise<{ id: string }> };
  * Body: { targetLocale: string }
  */
 export async function POST(req: NextRequest, { params }: Ctx) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("interactives"); if (capDenied) return capDenied;
 
   const { id } = await params;
   const { targetLocale } = await req.json() as { targetLocale: string };
   if (!targetLocale) {
-    return NextResponse.json({ error: "targetLocale required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.interactives.targetLocaleRequired") }, { status: 400 });
   }
 
   const adapter = await getMediaAdapter();
   const source = await adapter.getInteractive(id);
   if (!source) {
-    return NextResponse.json({ error: "Interactive not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.interactives.notFound") }, { status: 404 });
   }
 
   const siteConfig = await readSiteConfig();
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   // Auto-correct locale from detection + ensure translationGroup BEFORE rejection
   const sourceGroup = source.meta.translationGroup;
-  const translationGroupId = sourceGroup || `int-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  const translationGroupId = sourceGroup || `int-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`; // i18n-ignore: generated id
   const needsUpdate = !sourceGroup || (detectedLocale && source.meta.locale !== detectedLocale);
   if (needsUpdate) {
     await adapter.updateInteractive(id, {
@@ -57,7 +59,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (sourceLocale === targetLocale) {
     const fallback = siteConfig.locales?.find((l: string) => l !== sourceLocale) || siteConfig.defaultLocale || "da";
     if (fallback === sourceLocale) {
-      return NextResponse.json({ error: "No other locale available to translate to" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.interactives.noOtherLocale") }, { status: 400 });
     }
     actualTarget = fallback;
   }
@@ -91,14 +93,14 @@ CRITICAL RULES:
       ...mistralModel(model),
       maxTokens: 16384,
       system: systemPrompt,
-      messages: [{ role: "user", content: `Translate this HTML interactive from ${sourceLang} to ${actualTargetLang}:\n\n${source.content}` }],
+      messages: [{ role: "user", content: `Translate this HTML interactive from ${sourceLang} to ${actualTargetLang}:\n\n${source.content}` }], // i18n-ignore: model prompt
       purpose: "translate.interactive",
     });
     // Strip markdown code fences if present
     const cleanHtml = translatedHtml.replace(/^```html?\n?/i, "").replace(/\n?```$/i, "").trim();
 
     if (!cleanHtml.includes("<") || cleanHtml.length < 50) {
-      return NextResponse.json({ error: "AI returned invalid HTML" }, { status: 500 });
+      return NextResponse.json({ error: t("errApi.interactives.aiInvalidHtml") }, { status: 500 });
     }
 
     if (existing) {
@@ -108,13 +110,13 @@ CRITICAL RULES:
     } else {
       // Create new interactive with translated content
       const buffer = Buffer.from(cleanHtml, "utf-8");
-      const created = await adapter.createInteractive(`${translatedId}.html`, buffer);
+      const created = await adapter.createInteractive(`${translatedId}.html`, buffer); // i18n-ignore: file name
       // Set locale + translationGroup on the new interactive
       await adapter.updateInteractive(created.id, { locale: actualTarget, translationGroup: translationGroupId });
       return NextResponse.json({ id: created.id, action: "created" });
     }
   } catch (err) {
     console.error("[interactive-translate] AI translation failed:", err);
-    return NextResponse.json({ error: "AI translation failed" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.interactives.aiTranslationFailed") }, { status: 500 });
   }
 }

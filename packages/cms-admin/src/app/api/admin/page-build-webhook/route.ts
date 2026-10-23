@@ -76,11 +76,11 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   let payload: PageBuildPayload;
   try { payload = JSON.parse(rawBody); }
-  catch { return NextResponse.json({ error: "invalid JSON" }, { status: 400 }); }
+  catch { return NextResponse.json({ error: "invalid JSON" } /* i18n-ignore: reply to GitHub webhook, never shown to a person */, { status: 400 }); }
 
   const repo = payload.repository?.full_name;
   if (!repo) {
-    return NextResponse.json({ error: "missing repository.full_name" }, { status: 400 });
+    return NextResponse.json({ error: "missing repository.full_name" } /* i18n-ignore: reply to GitHub webhook, never shown to a person */, { status: 400 });
   }
 
   const candidates = await findSiteSecretsByRepo(repo);
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   if (matched === 0) {
-    return NextResponse.json({ error: "no matching site secret verified" }, { status: 401 });
+    return NextResponse.json({ error: "no matching site secret verified" } /* i18n-ignore: reply to GitHub webhook, never shown to a person */, { status: 401 });
   }
   return NextResponse.json({ ok: true, matched, repo });
 }

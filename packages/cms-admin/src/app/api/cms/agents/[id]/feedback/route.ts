@@ -16,6 +16,7 @@ import {
   type FeedbackType,
 } from "@/lib/agent-feedback";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET(
   request: NextRequest,
@@ -35,6 +36,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getServerTSafe();
   const denied = await denyViewers();
   if (denied) return denied;
   const { id } = await params;
@@ -50,12 +52,12 @@ export async function POST(
 
   if (!body || !body.type) {
     return NextResponse.json(
-      { error: "type is required (correction|rejection|edit)" },
+      { error: t("errCms.agentFeedback.typeRequired") },
       { status: 400 },
     );
   }
   if (!["correction", "rejection", "edit"].includes(body.type)) {
-    return NextResponse.json({ error: "invalid type" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.agentFeedback.invalidType") }, { status: 400 });
   }
 
   try {
@@ -69,7 +71,7 @@ export async function POST(
     });
     return NextResponse.json(entry);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to record feedback";
+    const msg = err instanceof Error ? err.message : t("errCms.agentFeedback.recordFailed");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

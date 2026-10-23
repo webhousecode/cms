@@ -3,23 +3,25 @@ import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("settings.edit"); if (denied) return denied;
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: t("errAdmin.common.unauthorized") }, { status: 401 });
   }
 
   const { to } = (await request.json()) as { to?: string };
   if (!to) {
-    return NextResponse.json({ error: "Recipient email required" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.emailTest.recipientRequired") }, { status: 400 });
   }
 
   const result = await sendEmail({
     to,
-    subject: "Test email from webhouse.app",
+    subject: "Test email from webhouse.app", // i18n-ignore: e-mail body/subject (F210.4)
     html: `<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>

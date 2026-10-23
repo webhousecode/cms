@@ -275,15 +275,15 @@ async function sendRevalidationAlert(plan: RetryPlan): Promise<void> {
   const totalAttempts = plan.retryDelaysMs.length + 1;
   const siteLabel = plan.site.name ?? plan.site.id ?? "unknown";
   const message =
-    `:rotating_light: **ICD revalidation failed** — ${siteLabel}\n` +
+    `:rotating_light: **ICD revalidation failed** — ${siteLabel}\n` + // i18n-ignore: Discord webhook payload (F210.4)
     `Collection: \`${plan.payload.collection}\`  ` +
     `Slug: \`${plan.payload.slug}\`  ` +
     `Action: \`${plan.payload.action}\`\n` +
     `Webhook URL: \`${plan.url}\`\n` +
-    `Attempts: ${totalAttempts} (sync + ${plan.retryDelaysMs.length} retries)\n` +
+    `Attempts: ${totalAttempts} (sync + ${plan.retryDelaysMs.length} retries)\n` + // i18n-ignore: Discord webhook payload (F210.4)
     `Time: ${new Date().toISOString()}\n` +
-    `Live site is now stale for the affected paths until the next successful revalidate. ` +
-    `Check Site Settings → Revalidation log for the latest attempt error.`;
+    `Live site is now stale for the affected paths until the next successful revalidate. ` + // i18n-ignore: Discord webhook payload (F210.4)
+    `Check Site Settings → Revalidation log for the latest attempt error.`; // i18n-ignore: Discord webhook payload (F210.4)
 
   // Fire-and-forget alert. One quick try, no retries on the alert
   // itself — if Discord is also down we accept the loss rather than

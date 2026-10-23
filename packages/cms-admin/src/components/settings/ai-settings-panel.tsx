@@ -34,7 +34,7 @@ const PROVIDERS = [
   },
   {
     id: "gemini" as const,
-    label: "Google Gemini",
+    label: "Google Gemini", // i18n-ignore: product name
     field: "geminiApiKey" as const,
     placeholder: "AIza…",
     docsUrl: "https://aistudio.google.com/api-keys",
@@ -261,8 +261,8 @@ export function AISettingsPanel() {
         {/* Provider selector */}
         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
           {([
-            { id: "brave" as const, label: "Brave Search", url: "https://api.search.brave.com/register" },
-            { id: "tavily" as const, label: "Tavily", url: "https://tavily.com/" },
+            { id: "brave" as const, label: "Brave Search", url: "https://api.search.brave.com/register" }, // i18n-ignore: provider brand name
+            { id: "tavily" as const, label: "Tavily", url: "https://tavily.com/" }, // i18n-ignore: provider brand name
           ]).map((p) => (
             <button
               data-testid="websearch-provider-button"
@@ -291,8 +291,8 @@ export function AISettingsPanel() {
           const provider = config.webSearchProvider ?? "brave";
           const keyField = provider === "brave" ? "braveApiKey" : "tavilyApiKey";
           const currentKey = provider === "brave" ? config.braveApiKey : config.tavilyApiKey;
-          const providerLabel = provider === "brave" ? "Brave" : "Tavily";
-          const placeholder = provider === "brave" ? "BSA…" : "tvly-…";
+          const providerLabel = provider === "brave" ? "Brave" : "Tavily"; // i18n-ignore: provider brand names
+          const placeholder = provider === "brave" ? "BSA…" : "tvly-…"; // i18n-ignore: credential format example
 
           return (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>

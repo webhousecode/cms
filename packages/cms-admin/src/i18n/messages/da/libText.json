@@ -1,0 +1,669 @@
+{
+  "aiPrompts": {
+    "chatSystem": {
+      "label": "AI-chat — systemprompt",
+      "description": "Systemprompt til AI-assistent-chatten i editoren. Variabler: {collectionName}, {fieldDescriptions}"
+    },
+    "generateSystem": {
+      "label": "Generér artikel — systemprompt",
+      "description": "Systemprompt til generering af hele artikler fra samlingslisten eller editoren. Variabler: {brandVoice}, {schemaInstructions}"
+    },
+    "rewriteSystem": {
+      "label": "Omskriv — systemprompt",
+      "description": "Systemprompt til omskrivning i tekstmenuen (bubble menu)."
+    },
+    "agentRunnerSchema": {
+      "label": "Agent-kørsel — skemainstruktioner",
+      "description": "Føjes til hver agent-kørsel. Fortæller modellen hvordan JSON-svaret skal formateres. Variabler: {fieldList}"
+    },
+    "agentGeneratePrompt": {
+      "label": "Agent — autogenerér systemprompt",
+      "description": "Prompt der autogenererer en agents systemprompt ud fra rolle og navn."
+    },
+    "agentCreateFromDescription": {
+      "label": "Agent — opret fra beskrivelse",
+      "description": "Systemprompt der genererer en hel agent-opsætning ud fra en beskrivelse i almindeligt sprog."
+    },
+    "interactivesGenerate": {
+      "label": "Interaktive elementer — opret med AI",
+      "description": "Systemprompt der genererer nye selvstændige HTML-elementer ud fra brugerens beskrivelse."
+    },
+    "interactivesEdit": {
+      "label": "Interaktive elementer — redigér med AI",
+      "description": "Systemprompt til at ændre eksisterende interaktive HTML-elementer via chat. Variabler: {title}, {interactiveId}"
+    }
+  },
+  "jsonLd": {
+    "article": {
+      "fields": {
+        "headline": {
+          "label": "Overskrift",
+          "placeholder": "Artiklens titel"
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Kort resumé"
+        },
+        "datePublished": {
+          "label": "Udgivet"
+        },
+        "dateModified": {
+          "label": "Ændret"
+        },
+        "authorName": {
+          "label": "Forfatter",
+          "placeholder": "Forfatterens navn"
+        },
+        "image": {
+          "label": "Billed-URL"
+        }
+      },
+      "label": "Artikel",
+      "description": "Blogindlæg eller nyhedsartikel"
+    },
+    "faq": {
+      "fields": {
+        "headline": {
+          "label": "Sidetitel",
+          "placeholder": "Titel på FAQ-siden"
+        }
+      },
+      "label": "FAQ",
+      "description": "Ofte stillede spørgsmål"
+    },
+    "product": {
+      "fields": {
+        "name": {
+          "label": "Produktnavn",
+          "placeholder": "Produktets titel"
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Produktbeskrivelse"
+        },
+        "image": {
+          "label": "Billed-URL"
+        },
+        "price": {
+          "label": "Pris"
+        },
+        "currency": {
+          "label": "Valuta"
+        },
+        "availability": {
+          "label": "Tilgængelighed"
+        }
+      },
+      "label": "Produkt",
+      "description": "Produkt med pris"
+    },
+    "event": {
+      "fields": {
+        "name": {
+          "label": "Begivenhedens navn",
+          "placeholder": "Begivenhedens titel"
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Beskrivelse af begivenheden"
+        },
+        "startDate": {
+          "label": "Startdato"
+        },
+        "endDate": {
+          "label": "Slutdato"
+        },
+        "locationName": {
+          "label": "Sted",
+          "placeholder": "Stedets navn"
+        },
+        "locationAddress": {
+          "label": "Adresse",
+          "placeholder": "Vej, by"
+        },
+        "image": {
+          "label": "Billed-URL"
+        }
+      },
+      "label": "Begivenhed",
+      "description": "Begivenhed med dato og sted"
+    },
+    "person": {
+      "fields": {
+        "name": {
+          "label": "Navn",
+          "placeholder": "Fulde navn"
+        },
+        "jobTitle": {
+          "label": "Stillingsbetegnelse",
+          "placeholder": "Softwareudvikler"
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Kort præsentation"
+        },
+        "image": {
+          "label": "Billed-URL"
+        },
+        "url": {
+          "label": "Website"
+        }
+      },
+      "label": "Person",
+      "description": "Profilside for en person"
+    },
+    "organization": {
+      "fields": {
+        "name": {
+          "label": "Navn",
+          "placeholder": "Organisationens navn"
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Om"
+        },
+        "url": {
+          "label": "Website"
+        },
+        "logo": {
+          "label": "Logo-URL"
+        }
+      },
+      "label": "Organisation",
+      "description": "Virksomhed eller organisation"
+    },
+    "localBusiness": {
+      "fields": {
+        "name": {
+          "label": "Virksomhedens navn",
+          "placeholder": "Virksomhedens navn"
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Om"
+        },
+        "streetAddress": {
+          "label": "Gade",
+          "placeholder": "Hovedgaden 1"
+        },
+        "city": {
+          "label": "By",
+          "placeholder": "Aalborg"
+        },
+        "postalCode": {
+          "label": "Postnummer"
+        },
+        "country": {
+          "label": "Land"
+        },
+        "phone": {
+          "label": "Telefon"
+        },
+        "image": {
+          "label": "Billed-URL"
+        }
+      },
+      "label": "Lokal virksomhed",
+      "description": "Lokal virksomhed med adresse"
+    },
+    "howto": {
+      "fields": {
+        "name": {
+          "label": "Guidens titel",
+          "placeholder": "Sådan..."
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Hvad guiden lærer dig"
+        },
+        "totalTime": {
+          "label": "Samlet tid",
+          "placeholder": "PT30M (30 min)"
+        },
+        "image": {
+          "label": "Billed-URL"
+        }
+      },
+      "label": "Vejledning (HowTo)",
+      "description": "Trin-for-trin-guide eller vejledning"
+    },
+    "service": {
+      "fields": {
+        "name": {
+          "label": "Ydelsens navn",
+          "placeholder": "Webudvikling"
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Hvad ydelsen omfatter"
+        },
+        "provider": {
+          "label": "Udbyderens navn",
+          "placeholder": "Virksomhedens navn"
+        },
+        "areaServed": {
+          "label": "Område",
+          "placeholder": "Danmark"
+        },
+        "image": {
+          "label": "Billed-URL"
+        }
+      },
+      "label": "Ydelse",
+      "description": "Professionel ydelse"
+    },
+    "software": {
+      "fields": {
+        "name": {
+          "label": "Appens navn",
+          "placeholder": "Appens navn"
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Hvad appen gør"
+        },
+        "applicationCategory": {
+          "label": "Kategori"
+        },
+        "operatingSystem": {
+          "label": "Styresystem",
+          "placeholder": "Web, macOS, Windows"
+        },
+        "price": {
+          "label": "Pris",
+          "placeholder": "0 (gratis) eller 29.00"
+        },
+        "currency": {
+          "label": "Valuta"
+        },
+        "image": {
+          "label": "Billed-URL"
+        }
+      },
+      "label": "Software",
+      "description": "Softwareprogram eller SaaS-produkt"
+    },
+    "breadcrumb": {
+      "fields": {
+        "item1Name": {
+          "label": "Niveau 1",
+          "placeholder": "Forside"
+        },
+        "item1Url": {
+          "label": "URL for niveau 1"
+        },
+        "item2Name": {
+          "label": "Niveau 2",
+          "placeholder": "Blog"
+        },
+        "item2Url": {
+          "label": "URL for niveau 2"
+        },
+        "item3Name": {
+          "label": "Niveau 3 (aktuel)",
+          "placeholder": "Artiklens titel"
+        }
+      },
+      "label": "Brødkrummesti",
+      "description": "Brødkrummesti til navigation (dannes automatisk ud fra URL'en)"
+    },
+    "website": {
+      "fields": {
+        "name": {
+          "label": "Sitets navn",
+          "placeholder": "Mit website"
+        },
+        "url": {
+          "label": "Sitets URL"
+        },
+        "description": {
+          "label": "Beskrivelse",
+          "placeholder": "Beskrivelse af sitet"
+        },
+        "searchUrl": {
+          "label": "Skabelon for søge-URL"
+        }
+      },
+      "label": "Website (WebSite)",
+      "description": "Skema for hele sitet med søgefunktion (brug på forsiden)"
+    }
+  },
+  "lighthouseOptimize": {
+    "linkName": {
+      "title": "Links har ikke et genkendeligt navn",
+      "description": "Tilføj beskrivende tekst til alle <a>-links i dit indhold. Undgå tomme links og links med kun et ikon."
+    },
+    "colorContrast": {
+      "title": "Kontrastforhold mellem baggrund og forgrund",
+      "description": "Justér sitets CSS så tekst har mindst 4,5:1 i kontrast til baggrunden. Brug et værktøj til kontrastmåling."
+    },
+    "renderBlockingResources": {
+      "title": "Ressourcer der blokerer visningen",
+      "description": "Udskyd ikke-kritisk CSS/JS. På statiske sites: læg den kritiske CSS inline. Next.js klarer det automatisk."
+    },
+    "unusedJavascript": {
+      "title": "Reducér ubrugt JavaScript",
+      "description": "Fjern ubrugte JS-biblioteker eller brug dynamiske imports. I Next.js: slå tree-shaking og code splitting til."
+    },
+    "usesResponsiveImages": {
+      "title": "Brug billeder i den rigtige størrelse",
+      "description": "Brug CMS'ets billedbehandling (F44) til at lave responsive varianter. Tilføj width/height-attributter til alle billeder."
+    },
+    "offscreenImages": {
+      "title": "Udskyd billeder uden for skærmen",
+      "description": "Tilføj loading=\"lazy\" til billeder under folden. CMS'ets byg gør det automatisk på statiske sites."
+    },
+    "largestContentfulPaint": {
+      "title": "Largest Contentful Paint",
+      "description": "Optimér dit største synlige element. Typiske rettelser: komprimér topbilledet, brug WebP, preload LCP-billedet, reducér serverens svartid."
+    },
+    "cumulativeLayoutShift": {
+      "title": "Cumulative Layout Shift",
+      "description": "Giv billeder og indlejringer eksplicit width/height. Undgå at indsætte indhold over eksisterende indhold. Brug font-display: swap."
+    },
+    "firstContentfulPaint": {
+      "title": "First Contentful Paint",
+      "description": "Reducér serverens svartid, fjern ressourcer der blokerer visningen, og preload kritiske filer."
+    },
+    "serverResponseTime": {
+      "title": "Serverens svartid (TTFB)",
+      "description": "Brug et CDN, slå caching til og optimér server-side rendering. På Fly.io: sørg for at maskinen står i den nærmeste region."
+    },
+    "domSize": {
+      "title": "DOM'en er for stor",
+      "description": "Forenkl sidens struktur. Lazy-load tunge sektioner. Del lange lister op i sider."
+    },
+    "redirects": {
+      "title": "Undgå flere omdirigeringer",
+      "description": "Lad links pege direkte på den endelige URL. Fjern unødvendige kæder af omdirigeringer."
+    },
+    "totalByteWeight": {
+      "title": "Siden fylder for meget",
+      "description": "Komprimér billeder, fjern ubrugt CSS/JS, og slå gzip/brotli-komprimering til på serveren."
+    },
+    "autoFixFailed": "Automatisk rettelse fejlede: {error}",
+    "unknownError": "ukendt fejl",
+    "documentTitle": {
+      "title": "Manglende sidetitler",
+      "fixed": "Tilføjede metatitler til {count} dokumenter ud fra deres titel."
+    },
+    "metaDescription": {
+      "title": "Manglende metabeskrivelser",
+      "fixed": "Tilføjede metabeskrivelser til {count} dokumenter ud fra deres uddrag."
+    },
+    "hreflang": {
+      "title": "Manglende hreflang",
+      "okTitle": "hreflang-tags",
+      "oneLocale": "Sitet har kun ét sprog sat op. Tilføj flere sprog under Site-indstillinger → Sprog for at slå hreflang til.",
+      "switched": "Skiftede sprogstrategi fra \"none\" til \"prefix-other\" — bygget laver nu hreflang-tags automatisk for {count} sprog.",
+      "configured": "hreflang er sat op ({locales} med strategien \"{strategy}\"). Bygget laver hreflang-tags automatisk."
+    },
+    "htmlLang": {
+      "title": "HTML-attributten lang",
+      "defaultSet": "Standardsproget er sat. Bygget tilføjer automatisk lang-attributten til <html>.",
+      "configured": "Standardsproget \"{locale}\" er sat op. Bygget tilføjer lang=\"{locale}\" til <html>."
+    },
+    "mainLandmark": {
+      "title": "Manglende <main>-landmærke",
+      "description": "Pak sidens indhold ind i et <main>-element. I Next.js: tilføj <main> i layout.tsx. På statiske sites: byggets skabelon skal have <main> omkring {content}. Tjek din build.ts eller layout-komponent."
+    },
+    "imageAlt": {
+      "missingTitle": "Billeder uden alt-tekst",
+      "missing": "Fandt {count} billeder uden alt-tekst. Gå til Medier og kør \"Analysér alle\" for at lave alt-tekst med AI, eller redigér de enkelte dokumenter.",
+      "okTitle": "Alt-tekst på billeder",
+      "ok": "Alle billeder har alt-tekst."
+    },
+    "fontDisplay": {
+      "title": "Skrifttype-visning",
+      "description": "Tilføj font-display: swap til dine @font-face-erklæringer eller Google Fonts-URL'en (&display=swap). Så er teksten synlig mens skrifttypen indlæses."
+    }
+  },
+  "lighthouseRunner": {
+    "localhost": "Kan ikke måle localhost-adresser — PSI kræver en offentlig URL. Udgiv sitet først, og scan så den rigtige adresse."
+  },
+  "psiEngine": {
+    "quotaExceeded": "Dagens kvote er brugt — tilføj din egen PageSpeed Insights-nøgle nedenfor og få 25.000 gratis scanninger om dagen.",
+    "invalidUrl": "Ugyldig URL — sørg for at sitet er offentligt tilgængeligt (ikke localhost).",
+    "unavailable": "Google PageSpeed Insights er midlertidigt utilgængelig. Prøv igen om et par minutter.",
+    "error": "PageSpeed Insights svarede med en fejl ({status}). Tjek at URL'en er rigtig, og at sitet er online.",
+    "invalidResponse": "Ugyldigt svar fra PSI: lighthouseResult mangler"
+  },
+  "imageAnalysis": {
+    "noVisionKey": "Der er ingen API-nøgle til billedanalyse. Tilføj en Mistral- eller Gemini-nøgle under Cockpit → Indstillinger."
+  },
+  "imageGeneration": {
+    "promptRequired": "Skriv en beskrivelse af billedet",
+    "promptTooLong": "Beskrivelsen af billedet er for lang (højst 4000 tegn)",
+    "notSetUp": "Billedgenerering er ikke sat op: BFL_API_KEY mangler.",
+    "outsideEu": "Billedgenereringen svarede uden for EU (udbyder {provider}, region {region}); afvist.",
+    "downloadFailed": "Download af billedet fejlede: {status}",
+    "notAnImage": "Det hentede var ikke et billede ({type})",
+    "noContentType": "ingen content-type"
+  },
+  "formsService": {
+    "submissionNotFound": "Indsendelsen findes ikke"
+  },
+  "formsStore": {
+    "configFormNotEditable": "Formularen \"{name}\" er defineret i cms.config.ts og kan ikke ændres fra admin",
+    "configFormNotDeletable": "Formularen \"{name}\" er defineret i cms.config.ts og kan ikke slettes fra admin",
+    "formNotFound": "Formularen findes ikke"
+  },
+  "seoKeywords": {
+    "empty": "Søgeordet må ikke være tomt",
+    "alreadyTracked": "Søgeordet \"{keyword}\" følges allerede"
+  },
+  "podcastApi": {
+    "unauthorized": "Ikke logget ind",
+    "lensReadOnly": "Lens-sessionen er skrivebeskyttet",
+    "forbidden": "Ingen adgang",
+    "missingPermission": "mangler tilladelsen {permission}"
+  },
+  "podcastCommon": {
+    "unknownError": "ukendt fejl",
+    "and": " og ",
+    "or": " eller ",
+    "tooFewLines": "kun {count} replik(ker) — et afsnit er en samtale, ikke et oplæg (mindst {min})"
+  },
+  "podcastManuscript": {
+    "noJsonList": "svaret indeholder ingen JSON-liste",
+    "jsonUnreadable": "JSON-listen kunne ikke læses: {error}",
+    "notAList": "svaret er ikke en liste",
+    "lineNotObject": "replik {index} er ikke et objekt",
+    "unknownSpeaker": "replik {index} har taleren «{speaker}» — kun {hosts} findes",
+    "lineNoText": "replik {index} ({speaker}) har ingen tekst",
+    "oneHostOnly": "kun «{speaker}» taler — et afsnit med to værter skal have begge"
+  },
+  "podcastState": {
+    "alreadyIn": "afsnittet er allerede «{state}»",
+    "unknownState": "ukendt tilstand «{state}»",
+    "illegalTransition": "«{from}» kan ikke gå til «{to}» — herfra er kun {allowed} lovlig",
+    "alreadyRecorded": "afsnittet er allerede indspillet — en ny indspilning koster igen. Ret manuskriptet først, så falder godkendelsen bort af sig selv.",
+    "notApproved": "manuskriptet er ikke godkendt (står som «{state}»). Indspilning bruger rigtige penge, så den kræver at et menneske har læst teksten."
+  },
+  "podcastTextFormat": {
+    "episode": "afsnit {n}",
+    "season": "sæson {n}",
+    "headerFormat": "FORMAT: «AIDAN:» eller «AIRINA:» på sin egen linje, replikken under.",
+    "headerIgnored": "Tomme linjer og linjer der starter med # ignoreres.",
+    "headerNames": "Skift ikke navnene — kun de to værter findes.",
+    "speakerNoText": "linje {line}: «{speaker}:» har ingen tekst under sig",
+    "notAHost": "linje {line}: «{speaker}» er ikke en af værterne. Kun {hosts} findes.",
+    "textBeforeSpeaker": "linje {line}: der står tekst før den første taler. Hver replik skal begynde med «AIDAN:» eller «AIRINA:» på sin egen linje.",
+    "noLines": "filen indeholder ingen replikker",
+    "lineCount": {
+      "one": "{count} replik",
+      "other": "{count} replikker"
+    }
+  },
+  "podcastStore": {
+    "missingCollection": "dette site har ingen «{collection}»-samling. Podcast-motoren er slået fra indtil den er erklæret i cms.config.ts — se docs/features/F189-podcast-engine-api.md for skemaet. Motoren opretter den ikke selv: en ugyldig config tager hele sitet ned, og vejen tilbage går gennem den samme config.",
+    "missingAfterWrite": "afsnittet «{slug}» findes ikke efter skrivningen",
+    "alreadyExists": "afsnittet «{slug}» findes allerede"
+  },
+  "podcastSponsors": {
+    "missingCollection": "dette site har ingen «{collection}»-samling. Sponsorindslag er slået fra indtil den er erklæret i cms.config.ts — se docs/features/F191-sponsorindslag.md for skemaet.",
+    "missingAfterWrite": "indslaget «{slug}» findes ikke efter skrivningen",
+    "paused": "indslaget er sat på pause",
+    "noAudio": "indslaget har ingen lyd endnu",
+    "inUse": "indslaget er i brug i {count} afsnit: {episodes}. Fjern det fra dem først, eller sæt det på pause i stedet for at slette det."
+  },
+  "podcastGenerate": {
+    "withdrawApprovalFirst": "afsnittet står som «{state}» — træk godkendelsen tilbage først (sæt tilstanden til «{next}»). En genskrivning uden det ville lave teksten om under en godkendelse der stadig stod ved magt.",
+    "articleNotFound": "artiklen «{article}» findes ikke",
+    "articleTooShort": "artiklen har kun {count} tegn brødtekst — for lidt til et afsnit",
+    "modelNoAnswer": "modellen svarede ikke: {error}",
+    "scriptRejected": "manuskriptet blev afvist: {reason}"
+  },
+  "podcastRecord": {
+    "episodeNotFound": "afsnittet «{slug}» findes ikke",
+    "emptyScript": "manuskriptet er tomt",
+    "recordingFailed": "indspilningen fejlede: {error}",
+    "paidButNotSaved": "lyden blev lavet (og betalt) men kunne ikke gemmes: {error}. Prøv igen — det koster igen.",
+    "sponsorNotFound": "sponsorindslaget «{slug}» findes ikke",
+    "sponsorAudioUnreadable": "sponsorindslagets lydfil kunne ikke læses ({url}). Indslaget peger på en fil der ikke er der."
+  },
+  "podcastStitch": {
+    "decodeFailed": "afkodningen fejlede",
+    "noPieces": "der er ingen lydstykker at samle",
+    "pieceLengthUnknown": "kunne ikke måle længden af lydstykket",
+    "ffmpegMissing": "ffmpeg mangler på serveren, og uden den kan lydstykkerne ikke samles. Tilføj den til imaget (apt-get install ffmpeg) — en ren sammenkædning giver en fil der ser hel ud og går i stå ved samlingen.",
+    "joinedLengthUnknown": "den samlede fil kunne ikke måles",
+    "joinFailed": "sammenføjningen fejlede"
+  },
+  "podcastVoices": {
+    "noKey": "der er ingen ElevenLabs-nøgle på dette site",
+    "noVoices": "udbyderen svarede uden en eneste stemme",
+    "lookupFailed": "opslaget fejlede"
+  },
+  "onboardingTours": {
+    "welcomeDashboard": {
+      "title": "Velkommen til dit Dashboard",
+      "body": "Dit kontrolcenter. Indholdsstatistik, seneste aktivitet og hurtige handlinger — alt samlet ét sted."
+    },
+    "welcomeContent": {
+      "title": "Dit indhold",
+      "body": "Alle dine collections bor her — sider, indlæg og alle de indholdstyper du definerer i cms.config.ts."
+    },
+    "welcomeChat": {
+      "title": "Chat med dit site",
+      "body": "Generér sider, oversæt indhold, optimér SEO eller administrér hele dit site via naturlig samtale. 47 værktøjer til rådighed."
+    },
+    "welcomeAgents": {
+      "title": "AI-agenter",
+      "body": "Automatiserede arbejdere der skriver, oversætter, optimerer og opdaterer dit indhold efter tidsplan. Opsæt dem én gang."
+    },
+    "welcomeMedia": {
+      "title": "Mediebibliotek",
+      "body": "Upload billeder, videoer og filer. AI genererer automatisk alt-tekst, billedtekster og tags for hvert billede."
+    },
+    "welcomeTools": {
+      "title": "Værktøjer & SEO",
+      "body": "SEO-score, linkchecker, backup, AI-analyse og synligheds-dashboard — alt for at holde dit site sundt og synligt."
+    },
+    "welcomeDone": {
+      "title": "Du er klar!",
+      "body": "Klik på en collection for at oprette indhold. Brug hjælp? Åbn Chat og spørg om hvad som helst."
+    },
+    "docTitle": {
+      "title": "Giv den en titel",
+      "body": "Hvert dokument starter med en titel. Den bruges i navigation, SEO og søgning på tværs af dit site."
+    },
+    "docEditor": {
+      "title": "Skriv dit indhold",
+      "body": "Rich text med markdown, billeder, tabeller og kodeblokke. Skriv / for slash-kommandoer eller begynd bare at skrive."
+    },
+    "docActionBar": {
+      "title": "Gem & publicér",
+      "body": "Gem dit dokument med ⌘S. Sæt status til Publiceret når det er klar. SEO-panelet optimerer din meta automatisk."
+    }
+  },
+  "seoScore": {
+    "labelMetaTitle": "Metatitel",
+    "labelMetaDesc": "Metabeskrivelse",
+    "labelKeywordTitle": "Søgeord i titel",
+    "labelKeywordDesc": "Søgeord i beskrivelse",
+    "labelContentLength": "Indholdets længde",
+    "labelHeadings": "Overskriftsstruktur",
+    "labelImgAlt": "Alt-tekst på billeder",
+    "labelOgImage": "Delingsbillede",
+    "labelKeywordSlug": "Søgeord i URL",
+    "labelInternalLinks": "Interne links",
+    "labelTitle": "Sidetitel",
+    "labelReadability": "Læsbarhed",
+    "labelUniqueTitle": "Unik titel",
+    "labelGeoAnswerFirst": "🤖 Svar først",
+    "labelGeoQuestionHeaders": "🤖 Spørgsmål som overskrifter",
+    "labelGeoStatistics": "🤖 Statistik",
+    "labelGeoCitations": "🤖 Kilder",
+    "labelGeoFreshness": "🤖 Aktualitet",
+    "labelGeoJsonLd": "🤖 Strukturerede data",
+    "labelGeoAuthor": "🤖 Forfatter",
+    "labelGeoDepth": "🤖 Indholdets dybde",
+    "metaTitleMissing": "Metatitlen mangler. Skriv en titel til søgeresultaterne ({min}-{max} tegn).",
+    "metaTitleShort": "Metatitlen er for kort ({len} tegn). Tilføj flere ord, så den når {min}-{max} tegn.",
+    "metaTitleLong": "Metatitlen er for lang ({len} tegn). Google klipper efter {max}. Gør den kortere.",
+    "metaTitleGood": "Metatitlens længde er god ({len}/{max} tegn)",
+    "metaDescMissing": "Metabeskrivelsen mangler. Skriv en beskrivelse til søgeresultaterne ({min}-{max} tegn).",
+    "metaDescShort": "Metabeskrivelsen er for kort ({len} tegn). Tilføj {add} tegn mere, så den når {min}.",
+    "metaDescLong": "Metabeskrivelsen er for lang ({len} tegn). Google klipper efter {max}. Fjern {remove} tegn.",
+    "metaDescGood": "Metabeskrivelsens længde er god ({len}/{max} tegn)",
+    "keywordInTitle": "Søgeordet \"{keyword}\" findes i metatitlen",
+    "keywordNotInTitle": "Tilføj søgeordet \"{keyword}\" i metatitel-feltet ovenfor.",
+    "keywordInDesc": "Søgeordet \"{keyword}\" findes i metabeskrivelsen",
+    "keywordNotInDesc": "Tilføj søgeordet \"{keyword}\" i metabeskrivelses-feltet ovenfor.",
+    "contentTooThin": "Indholdet er kun på {wc} ord. Skriv mindst 300 ord, så søgemaskinerne kan indeksere det ordentligt.",
+    "contentShort": "Indholdet er på {wc} ord. Skriv {more} ord mere for at nå 300 (anbefalet minimum).",
+    "contentGood": "Indholdet er på {wc} ord (300+ er godt)",
+    "headingsGood": "Indholdet bruger H2-overskrifter til struktur",
+    "headingsMissing": "Indholdet har ingen H2-overskrifter. Del teksten op med ## mellemrubrikker.",
+    "imgAltMissing": "{missing} af {total} billeder mangler alt-tekst. Redigér hvert billede og tilføj en beskrivelse.",
+    "imgAltGood": "Alle {total} billeder har alt-tekst",
+    "ogImageSet": "Delingsbillede (OG) er sat",
+    "ogImageMissing": "Intet delingsbillede er sat. Tilføj et billede i feltet \"Social image (OG)\" ovenfor — det vises, når nogen deler siden på Facebook/LinkedIn.",
+    "keywordInSlug": "Søgeordet \"{keyword}\" findes i URL'en",
+    "keywordNotInSlug": "Søgeordet \"{keyword}\" er ikke med i URL-sluggen ({slug}). Overvej at omdøbe sluggen under Egenskaber.",
+    "internalLinksGood": "Indholdet linker til andre sider på sitet",
+    "internalLinksMissing": "Ingen interne links. Tilføj links til andre sider på dit site (fx relaterede indlæg) for at styrke SEO.",
+    "titleGood": "Siden har en titel",
+    "titleMissing": "Siden har ingen titel. Udfyld titelfeltet øverst i editoren.",
+    "readabilityEasy": "Læsbarheden er {score}/100 — let at læse",
+    "readabilityMedium": "Læsbarheden er {score}/100 — overvej kortere sætninger og enklere ord",
+    "readabilityHard": "Læsbarheden er {score}/100 — teksten er meget svær at læse. Brug kortere sætninger og enklere ord.",
+    "titleDuplicate": "Metatitlen \"{title}\" bruges af {count} dokumenter. Hver side bør have sin egen titel.",
+    "titleUnique": "Metatitlen er unik på tværs af alle dokumenter",
+    "geoAnswerFirstPass": "De første 200 ord indeholder et direkte svar med fakta",
+    "geoAnswerFirstWarn": "Indledningen er OK, men kunne starte med et stærkere faktuelt svar. Tilføj et tal eller en statistik i første afsnit.",
+    "geoAnswerFirstFail": "Indledningen giver ikke et direkte svar. Omskriv, så første afsnit besvarer sidens hovedspørgsmål.",
+    "geoQuestionHeadersPass": "{questions}/{total} overskrifter er spørgsmål ({pct}% — AI-platforme matcher dem med brugernes spørgsmål)",
+    "geoQuestionHeadersWarn": "Kun {questions}/{total} overskrifter er spørgsmål. Omformulér nogle H2'ere som spørgsmål (fx \"Hvordan virker X?\") — AI-platforme matcher dem med søgninger.",
+    "geoStatisticsPass": "Indholdet har konkrete statistikker — AI-platforme foretrækker at citere påstande med data bag",
+    "geoStatisticsWarn": "Indholdet har tal, men ingen tydelige statistikker. Tilføj procenter, priser eller målbare datapunkter.",
+    "geoStatisticsFail": "Ingen statistikker fundet. Tilføj konkrete tal, procenter eller datapunkter — AI-systemer foretrækker klart fakta, der kan citeres.",
+    "geoCitationsPass": "Indholdet henviser til eksterne kilder — det styrker troværdigheden, når AI citerer",
+    "geoCitationsWarn": "Ingen eksterne kilder angivet. Henvis til undersøgelser, datakilder eller autoritative sites for at øge AI's tillid.",
+    "geoFreshnessPass": "Opdateret for {days} dage siden — AI-platforme foretrækker kraftigt nyt indhold",
+    "geoFreshnessWarn": "Opdateret for {days} dage siden. Indhold ældre end 90 dage citeres mindre af AI. Opdatér de vigtigste fakta.",
+    "geoFreshnessFail": "Opdateret for {days} dage siden. Forældet indhold citeres sjældent af AI. Opdatér med aktuel information.",
+    "geoJsonLdPass": "JSON-LD-strukturerede data er sat op — det hjælper AI-systemer med at forstå sidens indhold",
+    "geoJsonLdPartial": "JSON-LD-skabelon er valgt, men ikke helt udfyldt. Udfyld felterne, så AI bedre forstår indholdet.",
+    "geoJsonLdMissing": "Ingen JSON-LD-strukturerede data. Vælg en skabelon (Article, FAQ, HowTo) under Avanceret, så AI kan kategorisere indholdet.",
+    "geoAuthorPass": "Forfatteren \"{author}\" er angivet — det giver AI E-E-A-T-tillidssignaler",
+    "geoAuthorMissing": "Ingen forfatter angivet. Tilføj et forfatternavn — AI-platforme stoler på indhold med tydeligt forfatterskab (E-E-A-T).",
+    "geoDepthPass": "{wc} ord — grundigt nok til, at AI kan citere det som en autoritativ kilde",
+    "geoDepthWarn": "{wc} ord — gå mere i dybden (800+ ord), så AI-platforme ser det som en autoritativ kilde",
+    "geoDepthFail": "Kun {wc} ord. AI-platforme citerer sjældent tyndt indhold. Sigt efter 800+ ord, der dækker emnet grundigt."
+  },
+  "podcastPreflight": {
+    "scriptHasContent": "Manuskriptet har indhold",
+    "noLines": "der er ingen replikker at indspille",
+    "pronunciationClean": "Udtale-ordbogen er ren",
+    "ipaRows": "{count} række(r) bruger IPA, som udbyderen afviser: {words}. Skriv dem om som lyd-alias.",
+    "bothVoices": "Begge stemmer er valgt",
+    "tooFewVoices": "kun {count} stemme(r) valgt — der skal to til en samtale",
+    "voicesRespond": "Stemmerne svarer",
+    "unknownVoices": "udbyderen kender ikke: {voices}",
+    "voicesNotChecked": "ikke slået op hos udbyderen endnu",
+    "yourApproval": "Din godkendelse",
+    "notApproved": "lyden kan ikke laves før manuskriptet er godkendt"
+  }
+}

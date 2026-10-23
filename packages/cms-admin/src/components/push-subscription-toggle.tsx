@@ -59,11 +59,11 @@ export function PushSubscriptionToggle(): React.ReactNode {
       const keyRes = await fetch("/api/admin/push/vapid-public-key");
       if (keyRes.status === 503) {
         const data = await keyRes.json();
-        setErrMsg(data.error ?? "VAPID key not configured");
+        setErrMsg(data.error ?? t("misc.pushToggle.vapidNotConfigured"));
         setState("no-vapid");
         return;
       }
-      if (!keyRes.ok) throw new Error(`vapid-public-key ${keyRes.status}`);
+      if (!keyRes.ok) throw new Error(t("misc.pushToggle.vapidKeyFailed", { status: keyRes.status }));
       const { publicKey } = await keyRes.json() as { publicKey: string };
 
       // 2. Permission
@@ -94,14 +94,14 @@ export function PushSubscriptionToggle(): React.ReactNode {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!regRes.ok) throw new Error(`register ${regRes.status}: ${await regRes.text()}`);
+      if (!regRes.ok) throw new Error(t("misc.pushToggle.registerFailed", { status: regRes.status, body: await regRes.text() }));
 
       setState("enabled");
     } catch (e) {
       setErrMsg(e instanceof Error ? e.message : String(e));
       setState("error");
     }
-  }, []);
+  }, [t]);
 
   const disable = useCallback(async () => {
     setState("loading"); setErrMsg(null);

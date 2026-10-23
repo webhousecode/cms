@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { getT } from "@/i18n/locale";
+
+// The note is shown in the reader's admin language (F211.2); these tests read it in Danish.
+const da = getT("da");
 
 /**
  * A previous answer is shown immediately, and it says how old it is.
@@ -37,7 +41,7 @@ describe("peekQuick after a content write", () => {
     await cache.storeQuick("site-info", "Dit site har 9 samlinger.");
     await cache.invalidateContentQuick();
 
-    const r = await cache.peekQuick("site-info");
+    const r = await cache.peekQuick("site-info", da);
     expect(r.cached, "a content write threw the answer away again — this is the 55s wait").toBe(true);
     expect(r.markdown).toContain("Dit site har 9 samlinger.");
   });
@@ -46,7 +50,7 @@ describe("peekQuick after a content write", () => {
     await cache.storeQuick("site-info", "Dit site har 9 samlinger.");
     await cache.invalidateContentQuick();
 
-    const r = await cache.peekQuick("site-info");
+    const r = await cache.peekQuick("site-info", da);
     expect(r.stale).toBe(true);
     expect(r.markdown, "a stale answer is being shown as if it were current")
       .toMatch(/Vist fra hukommelsen/);
@@ -57,7 +61,7 @@ describe("peekQuick after a content write", () => {
     // Without this, appending the note unconditionally would pass every test
     // above and put "shown from memory" on answers that are current.
     await cache.storeQuick("site-info", "Dit site har 9 samlinger.");
-    const r = await cache.peekQuick("site-info");
+    const r = await cache.peekQuick("site-info", da);
     expect(r.cached).toBe(true);
     expect(r.stale).toBeFalsy();
     expect(r.markdown).toBe("Dit site har 9 samlinger.");
@@ -68,7 +72,7 @@ describe("peekQuick after a content write", () => {
     await cache.invalidateContentQuick();
     await cache.storeQuick("site-info", "nyt");
 
-    const r = await cache.peekQuick("site-info");
+    const r = await cache.peekQuick("site-info", da);
     expect(r.stale, "the entry stayed marked stale after a successful regen").toBeFalsy();
     expect(r.markdown).toBe("nyt");
   });
@@ -80,7 +84,7 @@ describe("peekQuick after a content write", () => {
     await cache.storeQuick("site-info", "meget gammelt");
     const now = Date.now();
     vi.spyOn(Date, "now").mockReturnValue(now + 7 * 60 * 60 * 1000); // 7h > 6h bound
-    const r = await cache.peekQuick("site-info");
+    const r = await cache.peekQuick("site-info", da);
     expect(r.cached, "a 7-hour-old answer was served as a stand-in").toBe(false);
     expect(r.markdown).toBe("");
   });
@@ -90,7 +94,7 @@ describe("peekQuick after a content write", () => {
     // "shown from memory" note on an answer that cannot have gone stale.
     await cache.storeQuick("capabilities", "Jeg kan 65 ting.");
     await cache.invalidateContentQuick();
-    const r = await cache.peekQuick("capabilities");
+    const r = await cache.peekQuick("capabilities", da);
     expect(r.stale).toBeFalsy();
     expect(r.markdown).toBe("Jeg kan 65 ting.");
   });

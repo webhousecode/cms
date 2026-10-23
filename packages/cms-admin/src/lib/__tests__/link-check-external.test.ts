@@ -71,7 +71,8 @@ describe("a host that never answers is not a dead page", () => {
     expect(r.status).toBe("error");
     // The cause has to survive: "the domain does not exist" and "the host was
     // slow" are opposite findings, and an editor acts differently on each.
-    expect(r.error).toBe("Intet svar inden 6s");
+    // F211.2 — English outside a request; Danish is system.linkCheck.timeout in da.
+    expect(r.error).toBe("No response within 6s");
   });
 
   it("keeps a DNS failure's own words rather than calling it a timeout", async () => {

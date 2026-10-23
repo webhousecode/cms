@@ -2,16 +2,18 @@
 import type { NextRequest } from "next/server";
 import { kraevTilladelse, preflight, svar, PODCAST_PERMISSIONS } from "@/lib/podcast/api";
 import { genererManuskript } from "@/lib/podcast/generate";
+import { getServerTSafe } from "@/i18n/server";
 
 export const OPTIONS = preflight;
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.edit);
   if (afvist) return afvist.svar;
 
   const { slug } = await params;
   const krop = (await req.json().catch(() => ({}))) as { samling?: string; artikel?: string };
-  if (!krop.artikel) return svar(req, { error: "«artikel» (slug) mangler" }, 400);
+  if (!krop.artikel) return svar(req, { error: t("errApi.podcast.artikelMissing") }, 400);
 
   const resultat = await genererManuskript({
     afsnitSlug: slug,

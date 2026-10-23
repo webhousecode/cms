@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { getAdminCmsForSite } from "@/lib/cms";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/mobile/content/search?orgId=...&siteId=...&q=qigong+sund+mad
@@ -9,9 +10,10 @@ import { getAdminCmsForSite } from "@/lib/cms";
  * Returns scored results with collection, slug, title, excerpt.
  */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   const orgId = req.nextUrl.searchParams.get("orgId");
@@ -19,7 +21,7 @@ export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams.get("q") ?? "";
 
   if (!orgId || !siteId) {
-    return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.orgSiteRequired") }, { status: 400 });
   }
   if (!query.trim()) {
     return NextResponse.json({ results: [] });
@@ -27,7 +29,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const cms = await getAdminCmsForSite(orgId, siteId);
-    if (!cms) return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    if (!cms) return NextResponse.json({ error: t("errApi.common.siteNotFound") }, { status: 404 });
     const results = await cms.content.search(query, { limit: 30 });
     return NextResponse.json({
       results: results.map((r) => ({
@@ -40,6 +42,6 @@ export async function GET(req: NextRequest) {
       })),
     });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Search failed" }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : t("errApi.mobile.searchFailed") }, { status: 500 });
   }
 }

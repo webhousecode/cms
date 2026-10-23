@@ -6,6 +6,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import fs from "fs/promises";
 import path from "path";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
 const VIDEO_EXTS = new Set(["mp4", "mov", "webm", "avi", "mkv", "m4v"]);
@@ -23,6 +24,7 @@ type DoneEvent = { kind: "done"; analyzed: number; failed: number };
 export type BatchEvent = StartEvent | ResultEvent | ErrorEvent | DoneEvent;
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const body = await req.json().catch(() => ({}));
   const language = body.language ?? "da";
@@ -103,7 +105,7 @@ export async function POST(req: NextRequest) {
             const fileUrl = file.folder ? `/uploads/${file.folder}/${file.name}` : `/uploads/${file.name}`;
             buffer = await getVideoThumbnail(fileUrl);
             if (!buffer) {
-              send({ kind: "error", filename: key, error: "Video thumbnail failed (ffmpeg required)" });
+              send({ kind: "error", filename: key, error: t("errApi.media.videoThumbFailed") });
               failed++;
               continue;
             }
@@ -111,7 +113,7 @@ export async function POST(req: NextRequest) {
             const segments = file.folder ? [file.folder, file.name] : [file.name];
             buffer = await adapter.readFile(segments);
             if (!buffer) {
-              send({ kind: "error", filename: key, error: "File not found" });
+              send({ kind: "error", filename: key, error: t("errApi.common.fileNotFound") });
               failed++;
               continue;
             }

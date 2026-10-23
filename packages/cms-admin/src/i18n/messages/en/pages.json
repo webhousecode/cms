@@ -99,7 +99,8 @@
     "cancel": "Cancel",
     "deleting": "Deleting...",
     "delete": "Delete",
-    "fieldName": "field name"
+    "fieldName": "field name",
+    "templateDescription": "Template based on {name}"
   },
   "agentNew": {
     "agents": "Agents",
@@ -210,6 +211,15 @@
       "step2": "6–8 focused questions, each building on your previous answer",
       "step3": "Takes about 3 minutes",
       "step4": "Result is saved and injected into every agent automatically"
+    },
+    "languages": {
+      "English": "English",
+      "Danish": "Danish",
+      "German": "German",
+      "French": "French",
+      "Spanish": "Spanish",
+      "Norwegian": "Norwegian",
+      "Swedish": "Swedish"
     }
   },
   "interactiveEdit": {
@@ -737,5 +747,16 @@
     "colCollections": "Collections",
     "colStatus": "Status",
     "filterAll": "All"
+  },
+  "workspaceLayout": {
+    "unknownSite": "Unknown site",
+    "githubAdminNeeded": "An administrator needs to connect GitHub for this site before you can access it."
+  },
+  "inlineEditConnect": {
+    "siteAndReturnRequired": "site and return are required",
+    "siteNotFound": "site not found",
+    "returnNotAllowed": "return origin not allowed",
+    "unauthorized": "Unauthorized",
+    "lensReadOnly": "Lens session is read-only — mint with the write key to get an edit session"
   }
 }

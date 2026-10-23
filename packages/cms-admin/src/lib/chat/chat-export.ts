@@ -80,7 +80,8 @@ export async function buildExportZip(
       })),
     };
 
-    chatsFolder.file(`${conv.id}.json`, JSON.stringify(exported, null, 2));
+    chatsFolder.file(`${conv.id}.json`, // i18n-ignore: file name
+      JSON.stringify(exported, null, 2));
   }
 
   // 3. Manifest

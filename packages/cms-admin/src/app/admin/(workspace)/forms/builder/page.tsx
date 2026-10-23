@@ -37,15 +37,15 @@ export default function FormBuilderPage() {
   const [name, setName] = useState("");
   const [label, setLabel] = useState("");
   const [fields, setFields] = useState<Field[]>([
-    { name: "name", type: "text", label: "Name", required: true, placeholder: "" },
-    { name: "email", type: "email", label: "Email", required: true, placeholder: "" },
-    { name: "message", type: "textarea", label: "Message", required: true, placeholder: "" },
+    { name: "name", type: "text", label: "Name", required: true, placeholder: "" }, // i18n-ignore: default form content stored in the site's form definition, not admin UI
+    { name: "email", type: "email", label: "Email", required: true, placeholder: "" }, // i18n-ignore: default form content stored in the site's form definition, not admin UI
+    { name: "message", type: "textarea", label: "Message", required: true, placeholder: "" }, // i18n-ignore: default form content stored in the site's form definition, not admin UI
   ]);
-  const [successMessage, setSuccessMessage] = useState("Thank you!");
+  const [successMessage, setSuccessMessage] = useState("Thank you!"); // i18n-ignore: default form content stored in the site's form definition, not admin UI
   const [notifyEmails, setNotifyEmails] = useState("");
   const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
-  const [autoReplySubject, setAutoReplySubject] = useState("Thanks for reaching out!");
-  const [autoReplyBody, setAutoReplyBody] = useState("Hi {{name}},\n\nWe received your message and will get back to you shortly.");
+  const [autoReplySubject, setAutoReplySubject] = useState("Thanks for reaching out!"); // i18n-ignore: default form content stored in the site's form definition, not admin UI
+  const [autoReplyBody, setAutoReplyBody] = useState("Hi {{name}},\n\nWe received your message and will get back to you shortly."); // i18n-ignore: default form content stored in the site's form definition, not admin UI
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [isEdit, setIsEdit] = useState(false);
@@ -60,7 +60,7 @@ export default function FormBuilderPage() {
         setName(String(f.name ?? ""));
         setLabel(String(f.label ?? ""));
         setFields((f.fields as Field[]) ?? []);
-        setSuccessMessage(String(f.successMessage ?? "Thank you!"));
+        setSuccessMessage(String(f.successMessage ?? "Thank you!")); // i18n-ignore: default form content stored in the site's form definition, not admin UI
         const notif = f.notifications as Record<string, unknown> | undefined;
         setNotifyEmails((notif?.email as string[] ?? []).join(", "));
         const ar = f.autoReply as Record<string, unknown> | undefined;

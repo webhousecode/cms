@@ -11,6 +11,8 @@
  *    Runtime-beviset er F189.7's kørsel udefra.
  */
 import { describe, it, expect } from "vitest";
+import daLib from "../../i18n/messages/da/libText.json";
+import enLib from "../../i18n/messages/en/libText.json";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -79,7 +81,7 @@ describe("rækkefølgen — valideringen SKAL ske før skrivningen", () => {
   const gen = kilde("src/lib/podcast/generate.ts");
 
   it("parseManuskript kaldes før skrivAfsnit", () => {
-    const validering = gen.indexOf("parseManuskript(raa)");
+    const validering = gen.indexOf("parseManuskript(raa");
     const skrivning = gen.indexOf("skrivAfsnit(args.afsnitSlug");
     expect(validering, "parseManuskript findes ikke").toBeGreaterThan(-1);
     expect(skrivning, "skrivAfsnit findes ikke").toBeGreaterThan(-1);
@@ -100,7 +102,8 @@ describe("rækkefølgen — valideringen SKAL ske før skrivningen", () => {
 
   it("en genskrivning på et GODKENDT afsnit afvises", () => {
     expect(gen).toMatch(/tilstand === "godkendt"/);
-    expect(gen).toMatch(/træk godkendelsen tilbage/);
+    expect(gen).toContain("libText.podcastGenerate.withdrawApprovalFirst");
+    expect(daLib.podcastGenerate.withdrawApprovalFirst).toMatch(/træk godkendelsen tilbage/);
   });
 });
 
@@ -115,8 +118,9 @@ describe("ship-dark — motoren opretter ikke samlingen selv", () => {
 
   it("beskeden siger hvad der mangler OG hvorfor vi ikke gør det selv", () => {
     expect(store).toContain(PODCAST_SAMLING);
-    expect(store).toMatch(/opretter den ikke selv/);
-    expect(store).toMatch(/tager hele sitet ned/);
+    expect(store).toContain("libText.podcastStore.missingCollection");
+    expect(daLib.podcastStore.missingCollection).toMatch(/opretter den ikke selv/);
+    expect(daLib.podcastStore.missingCollection).toMatch(/tager hele sitet ned/);
   });
 
   it("skrivningen LÆSER TILBAGE fra et frisk opslag", () => {

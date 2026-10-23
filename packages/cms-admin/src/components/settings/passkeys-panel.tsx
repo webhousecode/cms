@@ -67,7 +67,7 @@ export function PasskeysPanel() {
 
       // Try to derive a friendly default name from the UA
       const ua = navigator.userAgent;
-      let defaultName = "Passkey";
+      let defaultName = t("settings.passkeys.defaultName");
       if (/Mac/i.test(ua)) defaultName = "Mac";
       else if (/iPhone/i.test(ua)) defaultName = "iPhone";
       else if (/iPad/i.test(ua)) defaultName = "iPad";

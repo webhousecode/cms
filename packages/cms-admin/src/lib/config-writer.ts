@@ -1,6 +1,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { CmsConfig, FieldConfig } from '@webhouse/cms';
 import { findMatchingBracket } from './schema-field-infer';
+import { localizeKeyedError } from './build/validate-paths';
+import { getServerTSafe } from '@/i18n/server';
+
+/** A guard error from synchronous code: English message + catalog key, translated by the async writers (F211.2). */
+function keyedError(message: string, i18nKey: string, i18nVars?: Record<string, string>): Error {
+  return Object.assign(new Error(message), { i18nKey, i18nVars });
+}
 
 export interface CollectionDef {
   name: string;
@@ -81,7 +88,7 @@ function serializeCollection(col: CollectionDef): string {
     if (v === undefined) continue;
     lines.push(`      ${emitKey(k)}: ${emitInline(v)},`);
   }
-  lines.push('      fields: [');
+  lines.push('      fields: ['); // i18n-ignore: generated cms.config.ts source
   for (const f of fields ?? []) {
     lines.push(`        ${emitInline(f)},`);
   }
@@ -102,7 +109,7 @@ function serializeForm(form: FormDef): string {
     if (v === undefined) continue;
     lines.push(`      ${emitKey(k)}: ${emitInline(v)},`);
   }
-  lines.push('      fields: [');
+  lines.push('      fields: ['); // i18n-ignore: generated cms.config.ts source
   for (const f of fields ?? []) {
     lines.push(`        ${emitInline(f)},`);
   }
@@ -135,12 +142,12 @@ function escapeRegExp(s: string): string {
 function replaceTopLevelArray(source: string, key: string, literal: string): string {
   const m = new RegExp(`(^|\\n)([ \\t]*)${escapeRegExp(key)}[ \\t]*:[ \\t]*\\[`).exec(source);
   if (!m) {
-    throw new Error(`config-writer: could not locate top-level \`${key}:\` array in cms.config.ts`);
+    throw keyedError(`config-writer: could not locate top-level \`${key}:\` array in cms.config.ts`, "deployText.configWriter.arrayNotFound", { key }); // i18n-ignore: English fallback; the async writers translate it via its key
   }
   const bracketIdx = m.index + m[0].length - 1; // index of the opening '['
   const closeIdx = findMatchingBracket(source, bracketIdx);
   if (closeIdx < 0) {
-    throw new Error(`config-writer: unbalanced \`${key}\` array in cms.config.ts`);
+    throw keyedError(`config-writer: unbalanced \`${key}\` array in cms.config.ts`, "deployText.configWriter.arrayUnbalanced", { key }); // i18n-ignore: English fallback; the async writers translate it via its key
   }
   return source.slice(0, bracketIdx) + literal + source.slice(closeIdx + 1);
 }
@@ -171,11 +178,11 @@ export function replaceFormsArray(source: string, forms: FormDef[]): string {
   // key every generated config ends with — rather than guessing a position.
   const anchor = /(^|\n)([ \t]*)storage[ \t]*:/.exec(source);
   if (!anchor) {
-    throw new Error('config-writer: config has no `forms:` and no `storage:` to anchor a new one to');
+    throw keyedError('config-writer: config has no `forms:` and no `storage:` to anchor a new one to', "deployText.configWriter.noFormsAnchor"); // i18n-ignore: English fallback; the async writers translate it via its key
   }
   const indent = anchor[2];
   const at = anchor.index + anchor[1].length;
-  return source.slice(0, at) + `${indent}forms: ${literal},\n` + source.slice(at);
+  return source.slice(0, at) + `${indent}forms: ${literal},\n` + source.slice(at); // i18n-ignore: generated config source
 }
 
 /**
@@ -188,33 +195,33 @@ export function replaceFormsArray(source: string, forms: FormDef[]): string {
  */
 export function replaceBlocksArray(source: string, blocks: BlockDef[]): string {
   const col = /(^|\n)([ \t]*)collections[ \t]*:/.exec(source);
-  if (!col) throw new Error('config-writer: could not locate top-level `collections:` in cms.config.ts');
+  if (!col) throw keyedError('config-writer: could not locate top-level `collections:` in cms.config.ts', "deployText.configWriter.collectionsNotFound"); // i18n-ignore: English fallback; the async writers translate it via its key
   const indent = col[2];
   const literal = buildBlocksArray(blocks);
   const m = new RegExp(`(^|\\n)${escapeRegExp(indent)}blocks[ \\t]*:[ \\t]*\\[`).exec(source);
   if (m) {
     const bracketIdx = m.index + m[0].length - 1;
     const closeIdx = findMatchingBracket(source, bracketIdx);
-    if (closeIdx < 0) throw new Error('config-writer: unbalanced `blocks` array in cms.config.ts');
+    if (closeIdx < 0) throw keyedError('config-writer: unbalanced `blocks` array in cms.config.ts', "deployText.configWriter.arrayUnbalanced", { key: 'blocks' }); // i18n-ignore: English fallback; the async writers translate it via its key
     return source.slice(0, bracketIdx) + literal + source.slice(closeIdx + 1);
   }
   const anchor = new RegExp(`(^|\\n)${escapeRegExp(indent)}storage[ \\t]*:`).exec(source);
   if (!anchor) {
-    throw new Error('config-writer: config has no `blocks:` and no `storage:` to anchor a new one to');
+    throw keyedError('config-writer: config has no `blocks:` and no `storage:` to anchor a new one to', "deployText.configWriter.noBlocksAnchor"); // i18n-ignore: English fallback; the async writers translate it via its key
   }
   const at = anchor.index + anchor[1].length;
-  return source.slice(0, at) + `${indent}blocks: ${literal},\n` + source.slice(at);
+  return source.slice(0, at) + `${indent}blocks: ${literal},\n` + source.slice(at); // i18n-ignore: generated config source
 }
 
 /** Guardrail: never persist a result that lost defineConfig or a collection. */
 function assertConfigIntact(original: string, updated: string, collections: CollectionDef[]): void {
   if (!updated.includes('defineConfig')) {
-    throw new Error('config-writer: refusing to write — result no longer contains defineConfig');
+    throw keyedError('config-writer: refusing to write — result no longer contains defineConfig', "deployText.configWriter.lostDefineConfig"); // i18n-ignore: English fallback; the async writers translate it via its key
   }
   for (const c of collections) {
     const re = new RegExp(`name:\\s*["']${escapeRegExp(c.name)}["']`);
     if (!re.test(updated)) {
-      throw new Error(`config-writer: refusing to write — collection "${c.name}" missing from result`);
+      throw keyedError(`config-writer: refusing to write — collection "${c.name}" missing from result`, "deployText.configWriter.lostCollection", { name: c.name }); // i18n-ignore: English fallback; the async writers translate it via its key
     }
   }
 }
@@ -231,7 +238,7 @@ async function getGitHubToken(): Promise<string> {
   const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
   const token = cookieStore.get('github-token')?.value;
-  if (!token) throw new Error('GitHub not connected — please connect via Sites');
+  if (!token) throw new Error((await getServerTSafe())('deployText.configWriter.githubNotConnected'));
   return token;
 }
 
@@ -243,7 +250,7 @@ async function readGitHubFile(owner: string, repo: string, filePath: string, tok
       'X-GitHub-Api-Version': '2022-11-28',
     },
   });
-  if (!res.ok) throw new Error(`GitHub: read ${filePath} failed: ${res.status}`);
+  if (!res.ok) throw new Error((await getServerTSafe())('deployText.configWriter.githubReadFailed', { path: filePath, status: res.status }));
   const data = await res.json() as { content: string; sha: string };
   return {
     content: Buffer.from(data.content.replace(/\n/g, ''), 'base64').toString('utf-8'),
@@ -261,14 +268,14 @@ async function writeGitHubFile(owner: string, repo: string, filePath: string, co
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      message: 'chore: update schema via CMS admin',
+      message: 'chore: update schema via CMS admin', // i18n-ignore: git commit message
       content: Buffer.from(content).toString('base64'),
       sha,
     }),
   });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`GitHub: write ${filePath} failed: ${res.status} ${body}`);
+    throw new Error((await getServerTSafe())('deployText.configWriter.githubWriteFailed', { path: filePath, status: res.status, body }));
   }
 }
 
@@ -292,20 +299,32 @@ export async function writeConfigForms(
   _config: CmsConfig,
   forms: FormDef[],
 ): Promise<void> {
+  try {
+    await writeConfigFormsUnlocalized(configPath, _config, forms);
+  } catch (err) {
+    throw await localizeKeyedError(err);
+  }
+}
+
+async function writeConfigFormsUnlocalized(
+  configPath: string,
+  _config: CmsConfig,
+  forms: FormDef[],
+): Promise<void> {
   const guard = (original: string, updated: string) => {
     if (!updated.includes('defineConfig')) {
-      throw new Error('config-writer: refusing to write — result no longer contains defineConfig');
+      throw keyedError('config-writer: refusing to write — result no longer contains defineConfig', "deployText.configWriter.lostDefineConfig"); // i18n-ignore: English fallback; the async writers translate it via its key
     }
     // The forms rewrite must never cost a collection. Checked against the
     // ORIGINAL, so this catches a bracket-matching slip that ate a neighbour.
     for (const m of original.matchAll(/defineCollection\(\{\s*\n\s*name:\s*["']([^"']+)["']/g)) {
       if (!new RegExp(`name:\\s*["']${escapeRegExp(m[1])}["']`).test(updated)) {
-        throw new Error(`config-writer: refusing to write — collection "${m[1]}" missing from result`);
+        throw keyedError(`config-writer: refusing to write — collection "${m[1]}" missing from result`, "deployText.configWriter.lostCollection", { name: m[1] }); // i18n-ignore: English fallback; the async writers translate it via its key
       }
     }
     for (const f of forms) {
       if (!new RegExp(`name:\\s*["']${escapeRegExp(f.name)}["']`).test(updated)) {
-        throw new Error(`config-writer: refusing to write — form "${f.name}" missing from result`);
+        throw keyedError(`config-writer: refusing to write — form "${f.name}" missing from result`, "deployText.configWriter.lostForm", { name: f.name }); // i18n-ignore: English fallback; the async writers translate it via its key
       }
     }
   };
@@ -333,16 +352,16 @@ export async function writeConfigForms(
  */
 export function assertBlocksRewriteSafe(original: string, updated: string, blocks: BlockDef[]): void {
   if (!updated.includes('defineConfig')) {
-    throw new Error('config-writer: refusing to write — result no longer contains defineConfig');
+    throw keyedError('config-writer: refusing to write — result no longer contains defineConfig', "deployText.configWriter.lostDefineConfig"); // i18n-ignore: English fallback; the async writers translate it via its key
   }
   for (const m of original.matchAll(/defineCollection\(\{\s*\n\s*name:\s*["']([^"']+)["']/g)) {
     if (!new RegExp(`name:\\s*["']${escapeRegExp(m[1])}["']`).test(updated)) {
-      throw new Error(`config-writer: refusing to write — collection "${m[1]}" missing from result`);
+      throw keyedError(`config-writer: refusing to write — collection "${m[1]}" missing from result`, "deployText.configWriter.lostCollection", { name: m[1] }); // i18n-ignore: English fallback; the async writers translate it via its key
     }
   }
   for (const b of blocks) {
     if (!updated.includes(`name: ${JSON.stringify(b.name)}`)) {
-      throw new Error(`config-writer: refusing to write — block "${b.name}" missing from result`);
+      throw keyedError(`config-writer: refusing to write — block "${b.name}" missing from result`, "deployText.configWriter.lostBlock", { name: b.name }); // i18n-ignore: English fallback; the async writers translate it via its key
     }
   }
 }
@@ -356,9 +375,21 @@ export async function writeConfigBlocks(
   _config: CmsConfig,
   blocks: BlockDef[],
 ): Promise<void> {
+  try {
+    await writeConfigBlocksUnlocalized(configPath, _config, blocks);
+  } catch (err) {
+    throw await localizeKeyedError(err);
+  }
+}
+
+async function writeConfigBlocksUnlocalized(
+  configPath: string,
+  _config: CmsConfig,
+  blocks: BlockDef[],
+): Promise<void> {
   for (const b of blocks) {
     if (typeof b.name !== 'string' || b.name.trim() === '') {
-      throw new Error('config-writer: refusing to write — every block needs a name');
+      throw keyedError('config-writer: refusing to write — every block needs a name', "deployText.configWriter.blockNeedsName"); // i18n-ignore: English fallback; the async writers translate it via its key
     }
   }
   const guard = (original: string, updated: string) => assertBlocksRewriteSafe(original, updated, blocks);
@@ -380,6 +411,18 @@ export async function writeConfigBlocks(
 }
 
 export async function writeConfigCollections(
+  configPath: string,
+  _config: CmsConfig,
+  collections: CollectionDef[],
+): Promise<void> {
+  try {
+    await writeConfigCollectionsUnlocalized(configPath, _config, collections);
+  } catch (err) {
+    throw await localizeKeyedError(err);
+  }
+}
+
+async function writeConfigCollectionsUnlocalized(
   configPath: string,
   _config: CmsConfig,
   collections: CollectionDef[],

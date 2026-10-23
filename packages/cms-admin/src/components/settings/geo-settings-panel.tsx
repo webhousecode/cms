@@ -64,7 +64,7 @@ export function GeoSettingsPanel() {
     setConfig((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new CustomEvent("cms:settings-dirty"));
     // Persist via settings save button (same pattern as other panels)
-    const apiKey = `geo${key.charAt(0).toUpperCase()}${key.slice(1)}` as string;
+    const apiKey = `geo${key.charAt(0).toUpperCase()}${key.slice(1)}` as string; // i18n-ignore: config key name
     fetch("/api/admin/site-config", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -75,7 +75,7 @@ export function GeoSettingsPanel() {
   // Generate preview of robots.txt
   const previewLines: string[] = [];
   if (config.robotsStrategy === "maximum") {
-    previewLines.push("User-agent: * → Allow: /");
+    previewLines.push("User-agent: * → Allow: /"); // i18n-ignore: robots.txt syntax preview
     previewLines.push(t("settings.geo.previewAllAiAllow"));
   } else if (config.robotsStrategy === "balanced") {
     previewLines.push(t("settings.geo.previewSearchBotsAllow"));
@@ -116,7 +116,7 @@ export function GeoSettingsPanel() {
                 data-testid="geo-robots-custom-rules"
                 value={config.robotsCustomRules}
                 onChange={(e) => update("robotsCustomRules", e.target.value)}
-                placeholder={"User-agent: GPTBot\nDisallow: /"}
+                placeholder={"User-agent: GPTBot\nDisallow: /"} // i18n-ignore: robots.txt syntax example
                 rows={6}
                 style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", resize: "vertical" }}
               />
@@ -143,7 +143,9 @@ export function GeoSettingsPanel() {
         </p>
         <SettingsCard>
           <SettingsInput label={t("settings.geo.orgName")} value={config.organizationName} onChange={(e) => update("organizationName", e.target.value)} />
+          {/* i18n-ignore: example URL */}
           <SettingsInput label={t("settings.geo.websiteUrl")} value={config.organizationUrl} onChange={(e) => update("organizationUrl", e.target.value)} placeholder="https://..." />
+          {/* i18n-ignore: example path */}
           <SettingsInput label={t("settings.geo.logoUrl")} value={config.organizationLogo} onChange={(e) => update("organizationLogo", e.target.value)} placeholder="/uploads/logo.svg" />
         </SettingsCard>
       </div>

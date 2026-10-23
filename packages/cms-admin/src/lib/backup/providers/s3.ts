@@ -7,6 +7,7 @@
  */
 
 import type { BackupProvider, CloudBackupFile, S3ProviderConfig } from "./types";
+import { getServerTSafe } from "@/i18n/server";
 
 /** Pre-filled endpoint/region for known providers */
 const S3_PRESETS: Record<string, { endpoint?: string; region: string }> = {
@@ -126,17 +127,19 @@ export class S3BackupProvider implements BackupProvider {
       }));
 
       const count = list.Contents?.length ?? 0;
+      const t = await getServerTSafe();
       return {
         ok: true,
-        message: `Connected to ${this.config.bucket} — ${count} backup${count !== 1 ? "s" : ""} stored`,
+        message: t(count !== 1 ? "deployText.s3.connectedMany" : "deployText.s3.connectedOne", { bucket: this.config.bucket, count }),
       };
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Connection failed";
+      const t = await getServerTSafe();
+      const msg = err instanceof Error ? err.message : t("deployText.s3.connectionFailed");
       if (msg.includes("403") || msg.includes("Access Denied")) {
-        return { ok: false, message: "Access denied — check API key permissions" };
+        return { ok: false, message: t("deployText.s3.accessDenied") };
       }
       if (msg.includes("404") || msg.includes("NoSuchBucket")) {
-        return { ok: false, message: `Bucket "${this.config.bucket}" not found` };
+        return { ok: false, message: t("deployText.s3.bucketNotFound", { bucket: this.config.bucket }) };
       }
       return { ok: false, message: msg };
     }

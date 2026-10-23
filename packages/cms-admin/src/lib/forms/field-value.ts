@@ -19,8 +19,8 @@
 
 /** Hvad et flueben og en dato hedder for en læser. */
 const ORD = {
-  da: { ja: "Ja", nej: "Nej" },
-  en: { ja: "Yes", nej: "No" },
+  da: { ja: "Ja", nej: "Nej" }, // i18n-ignore: notification e-mail wording in the site's language (F210.4)
+  en: { ja: "Yes", nej: "No" }, // i18n-ignore: notification e-mail wording in the site's language (F210.4)
 } as const;
 
 export type ValueLang = keyof typeof ORD;

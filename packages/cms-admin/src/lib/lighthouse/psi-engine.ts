@@ -5,6 +5,7 @@
  * Free: 25,000 requests/day (no key needed, key removes rate limits).
  */
 import type { LighthouseResult, LighthouseOpportunity, LighthouseDiagnostic, CruxFieldData } from "./types";
+import { getServerTSafe } from "@/i18n/server";
 
 const PSI_URL = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 
@@ -20,29 +21,35 @@ export async function runPsiAudit(
   if (apiKey) params.set("key", apiKey);
 
   const res = await fetch(`${PSI_URL}?${params}`, {
-    headers: { "User-Agent": "webhouse.app-cms/1.0 (Lighthouse Audit)" },
+    headers: { "User-Agent": "webhouse.app-cms/1.0 (Lighthouse Audit)" }, // i18n-ignore: HTTP User-Agent header value
   });
 
+  const t = await getServerTSafe();
   if (!res.ok) {
     if (res.status === 429) {
-      throw new Error("Daily quota exceeded — add your own PageSpeed Insights API key below to get 25,000 free scans per day.");
+      throw new Error(t("libText.psiEngine.quotaExceeded"));
     }
     if (res.status === 400) {
-      throw new Error("Invalid URL — make sure the site is publicly accessible (not localhost).");
+      throw new Error(t("libText.psiEngine.invalidUrl"));
     }
     if (res.status === 500 || res.status === 503) {
-      throw new Error("Google PageSpeed Insights is temporarily unavailable. Try again in a few minutes.");
+      throw new Error(t("libText.psiEngine.unavailable"));
     }
-    throw new Error(`PageSpeed Insights returned an error (${res.status}). Check that the URL is correct and the site is online.`);
+    throw new Error(t("libText.psiEngine.error", { status: res.status }));
   }
 
   const data = await res.json();
-  return parsePsiResponse(data, strategy, url);
+  return parsePsiResponse(data, strategy, url, t);
 }
 
-function parsePsiResponse(data: any, strategy: "mobile" | "desktop", requestUrl?: string): LighthouseResult {
+function parsePsiResponse(
+  data: any,
+  strategy: "mobile" | "desktop",
+  requestUrl: string | undefined,
+  t: Awaited<ReturnType<typeof getServerTSafe>>,
+): LighthouseResult {
   const lhr = data.lighthouseResult;
-  if (!lhr) throw new Error("Invalid PSI response: missing lighthouseResult");
+  if (!lhr) throw new Error(t("libText.psiEngine.invalidResponse"));
 
   const categories = lhr.categories ?? {};
   const audits = lhr.audits ?? {};

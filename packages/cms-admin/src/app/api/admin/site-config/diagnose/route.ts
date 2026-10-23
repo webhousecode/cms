@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { requirePermission } from "@/lib/permissions";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { getAI, mistralModel, parseJsonLoose } from "@/lib/ai/client";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface DiagnoseIssue {
   field: string;
@@ -23,6 +24,7 @@ export interface DiagnoseResult {
 }
 
 export async function POST(req: Request) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("sites.write");
   if (denied) return denied;
 
@@ -35,12 +37,12 @@ export async function POST(req: Request) {
 
   const registry = await loadRegistry();
   if (!registry || !activeOrgId || !activeSiteId) {
-    return NextResponse.json({ error: "Could not resolve active site" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.siteConfig.noActiveSite") }, { status: 400 });
   }
 
   const site = findSite(registry, activeOrgId, activeSiteId);
   if (!site) {
-    return NextResponse.json({ error: "Site not found in registry" }, { status: 404 });
+    return NextResponse.json({ error: t("errAdmin.siteConfig.siteNotInRegistry") }, { status: 404 });
   }
 
   const isFilesystem = !site.configPath.startsWith("github://");
@@ -50,7 +52,7 @@ export async function POST(req: Request) {
     try {
       configContent = await readFile(site.configPath, "utf-8");
     } catch {
-      return NextResponse.json({ error: "Could not read config file" }, { status: 500 });
+      return NextResponse.json({ error: t("errAdmin.siteConfig.readConfigFailed") }, { status: 500 });
     }
   }
 
@@ -60,11 +62,11 @@ export async function POST(req: Request) {
       siteName: site.name,
       configPath: site.configPath,
       isFilesystem,
-      summary: "The site configuration has validation errors that prevent it from loading.",
+      summary: t("errAdmin.siteConfig.diagnoseSummary"),
       issues: rawErrors.split("\n").filter(Boolean).map((line) => ({
         field: line.split(":")[0]?.trim() ?? "unknown",
         problem: line.trim(),
-        fix: "Review the cms.config.ts file and correct the field format.",
+        fix: t("errAdmin.siteConfig.diagnoseFix"),
         autoFixable: false,
       })),
       canAutoFix: false,
@@ -99,7 +101,9 @@ Output ONLY valid JSON (no markdown fences) matching this exact shape:
   "autoFixNotes": "optional caveat if auto-fix has limitations"
 }`;
 
-  const user = isFilesystem
+  // i18n-ignore: model prompt (both branches)
+  const user = isFilesystem // i18n-ignore: model prompt
+    /* i18n-ignore: model prompt */
     ? `Site name: ${site.name}
 Config file path: ${site.configPath}
 
@@ -109,7 +113,8 @@ ${rawErrors}
 Config file content:
 \`\`\`typescript
 ${configContent.slice(0, 8000)}
-\`\`\``
+\`\`\`` // i18n-ignore: model prompt
+    /* i18n-ignore: model prompt */
     : `Site name: ${site.name}
 Config: GitHub-backed (${site.configPath})
 
@@ -129,7 +134,7 @@ ${rawErrors}`;
     });
     aiText = text;
   } catch {
-    return NextResponse.json({ error: "AI diagnosis unavailable" }, { status: 502 });
+    return NextResponse.json({ error: t("errAdmin.siteConfig.aiDiagnosisUnavailable") }, { status: 502 });
   }
 
   let parsed: { summary?: string; issues?: DiagnoseIssue[]; canAutoFix?: boolean; autoFixNotes?: string } = {};

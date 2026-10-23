@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { getActiveSitePaths } from "@/lib/site-paths";
+import { getServerTSafe } from "@/i18n/server";
 
 /** GET /api/media/ai-meta?file=/uploads/filename.jpg
  *  Returns AI metadata for a specific image from media-meta.json */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const file = req.nextUrl.searchParams.get("file");
-  if (!file) return NextResponse.json({ error: "file param required" }, { status: 400 });
+  if (!file) return NextResponse.json({ error: t("errApi.common.fileParamRequired") }, { status: 400 });
 
   try {
     const { dataDir } = await getActiveSitePaths();

@@ -15,6 +15,7 @@
 import { createSsoClient, loadSsoConfig, type SsoClient, type SsoConfig } from "@broberg/sso";
 import { isBidConfigured } from "./bid-config";
 import { BRAND_PACKS, type BrandPack } from "./brand";
+import { getT } from "@/i18n/locale";
 export { requestHost } from "./brand";
 export { isBidConfigured, BID_ID_TOKEN_COOKIE } from "./bid-config";
 
@@ -128,4 +129,10 @@ export function legacyLoginAllowed(_user: { role?: string }, env: NodeJS.Process
   return !isBidConfigured(env);
 }
 
-export const LEGACY_LOGIN_REFUSED = "Sign in with Broberg ID";
+/** English text, for callers outside a request. Inside one, use legacyLoginRefused(). */
+export const LEGACY_LOGIN_REFUSED = getT("en")("system.auth.legacyLoginRefused");
+
+/** The refusal in the requesting user's language. */
+export async function legacyLoginRefused(): Promise<string> {
+  return (await (await import("@/i18n/server")).getServerTSafe())("system.auth.legacyLoginRefused");
+}

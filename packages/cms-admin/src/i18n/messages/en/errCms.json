@@ -1,0 +1,190 @@
+{
+  "shared": {
+    "notFound": "Not found",
+    "internalError": "Internal error",
+    "noAccess": "No access",
+    "noWriteAccess": "No write access",
+    "noAccessToSite": "No access to this site",
+    "unknownCollection": "Unknown collection",
+    "collectionNotFound": "Collection not found",
+    "documentNotFound": "Document not found",
+    "siteNotFound": "Site not found",
+    "siteNotFoundId": "site not found: {site}",
+    "aiKeyMissing": "Anthropic API key not configured — add it in Settings → AI",
+    "aiKeyMissingGt": "Anthropic API key not configured — add it in Settings > AI",
+    "aiKeyMissingShort": "Anthropic API key not configured",
+    "aiError": "AI error",
+    "noActiveOrg": "No active org",
+    "failedToDelete": "Failed to delete",
+    "failedToSave": "Failed to save",
+    "unknownAction": "Unknown action",
+    "orgIdSiteIdRequired": "orgId and siteId required",
+    "orgIdRequired": "orgId required",
+    "configPathRequired": "configPath required",
+    "activeConfigOnly": "Only the active site's own config can be loaded",
+    "instanceAdminPaths": "Only the CMS instance admin can change a site's paths",
+    "noRegistry": "No registry",
+    "orgNotFound": "Org not found",
+    "promptIsRequired": "prompt is required",
+    "unknownError": "Unknown error",
+    "invalidConfig": "Invalid config",
+    "githubExportUnsupported": "Schema export from GitHub configs not supported yet",
+    "schemaExportFailed": "Schema export failed: {error}",
+    "memoryNotFound": "Memory not found",
+    "versionNotFound": "Version not found",
+    "idRequired": "id required",
+    "collectionFieldsRequired": "collection and fields[] required",
+    "collectionNamedNotFound": "Collection \"{collection}\" not found",
+    "invalidCollectionPath": "Invalid collection path",
+    "stepMissingAgent": "Step {index} is missing agentId"
+  },
+  "revisions": {
+    "revisionNotFound": "Revision not found"
+  },
+  "document": {
+    "slugExists": "Slug already exists"
+  },
+  "translate": {
+    "targetLocaleRequired": "targetLocale is required",
+    "nothingToTranslate": "No translatable content found",
+    "parseFailed": "Failed to parse AI translation response",
+    "failed": "AI translation failed"
+  },
+  "collection": {
+    "editorsOnly": "Editors only"
+  },
+  "agentTemplates": {
+    "bodyRequired": "Body required",
+    "updateFailed": "Failed to update template",
+    "namePayloadRequired": "name and payload are required",
+    "saveFailed": "Failed to save template"
+  },
+  "agents": {
+    "notFound": "Agent not found",
+    "updateFailed": "Failed to update agent",
+    "deleteFailed": "Failed to delete agent",
+    "runFailed": "Failed to run agent",
+    "descriptionRequired": "description is required",
+    "roleRequired": "role required",
+    "createFailed": "Failed to create agent",
+    "copyOf": "Copy of {name}"
+  },
+  "agentFeedback": {
+    "typeRequired": "type is required (correction|rejection|edit)",
+    "invalidType": "invalid type",
+    "recordFailed": "Failed to record feedback"
+  },
+  "ai": {
+    "messageRequired": "message required",
+    "promptRequired": "prompt required",
+    "generatedContent": "Generated content",
+    "instructionRequired": "instruction required",
+    "htmlRequired": "html required",
+    "textRequired": "text required",
+    "proofreadUnreadable": "The proofreader returned an unreadable response — please try again.",
+    "proofreadFailed": "Proofreading failed",
+    "textInstructionRequired": "text and instruction required"
+  },
+  "brandVoice": {
+    "somethingWrong": "Something went wrong — please try again.",
+    "parseFailed": "Failed to parse translated JSON"
+  },
+  "build": {
+    "loadSiteFailed": "Failed to load site",
+    "noCommand": "No build command configured in cms.config.ts. Use the native pipeline via the Deploy button instead.",
+    "commandNotAllowed": "Command \"{command}\" is not allowed by organization settings.",
+    "pathValidationFailed": "Path validation failed",
+    "executionFailed": "Build execution failed"
+  },
+  "chat": {
+    "newConversation": "New conversation",
+    "readOnly": "Read-only",
+    "messagesRequired": "messages required",
+    "initFailed": "Chat init failed: {error}",
+    "error": "Chat error",
+    "eventRequired": "event required",
+    "unknownError": "unknown"
+  },
+  "chatImport": {
+    "noFile": "No file provided",
+    "emptyFile": "Empty file",
+    "importFailed": "Import failed: {error}",
+    "invalidZip": "invalid ZIP"
+  },
+  "chatMemory": {
+    "conversationIdRequired": "conversationId is required",
+    "conversationNotFound": "Conversation not found",
+    "noData": "No data to import",
+    "factRequired": "fact is required"
+  },
+  "translations": {
+    "failed": "Failed"
+  },
+  "curation": {
+    "approveFailed": "Failed to approve",
+    "feedbackRequired": "feedback required",
+    "rejectFailed": "Failed to reject",
+    "alternativeIndexRequired": "alternativeIndex required",
+    "invalidAction": "Invalid action"
+  },
+  "folderPicker": {
+    "macOnly": "Folder picker only available on macOS",
+    "prompt": "Select site folder containing cms.config.ts",
+    "failed": "Folder picker failed"
+  },
+  "exportSchema": {
+    "invalidFilename": "Invalid filename",
+    "pathEscapes": "Output path escapes project directory"
+  },
+  "registryImport": {
+    "folderPathRequired": "folderPath is required",
+    "notDirectory": "Path is not a directory",
+    "dirNotFound": "Directory not found: {path}",
+    "noConfig": "No cms.config.ts found in {path}"
+  },
+  "registry": {
+    "adminOnly": "Admin only",
+    "moveSiteRequired": "siteId, fromOrgId, and toOrgId required",
+    "orgNamedNotFound": "Org \"{orgId}\" not found",
+    "siteNamedNotFound": "Site \"{siteId}\" not found",
+    "unauthorized": "Unauthorized",
+    "noOrgAccess": "No access to that organization",
+    "instanceAdminPlan": "Only the CMS instance admin can change an organization's plan",
+    "exists": "Registry already exists",
+    "orgNameRequired": "orgName required",
+    "orgIdSiteRequired": "orgId and site required",
+    "siteIdExists": "Site ID \"{siteId}\" already exists"
+  },
+  "registryValidate": {
+    "cannotLoad": "Cannot load config file: {error}",
+    "suggestion": "Make sure the file exists and exports a valid config with defineConfig().",
+    "failed": "Validation failed"
+  },
+  "revalidation": {
+    "noActiveSite": "No active site"
+  },
+  "calendar": {
+    "accessDenied": "Access denied",
+    "publishTitle": "Publish: {title}",
+    "unpublishTitle": "Unpublish: {title}",
+    "calName": "CMS Content Schedule",
+    "omittedOne": "1 item could not be shown",
+    "omittedMany": "{count} items could not be shown"
+  },
+  "schemaDrift": {
+    "alreadyExist": "All specified fields already exist in schema",
+    "filesystemOnly": "Add-to-schema is only available for filesystem sites",
+    "addFailed": "Add to schema failed",
+    "nothingToRemove": "All specified fields exist in schema — nothing to remove",
+    "contentDirNotFound": "Content directory not found: {collection}",
+    "fixFailed": "Fix failed",
+    "checkFailed": "Schema drift check failed"
+  },
+  "workflows": {
+    "updateFailed": "Failed to update workflow",
+    "runFailed": "Failed to run workflow",
+    "listFailed": "Failed to list workflows",
+    "nameStepsRequired": "name and steps are required",
+    "createFailed": "Failed to create workflow"
+  }
+}

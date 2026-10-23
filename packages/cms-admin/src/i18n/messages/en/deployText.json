@@ -1,0 +1,225 @@
+{
+  "backupService": {
+    "fileNotFound": "Backup file not found",
+    "githubConfigMissing": "GitHub config missing on site entry"
+  },
+  "backupProviders": {
+    "pcloudMissing": "pCloud config missing",
+    "s3Missing": "S3 config missing",
+    "unknown": "Unknown backup provider: {type}"
+  },
+  "pcloud": {
+    "nearlyFull": "pCloud storage nearly full: {freeMB} MB free, need {needMB} MB. Free up space or upgrade your pCloud plan.",
+    "authFailed": "pCloud authentication failed — check email and password in Settings → Backup.",
+    "quotaExceeded": "pCloud storage quota exceeded. Free up space or upgrade your pCloud plan.",
+    "uploadFailed": "pCloud upload failed: {status}",
+    "downloadFailed": "pCloud download failed: {status}",
+    "deleteFailed": "pCloud delete failed: {status}",
+    "invalidCredentials": "Invalid email or password",
+    "connectionFailedStatus": "Connection failed: {status}",
+    "connected": "Connected — {freeGB} GB free",
+    "connectionFailed": "Connection failed",
+    "folderFailed": "pCloud MKCOL failed: {status}"
+  },
+  "s3": {
+    "connectedOne": "Connected to {bucket} — {count} backup stored",
+    "connectedMany": "Connected to {bucket} — {count} backups stored",
+    "connectionFailed": "Connection failed",
+    "accessDenied": "Access denied — check API key permissions",
+    "bucketNotFound": "Bucket \"{bucket}\" not found"
+  },
+  "beamPush": {
+    "initiateFailed": "Initiate failed",
+    "sendFailed": "Failed to send {path}",
+    "finalizeFailed": "Finalize failed"
+  },
+  "beamImport": {
+    "missingManifest": "Invalid .beam archive: missing manifest.json",
+    "unsupportedVersion": "Unsupported beam version: {version}",
+    "invalidSiteId": "Invalid site id in archive: {id}",
+    "invalidOrgId": "Invalid org id: {id}",
+    "otherOrg": "Site id \"{siteId}\" belongs to another organization",
+    "exists": "Site \"{siteId}\" already exists in org \"{orgId}\". Use overwrite option."
+  },
+  "flyBuilder": {
+    "noMachineId": "Fly Machines spawn returned no machine id: {detail}"
+  },
+  "flyEphemeral": {
+    "noSite": "no active site for fly-ephemeral deploy",
+    "noToken": "fly-ephemeral requires a Fly API token (per-site config or FLY_API_TOKEN env on cms-admin).",
+    "noAppName": "fly-ephemeral requires deployAppName configured.",
+    "noCallbackUrl": "fly-ephemeral requires NEXTAUTH_URL (or equivalent) so the builder VM can call back.",
+    "noRegistryToken": "fly-ephemeral requires GHCR_PUSH_TOKEN env on cms-admin so the builder VM can push images.",
+    "pathsFailed": "fly-ephemeral could not resolve the site's paths: {error}",
+    "sourceFetchFailed": "source-fetch failed: {error}",
+    "builderExited": "builder VM exited with state={state} exit={exit}",
+    "imageDeployFailed": "image-deploy failed: {error}"
+  },
+  "sourceFetch": {
+    "empty": "source is empty",
+    "invalidUrl": "Invalid source URL: \"{source}\". Expected \"github:owner/repo[:subdir]\" or \"local:/absolute/path\".",
+    "localMissing": "local source path does not exist: {path}",
+    "subdirMissing": "subdir not found in cloned repo: {subdir}"
+  },
+  "installer": {
+    "noDeps": "(no extra deps required)",
+    "alreadyInstalled": "(deps already installed, skipped)"
+  },
+  "buildPaths": {
+    "workingDirEscapes": "workingDir \"{dir}\" escapes project directory",
+    "workingDirMissing": "workingDir \"{dir}\" does not exist",
+    "workingDirNotDir": "workingDir \"{dir}\" is not a directory",
+    "outDirEscapes": "outDir \"{dir}\" escapes project directory"
+  },
+  "dockerPresets": {
+    "unknown": "Unknown Docker preset \"{preset}\". Available: {available}"
+  },
+  "serverBuildPolicy": {
+    "disabled": "This CMS server does not run a site's own build code (CMS_SERVER_BUILDS=off). Build the site in its own repo and set Site Settings → Deploy to «Webhook», so the CMS only sends the build signal."
+  },
+  "executor": {
+    "envBlocked": "Environment variable \"{key}\" is blocked for security reasons.",
+    "emptyCommand": "Empty build command"
+  },
+  "siteBuild": {
+    "depsFailed": "Failed to install extra deps: {error}\n{log}",
+    "exitCode": "Exit code: {code}",
+    "profileFailed": "Build \"{name}\" failed: {error}",
+    "failed": "Build failed",
+    "failedWith": "Build failed: {error}",
+    "noOutDir": "Build completed but no {dir}/ directory was created."
+  },
+  "configWriter": {
+    "arrayNotFound": "config-writer: could not locate top-level `{key}:` array in cms.config.ts",
+    "arrayUnbalanced": "config-writer: unbalanced `{key}` array in cms.config.ts",
+    "noFormsAnchor": "config-writer: config has no `forms:` and no `storage:` to anchor a new one to",
+    "collectionsNotFound": "config-writer: could not locate top-level `collections:` in cms.config.ts",
+    "noBlocksAnchor": "config-writer: config has no `blocks:` and no `storage:` to anchor a new one to",
+    "lostDefineConfig": "config-writer: refusing to write — result no longer contains defineConfig",
+    "lostCollection": "config-writer: refusing to write — collection \"{name}\" missing from result",
+    "lostForm": "config-writer: refusing to write — form \"{name}\" missing from result",
+    "lostBlock": "config-writer: refusing to write — block \"{name}\" missing from result",
+    "blockNeedsName": "config-writer: refusing to write — every block needs a name",
+    "githubNotConnected": "GitHub not connected — please connect via Sites",
+    "githubReadFailed": "GitHub: read {path} failed: {status}",
+    "githubWriteFailed": "GitHub: write {path} failed: {status} {body}"
+  },
+  "deployService": {
+    "resyncFailed": "{failed} of {total} document re-syncs failed (see revalidation log)",
+    "noProvider": "No deploy provider configured",
+    "noHookUrl": "Deploy hook URL not configured",
+    "cfNoToken": "Cloudflare Pages requires an API token (Pages:Edit permission).",
+    "cfNoAccount": "Cloudflare Pages requires your Cloudflare Account ID.",
+    "cfNoProject": "Cloudflare Pages requires a project name.",
+    "cfNoBuild": "Cloudflare Pages requires a build.ts or a build.command in cms.config.ts — it deploys static output.",
+    "noDeployDir": "Build completed but no deploy/ directory was created.",
+    "flyLiveNoToken": "Fly.io Live requires an API token. Set FLY_API_TOKEN as a Fly secret on the CMS host (recommended — works for all sites), or paste a per-site token in Site Settings → Deploy.",
+    "flyLiveNoApp": "Fly.io Live requires an app name.",
+    "flyLiveNoBuild": "Fly.io Live requires a build.ts or a build.command in cms.config.ts — it deploys static output. Use the regular 'Fly.io (rebuild)' provider for Next.js/SSR apps.",
+    "flyNoToken": "Fly.io requires an API token. Set FLY_API_TOKEN as a Fly secret on the CMS host (recommended — works for all sites), or paste a per-site token in Site Settings → Deploy.",
+    "flyNoApp": "Fly.io requires an app name.",
+    "ghNoBuild": "No build.ts found — this site doesn't support static builds. Configure a different deploy provider (Fly.io, Vercel) in Site Settings → Deploy.",
+    "ghNoToken": "GitHub Pages requires a GitHub token. Connect GitHub via OAuth or add a token in Settings → Automation.",
+    "ghUserFailed": "Failed to get GitHub user — check your token.",
+    "repoCreateFailed": "Failed to create repo: {status} {body}",
+    "hookFailed": "Hook returned {status}: {body}",
+    "flyNoBuild": "No build.ts, Dockerfile, or build.command found — this site can't be deployed to Fly.io. Add a build.ts (static), Dockerfile (Next.js/SSR), or build.command in cms.config.ts.",
+    "flyctlMissing": "flyctl CLI not found. Install it: curl -L https://fly.io/install.sh | sh",
+    "failed": "Failed",
+    "flyAppCreateFailed": "Failed to create Fly app \"{app}\" in org \"{org}\": {error}",
+    "deployFailed": "Deploy failed",
+    "flyDeployFailed": "Fly.io deploy failed: {error}",
+    "noStaticBuild": "No build.ts or build.command found — this site doesn't support static builds.",
+    "distEmpty": "Build completed but dist/ is empty.",
+    "blobFailed": "Failed to create blob for {path}: {status}",
+    "rateLimited": "GitHub rate limit exceeded after 3 retries on {path}. Wait a few minutes and try again.",
+    "treeFailed": "Failed to create tree: {status}",
+    "commitFailed": "Failed to create commit: {status}",
+    "refUpdateFailed": "Failed to update gh-pages ref: {status}",
+    "refCreateFailed": "Failed to create gh-pages ref: {status}",
+    "pagesPrivate": "GitHub Pages is not available for private repos on the Free plan. Make the repo public or upgrade your plan.",
+    "pagesEnableFailed": "Failed to enable GitHub Pages: {status}",
+    "apiError": "API error: {status}"
+  },
+  "cloudflarePages": {
+    "noFiles": "No files to deploy — the build directory is empty.",
+    "fetchProjectFailed": "Cloudflare Pages: fetching project failed ({status}): {error}",
+    "createProjectFailed": "Cloudflare Pages: creating project failed ({status}): {error}",
+    "deploymentFailed": "Cloudflare Pages: deployment failed ({status}): {error}",
+    "unknownError": "unknown error",
+    "deploymentRejected": "Cloudflare Pages: deployment rejected: {error}",
+    "invalidProjectName": "Cloudflare Pages project name \"{name}\" is invalid. Use lowercase letters, digits, and hyphens (max 58 chars)."
+  },
+  "deployEvents": {
+    "liveTitle": "Site is live 🌐",
+    "failedTitle": "Deploy failed",
+    "liveBody": "Your changes are now live on GitHub Pages.",
+    "failedBody": "GitHub Pages build errored — see Site Settings → Deploy."
+  },
+  "dnsClient": {
+    "invalidDomain": "\"{domain}\" is not a valid domain",
+    "zonesFailed": "DNS API: zones list failed ({status})",
+    "lookupFailed": "DNS API: lookup failed ({status})",
+    "createFailed": "DNS API: create failed ({status}): {body}",
+    "updateFailed": "DNS API: update failed ({status}): {body}",
+    "searchFailed": "Registrar search failed ({status})",
+    "checkFailed": "Registrar check failed ({status})",
+    "registrationFailed": "Registration failed ({status}): {body}",
+    "confirmFailed": "Registration confirmation failed ({status}): {body}"
+  },
+  "flyLive": {
+    "assetsMissing": "fly-live-assets directory missing at {dir} — cms-admin bundle is corrupt",
+    "icdFailed": "ICD {method} {path} failed: {status} {body}",
+    "syncTimeout": "Sync endpoint did not come online within {seconds}s"
+  },
+  "flyOrgs": {
+    "missingToken": "Missing Fly API token",
+    "noOrgs": "No organizations found for this token",
+    "rejected": "Fly rejected this token",
+    "unreachable": "Could not reach Fly to verify the token"
+  },
+  "outputBrowser": {
+    "tooLarge": "File too large to preview ({size} bytes > {max})"
+  },
+  "templates": {
+    "blog": "A clean blog with posts, categories, and rich text editing.",
+    "landing": "Marketing landing page with hero, features, and call-to-action blocks.",
+    "staticAgency": "Dark, modern agency template with case studies and team sections.",
+    "staticFreelancer": "Minimal freelancer portfolio with projects and about page.",
+    "staticPortfolio": "Creative portfolio with full-bleed images and project grid.",
+    "staticPortfolioSquared": "Grid-based portfolio with square image thumbnails.",
+    "staticBoutique": "Elegant boutique template for fashion and lifestyle brands.",
+    "staticStudio": "Creative studio template with project showcases.",
+    "staticBridgeberg": "Corporate consulting template with services and timeline.",
+    "staticCmsdemo": "Full demo site showcasing all CMS features. Ships as Docker default.",
+    "staticBoilerplate": "Minimal static site starter — HTML output with build pipeline.",
+    "nextjsBoilerplate": "Next.js App Router with CMS helpers, SEO, and Fly.io deploy."
+  },
+  "templateRegistry": {
+    "notFound": "Template \"{id}\" not found",
+    "fetchFailed": "Failed to fetch template",
+    "githubError": "GitHub API error: {status}"
+  },
+  "githubMedia": {
+    "notConnected": "GitHub not connected — connect via Sites → Settings"
+  },
+  "sitePool": {
+    "invalidFieldType": "Invalid field type \"{received}\" at {path}. Valid types: {validTypes}",
+    "validationFailed": "Site \"{site}\" config validation failed:\n{issues}",
+    "configNotFound": "Site \"{site}\": Config file not found at \"{path}\". Check the path in site settings.",
+    "unknownError": "Site \"{site}\": Unknown error loading config",
+    "envNotSet": "Environment variable \"{name}\" is not set (needed for GitHub token)",
+    "githubNotConnected": "GitHub not connected — please connect via Sites → New Site → Connect GitHub",
+    "ghFileNotFound": "GitHub: file not found: {file}",
+    "ghBadToken": "GitHub: bad token or no access to {repo}",
+    "ghFetchFailed": "GitHub: fetch {path} failed: {status}",
+    "noGithubConfig": "Site \"{id}\" is github adapter but has no github config",
+    "githubConfigDisabled": "This CMS server does not run a site's cms.config.ts from GitHub (CMS_SERVER_BUILDS=off). Keep the config on the server (filesystem) and let GitHub hold only the content."
+  },
+  "wpMigration": {
+    "noRestApi": "REST API not available — cannot extract content"
+  },
+  "beam": {
+    "importedSiteName": "Imported Site"
+  }
+}

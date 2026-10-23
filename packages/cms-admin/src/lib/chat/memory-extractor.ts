@@ -60,7 +60,7 @@ Respond with ONLY the JSON array, no other text.`;
 function formatConversation(conv: StoredConversation): string {
   return conv.messages
     .map((m) => {
-      const role = m.role === "user" ? "User" : "Assistant";
+      const role = m.role === "user" ? "User" : "Assistant"; // i18n-ignore: transcript labels inside the extraction prompt sent to the model
       // For assistant messages, skip tool call details — focus on intent
       let content = m.content;
       if (content.length > 2000) {

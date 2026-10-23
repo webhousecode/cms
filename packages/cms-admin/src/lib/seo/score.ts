@@ -1,3 +1,6 @@
+import { translate, type Dict } from "@broberg/i18n";
+import enLibText from "@/i18n/messages/en/libText.json";
+
 /**
  * F97 + F112 — SEO & GEO Score Calculator
  *
@@ -5,6 +8,17 @@
  * GEO: 8 rules for AI/generative engine citation-friendliness.
  * Combined "Visibility Score" weights both equally.
  */
+
+/**
+ * F211.2 — rule texts follow the ADMIN language. score.ts is synchronous and runs
+ * in the browser (SEO panel) and on the server, so the caller passes its own
+ * translator: useT() on the client, await getServerTSafe() on the server.
+ * Without one, the texts are English (the catalog's source language).
+ */
+export type ScoreTranslator = (key: string, vars?: Record<string, string | number>) => string;
+
+const englishT: ScoreTranslator = (key, vars) =>
+  translate({ en: { libText: enLibText } } as Record<string, Dict>, "en", key, vars);
 
 export interface SeoFields {
   metaTitle?: string;
@@ -111,7 +125,9 @@ export function calculateSeoScore(
   seo: SeoFields,
   allTitles?: string[],
   locale?: string,
+  t?: ScoreTranslator,
 ): SeoScoreResult {
+  const tr = t ?? englishT;
   const details: SeoScoreDetail[] = [];
   const content = stripToText(String(doc.data.content ?? doc.data.body ?? ""));
   const title = String(doc.data.title ?? "");
@@ -124,62 +140,62 @@ export function calculateSeoScore(
   // 1. Meta title length
   const mt = seo.metaTitle ?? "";
   if (!mt) {
-    details.push({ rule: "meta-title", label: "Meta title", status: "fail", message: `Meta title is missing. Write a title for search results (${limits.titleMin}-${limits.titleMax} characters).` });
+    details.push({ rule: "meta-title", label: tr("libText.seoScore.labelMetaTitle"), status: "fail", message: tr("libText.seoScore.metaTitleMissing", { min: limits.titleMin, max: limits.titleMax }) });
   } else if (mt.length < limits.titleMin) {
-    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Meta title is too short (${mt.length} characters). Add more words to reach ${limits.titleMin}-${limits.titleMax} characters.` });
+    details.push({ rule: "meta-title", label: tr("libText.seoScore.labelMetaTitle"), status: "warn", message: tr("libText.seoScore.metaTitleShort", { len: mt.length, min: limits.titleMin, max: limits.titleMax }) });
   } else if (mt.length > limits.titleMax) {
-    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Meta title is too long (${mt.length} characters). Google cuts off after ${limits.titleMax}. Shorten it.` });
+    details.push({ rule: "meta-title", label: tr("libText.seoScore.labelMetaTitle"), status: "warn", message: tr("libText.seoScore.metaTitleLong", { len: mt.length, max: limits.titleMax }) });
   } else {
-    details.push({ rule: "meta-title", label: "Meta title", status: "pass", message: `Meta title length is good (${mt.length}/${limits.titleMax} characters)` });
+    details.push({ rule: "meta-title", label: tr("libText.seoScore.labelMetaTitle"), status: "pass", message: tr("libText.seoScore.metaTitleGood", { len: mt.length, max: limits.titleMax }) });
   }
 
   // 2. Meta description length
   const md = seo.metaDescription ?? "";
   if (!md) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "fail", message: `Meta description is missing. Write a description for search results (${limits.descMin}-${limits.descMax} characters).` });
+    details.push({ rule: "meta-desc", label: tr("libText.seoScore.labelMetaDesc"), status: "fail", message: tr("libText.seoScore.metaDescMissing", { min: limits.descMin, max: limits.descMax }) });
   } else if (md.length < limits.descMin) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Meta description is too short (${md.length} characters). Add ${limits.descMin - md.length} more characters to reach ${limits.descMin}.` });
+    details.push({ rule: "meta-desc", label: tr("libText.seoScore.labelMetaDesc"), status: "warn", message: tr("libText.seoScore.metaDescShort", { len: md.length, add: limits.descMin - md.length, min: limits.descMin }) });
   } else if (md.length > limits.descMax) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Meta description is too long (${md.length} characters). Google cuts off after ${limits.descMax}. Remove ${md.length - limits.descMax} characters.` });
+    details.push({ rule: "meta-desc", label: tr("libText.seoScore.labelMetaDesc"), status: "warn", message: tr("libText.seoScore.metaDescLong", { len: md.length, max: limits.descMax, remove: md.length - limits.descMax }) });
   } else {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "pass", message: `Meta description length is good (${md.length}/${limits.descMax} characters)` });
+    details.push({ rule: "meta-desc", label: tr("libText.seoScore.labelMetaDesc"), status: "pass", message: tr("libText.seoScore.metaDescGood", { len: md.length, max: limits.descMax }) });
   }
 
   // 3. Keyword in meta title
   if (keywords.length > 0 && mt) {
     if (keywordInText(mt, keywords)) {
-      details.push({ rule: "keyword-title", label: "Keyword in title", status: "pass", message: `Keyword "${keywords[0]}" found in meta title` });
+      details.push({ rule: "keyword-title", label: tr("libText.seoScore.labelKeywordTitle"), status: "pass", message: tr("libText.seoScore.keywordInTitle", { keyword: keywords[0] }) });
     } else {
-      details.push({ rule: "keyword-title", label: "Keyword in title", status: "warn", message: `Add the keyword "${keywords[0]}" to the meta title field above.` });
+      details.push({ rule: "keyword-title", label: tr("libText.seoScore.labelKeywordTitle"), status: "warn", message: tr("libText.seoScore.keywordNotInTitle", { keyword: keywords[0] }) });
     }
   }
 
   // 4. Keyword in meta description
   if (keywords.length > 0 && md) {
     if (keywordInText(md, keywords)) {
-      details.push({ rule: "keyword-desc", label: "Keyword in description", status: "pass", message: `Keyword "${keywords[0]}" found in meta description` });
+      details.push({ rule: "keyword-desc", label: tr("libText.seoScore.labelKeywordDesc"), status: "pass", message: tr("libText.seoScore.keywordInDesc", { keyword: keywords[0] }) });
     } else {
-      details.push({ rule: "keyword-desc", label: "Keyword in description", status: "warn", message: `Add the keyword "${keywords[0]}" to the meta description field above.` });
+      details.push({ rule: "keyword-desc", label: tr("libText.seoScore.labelKeywordDesc"), status: "warn", message: tr("libText.seoScore.keywordNotInDesc", { keyword: keywords[0] }) });
     }
   }
 
   // 5. Content length (min 300 words)
   const wc = wordCount(content);
   if (wc < 100) {
-    details.push({ rule: "content-length", label: "Content length", status: "fail", message: `Content is only ${wc} words. Write at least 300 words for search engines to index properly.` });
+    details.push({ rule: "content-length", label: tr("libText.seoScore.labelContentLength"), status: "fail", message: tr("libText.seoScore.contentTooThin", { wc }) });
   } else if (wc < 300) {
-    details.push({ rule: "content-length", label: "Content length", status: "warn", message: `Content is ${wc} words. Write ${300 - wc} more words to reach 300 (recommended minimum).` });
+    details.push({ rule: "content-length", label: tr("libText.seoScore.labelContentLength"), status: "warn", message: tr("libText.seoScore.contentShort", { wc, more: 300 - wc }) });
   } else {
-    details.push({ rule: "content-length", label: "Content length", status: "pass", message: `Content is ${wc} words (300+ is good)` });
+    details.push({ rule: "content-length", label: tr("libText.seoScore.labelContentLength"), status: "pass", message: tr("libText.seoScore.contentGood", { wc }) });
   }
 
   // 6. Heading structure (has H2s)
   const rawContent = String(doc.data.content ?? doc.data.body ?? "");
   const hasH2 = /#{2}\s|<h2/i.test(rawContent);
   if (hasH2) {
-    details.push({ rule: "headings", label: "Heading structure", status: "pass", message: "Content uses H2 headings for structure" });
+    details.push({ rule: "headings", label: tr("libText.seoScore.labelHeadings"), status: "pass", message: tr("libText.seoScore.headingsGood") });
   } else if (wc > 200) {
-    details.push({ rule: "headings", label: "Heading structure", status: "warn", message: "Content has no H2 headings. Break up the text with ## subheadings." });
+    details.push({ rule: "headings", label: tr("libText.seoScore.labelHeadings"), status: "warn", message: tr("libText.seoScore.headingsMissing") });
   }
 
   // 7. Images have alt text
@@ -192,52 +208,52 @@ export function calculateSeoScore(
   if (totalImgs === 0) {
     // No images — not a fail, just skip
   } else if (totalMissing > 0) {
-    details.push({ rule: "img-alt", label: "Image alt text", status: "warn", message: `${totalMissing} of ${totalImgs} images are missing alt text. Edit each image and add a description.` });
+    details.push({ rule: "img-alt", label: tr("libText.seoScore.labelImgAlt"), status: "warn", message: tr("libText.seoScore.imgAltMissing", { missing: totalMissing, total: totalImgs }) });
   } else {
-    details.push({ rule: "img-alt", label: "Image alt text", status: "pass", message: `All ${totalImgs} images have alt text` });
+    details.push({ rule: "img-alt", label: tr("libText.seoScore.labelImgAlt"), status: "pass", message: tr("libText.seoScore.imgAltGood", { total: totalImgs }) });
   }
 
   // 8. OG image
   if (seo.ogImage) {
-    details.push({ rule: "og-image", label: "Social image", status: "pass", message: "Social sharing image (OG) is set" });
+    details.push({ rule: "og-image", label: tr("libText.seoScore.labelOgImage"), status: "pass", message: tr("libText.seoScore.ogImageSet") });
   } else {
-    details.push({ rule: "og-image", label: "Social image", status: "warn", message: "No social image set. Add an image in the \"Social image (OG)\" field above — it shows when someone shares this page on Facebook/LinkedIn." });
+    details.push({ rule: "og-image", label: tr("libText.seoScore.labelOgImage"), status: "warn", message: tr("libText.seoScore.ogImageMissing") });
   }
 
   // 9. Keyword in URL slug
   if (keywords.length > 0) {
     const slugLower = doc.slug.toLowerCase();
     if (keywords.some((k) => slugLower.includes(k.toLowerCase().replace(/\s+/g, "-")))) {
-      details.push({ rule: "keyword-slug", label: "Keyword in URL", status: "pass", message: `Keyword "${keywords[0]}" found in the URL` });
+      details.push({ rule: "keyword-slug", label: tr("libText.seoScore.labelKeywordSlug"), status: "pass", message: tr("libText.seoScore.keywordInSlug", { keyword: keywords[0] }) });
     } else {
-      details.push({ rule: "keyword-slug", label: "Keyword in URL", status: "warn", message: `The keyword "${keywords[0]}" is not in the URL slug (${doc.slug}). Consider renaming the slug in Properties.` });
+      details.push({ rule: "keyword-slug", label: tr("libText.seoScore.labelKeywordSlug"), status: "warn", message: tr("libText.seoScore.keywordNotInSlug", { keyword: keywords[0], slug: doc.slug }) });
     }
   }
 
   // 10. Internal links
   const hasInternalLinks = /\]\(\/|href=["']\//.test(rawContent);
   if (hasInternalLinks) {
-    details.push({ rule: "internal-links", label: "Internal links", status: "pass", message: "Content links to other pages on the site" });
+    details.push({ rule: "internal-links", label: tr("libText.seoScore.labelInternalLinks"), status: "pass", message: tr("libText.seoScore.internalLinksGood") });
   } else if (wc > 200) {
-    details.push({ rule: "internal-links", label: "Internal links", status: "warn", message: "No internal links. Add links to other pages on your site (e.g. related posts) to improve SEO." });
+    details.push({ rule: "internal-links", label: tr("libText.seoScore.labelInternalLinks"), status: "warn", message: tr("libText.seoScore.internalLinksMissing") });
   }
 
   // 11. Document has title
   if (title) {
-    details.push({ rule: "title", label: "Page title", status: "pass", message: "Page has a title" });
+    details.push({ rule: "title", label: tr("libText.seoScore.labelTitle"), status: "pass", message: tr("libText.seoScore.titleGood") });
   } else {
-    details.push({ rule: "title", label: "Page title", status: "fail", message: "Page has no title. Fill in the Title field at the top of the editor." });
+    details.push({ rule: "title", label: tr("libText.seoScore.labelTitle"), status: "fail", message: tr("libText.seoScore.titleMissing") });
   }
 
   // 12. Readability (only if 100+ words)
   if (wc >= 100) {
     const readability = calculateReadability(content);
     if (readability >= 60) {
-      details.push({ rule: "readability", label: "Readability", status: "pass", message: `Readability score is ${readability}/100 — easy to read` });
+      details.push({ rule: "readability", label: tr("libText.seoScore.labelReadability"), status: "pass", message: tr("libText.seoScore.readabilityEasy", { score: readability }) });
     } else if (readability >= 30) {
-      details.push({ rule: "readability", label: "Readability", status: "warn", message: `Readability score is ${readability}/100 — consider shorter sentences and simpler words` });
+      details.push({ rule: "readability", label: tr("libText.seoScore.labelReadability"), status: "warn", message: tr("libText.seoScore.readabilityMedium", { score: readability }) });
     } else {
-      details.push({ rule: "readability", label: "Readability", status: "fail", message: `Readability score is ${readability}/100 — text is very hard to read. Use shorter sentences and simpler words.` });
+      details.push({ rule: "readability", label: tr("libText.seoScore.labelReadability"), status: "fail", message: tr("libText.seoScore.readabilityHard", { score: readability }) });
     }
   }
 
@@ -246,9 +262,9 @@ export function calculateSeoScore(
     const mtLower = mt.toLowerCase();
     const duplicates = allTitles.filter((t) => t.toLowerCase() === mtLower).length;
     if (duplicates > 1) {
-      details.push({ rule: "duplicate-title", label: "Unique title", status: "warn", message: `Meta title "${mt}" is used by ${duplicates} documents. Each page should have a unique title.` });
+      details.push({ rule: "duplicate-title", label: tr("libText.seoScore.labelUniqueTitle"), status: "warn", message: tr("libText.seoScore.titleDuplicate", { title: mt, count: duplicates }) });
     } else {
-      details.push({ rule: "duplicate-title", label: "Unique title", status: "pass", message: "Meta title is unique across all documents" });
+      details.push({ rule: "duplicate-title", label: tr("libText.seoScore.labelUniqueTitle"), status: "pass", message: tr("libText.seoScore.titleUnique") });
     }
   }
 
@@ -272,7 +288,9 @@ export function calculateSeoScore(
 export function calculateGeoScore(
   doc: { slug: string; data: Record<string, unknown>; updatedAt?: string },
   seo: SeoFields,
+  t?: ScoreTranslator,
 ): GeoScoreResult {
+  const tr = t ?? englishT;
   const details: SeoScoreDetail[] = [];
   const rawContent = String(doc.data.content ?? doc.data.body ?? "");
   const content = stripToText(rawContent);
@@ -287,11 +305,11 @@ export function calculateGeoScore(
     const startsWithQuestion = /^(what|how|why|when|where|who|which|hvad|hvordan|hvorfor|hvornår|hvor|hvem)\b/i.test(first200);
 
     if (hasNumber && hasDefinitive && !startsWithQuestion) {
-      details.push({ rule: "geo-answer-first", label: "🤖 Answer-first", status: "pass", message: "First 200 words contain a direct answer with facts" });
+      details.push({ rule: "geo-answer-first", label: tr("libText.seoScore.labelGeoAnswerFirst"), status: "pass", message: tr("libText.seoScore.geoAnswerFirstPass") });
     } else if (hasDefinitive) {
-      details.push({ rule: "geo-answer-first", label: "🤖 Answer-first", status: "warn", message: "Opening is OK but could lead with a stronger factual answer. Add a number or statistic in the first paragraph." });
+      details.push({ rule: "geo-answer-first", label: tr("libText.seoScore.labelGeoAnswerFirst"), status: "warn", message: tr("libText.seoScore.geoAnswerFirstWarn") });
     } else {
-      details.push({ rule: "geo-answer-first", label: "🤖 Answer-first", status: "fail", message: "Opening doesn't provide a direct answer. Restructure so the first paragraph answers the page's main question." });
+      details.push({ rule: "geo-answer-first", label: tr("libText.seoScore.labelGeoAnswerFirst"), status: "fail", message: tr("libText.seoScore.geoAnswerFirstFail") });
     }
   }
 
@@ -301,9 +319,9 @@ export function calculateGeoScore(
     const questionH2s = h2Matches.filter((h) => /\?/.test(h)).length;
     const ratio = questionH2s / h2Matches.length;
     if (ratio >= 0.3) {
-      details.push({ rule: "geo-question-headers", label: "🤖 Question headers", status: "pass", message: `${questionH2s}/${h2Matches.length} headings are questions (${Math.round(ratio * 100)}% — AI platforms match these to user queries)` });
+      details.push({ rule: "geo-question-headers", label: tr("libText.seoScore.labelGeoQuestionHeaders"), status: "pass", message: tr("libText.seoScore.geoQuestionHeadersPass", { questions: questionH2s, total: h2Matches.length, pct: Math.round(ratio * 100) }) });
     } else {
-      details.push({ rule: "geo-question-headers", label: "🤖 Question headers", status: "warn", message: `Only ${questionH2s}/${h2Matches.length} headings are questions. Rephrase some H2s as questions (e.g. "How does X work?") — AI platforms match these to queries.` });
+      details.push({ rule: "geo-question-headers", label: tr("libText.seoScore.labelGeoQuestionHeaders"), status: "warn", message: tr("libText.seoScore.geoQuestionHeadersWarn", { questions: questionH2s, total: h2Matches.length }) });
     }
   }
 
@@ -313,11 +331,11 @@ export function calculateGeoScore(
     const hasStats = statsPattern.test(content);
     const hasPlainNumbers = (content.match(/\b\d{2,}\b/g) ?? []).length >= 3;
     if (hasStats) {
-      details.push({ rule: "geo-statistics", label: "🤖 Statistics", status: "pass", message: "Content includes specific statistics — AI platforms prefer citing data-backed claims" });
+      details.push({ rule: "geo-statistics", label: tr("libText.seoScore.labelGeoStatistics"), status: "pass", message: tr("libText.seoScore.geoStatisticsPass") });
     } else if (hasPlainNumbers) {
-      details.push({ rule: "geo-statistics", label: "🤖 Statistics", status: "warn", message: "Content has numbers but no clear statistics. Add percentages, costs, or measurable data points." });
+      details.push({ rule: "geo-statistics", label: tr("libText.seoScore.labelGeoStatistics"), status: "warn", message: tr("libText.seoScore.geoStatisticsWarn") });
     } else {
-      details.push({ rule: "geo-statistics", label: "🤖 Statistics", status: "fail", message: "No statistics found. Add specific numbers, percentages, or data points — AI systems strongly prefer citable facts." });
+      details.push({ rule: "geo-statistics", label: tr("libText.seoScore.labelGeoStatistics"), status: "fail", message: tr("libText.seoScore.geoStatisticsFail") });
     }
   }
 
@@ -325,47 +343,47 @@ export function calculateGeoScore(
   const hasExternalLink = /https?:\/\/(?!localhost|127\.0\.0\.1)[^\s"'<>]+/.test(rawContent);
   const hasAttribution = /\b(according to|source:|kilde:|ifølge|research by|study by|data from)\b/i.test(content);
   if (hasExternalLink || hasAttribution) {
-    details.push({ rule: "geo-citations", label: "🤖 Citations", status: "pass", message: "Content references external sources — adds credibility for AI citation" });
+    details.push({ rule: "geo-citations", label: tr("libText.seoScore.labelGeoCitations"), status: "pass", message: tr("libText.seoScore.geoCitationsPass") });
   } else if (wc >= 200) {
-    details.push({ rule: "geo-citations", label: "🤖 Citations", status: "warn", message: "No external sources cited. Add references to research, data sources, or authoritative sites to boost AI trust." });
+    details.push({ rule: "geo-citations", label: tr("libText.seoScore.labelGeoCitations"), status: "warn", message: tr("libText.seoScore.geoCitationsWarn") });
   }
 
   // G5: Content freshness — updated within 90 days
   if (doc.updatedAt) {
     const daysSinceUpdate = Math.floor((Date.now() - new Date(doc.updatedAt).getTime()) / 86400000);
     if (daysSinceUpdate <= 90) {
-      details.push({ rule: "geo-freshness", label: "🤖 Freshness", status: "pass", message: `Updated ${daysSinceUpdate} days ago — AI platforms have strong recency bias` });
+      details.push({ rule: "geo-freshness", label: tr("libText.seoScore.labelGeoFreshness"), status: "pass", message: tr("libText.seoScore.geoFreshnessPass", { days: daysSinceUpdate }) });
     } else if (daysSinceUpdate <= 180) {
-      details.push({ rule: "geo-freshness", label: "🤖 Freshness", status: "warn", message: `Updated ${daysSinceUpdate} days ago. Content older than 90 days gets less AI citation. Refresh key facts.` });
+      details.push({ rule: "geo-freshness", label: tr("libText.seoScore.labelGeoFreshness"), status: "warn", message: tr("libText.seoScore.geoFreshnessWarn", { days: daysSinceUpdate }) });
     } else {
-      details.push({ rule: "geo-freshness", label: "🤖 Freshness", status: "fail", message: `Updated ${daysSinceUpdate} days ago. Stale content is rarely cited by AI. Update with current information.` });
+      details.push({ rule: "geo-freshness", label: tr("libText.seoScore.labelGeoFreshness"), status: "fail", message: tr("libText.seoScore.geoFreshnessFail", { days: daysSinceUpdate }) });
     }
   }
 
   // G6: JSON-LD configured — structured data helps AI understand content
   if (seo.jsonLd && Object.keys(seo.jsonLd).length > 0) {
-    details.push({ rule: "geo-jsonld", label: "🤖 Structured data", status: "pass", message: "JSON-LD structured data is configured — helps AI systems understand page content" });
+    details.push({ rule: "geo-jsonld", label: tr("libText.seoScore.labelGeoJsonLd"), status: "pass", message: tr("libText.seoScore.geoJsonLdPass") });
   } else if (seo.jsonLdTemplate) {
-    details.push({ rule: "geo-jsonld", label: "🤖 Structured data", status: "warn", message: "JSON-LD template selected but not fully configured. Fill in the fields to help AI understand this content." });
+    details.push({ rule: "geo-jsonld", label: tr("libText.seoScore.labelGeoJsonLd"), status: "warn", message: tr("libText.seoScore.geoJsonLdPartial") });
   } else {
-    details.push({ rule: "geo-jsonld", label: "🤖 Structured data", status: "warn", message: "No JSON-LD structured data. Select a template (Article, FAQ, HowTo) in the Advanced section to help AI categorize this content." });
+    details.push({ rule: "geo-jsonld", label: tr("libText.seoScore.labelGeoJsonLd"), status: "warn", message: tr("libText.seoScore.geoJsonLdMissing") });
   }
 
   // G7: Author attribution — E-E-A-T signal
   const author = doc.data.author ?? doc.data.authorName ?? doc.data.by;
   if (author && String(author).trim().length > 0) {
-    details.push({ rule: "geo-author", label: "🤖 Author", status: "pass", message: `Author "${String(author)}" attributed — builds E-E-A-T trust signals for AI` });
+    details.push({ rule: "geo-author", label: tr("libText.seoScore.labelGeoAuthor"), status: "pass", message: tr("libText.seoScore.geoAuthorPass", { author: String(author) }) });
   } else {
-    details.push({ rule: "geo-author", label: "🤖 Author", status: "warn", message: "No author attributed. Add an author name — AI platforms trust content with clear authorship (E-E-A-T)." });
+    details.push({ rule: "geo-author", label: tr("libText.seoScore.labelGeoAuthor"), status: "warn", message: tr("libText.seoScore.geoAuthorMissing") });
   }
 
   // G8: Content depth — AI prefers comprehensive content
   if (wc >= 800) {
-    details.push({ rule: "geo-depth", label: "🤖 Content depth", status: "pass", message: `${wc} words — comprehensive enough for AI to cite as an authoritative source` });
+    details.push({ rule: "geo-depth", label: tr("libText.seoScore.labelGeoDepth"), status: "pass", message: tr("libText.seoScore.geoDepthPass", { wc }) });
   } else if (wc >= 400) {
-    details.push({ rule: "geo-depth", label: "🤖 Content depth", status: "warn", message: `${wc} words — add more depth (800+ words) for AI platforms to consider this an authoritative source` });
+    details.push({ rule: "geo-depth", label: tr("libText.seoScore.labelGeoDepth"), status: "warn", message: tr("libText.seoScore.geoDepthWarn", { wc }) });
   } else if (wc >= 100) {
-    details.push({ rule: "geo-depth", label: "🤖 Content depth", status: "fail", message: `Only ${wc} words. AI platforms rarely cite thin content. Aim for 800+ words with comprehensive coverage.` });
+    details.push({ rule: "geo-depth", label: tr("libText.seoScore.labelGeoDepth"), status: "fail", message: tr("libText.seoScore.geoDepthFail", { wc }) });
   }
 
   // Calculate score
@@ -387,9 +405,10 @@ export function calculateVisibilityScore(
   seo: SeoFields,
   allTitles?: string[],
   locale?: string,
+  t?: ScoreTranslator,
 ): VisibilityScoreResult {
-  const seoResult = calculateSeoScore(doc, seo, allTitles, locale);
-  const geoResult = calculateGeoScore(doc, seo);
+  const seoResult = calculateSeoScore(doc, seo, allTitles, locale, t);
+  const geoResult = calculateGeoScore(doc, seo, t);
   const combined = Math.round((seoResult.score * 0.5) + (geoResult.score * 0.5));
   return { seo: seoResult, geo: geoResult, combined };
 }

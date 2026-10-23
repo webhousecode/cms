@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerTSafe } from "@/i18n/server";
 import { cookies } from "next/headers";
 import { mintEditSessionToken, isReadOnlyLensSession } from "@/lib/inline-edit-token";
 import { requirePermission } from "@/lib/permissions";
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
   const siteId = request.nextUrl.searchParams.get("site");
   const returnUrl = request.nextUrl.searchParams.get("return");
   if (!siteId || !returnUrl) {
-    return NextResponse.json({ error: "site and return are required" }, { status: 400 });
+    return NextResponse.json({ error: (await getServerTSafe())("pages.inlineEditConnect.siteAndReturnRequired") }, { status: 400 });
   }
 
   // F158.1 — self-resolve ?site=. proxy.ts only injects the cms-active-site
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
     }
   }
   if (!orgId) {
-    return NextResponse.json({ error: "site not found" }, { status: 404 });
+    return NextResponse.json({ error: (await getServerTSafe())("pages.inlineEditConnect.siteNotFound") }, { status: 404 });
   }
 
   return withSiteContext({ orgId, siteId }, async () => {
@@ -97,16 +98,16 @@ export async function GET(request: NextRequest) {
 
     const site = await getActiveSiteEntry();
     if (!site || site.id !== siteId) {
-      return NextResponse.json({ error: "site not found" }, { status: 404 });
+      return NextResponse.json({ error: (await getServerTSafe())("pages.inlineEditConnect.siteNotFound") }, { status: 404 });
     }
 
     if (!(await isReturnAllowed(returnUrl))) {
-      return NextResponse.json({ error: "return origin not allowed" }, { status: 400 });
+      return NextResponse.json({ error: (await getServerTSafe())("pages.inlineEditConnect.returnNotAllowed") }, { status: 400 });
     }
 
     const session = await getSessionWithSiteRole();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: (await getServerTSafe())("pages.inlineEditConnect.unauthorized") }, { status: 401 });
     }
 
     const now = Math.floor(Date.now() / 1000);
@@ -126,7 +127,7 @@ export async function GET(request: NextRequest) {
     // direct PATCH (403) and granted a writing token here, four calls apart.
     if (isReadOnlyLensSession(rawSession)) {
       return NextResponse.json(
-        { error: "Lens session is read-only — mint with the write key to get an edit session" },
+        { error: (await getServerTSafe())("pages.inlineEditConnect.lensReadOnly") },
         { status: 403 },
       );
     }

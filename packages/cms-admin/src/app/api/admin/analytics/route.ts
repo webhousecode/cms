@@ -9,6 +9,7 @@ import {
   recordContentEdit,
   type RunHistoryFilter,
 } from "@/lib/analytics";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/admin/analytics
@@ -20,6 +21,7 @@ import {
  *  - limit: max results (for runs)
  */
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   try {
     const { searchParams } = request.nextUrl;
     const view = searchParams.get("view") ?? "runs";
@@ -49,10 +51,10 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(ratio);
       }
       default:
-        return NextResponse.json({ error: `Unknown view: ${view}` }, { status: 400 });
+        return NextResponse.json({ error: t("errAdmin.analytics.unknownView", { view }) }, { status: 400 });
     }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to fetch analytics";
+    const msg = err instanceof Error ? err.message : t("errAdmin.analytics.fetchFailed");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
@@ -63,6 +65,7 @@ export async function GET(request: NextRequest) {
  * Body: { type: "run" | "edit", data: RunEntry | ContentEdit }
  */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   try {
     const body = await request.json();
@@ -80,9 +83,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(entry, { status: 201 });
     }
 
-    return NextResponse.json({ error: `Unknown type: ${type}` }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.analytics.unknownType", { type }) }, { status: 400 });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to record entry";
+    const msg = err instanceof Error ? err.message : t("errAdmin.analytics.recordFailed");
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

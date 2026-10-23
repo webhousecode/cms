@@ -51,7 +51,7 @@ export async function probeWpSite(rawUrl: string): Promise<WpProbeResult> {
 
   // ── 1. Detect REST API ──
   try {
-    const apiRes = await fetchWithTimeout(`${url}/wp-json/`, 8000);
+    const apiRes = await fetchWithTimeout(`${url}/wp-json/`, 8000); // i18n-ignore: URL
     if (apiRes.ok) {
       const data = await apiRes.json();
       result.restApiAvailable = true;
@@ -115,15 +115,15 @@ export async function probeWpSite(rawUrl: string): Promise<WpProbeResult> {
     const api = result.restApiUrl;
 
     // Standard types
-    result.contentCounts.posts = await getWpCount(`${api}/posts`);
-    result.contentCounts.pages = await getWpCount(`${api}/pages`);
-    result.contentCounts.media = await getWpCount(`${api}/media`);
-    result.contentCounts.categories = await getWpCount(`${api}/categories`);
-    result.contentCounts.tags = await getWpCount(`${api}/tags`);
+    result.contentCounts.posts = await getWpCount(`${api}/posts`); // i18n-ignore: URL
+    result.contentCounts.pages = await getWpCount(`${api}/pages`); // i18n-ignore: URL
+    result.contentCounts.media = await getWpCount(`${api}/media`); // i18n-ignore: URL
+    result.contentCounts.categories = await getWpCount(`${api}/categories`); // i18n-ignore: URL
+    result.contentCounts.tags = await getWpCount(`${api}/tags`); // i18n-ignore: URL
 
     // Detect custom post types
     try {
-      const typesRes = await fetchWithTimeout(`${api}/types`, 5000);
+      const typesRes = await fetchWithTimeout(`${api}/types`, 5000); // i18n-ignore: URL
       if (typesRes.ok) {
         const types = await typesRes.json();
         for (const [slug, meta] of Object.entries(types) as [string, any][]) {
@@ -155,7 +155,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Respons
   try {
     return await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": "webhouse.app-cms/1.0 (WordPress Migration)" },
+      headers: { "User-Agent": "webhouse.app-cms/1.0 (WordPress Migration)" }, // i18n-ignore: HTTP User-Agent header
     });
   } finally {
     clearTimeout(timer);

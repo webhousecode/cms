@@ -39,7 +39,8 @@ export function BidPanel() {
             className="text-muted-foreground dark:text-white"
             style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}
           >
-            Broberg ID
+            {/* i18n-ignore: name of the login service (D-e106f4: it is called BID) */}
+            BID
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {t("settings.bidPanel.description")}

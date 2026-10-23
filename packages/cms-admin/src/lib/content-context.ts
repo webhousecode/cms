@@ -57,7 +57,7 @@ export async function buildContentContext(): Promise<string> {
         ? (doc.data["tags"] as string[]).join(", ")
         : "";
 
-      const tagStr = tags ? ` [tags: ${tags}]` : "";
+      const tagStr = tags ? ` [tags: ${tags}]` : ""; // i18n-ignore: model prompt context
       const excerptStr = excerpt ? ` — ${excerpt}` : "";
 
       lines.push(`- "${title}" ${url} [${col.label ?? col.name}]${tagStr}${excerptStr}`);

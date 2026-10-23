@@ -318,7 +318,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               type="url"
               value={targetUrl}
               onChange={(e) => setTargetUrl(e.target.value)}
-              placeholder="https://remote-cms.example.com"
+              placeholder="https://remote-cms.example.com" // i18n-ignore: placeholder example value (URL / identifier), not prose
               disabled={pushing}
               style={{
                 width: "100%",
@@ -340,7 +340,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               type="text"
               value={pushToken}
               onChange={(e) => setPushToken(e.target.value)}
-              placeholder="beam_..."
+              placeholder="beam_..." // i18n-ignore: placeholder example value (URL / identifier), not prose
               disabled={pushing}
               style={{
                 width: "100%",

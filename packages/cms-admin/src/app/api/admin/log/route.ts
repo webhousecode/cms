@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readLog, logStats, logEvent, hashIp, type LogLayer, type LogLevel } from "@/lib/event-log";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +39,9 @@ export async function GET(req: NextRequest) {
 
 /** POST /api/admin/log — receive client-side events (any authenticated user) */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: t("errAdmin.common.notAuthenticated") }, { status: 401 });
 
   try {
     const body = await req.json() as {
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     };
 
     if (!Array.isArray(body.events)) {
-      return NextResponse.json({ error: "events array required" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.log.eventsRequired") }, { status: 400 });
     }
 
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
@@ -78,7 +80,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, received: body.events.length });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to log events" },
+      { error: err instanceof Error ? err.message : t("errAdmin.log.failed") },
       { status: 500 },
     );
   }

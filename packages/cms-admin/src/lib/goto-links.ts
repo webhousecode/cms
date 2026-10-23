@@ -61,7 +61,7 @@ export async function createGotoLink(input: {
   // URLs, and anything that doesn't start with "/". This prevents open-redirect
   // abuse via crafted goto links.
   if (!input.path.startsWith("/") || input.path.startsWith("//")) {
-    throw new Error(`createGotoLink: path must be an internal path starting with "/", got "${input.path}"`);
+    throw new Error(`createGotoLink: path must be an internal path starting with "/", got "${input.path}"`); // i18n-ignore: developer guard (programming error)
   }
   const links = await load();
   const id = shortId();
@@ -115,7 +115,7 @@ export async function buildAdminDeepLink(input: {
       path: input.path,
       ...(input.label ? { label: input.label } : {}),
     });
-    return `${base}/admin/goto/${id}`;
+    return `${base}/admin/goto/${id}`; // i18n-ignore: URL
   } catch {
     return `${base}${input.path}`;
   }

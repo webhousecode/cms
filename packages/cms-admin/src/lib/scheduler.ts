@@ -110,15 +110,15 @@ async function generateScheduledPrompt(agent: AgentConfig): Promise<string> {
   const contentContext = await buildContentContext().catch(() => "");
 
   const prompts = [
-    `Generate a new piece of content for the "${collection}" collection.`,
+    `Generate a new piece of content for the "${collection}" collection.`, // i18n-ignore: model prompt
     contentContext
-      ? "Review the existing site content listed below and write about a topic that has NOT been covered yet. Offer a fresh perspective."
+      ? "Review the existing site content listed below and write about a topic that has NOT been covered yet. Offer a fresh perspective." // i18n-ignore: model prompt
       : "",
-    `The content should match the site's voice and add genuine value for readers.`,
+    `The content should match the site's voice and add genuine value for readers.`, // i18n-ignore: model prompt
     agent.role === "seo"
-      ? "Focus on SEO-optimized content with strong headings and keyword placement."
+      ? "Focus on SEO-optimized content with strong headings and keyword placement." // i18n-ignore: model prompt
       : agent.role === "refresher"
-        ? "Find an outdated topic and write an updated version with current information."
+        ? "Find an outdated topic and write an updated version with current information." // i18n-ignore: model prompt
         : "",
   ].filter(Boolean);
 
@@ -193,11 +193,11 @@ export async function runScheduledAgents(): Promise<{ ran: string[]; skipped: st
     for (const workflow of workflows) {
       if (!isWorkflowDue(workflow, state)) continue;
       if (cockpit.currentMonthSpentUsd >= cockpit.monthlyBudgetUsd * 0.95) {
-        skipped.push(`wf:${workflow.id}`);
+        skipped.push(`wf:${workflow.id}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
         continue;
       }
       const prompt = workflow.defaultPrompt?.trim()
-        || `Generate new content for the "${workflow.name}" pipeline. Match the site's voice and add genuine value.`;
+        || `Generate new content for the "${workflow.name}" pipeline. Match the site's voice and add genuine value.`; // i18n-ignore: model prompt
       try {
         const maxPerRun = workflow.schedule?.maxPerRun ?? 1;
         for (let i = 0; i < maxPerRun; i++) {
@@ -205,18 +205,18 @@ export async function runScheduledAgents(): Promise<{ ran: string[]; skipped: st
           await runWorkflow(workflow.id, prompt);
         }
         state.lastRuns[`wf:${workflow.id}`] = new Date().toISOString();
-        ran.push(`wf:${workflow.id}`);
+        ran.push(`wf:${workflow.id}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
       } catch (err) {
         const msg = err instanceof Error ? err.message : "unknown";
         console.error(`[scheduler] Workflow ${workflow.name} failed:`, msg);
-        errors.push(`wf:${workflow.id}: ${msg}`);
+        errors.push(`wf:${workflow.id}: ${msg}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
       }
     }
 
     await writeState(state);
   } catch (err) {
     console.error("[scheduler] Fatal error:", err);
-    errors.push(`fatal: ${err instanceof Error ? err.message : "unknown"}`);
+    errors.push(`fatal: ${err instanceof Error ? err.message : "unknown"}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
   }
 
   return { ran, skipped, errors };

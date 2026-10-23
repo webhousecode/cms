@@ -129,15 +129,19 @@ export function bareSpecifierToPackageName(spec: string): string {
 export function detectFramework(projectDir: string): ScanResult["framework"] | undefined {
   if (!existsSync(projectDir)) return undefined;
   // Check for framework signals in known order. Most-specific first.
+  // i18n-ignore: file paths
   if (existsSync(`${projectDir}/next.config.ts`) || existsSync(`${projectDir}/next.config.mjs`) || existsSync(`${projectDir}/next.config.js`)) {
     return "nextjs";
   }
+  // i18n-ignore: file paths
   if (existsSync(`${projectDir}/bun.lockb`) || existsSync(`${projectDir}/bunfig.toml`)) {
     return "bun-hono";
   }
+  // i18n-ignore: file paths
   if (existsSync(`${projectDir}/vite.config.ts`) || existsSync(`${projectDir}/vite.config.js`)) {
     return "vite-spa";
   }
+  // i18n-ignore: file paths
   if (existsSync(`${projectDir}/build.ts`) || existsSync(`${projectDir}/build.mjs`) || existsSync(`${projectDir}/build.js`)) {
     return "static";
   }

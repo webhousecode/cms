@@ -117,7 +117,7 @@ function titleFor(path: string, t: Translate): string | null {
 function pathTitle(path: string): string {
   const bare = path.split("?")[0];
   const parts = bare.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
-  if (parts.length === 0) return "Dashboard";
+  if (parts.length === 0) return "Dashboard"; // i18n-ignore: stored title of a built-in route; displayTabTitle() renders it from shell.tabTitles
   // Tab titles are ALWAYS capitalized (first letter uppercase) — never raw URL slugs.
   const slug = decodeURIComponent(parts[parts.length - 1]);
   return slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -152,7 +152,7 @@ const Ctx = createContext<TabsCtx | null>(null);
 
 export function useTabs(): TabsCtx {
   const c = useContext(Ctx);
-  if (!c) throw new Error("useTabs used outside TabsProvider");
+  if (!c) throw new Error("useTabs used outside TabsProvider"); // i18n-ignore: developer error (hook misuse)
   return c;
 }
 
@@ -274,7 +274,7 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       } else {
         // No saved tabs for this site — fresh Dashboard
         const id = uid();
-        const fresh: Tab[] = [{ id, path: "/admin", title: "Dashboard" }];
+        const fresh: Tab[] = [{ id, path: "/admin", title: "Dashboard" }]; // i18n-ignore: stored title of a built-in route; displayTabTitle() renders it from shell.tabTitles
         tabsRef.current = fresh;
         activeIdRef.current = id;
         setTabs(fresh);
@@ -288,8 +288,8 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
     function handleTabsReset(e: Event) {
       const { path, title } = (e as CustomEvent).detail ?? {};
       if (!path) return;
-      const id = `tab-${Date.now()}`;
-      const fresh = [{ id, path, title: title ?? "Sites" }];
+      const id = `tab-${Date.now()}`; // i18n-ignore: generated id
+      const fresh = [{ id, path, title: title ?? "Sites" }]; // i18n-ignore: stored title of a built-in route; displayTabTitle() renders it from shell.tabTitles
       setTabs(fresh);
       setActiveId(id);
       save(fresh, id, userIdRef.current, siteIdRef.current);
@@ -436,7 +436,7 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
     // Closed the active tab — switch to neighbour
     if (next.length === 0) {
       const id2 = uid();
-      const dash: Tab = { id: id2, path: "/admin", title: "Dashboard" };
+      const dash: Tab = { id: id2, path: "/admin", title: "Dashboard" }; // i18n-ignore: stored title of a built-in route; displayTabTitle() renders it from shell.tabTitles
       applyTabs([dash], id2);
       skipNextPathChange.current = true;
       router.push("/admin");
@@ -452,7 +452,7 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
 
   const closeAllTabs = useCallback(() => {
     const id2 = uid();
-    const dash: Tab = { id: id2, path: "/admin", title: "Dashboard" };
+    const dash: Tab = { id: id2, path: "/admin", title: "Dashboard" }; // i18n-ignore: stored title of a built-in route; displayTabTitle() renders it from shell.tabTitles
     applyTabs([dash], id2);
     skipNextPathChange.current = true;
     router.push("/admin");

@@ -227,29 +227,29 @@ export function evaluateToken(
 ): EvaluateResult {
   // 1. TTL window
   if (token.notBefore && now < new Date(token.notBefore)) {
-    return { allow: false, reason: "token not yet valid" };
+    return { allow: false, reason: "token not yet valid" }; // i18n-ignore: machine reason code for API-token callers; token-scope.ts matches on its prefix
   }
   if (token.notAfter && now >= new Date(token.notAfter)) {
-    return { allow: false, reason: "token expired" };
+    return { allow: false, reason: "token expired" }; // i18n-ignore: machine reason code for API-token callers; token-scope.ts matches on its prefix
   }
 
   // 2. IP filters
   const notIns = token.ipFilters.filter((f) => f.op === "not_in");
   for (const f of notIns) {
     if (f.cidrs.some((c) => ipInCidr(clientIp, c))) {
-      return { allow: false, reason: "client ip on denylist" };
+      return { allow: false, reason: "client ip on denylist" }; // i18n-ignore: machine reason code for API-token callers; token-scope.ts matches on its prefix
     }
   }
   const ins = token.ipFilters.filter((f) => f.op === "in");
   if (ins.length > 0) {
     const ok = ins.some((f) => f.cidrs.some((c) => ipInCidr(clientIp, c)));
-    if (!ok) return { allow: false, reason: "client ip not on allowlist" };
+    if (!ok) return { allow: false, reason: "client ip not on allowlist" }; // i18n-ignore: machine reason code for API-token callers; token-scope.ts matches on its prefix
   }
 
   // 3. Permission
   const perms = token.permissions ?? [];
   if (!perms.includes("*") && !perms.includes(permission)) {
-    return { allow: false, reason: `missing permission ${permission}` };
+    return { allow: false, reason: `missing permission ${permission}` }; // i18n-ignore: machine reason code for API-token callers; token-scope.ts matches on its prefix
   }
 
   // 4. Resource filters
@@ -263,11 +263,11 @@ export function evaluateToken(
   // If include filters: caller must match at least one include.
   if (includes.length > 0) {
     const included = includes.some((f) => resourceMatchesFilter(resource, f));
-    if (!included) return { allow: false, reason: "resource not in include set" };
+    if (!included) return { allow: false, reason: "resource not in include set" }; // i18n-ignore: machine reason code for API-token callers; token-scope.ts matches on its prefix
   }
   for (const f of excludes) {
     if (resourceMatchesFilter(resource, f)) {
-      return { allow: false, reason: "resource in exclude set" };
+      return { allow: false, reason: "resource in exclude set" }; // i18n-ignore: machine reason code for API-token callers; token-scope.ts matches on its prefix
     }
   }
   return { allow: true };

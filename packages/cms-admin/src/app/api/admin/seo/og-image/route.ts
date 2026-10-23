@@ -3,6 +3,7 @@ import { getAdminCms } from "@/lib/cms";
 import { generateOgImage } from "@/lib/seo/og-image";
 import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/admin/seo/og-image
@@ -13,18 +14,19 @@ import { requireCapability } from "@/lib/capabilities";
  * Returns: { url: string } or { error: string }
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("seo"); if (capDenied) return capDenied;
   try {
     const { collection, slug } = (await req.json()) as { collection?: string; slug?: string };
     if (!collection || !slug) {
-      return NextResponse.json({ error: "collection and slug required" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.seo.collectionSlugRequired") }, { status: 400 });
     }
 
     const cms = await getAdminCms();
     const doc = await cms.content.findBySlug(collection, slug);
     if (!doc) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errAdmin.common.documentNotFound") }, { status: 404 });
     }
 
     const data = (doc as { data?: Record<string, unknown> }).data ?? {};
@@ -47,18 +49,18 @@ export async function POST(req: NextRequest) {
     }
 
     if (!sourceImage) {
-      return NextResponse.json({ error: "No image found in document to use as OG base" }, { status: 404 });
+      return NextResponse.json({ error: t("errAdmin.seo.noImage") }, { status: 404 });
     }
 
     const url = await generateOgImage(sourceImage, title, slug);
     if (!url) {
-      return NextResponse.json({ error: "OG image generation failed" }, { status: 500 });
+      return NextResponse.json({ error: t("errAdmin.seo.ogFailed") }, { status: 500 });
     }
 
     return NextResponse.json({ url });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed" },
+      { error: err instanceof Error ? err.message : t("errAdmin.common.failed") },
       { status: 500 },
     );
   }

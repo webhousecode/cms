@@ -10,6 +10,7 @@ import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
 import { fireContentEvent } from "@/lib/webhook-events";
+import { getServerTSafe } from "@/i18n/server";
 
 type Ctx = { params: Promise<{ collection: string }> };
 
@@ -34,36 +35,38 @@ async function runScoped<T>(req: NextRequest, fn: () => Promise<T>): Promise<T |
   const overrideSite = req.nextUrl.searchParams.get("site");
   if (!overrideSite) return fn();
   const ctx = await resolveSiteCtx(overrideSite);
-  if (!ctx) return NextResponse.json({ error: `site not found: ${overrideSite}` }, { status: 404 });
+  if (!ctx) return NextResponse.json({ error: (await getServerTSafe())("errCms.shared.siteNotFoundId", { site: overrideSite }) }, { status: 404 });
   return withSiteContext(ctx, fn);
 }
 
 export async function GET(req: NextRequest, { params }: Ctx) {
+  const t = await getServerTSafe();
   // Viewers can read, but check team membership exists
   const role = await getSiteRole();
-  if (!role) return NextResponse.json({ error: "No access to this site" }, { status: 403 });
+  if (!role) return NextResponse.json({ error: t("errCms.shared.noAccessToSite") }, { status: 403 });
   const result = await runScoped(req, async () => {
   try {
     const { collection } = await params;
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
     const colConfig = config.collections.find((c) => c.name === collection);
-    if (!colConfig) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
+    if (!colConfig) return NextResponse.json({ error: t("errCms.shared.unknownCollection") }, { status: 404 });
     const { documents } = await cms.content.findMany(collection, {});
     // ?all=true includes trashed docs (needed for collection list filters)
     const includeAll = req.nextUrl.searchParams.get("all") === "true";
     return NextResponse.json(includeAll ? documents : documents.filter((d: any) => d.status !== "trashed"));
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errCms.shared.internalError") }, { status: 500 });
   }
   });
   return result instanceof Response ? result : result as Response;
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
+  const t = await getServerTSafe();
   // Only admins and editors can create documents
   const role = await getSiteRole();
-  if (!role || role === "viewer") return NextResponse.json({ error: "Editors only" }, { status: 403 });
+  if (!role || role === "viewer") return NextResponse.json({ error: t("errCms.collection.editorsOnly") }, { status: 403 });
 
   const result = await runScoped(req, async () => {
   try {
@@ -77,7 +80,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
 
     const colConfig = config.collections.find((c) => c.name === collection);
-    if (!colConfig) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
+    if (!colConfig) return NextResponse.json({ error: t("errCms.shared.unknownCollection") }, { status: 404 });
 
     // Default to draft. Callers may opt in to "published" for one-shot
     // create-and-publish — without this the document lands as draft and the
@@ -97,6 +100,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       body.data ?? {},
       body.data ?? {},
       status,
+      t,
     );
     if (!schemaCheck.ok) {
       return NextResponse.json(
@@ -175,14 +179,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       const { getSessionWithSiteRole } = await import("@/lib/require-role");
       const actor = await getSessionWithSiteRole().catch(() => null);
       fireContentEvent(status === "published" ? "published" : "created", collection, body.slug, doc,
-        actor ? `user:${actor.email}` : undefined).catch(() => {});
+        actor ? `user:${actor.email}` : undefined).catch(() => {}); // i18n-ignore: webhook actor id
     }
 
     await invalidateQuickCacheOnWrite(); // F158: content created → refresh overview/drafts
     return NextResponse.json({ ...doc, _deployTriggered: deployTriggered }, { status: 201 });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errCms.shared.internalError") }, { status: 500 });
   }
   });
   return result instanceof Response ? result : result as Response;

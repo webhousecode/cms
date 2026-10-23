@@ -124,7 +124,7 @@ export async function runConversationRetention(
       const { dataDir } = await getActiveSitePaths();
       await sweep(dataDir, "single-site");
     } catch (err) {
-      errors.push(`single-site: ${err instanceof Error ? err.message : String(err)}`);
+      errors.push(`single-site: ${err instanceof Error ? err.message : String(err)}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
     }
     return { sitesSwept, redacted, errors };
   }

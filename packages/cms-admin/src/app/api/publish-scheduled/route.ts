@@ -1,6 +1,7 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { NextResponse } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/publish-scheduled
@@ -11,9 +12,10 @@ import { getSiteRole } from "@/lib/require-role";
  * Returns { published: [{ collection, slug }] }
  */
 export async function POST() {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (!role || role === "viewer") {
-    return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+    return NextResponse.json({ error: t("errApi.publishScheduled.notAuthorized") }, { status: 403 });
   }
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
@@ -36,6 +38,6 @@ export async function POST() {
     return NextResponse.json({ published, checkedAt: now.toISOString() });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

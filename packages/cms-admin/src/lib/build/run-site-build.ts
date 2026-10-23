@@ -10,9 +10,10 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import type { CmsConfig } from "@webhouse/cms";
 import { executeBuild } from "./executor";
-import { resolveWorkingDir } from "./validate-paths";
+import { resolveWorkingDir, localizeKeyedError } from "./validate-paths";
 import { resolveProfile } from "./resolve-profile";
 import { assertServerBuildAllowed } from "./server-build-policy";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface SiteBuildOptions {
   /** Absolute path to site project directory. */
@@ -48,11 +49,12 @@ export async function runSiteBuild(
   opts: SiteBuildOptions,
 ): Promise<SiteBuildResult> {
   // F206.3 — build.ts and custom commands are the site's code, not ours.
-  assertServerBuildAllowed();
+  try { assertServerBuildAllowed(); } catch (err) { throw await localizeKeyedError(err); }
   const { projectDir, cmsConfig, deployOutDir, basePath, profileName } = opts;
 
   // Phase 3: resolve profile (handles both profiles[] and root command)
-  const profile = resolveProfile(cmsConfig.build, profileName);
+  let profile: ReturnType<typeof resolveProfile>;
+  try { profile = resolveProfile(cmsConfig.build, profileName); } catch (err) { throw await localizeKeyedError(err); }
 
   if (profile) {
     return runCustomBuild(projectDir, profile, deployOutDir, basePath);
@@ -104,7 +106,7 @@ async function prepareExtraDeps(
     console.log(`[deploy] Installing ${combined.length} extra dep(s) into deps-store ${hash.slice(0, 8)}…`);
     const result = await installDepsSet({ hash, deps: combined, dataDir });
     if (result.status === "failed") {
-      throw new Error(`Failed to install extra deps: ${result.error}\n${result.logTail}`);
+      throw new Error((await getServerTSafe())("deployText.siteBuild.depsFailed", { error: String(result.error), log: result.logTail }));
     }
     if (result.status === "success") {
       console.log(`[deploy] Installed extra deps in ${result.durationMs}ms`);
@@ -122,7 +124,9 @@ async function runCustomBuild(
   deployOutDir: string,
   basePath?: string,
 ): Promise<SiteBuildResult> {
-  const workingDir = resolveWorkingDir(projectDir, profile.workingDir);
+  let workingDir: string;
+  try { workingDir = resolveWorkingDir(projectDir, profile.workingDir); } catch (err) { throw await localizeKeyedError(err); }
+  const t = await getServerTSafe();
   const timeout = Math.min(profile.timeout ?? 300, 900);
 
   // Merge profile env with deploy-specific overrides
@@ -154,8 +158,8 @@ async function runCustomBuild(
   const outDirAbs = path.join(projectDir, profile.outDir ?? deployOutDir);
 
   if (!result.success) {
-    const errMsg = result.stderr.slice(-300) || `Exit code: ${result.exitCode}`;
-    throw new Error(`Build "${profile.name}" failed: ${errMsg}`);
+    const errMsg = result.stderr.slice(-300) || t("deployText.siteBuild.exitCode", { code: String(result.exitCode) });
+    throw new Error(t("deployText.siteBuild.profileFailed", { name: profile.name, error: errMsg }));
   }
 
   return {
@@ -305,15 +309,14 @@ async function runNativeBuild(
       : "";
     // Tail of stderr — the actual error typically lands last; npm/pnpm
     // warnings dominate the head and would otherwise hide the real cause.
-    const msg = stderr.trim().slice(-500) || (err instanceof Error ? err.message : "Build failed");
-    throw new Error(`Build failed: ${msg}`);
+    const t = await getServerTSafe();
+    const msg = stderr.trim().slice(-500) || (err instanceof Error ? err.message : t("deployText.siteBuild.failed"));
+    throw new Error(t("deployText.siteBuild.failedWith", { error: msg }));
   }
 
   const outDirAbs = path.join(projectDir, deployOutDir);
   if (!existsSync(outDirAbs)) {
-    throw new Error(
-      `Build completed but no ${deployOutDir}/ directory was created.`,
-    );
+    throw new Error((await getServerTSafe())("deployText.siteBuild.noOutDir", { dir: deployOutDir }));
   }
 
   return {

@@ -469,7 +469,7 @@ export default function InteractiveDetailPage() {
     setCloning(true);
     try {
       const blob = new Blob([codeValue], { type: "text/html" });
-      const file = new File([blob], `${detail.name}-copy.html`, { type: "text/html" });
+      const file = new File([blob], `${detail.name}-copy.html`, { type: "text/html" }); // i18n-ignore: file name
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/interactives", { method: "POST", body: fd });

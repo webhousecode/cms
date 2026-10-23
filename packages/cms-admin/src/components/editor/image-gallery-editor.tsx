@@ -176,7 +176,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
                 setUrlInputValue("");
               }
             }}
-            placeholder="https://images.unsplash.com/..."
+            placeholder="https://images.unsplash.com/..." // i18n-ignore: placeholder example value (URL / identifier), not prose
             autoFocus
             style={{
               flex: 1, padding: "0.35rem 0.5rem", borderRadius: "6px",

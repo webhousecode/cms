@@ -83,13 +83,13 @@ export function humanizeLabel(name: string): string {
 
 function fieldProps(name: string, inf: InferredField): string {
   const parts = [
-    `name: ${JSON.stringify(name)}`,
-    `type: ${JSON.stringify(inf.type)}`,
-    `label: ${JSON.stringify(humanizeLabel(name))}`,
+    `name: ${JSON.stringify(name)}`, // i18n-ignore: generated cms.config.ts source
+    `type: ${JSON.stringify(inf.type)}`, // i18n-ignore: generated cms.config.ts source
+    `label: ${JSON.stringify(humanizeLabel(name))}`, // i18n-ignore: generated cms.config.ts source
   ];
   if (inf.fields?.length) {
     const nested = inf.fields.map((sf) => `{ ${fieldProps(sf.name ?? "field", sf)} }`).join(", ");
-    parts.push(`fields: [${nested}]`);
+    parts.push(`fields: [${nested}]`); // i18n-ignore: generated cms.config.ts source
   }
   return parts.join(", ");
 }
@@ -159,7 +159,7 @@ export function insertFieldsIntoCollection(
   if (fieldLines.length === 0) return source;
   const loc = locateCollectionFieldsArray(source, collection);
   if (!loc) {
-    throw new Error(`Could not locate fields array for collection "${collection}" in cms.config.ts`);
+    throw new Error(`Could not locate fields array for collection "${collection}" in cms.config.ts`); // i18n-ignore: safety guard naming cms.config.ts internals, for operators
   }
   const { openIdx, closeIdx } = loc;
   const inner = source.slice(openIdx + 1, closeIdx);
@@ -187,20 +187,20 @@ export function assertConfigStructureIntact(
   newFieldNames: string[],
 ): void {
   if (!after.includes("defineConfig")) {
-    throw new Error("Refusing to write: result no longer contains defineConfig");
+    throw new Error("Refusing to write: result no longer contains defineConfig"); // i18n-ignore: safety guard naming cms.config.ts internals, for operators
   }
   if (after.length <= before.length) {
-    throw new Error("Refusing to write: result did not grow after inserting fields");
+    throw new Error("Refusing to write: result did not grow after inserting fields"); // i18n-ignore: safety guard naming cms.config.ts internals, for operators
   }
   for (const c of expectedCollections) {
     const re = new RegExp(`name:\\s*["']${escapeRegExp(c)}["']`);
     if (!re.test(after)) {
-      throw new Error(`Refusing to write: collection "${c}" disappeared from config`);
+      throw new Error(`Refusing to write: collection "${c}" disappeared from config`); // i18n-ignore: safety guard naming cms.config.ts internals, for operators
     }
   }
   for (const f of newFieldNames) {
     if (!after.includes(`name: ${JSON.stringify(f)}`)) {
-      throw new Error(`Refusing to write: new field "${f}" missing from result`);
+      throw new Error(`Refusing to write: new field "${f}" missing from result`); // i18n-ignore: safety guard naming cms.config.ts internals, for operators
     }
   }
 }

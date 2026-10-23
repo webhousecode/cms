@@ -108,7 +108,6 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
             <CommandPaletteProvider>
               <TourProvider
                 initialOnboarding={onboarding ?? { tourCompleted: true, completedSteps: [], activeTour: null, firstLoginAt: null }}
-                locale={locale ?? "en"}
                 forceOnboarding={forceOnboarding}
               >
                 {children}

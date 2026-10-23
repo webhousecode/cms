@@ -1,5 +1,6 @@
 import { getAdminCms } from "@/lib/cms";
 import { NextResponse } from "next/server";
+import { getServerTSafe } from "@/i18n/server";
 
 type Ctx = { params: Promise<{ name: string; slug: string }> };
 
@@ -10,6 +11,7 @@ type Ctx = { params: Promise<{ name: string; slug: string }> };
  * Uses translationGroup (preferred) or legacy translationOf fallback.
  */
 export async function GET(_req: Request, { params }: Ctx) {
+  const t = await getServerTSafe();
   try {
     const { name: collection, slug } = await params;
     const cms = await getAdminCms();
@@ -53,7 +55,7 @@ export async function GET(_req: Request, { params }: Ctx) {
     return NextResponse.json({ translations, siblingData });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed" },
+      { error: err instanceof Error ? err.message : t("errCms.translations.failed") },
       { status: 500 },
     );
   }

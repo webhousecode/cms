@@ -71,14 +71,14 @@ export async function generateVariants(
 /** Generate variant filename: hero.jpg + "800w" → hero-800w.webp */
 export function variantFilename(original: string, suffix: string): string {
   const lastDot = original.lastIndexOf(".");
-  if (lastDot === -1) return `${original}-${suffix}.webp`;
-  return `${original.slice(0, lastDot)}-${suffix}.webp`;
+  if (lastDot === -1) return `${original}-${suffix}.webp`; // i18n-ignore: file name / srcset value
+  return `${original.slice(0, lastDot)}-${suffix}.webp`; // i18n-ignore: file name / srcset value
 }
 
 /** Build srcset string from variant list */
 export function buildSrcset(originalUrl: string, variants: { suffix: string; width: number }[]): string {
   const base = originalUrl.replace(/\.[^.]+$/, "");
-  return variants.map((v) => `${base}-${v.suffix}.webp ${v.width}w`).join(", ");
+  return variants.map((v) => `${base}-${v.suffix}.webp ${v.width}w`).join(", "); // i18n-ignore: file name / srcset value
 }
 
 /**
@@ -104,7 +104,7 @@ export function upgradeImages(
       const srcset = srcsetParts.map((v) => `${v.path} ${v.w}w`).join(", ");
       return `<picture>` +
         `<source srcset="${srcset}" type="image/webp" sizes="(max-width: 800px) 100vw, 800px">` +
-        `<img ${pre}src="${src}"${post}>` +
+        `<img ${pre}src="${src}"${post}>` + // i18n-ignore: HTML markup
         `</picture>`;
     },
   );

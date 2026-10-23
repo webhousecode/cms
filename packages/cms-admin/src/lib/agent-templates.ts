@@ -60,7 +60,7 @@ export interface AgentTemplate {
 async function getTemplatesDir(orgId: string): Promise<string> {
   const { getAdminDataDir } = await import("./site-registry");
   // Security W41 C1 — the org id becomes a directory name; never a dot or slash.
-  if (!isSafeId(orgId)) throw new Error(`invalid org id: ${JSON.stringify(orgId)}`);
+  if (!isSafeId(orgId)) throw new Error(`invalid org id: ${JSON.stringify(orgId)}`); // i18n-ignore: internal security guard (unsafe id), not a user-facing message
   const adminDir = getAdminDataDir();
   return path.join(adminDir, "_data", "agent-templates", orgId);
 }
@@ -155,11 +155,12 @@ export async function updateLocalTemplate(
   patch: Partial<Omit<AgentTemplate, "id" | "createdAt" | "source">>,
 ): Promise<AgentTemplate> {
   const existing = await getLocalTemplate(orgId, id);
-  if (!existing) throw new Error(`Template ${id} not found`);
+  const t = await (await import("@/i18n/server")).getServerTSafe();
+  if (!existing) throw new Error(t("system.agents.templateNotFound", { id }));
   // Marketplace ids should never end up here in practice (they're read-only),
   // but defensively we still refuse to mutate any non-local entry.
   if (existing.source !== "local") {
-    throw new Error("Only local templates can be edited");
+    throw new Error(t("system.agents.templateLocalOnly"));
   }
   const updated: AgentTemplate = {
     ...existing,

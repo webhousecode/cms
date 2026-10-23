@@ -19,6 +19,7 @@
  * egen. Det er samtidig den eneste form der virker headless: et site-panel kan
  * spørge om sin egen ordbog holder, uden at vi kender den på forhånd.
  */
+import { getT } from "@/i18n/locale";
 import type { Replik } from "./manuscript";
 import { manuskriptTegn } from "./manuscript";
 import { RESERVE_KURS, RESERVE_MAALT, type Kurs } from "./valutakurs";
@@ -82,7 +83,7 @@ export const KURS_MAALT = RESERVE_MAALT;
  *  skrives med ører, og fordi to beløb ved siden af hinanden ellers ville have
  *  hver sin form. */
 export function dkk(usd: number, kurs: number = RESERVE_KURS): string {
-  return `${(usd * kurs).toFixed(2).replace(".", ",")} kr`;
+  return `${(usd * kurs).toFixed(2).replace(".", ",")} kr`; // i18n-ignore: amount formatting (number + unit), covered by podcast-pris tests; DKK-prefix format is a separate decision
 }
 
 export type Estimat = {
@@ -145,6 +146,17 @@ export type Tjek = {
   detalje: string;
 };
 
+/**
+ * F211.2 — tjek-teksterne følger ADMIN-sproget. foerFlyvning er synkron, så
+ * kalderen giver sin oversætter med (await getServerTSafe() i en route).
+ * Uden en er teksterne engelske — katalogets kildesprog.
+ */
+export type PreflightTranslator = (key: string, vars?: Record<string, string | number>) => string;
+
+// English when the caller passes no translator. Through the app's own getT so
+// this engine file names no package or site (podcast-udtale.test guards that).
+const englishT: PreflightTranslator = getT("en");
+
 export type FoerFlyvning = {
   klar: boolean;
   tjek: Tjek[];
@@ -164,15 +176,15 @@ export function foerFlyvning(args: {
   /** Hvilke stemmer udbyderen svarer på LIGE NU. undefined = ikke slået op. */
   levendeStemmer?: string[];
   godkendt: boolean;
-}): FoerFlyvning {
+}, t: PreflightTranslator = englishT): FoerFlyvning {
   const tjek: Tjek[] = [];
 
   // 1. Er der overhovedet et manuskript?
   const tegn = manuskriptTegn(args.replikker);
   tjek.push({
-    navn: "Manuskriptet har indhold",
+    navn: t("libText.podcastPreflight.scriptHasContent"),
     ok: args.replikker.length > 0 && tegn > 0,
-    detalje: args.replikker.length ? "" : "der er ingen replikker at indspille",
+    detalje: args.replikker.length ? "" : t("libText.podcastPreflight.noLines"),
   });
 
   // 2. IPA — den MÅLTE forhindring. ElevenLabs-adapteren KASTER på ipa-rækker;
@@ -180,45 +192,44 @@ export function foerFlyvning(args: {
   //    indspilning hvor fejlen kommer som en undtagelse fra en tredjepart.
   const ipaRaekker = (args.udtaler ?? []).filter((u) => "ipa" in u).map((u) => u.word);
   tjek.push({
-    navn: "Udtale-ordbogen er ren",
+    navn: t("libText.podcastPreflight.pronunciationClean"),
     ok: ipaRaekker.length === 0,
     detalje: ipaRaekker.length
-      ? `${ipaRaekker.length} række(r) bruger IPA, som udbyderen afviser: ` +
-        `${ipaRaekker.join(", ")}. Skriv dem om som lyd-alias.`
+      ? t("libText.podcastPreflight.ipaRows", { count: ipaRaekker.length, words: ipaRaekker.join(", ") })
       : "",
   });
 
   // 3. Stemmerne. To adskilte spørgsmål — er de VALGT, og svarer de.
   const valgte = args.stemmer ?? [];
   tjek.push({
-    navn: "Begge stemmer er valgt",
+    navn: t("libText.podcastPreflight.bothVoices"),
     ok: valgte.length >= 2,
-    detalje: valgte.length >= 2 ? "" : `kun ${valgte.length} stemme(r) valgt — der skal to til en samtale`,
+    detalje: valgte.length >= 2 ? "" : t("libText.podcastPreflight.tooFewVoices", { count: valgte.length }),
   });
 
   if (args.levendeStemmer !== undefined) {
     const doede = valgte.filter((v) => !args.levendeStemmer!.includes(v));
     tjek.push({
-      navn: "Stemmerne svarer",
+      navn: t("libText.podcastPreflight.voicesRespond"),
       ok: doede.length === 0,
-      detalje: doede.length ? `udbyderen kender ikke: ${doede.join(", ")}` : "",
+      detalje: doede.length ? t("libText.podcastPreflight.unknownVoices", { voices: doede.join(", ") }) : "",
     });
   } else {
     // «Ikke slået op» er IKKE det samme som «i orden». Et tjek der stiltiende
     // består når ingen har spurgt, er værre end intet tjek: det ser grønt ud.
     tjek.push({
-      navn: "Stemmerne svarer",
+      navn: t("libText.podcastPreflight.voicesRespond"),
       ok: false,
-      detalje: "ikke slået op hos udbyderen endnu",
+      detalje: t("libText.podcastPreflight.voicesNotChecked"),
     });
   }
 
   // 4. Godkendelsen. Sidst, fordi den er menneskets og ikke maskinens.
   tjek.push({
-    navn: "Din godkendelse",
+    navn: t("libText.podcastPreflight.yourApproval"),
     ok: args.godkendt,
-    detalje: args.godkendt ? "" : "lyden kan ikke laves før manuskriptet er godkendt",
+    detalje: args.godkendt ? "" : t("libText.podcastPreflight.notApproved"),
   });
 
-  return { klar: tjek.every((t) => t.ok), tjek };
+  return { klar: tjek.every((x) => x.ok), tjek };
 }

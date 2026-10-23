@@ -26,25 +26,25 @@ export function getSiteLocales(
 
 /** ISO 639-1 language display names */
 export const LOCALE_LABELS: Record<string, string> = {
-  da: "Dansk",
-  en: "English",
-  de: "Deutsch",
-  fr: "Francais",
-  es: "Espanol",
-  sv: "Svenska",
-  nb: "Norsk",
-  nl: "Nederlands",
-  fi: "Suomi",
-  it: "Italiano",
-  pt: "Portugues",
-  pl: "Polski",
-  uk: "Ukrajinska",
-  ro: "Romana",
-  bg: "Bulgarski",
-  lt: "Lietuviu",
-  ja: "Japanese",
-  zh: "Chinese",
-  ko: "Korean",
+  da: "Dansk", // i18n-ignore: language name list (endonyms), not translated
+  en: "English", // i18n-ignore: language name list (endonyms), not translated
+  de: "Deutsch", // i18n-ignore: language name list (endonyms), not translated
+  fr: "Francais", // i18n-ignore: language name list (endonyms), not translated
+  es: "Espanol", // i18n-ignore: language name list (endonyms), not translated
+  sv: "Svenska", // i18n-ignore: language name list (endonyms), not translated
+  nb: "Norsk", // i18n-ignore: language name list (endonyms), not translated
+  nl: "Nederlands", // i18n-ignore: language name list (endonyms), not translated
+  fi: "Suomi", // i18n-ignore: language name list (endonyms), not translated
+  it: "Italiano", // i18n-ignore: language name list (endonyms), not translated
+  pt: "Portugues", // i18n-ignore: language name list (endonyms), not translated
+  pl: "Polski", // i18n-ignore: language name list (endonyms), not translated
+  uk: "Ukrajinska", // i18n-ignore: language name list (endonyms), not translated
+  ro: "Romana", // i18n-ignore: language name list (endonyms), not translated
+  bg: "Bulgarski", // i18n-ignore: language name list (endonyms), not translated
+  lt: "Lietuviu", // i18n-ignore: language name list (endonyms), not translated
+  ja: "Japanese", // i18n-ignore: language name list (endonyms), not translated
+  zh: "Chinese", // i18n-ignore: language name list (endonyms), not translated
+  ko: "Korean", // i18n-ignore: language name list (endonyms), not translated
 };
 
 /** Check if a translation is stale (source was updated after translation) */

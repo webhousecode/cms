@@ -12,6 +12,10 @@
  * longer breaks the match. Falls back to exact equality for "*" or a malformed
  * entry (never throws).
  */
+import { getT } from "@/i18n/locale";
+
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
+
 export function originAllowed(origin: string | null, allowed: string[]): boolean {
   if (!origin) return false;
   return allowed.some((a) => {
@@ -131,25 +135,25 @@ export function siteOriginsWithSiblings(config: {
  *   nothing while reading as if it did
  * - a bare host is the normal way a person writes one, so it gets https://
  */
-export function normalizeDomainEntry(raw: string): { origin: string } | { error: string } {
+export function normalizeDomainEntry(raw: string, t: Translate = getT("en")): { origin: string } | { error: string } {
   const v = (raw ?? "").trim();
-  if (!v) return { error: "Domænet er tomt" };
-  if (v.includes("*")) return { error: `Wildcards kan ikke bruges som domæne: "${v}"` };
+  if (!v) return { error: t("system.domains.empty") };
+  if (v.includes("*")) return { error: t("system.domains.wildcard", { value: v }) };
 
   const withScheme = /^https?:\/\//i.test(v) ? v : `https://${v}`;
   let u: URL;
   try {
     u = new URL(withScheme);
   } catch {
-    return { error: `Ikke et gyldigt domæne: "${v}"` };
+    return { error: t("system.domains.invalid", { value: v }) };
   }
   if (!u.hostname || !u.hostname.includes(".")) {
-    return { error: `Ikke et gyldigt domæne: "${v}"` };
+    return { error: t("system.domains.invalid", { value: v }) };
   }
   // A trailing "/" is what a browser's address bar gives you, so accept it —
   // anything more is a path and would never match an Origin header.
   if (u.pathname !== "/" || u.search || u.hash) {
-    return { error: `Et domæne kan ikke indeholde en sti: "${v}"` };
+    return { error: t("system.domains.hasPath", { value: v }) };
   }
   return { origin: u.origin };
 }
@@ -162,10 +166,11 @@ export function normalizeDomainEntry(raw: string): { origin: string } | { error:
  */
 export function normalizeDomainList(
   raw: string[],
+  t: Translate = getT("en"),
 ): { domains: string[] } | { error: string } {
   const out: string[] = [];
   for (const entry of raw) {
-    const r = normalizeDomainEntry(entry);
+    const r = normalizeDomainEntry(entry, t);
     if ("error" in r) return { error: r.error };
     if (!out.includes(r.origin)) out.push(r.origin);
   }

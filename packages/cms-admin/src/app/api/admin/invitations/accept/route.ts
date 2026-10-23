@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authAttemptLimited, clientIp, TOO_MANY_ATTEMPTS } from "@/lib/auth-rate-limit";
+import { authAttemptLimited, clientIp, tooManyAttempts } from "@/lib/auth-rate-limit";
 import { cookies } from "next/headers";
 import { createUser, getUsers, createToken, getSessionUser, COOKIE_NAME } from "@/lib/auth";
 import { isBidConfigured } from "@/lib/bid-config";
 import { validateToken, markAccepted } from "@/lib/invitations";
 import { addTeamMember } from "@/lib/team";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const body = (await request.json()) as {
     token?: string;
     name?: string;
@@ -14,13 +16,13 @@ export async function POST(request: NextRequest) {
   };
 
   if (!body.token || !body.name) {
-    return NextResponse.json({ error: "Token and name are required" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.invitations.tokenNameRequired") }, { status: 400 });
   }
 
-  if (authAttemptLimited("invite-accept", clientIp(request.headers))) return NextResponse.json(TOO_MANY_ATTEMPTS, { status: 429 });
+  if (authAttemptLimited("invite-accept", clientIp(request.headers))) return NextResponse.json(await tooManyAttempts(), { status: 429 });
   const invitation = await validateToken(body.token);
   if (!invitation) {
-    return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 });
+    return NextResponse.json({ error: t("errAdmin.invitations.invalid") }, { status: 404 });
   }
 
   try {
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
       const session = await getSessionUser(await cookies());
       if (session?.sub !== user.id) {
         return NextResponse.json(
-          { error: `This email already has an account. Sign in as ${invitation.email} and open the link again.` },
+          { error: t("errAdmin.invitations.alreadyHasAccount", { email: invitation.email }) },
           { status: 403 },
         );
       }
@@ -54,10 +56,10 @@ export async function POST(request: NextRequest) {
     } else {
       // New user — requires password
       if (!body.password || body.password === "__existing__") {
-        return NextResponse.json({ error: "Password is required for new accounts" }, { status: 400 });
+        return NextResponse.json({ error: t("errAdmin.invitations.passwordRequired") }, { status: 400 });
       }
       if (body.password.length < 8) {
-        return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+        return NextResponse.json({ error: t("errAdmin.common.passwordTooShort") }, { status: 400 });
       }
       user = await createUser(invitation.email, body.password, body.name, {
         // Security W41 — the CMS-wide role "admin" makes a user the INSTANCE
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
     });
     return response;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Failed to create account";
+    const message = err instanceof Error ? err.message : t("errAdmin.invitations.createAccountFailed");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

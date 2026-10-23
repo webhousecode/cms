@@ -63,7 +63,7 @@ interface ContentRatio {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
+  if (ms < 1000) return `${ms}ms`; // i18n-ignore: unit suffix
   const s = ms / 1000;
   if (s < 60) return `${s.toFixed(1)}s`;
   return `${Math.floor(s / 60)}m ${Math.floor(s % 60)}s`;

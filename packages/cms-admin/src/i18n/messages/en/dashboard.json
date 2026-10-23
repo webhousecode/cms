@@ -27,6 +27,7 @@
     "visibilityHint": "Search engines + AI platforms"
   },
   "siteIntroCard": {
-    "loadingPreview": "Loading preview..."
+    "loadingPreview": "Loading preview...",
+    "siteFallback": "Site"
   }
 }

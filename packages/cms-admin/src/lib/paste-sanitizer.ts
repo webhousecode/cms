@@ -56,7 +56,7 @@ function unwrapNoiseSpans(html: string): string {
     out = out.replace(innermost, (_m, attrs: string, inner: string) =>
       spanIsSemantic(attrs)
         ? // park kept spans under a placeholder so the loop can't re-match them
-          `<keptspan${attrs}>${inner}</keptspan>`
+          `<keptspan${attrs}>${inner}</keptspan>` // i18n-ignore: internal HTML placeholder markup
         : inner,
     );
     guard++;
@@ -99,7 +99,7 @@ export function sanitizeWordPasteHtml(html: string): string {
   // 6. Strip `mso-*` declarations from style attributes; drop the attr if empty.
   out = out.replace(/\sstyle=("|')([\s\S]*?)\1/gi, (_m, _q, css: string) => {
     const cleaned = stripMsoFromCss(css);
-    return cleaned ? ` style="${cleaned}"` : "";
+    return cleaned ? ` style="${cleaned}"` : ""; // i18n-ignore: HTML attribute
   });
 
   // 7. Unwrap noise-only spans (after step 6 mso-only spans are attribute-less).

@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { getOrCreateInstance } from "@/lib/site-pool";
+import { getServerTSafe } from "@/i18n/server";
 
 /** GET /api/cms/registry/stats?orgId=x&siteId=y — page count for a site */
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   const { searchParams } = request.nextUrl;
   const orgId = searchParams.get("orgId");
   const siteId = searchParams.get("siteId");
 
   if (!orgId || !siteId) {
-    return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.shared.orgIdSiteIdRequired") }, { status: 400 });
   }
 
   const registry = await loadRegistry();

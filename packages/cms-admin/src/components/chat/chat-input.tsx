@@ -28,6 +28,7 @@ const ALLOWED_EXTENSIONS = new Set([
   "ppt", "pptx",
 ]);
 
+// i18n-ignore: unused constant, never rendered anywhere (dead code)
 const SUPPORTED_FILE_INFO = `**Supported file types:**
 
 | Type | Formats | What happens |

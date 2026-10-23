@@ -9,8 +9,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateBeamToken, listActiveBeamTokens } from "@/lib/beam/tokens";
 import { requireInstanceAdmin } from "@/lib/instance-admin";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   // Security W41 NY-K2 — a beam token lets its holder create a site on THIS
   // instance (any org): an instance-level grant, not a site admin's.
   const denied = await requireInstanceAdmin(); if (denied) return denied;
@@ -26,12 +28,13 @@ export async function POST(request: NextRequest) {
       expiresAt: token.expiresAt,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Token generation failed";
+    const message = err instanceof Error ? err.message : t("errAdmin.beam.tokenFailed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function GET() {
+  const t = await getServerTSafe();
   // Security W41 NY-K2 — a beam token lets its holder create a site on THIS
   // instance (any org): an instance-level grant, not a site admin's.
   const denied = await requireInstanceAdmin(); if (denied) return denied;
@@ -45,7 +48,7 @@ export async function GET() {
     }));
     return NextResponse.json({ tokens: masked });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to list tokens";
+    const message = err instanceof Error ? err.message : t("errAdmin.beam.listTokensFailed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

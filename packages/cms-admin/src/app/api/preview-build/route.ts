@@ -6,7 +6,8 @@ import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import path from "path";
 import { denyViewers } from "@/lib/require-role";
-import { serverBuildsAllowed, SERVER_BUILD_DISABLED_MESSAGE } from "@/lib/build/server-build-policy";
+import { serverBuildsAllowed, SERVER_BUILD_DISABLED_KEY } from "@/lib/build/server-build-policy";
+import { getServerTSafe } from "@/i18n/server";
 
 const execAsync = promisify(exec);
 
@@ -19,6 +20,7 @@ const execAsync = promisify(exec);
  * 2. Otherwise → use runBuild() from @webhouse/cms directly
  */
 export async function POST() {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const sitePaths = await getActiveSitePaths();
   const projectDir = sitePaths.projectDir;
@@ -28,7 +30,7 @@ export async function POST() {
   if (existsSync(buildFile)) {
     // F206.3 — build.ts is the site's code; this server may not run it.
     if (!serverBuildsAllowed()) {
-      return NextResponse.json({ error: SERVER_BUILD_DISABLED_MESSAGE }, { status: 409 });
+      return NextResponse.json({ error: t(SERVER_BUILD_DISABLED_KEY) }, { status: 409 });
     }
     try {
       const { stdout, stderr } = await execAsync("npx tsx build.ts", {
@@ -38,7 +40,7 @@ export async function POST() {
       });
       return NextResponse.json({ ok: true, output: stdout, warnings: stderr || undefined });
     } catch (err) {
-      const msg = err instanceof Error ? (err as Error & { stderr?: string }).stderr || err.message : "Build failed";
+      const msg = err instanceof Error ? (err as Error & { stderr?: string }).stderr || err.message : t("errApi.common.buildFailed");
       return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
@@ -55,9 +57,9 @@ export async function POST() {
       includeDrafts: true,
     });
 
-    return NextResponse.json({ ok: true, output: `Built ${result.pages} pages to ${distDir}` });
+    return NextResponse.json({ ok: true, output: t("errApi.preview.built", { pages: result.pages, dir: String(distDir) }) });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Build failed";
+    const msg = err instanceof Error ? err.message : t("errApi.common.buildFailed");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

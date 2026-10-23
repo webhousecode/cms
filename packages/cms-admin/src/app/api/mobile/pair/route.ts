@@ -5,6 +5,7 @@ import os from "os";
 import QRCode from "qrcode";
 import { getSessionUser } from "@/lib/auth";
 import { approveQrSession, createQrSession } from "@/lib/qr-sessions";
+import { getServerTSafe } from "@/i18n/server";
 
 /** Find first non-internal IPv4 address (LAN IP). */
 
@@ -24,9 +25,10 @@ import { approveQrSession, createQrSession } from "@/lib/qr-sessions";
  * The token is single-use and expires after 5 minutes (qr-sessions.ts).
  */
 export async function POST(req: Request) {
+  const t = await getServerTSafe();
   const user = await getSessionUser(await cookies());
   if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   // Use the request URL as the server URL the mobile app will talk to.
@@ -63,7 +65,7 @@ export async function POST(req: Request) {
   const session = createQrSession(req.headers.get("user-agent") ?? undefined);
   approveQrSession(session.id, user.id);
 
-  const deepLink = `webhouseapp://login?server=${encodeURIComponent(serverUrl)}&token=${session.id}`;
+  const deepLink = `webhouseapp://login?server=${encodeURIComponent(serverUrl)}&token=${session.id}`; // i18n-ignore: deep-link URL
 
   const qrDataUrl = await QRCode.toDataURL(deepLink, {
     errorCorrectionLevel: "M",

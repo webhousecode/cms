@@ -382,7 +382,7 @@ function BlockMarkerView({ node, deleteNode, editor, getPos }: NodeViewProps) {
       <DragHandle />
       <div
         onDoubleClick={del.confirming ? undefined : handleDoubleClick}
-        title={del.confirming ? undefined : "Double-click to change block"}
+        title={del.confirming ? undefined : t("editor.richText.block.doubleClickToChange")}
         style={{
           display: "inline-flex", alignItems: "center", gap: "0.5rem",
           margin: "0.75rem 0", padding: "0.5rem 0.875rem",
@@ -399,6 +399,7 @@ function BlockMarkerView({ node, deleteNode, editor, getPos }: NodeViewProps) {
         </span>
         {!del.confirming && (
           <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", opacity: 0.5 }}>
+            {/* i18n-ignore: block shortcode syntax */}
             {`[block:${slug}]`}
           </span>
         )}
@@ -457,7 +458,7 @@ const BlockMarker = TipTapNode.create({
       openPicker: null as ((pos: number) => void) | null,
       markdown: {
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, string> }) {
-          state.write(`[block:${node.attrs.slug}]`);
+          state.write(`[block:${node.attrs.slug}]`); // i18n-ignore: markdown serialization
           state.closeBlock(node);
         },
         parse: {
@@ -685,7 +686,8 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
           ) : (
             <>
               <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 4px", opacity: 0.6, flexShrink: 0 }}>
-                {url.includes("youtu") ? "YouTube" : url.includes("vimeo") ? "Vimeo" : "Video"}
+                {/* i18n-ignore: provider brand names */}
+                {url.includes("youtu") ? "YouTube" : url.includes("vimeo") ? "Vimeo" : t("editor.richText.video.label")}
               </span>
               {startAt > 0 && (
                 <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", background: "var(--accent)", borderRadius: "3px", padding: "0.1rem 0.3rem", flexShrink: 0 }}>{t("editor.richText.video.startAt", { seconds: startAt })}</span>
@@ -751,7 +753,7 @@ const VideoEmbed = TipTapNode.create({
       markdown: {
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
           const { url, startAt, width, align } = node.attrs as { url: string; startAt: number; width: string | null; align: string };
-          let marker = `[video:${url}`;
+          let marker = `[video:${url}`; // i18n-ignore: markdown serialization
           if (startAt > 0)                      marker += `|start:${startAt}`;
           if (width)                             marker += `|width:${width}`;
           if (align && align !== "center")       marker += `|align:${align}`;
@@ -894,7 +896,7 @@ function AudioNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
         )}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {title || "Audio"}
+            {title || t("editor.richText.audio.label")}
           </span>
           <button data-testid="audio-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
             style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
@@ -939,7 +941,7 @@ const AudioEmbed = TipTapNode.create({
       markdown: {
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
           const { src } = node.attrs as { src: string };
-          state.write(`<audio controls src="${src}"></audio>`);
+          state.write(`<audio controls src="${src}"></audio>`); // i18n-ignore: markdown serialization
           state.closeBlock(node);
         },
         parse: {
@@ -1076,7 +1078,7 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
           <iframe
             src={`/api/interactives/${interactiveId}/preview`}
             style={{ width: "100%", height: "100%", border: "none" }}
-            title={title || "Interactive preview"}
+            title={title || t("editor.richText.interactive.preview")}
           />
         </div>
         {/* Footer bar — title + inline delete */}
@@ -1178,9 +1180,9 @@ const InteractiveEmbed = TipTapNode.create({
           const parts = [node.attrs.interactiveId];
           if (node.attrs.title) parts.push(node.attrs.title);
           else parts.push('');
-          if (node.attrs.align && node.attrs.align !== 'center') parts.push(`align:${node.attrs.align}`);
-          if (node.attrs.width) parts.push(`width:${node.attrs.width}`);
-          if (node.attrs.height) parts.push(`height:${node.attrs.height}`);
+          if (node.attrs.align && node.attrs.align !== 'center') parts.push(`align:${node.attrs.align}`); // i18n-ignore: markdown serialization syntax for the !!INTERACTIVE token
+          if (node.attrs.width) parts.push(`width:${node.attrs.width}`); // i18n-ignore: markdown serialization syntax for the !!INTERACTIVE token
+          if (node.attrs.height) parts.push(`height:${node.attrs.height}`); // i18n-ignore: markdown serialization syntax for the !!INTERACTIVE token
           state.write(`!!INTERACTIVE[${parts.join('|')}]`);
           state.closeBlock(node);
         },
@@ -1926,9 +1928,9 @@ function CalloutNodeView({ node, updateAttributes, deleteNode, selected }: NodeV
         <div contentEditable={false} style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.35rem 0.75rem", borderBottom: `1px solid color-mix(in srgb, ${style.border} 13%, transparent)`, userSelect: "none" }}>
           <span style={{ fontSize: "0.8rem", lineHeight: 1 }}>{style.icon}</span>
           <span style={{ fontSize: "0.65rem", color: style.border, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: "auto" }}>{variant}</span>
-          {btnVariant("info", "Info")}
-          {btnVariant("warning", "Warning")}
-          {btnVariant("tip", "Tip")}
+          {btnVariant("info", t("editor.richText.callout.info"))}
+          {btnVariant("warning", t("editor.richText.callout.warning"))}
+          {btnVariant("tip", t("editor.richText.callout.tip"))}
           {del.confirming ? (
             <>
               <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>{t("editor.richText.removeConfirm")}</span>
@@ -2406,9 +2408,9 @@ function Btn({
             className={cn(
               "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
               active
-                ? "bg-white/12 text-foreground"
-                : "text-muted-foreground hover:bg-white/8 hover:text-foreground",
-              disabled && "opacity-20 pointer-events-none",
+                ? "bg-white/12 text-foreground" // i18n-ignore: CSS class names
+                : "text-muted-foreground hover:bg-white/8 hover:text-foreground", // i18n-ignore: CSS class names
+              disabled && "opacity-20 pointer-events-none", // i18n-ignore: CSS class names
             )}
           />
         }
@@ -3074,7 +3076,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       <div className={cn(
         "rounded-lg border border-border overflow-visible",
         "focus-within:ring-1 focus-within:ring-ring focus-within:border-ring transition-shadow",
-        disabled && "opacity-50 pointer-events-none",
+        disabled && "opacity-50 pointer-events-none", // i18n-ignore: CSS class names
       )}>
 
         {/* ── Main Toolbar ── */}
@@ -3262,12 +3264,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   marginTop: "4px",
                 }}>
                   {[
-                    { color: "#bbf7d0", label: "Green" },
-                    { color: "#bfdbfe", label: "Blue" },
-                    { color: "#fde68a", label: "Yellow" },
-                    { color: "#fecaca", label: "Red" },
-                    { color: "#e9d5ff", label: "Purple" },
-                    { color: "#fed7aa", label: "Orange" },
+                    { color: "#bbf7d0", label: "Green" }, // i18n-ignore: colour id; title rendered via t(editor.richText.highlight.*)
+                    { color: "#bfdbfe", label: "Blue" }, // i18n-ignore: colour id; title rendered via t(editor.richText.highlight.*)
+                    { color: "#fde68a", label: "Yellow" }, // i18n-ignore: colour id; title rendered via t(editor.richText.highlight.*)
+                    { color: "#fecaca", label: "Red" }, // i18n-ignore: colour id; title rendered via t(editor.richText.highlight.*)
+                    { color: "#e9d5ff", label: "Purple" }, // i18n-ignore: colour id; title rendered via t(editor.richText.highlight.*)
+                    { color: "#fed7aa", label: "Orange" }, // i18n-ignore: colour id; title rendered via t(editor.richText.highlight.*)
                   ].map(({ color, label }) => (
                     <button data-testid={`highlight-color-${label.toLowerCase()}`} key={color} type="button" title={t(`editor.richText.highlight.${label.toLowerCase()}`)}
                       onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHighlight({ color }).run(); setHighlightOpen(false); }}
@@ -3602,7 +3604,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               editor.chain().focus().insertContent({
                 type: "callout",
                 attrs: { variant: "info" },
-                content: [{ type: "paragraph", content: [{ type: "text", text: "Type your note here…" }] }],
+                content: [{ type: "paragraph", content: [{ type: "text", text: t("editor.richText.callout.notePlaceholder") }] }],
               }).run();
             }}>
               <MessageSquareWarning className="w-[18px] h-[18px]" />
@@ -3706,7 +3708,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 if (!res.ok) { toast.error(data.error ?? t("editor.richText.toolbar.proofreadFailed")); return; }
                 const corrections = data.corrections ?? [];
                 if (corrections.length === 0) {
-                  toast.success(`No errors found (${data.language})`);
+                  toast.success(t("editor.richText.proofread.noErrors", { language: data.language }));
                   return;
                 }
                 // Map API offsets to ProseMirror positions
@@ -4366,7 +4368,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               {/* Header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <p style={{ fontSize: "0.75rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)" }}>
-                  {replacePos !== null ? "Replace Content Block" : "Insert Content Block"}
+                  {replacePos !== null ? t("editor.richText.blocks.replaceTitle") : t("editor.richText.blocks.insertTitle")}
                 </p>
                 <button data-testid="block-picker-close-button" type="button" onClick={closeBlockPicker} style={{ background: "none", border: "none", color: "var(--muted-foreground)", cursor: "pointer", fontSize: "1.2rem", lineHeight: 1 }}>×</button>
               </div>
@@ -4417,6 +4419,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--foreground)", marginBottom: "2px" }}>{block.label}</p>
                       <p style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>{block.slug} · {block.blockType}</p>
                     </div>
+                    {/* i18n-ignore: block shortcode syntax */}
                     <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", opacity: 0.5, flexShrink: 0, marginLeft: "0.5rem" }}>{`[block:${block.slug}]`}</span>
                   </button>
                 ))}

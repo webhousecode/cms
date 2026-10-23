@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { readMemories, exportMemories } from "@/lib/chat/memory-store";
+import { getServerTSafe } from "@/i18n/server";
 
 /** GET /api/cms/chat/memory/export — download memories as text */
 export async function GET() {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const index = await readMemories();
   const text = exportMemories(index.memories);

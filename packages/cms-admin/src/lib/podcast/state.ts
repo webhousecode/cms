@@ -11,6 +11,12 @@
  * ikke knappen.
  */
 
+import { getT } from "@/i18n/locale";
+
+/** Translator; defaults to English when the caller has no request language. */
+type T = ReturnType<typeof getT>;
+const EN: T = getT("en");
+
 export const TILSTANDE = [
   "kladde",
   "manuskript-klar",
@@ -69,20 +75,22 @@ export type OvergangSvar =
  * kalderen, og en handling der ikke skete og ikke sagde noget er den fejlform
  * huset bruger mest tid på.
  */
-export function maaSkifte(fra: Tilstand, til: Tilstand): OvergangSvar {
+export function maaSkifte(fra: Tilstand, til: Tilstand, t: T = EN): OvergangSvar {
   if (fra === til) {
-    return { ok: false, grund: `afsnittet er allerede «${til}»` };
+    return { ok: false, grund: t("libText.podcastState.alreadyIn", { state: til }) };
   }
   const tilladte = LOVLIGE[fra];
   if (!tilladte) {
-    return { ok: false, grund: `ukendt tilstand «${fra}»` };
+    return { ok: false, grund: t("libText.podcastState.unknownState", { state: fra }) };
   }
   if (!tilladte.includes(til)) {
     return {
       ok: false,
-      grund:
-        `«${fra}» kan ikke gå til «${til}» — ` +
-        `herfra er kun ${tilladte.map((t) => `«${t}»`).join(" eller ")} lovlig`,
+      grund: t("libText.podcastState.illegalTransition", {
+        from: fra,
+        to: til,
+        allowed: tilladte.map((x) => `«${x}»`).join(t("libText.podcastCommon.or")),
+      }),
     };
   }
   return { ok: true };
@@ -101,21 +109,17 @@ export function erTilstand(v: unknown): v is Tilstand {
  * ét sted når nogen om et halvt år spørger «hvad forhindrer en dobbelt-
  * indspilning?».
  */
-export function maaIndspilles(tilstand: Tilstand): OvergangSvar {
+export function maaIndspilles(tilstand: Tilstand, t: T = EN): OvergangSvar {
   if (tilstand === "godkendt") return { ok: true };
   if (tilstand === "indspillet" || tilstand === "udgivet") {
     return {
       ok: false,
-      grund:
-        `afsnittet er allerede indspillet — en ny indspilning koster igen. ` +
-        `Ret manuskriptet først, så falder godkendelsen bort af sig selv.`,
+      grund: t("libText.podcastState.alreadyRecorded"),
     };
   }
   return {
     ok: false,
-    grund:
-      `manuskriptet er ikke godkendt (står som «${tilstand}»). ` +
-      `Indspilning bruger rigtige penge, så den kræver at et menneske har læst teksten.`,
+    grund: t("libText.podcastState.notApproved", { state: tilstand }),
   };
 }
 

@@ -6,15 +6,17 @@
  * Decided once, in the proxy, for every mobile route (so a new one inherits
  * it): the caller must be on that site's team, and a viewer may only read.
  */
+import { getT } from "@/i18n/locale";
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
 import { isSafeId } from "./active-site-cookie";
 
 export type MobileAccessDecision = { status: 400 | 403 | 404; error: string } | null;
 
 /** Pure: given the caller's role on the named site (null = no membership). */
-export function decideMobileAccess(method: string, role: string | null): MobileAccessDecision {
-  if (!role) return { status: 403, error: "No access to that site" };
+export function decideMobileAccess(method: string, role: string | null, t: Translate = getT("en")): MobileAccessDecision {
+  if (!role) return { status: 403, error: t("system.auth.noSiteAccess") };
   const read = method === "GET" || method === "HEAD" || method === "OPTIONS";
-  if (!read && role === "viewer") return { status: 403, error: "No write access" };
+  if (!read && role === "viewer") return { status: 403, error: t("system.auth.noWriteAccess") };
   return null;
 }
 
@@ -28,20 +30,23 @@ export async function checkMobileSiteAccess(input: {
   orgId: string | null;
   siteId: string | null;
   bearer: string | null;
+  /** Translator for the caller's language; English when omitted. */
+  t?: Translate;
 }): Promise<MobileAccessDecision> {
   const { orgId, siteId, bearer, method } = input;
+  const t = input.t ?? getT("en");
   if (!orgId && !siteId) return null;
   if (!bearer) return null;
-  if (!isSafeId(orgId) || !isSafeId(siteId)) return { status: 400, error: "Invalid orgId or siteId" };
+  if (!isSafeId(orgId) || !isSafeId(siteId)) return { status: 400, error: t("system.mobile.invalidIds") };
 
   const { verifyToken } = await import("./auth");
   const payload = await verifyToken(bearer);
   if (!payload) return null; // the route itself answers 401
-  if ((payload as { editSession?: unknown }).editSession === true) return { status: 403, error: "Inline-edit session is not a mobile login" };
+  if ((payload as { editSession?: unknown }).editSession === true) return { status: 403, error: t("system.mobile.editSessionNotMobile") };
 
   const { loadRegistry, findSite } = await import("./site-registry");
   const registry = await loadRegistry();
-  if (registry && !findSite(registry, orgId, siteId)) return { status: 404, error: "Site not found" };
+  if (registry && !findSite(registry, orgId, siteId)) return { status: 404, error: t("system.mobile.siteNotFound") };
 
   const { isSelfDescribingPrincipal } = await import("./require-role");
   let role: string | null;
@@ -52,5 +57,5 @@ export async function checkMobileSiteAccess(input: {
     const members = await getTeamMembersForSite(orgId, siteId);
     role = members.find((m) => m.userId === payload.sub)?.role ?? null;
   }
-  return decideMobileAccess(method, role);
+  return decideMobileAccess(method, role, t);
 }

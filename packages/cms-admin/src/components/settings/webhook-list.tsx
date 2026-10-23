@@ -67,9 +67,9 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
       const isDiscord = url.includes("discord.com/api/webhooks");
       const isSlack = url.includes("hooks.slack.com");
       const body = isDiscord
-        ? { content: "Test from webhouse.app", embeds: [{ title: "Webhook Test", description: "This webhook is configured correctly.", color: 0xF7BB2E, footer: { text: "webhouse.app" } }] }
+        ? { content: "Test from webhouse.app", embeds: [{ title: "Webhook Test", description: "This webhook is configured correctly.", color: 0xF7BB2E, footer: { text: "webhouse.app" } }] } // i18n-ignore: outgoing webhook test payload to Discord/Slack (F210.4)
         : isSlack
-          ? { text: "*webhouse.app* — Webhook test successful." }
+          ? { text: "*webhouse.app* — Webhook test successful." } // i18n-ignore: outgoing webhook test payload to Discord/Slack (F210.4)
           : { event: "webhook.test", timestamp: new Date().toISOString(), source: "webhouse.app" };
       const res = await fetch(url, {
         method: "POST",

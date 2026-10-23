@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/extract-text
@@ -6,9 +7,10 @@ import { NextRequest, NextResponse } from "next/server";
  * Supports: PDF, DOCX
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
-  if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
+  if (!file) return NextResponse.json({ error: t("errApi.common.noFile") }, { status: 400 });
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
@@ -22,7 +24,7 @@ export async function POST(req: NextRequest) {
       const result = await pdfParse(buffer);
       const text = result.text?.trim();
       if (!text || text.length < 10) {
-        return NextResponse.json({ text: null, reason: "No readable text (possibly scanned/image PDF)" });
+        return NextResponse.json({ text: null, reason: t("errApi.extractText.noReadable") });
       }
       return NextResponse.json({ text: text.slice(0, 50_000) });
     }
@@ -31,13 +33,13 @@ export async function POST(req: NextRequest) {
       const mammoth = await import("mammoth");
       const result = await mammoth.extractRawText({ buffer });
       const text = result.value?.trim();
-      if (!text) return NextResponse.json({ text: null, reason: "No text found" });
+      if (!text) return NextResponse.json({ text: null, reason: t("errApi.extractText.noText") });
       return NextResponse.json({ text: text.slice(0, 50_000) });
     }
 
-    return NextResponse.json({ text: null, reason: "Unsupported file type" });
+    return NextResponse.json({ text: null, reason: t("errApi.extractText.unsupported") });
   } catch (err) {
     console.error("[extract-text] Error:", err instanceof Error ? err.message : err);
-    return NextResponse.json({ text: null, reason: `Extraction error: ${err instanceof Error ? err.message : "unknown"}` });
+    return NextResponse.json({ text: null, reason: t("errApi.extractText.error", { error: err instanceof Error ? err.message : t("errApi.common.unknown") }) });
   }
 }

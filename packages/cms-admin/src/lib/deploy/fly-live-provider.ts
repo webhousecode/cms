@@ -16,6 +16,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface FlyLiveConfig {
   appName: string;
@@ -155,7 +156,7 @@ async function ensureInfrastructure(
   // Build temp deploy context from bundled assets
   const assetsDir = path.join(__dirname, "fly-live-assets");
   if (!existsSync(assetsDir)) {
-    throw new Error(`fly-live-assets directory missing at ${assetsDir} — cms-admin bundle is corrupt`);
+    throw new Error((await getServerTSafe())("deployText.flyLive.assetsMissing", { dir: assetsDir }));
   }
   const tmpDir = path.join("/tmp", `fly-live-deploy-${Date.now()}`);
   mkdirSync(tmpDir, { recursive: true });
@@ -359,7 +360,7 @@ async function icdFetch(
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`ICD ${method} ${pathWithQuery} failed: ${res.status} ${text.slice(0, 200)}`);
+    throw new Error((await getServerTSafe())("deployText.flyLive.icdFailed", { method, path: pathWithQuery, status: res.status, body: text.slice(0, 200) }));
   }
   return res;
 }
@@ -407,5 +408,5 @@ async function waitForIcdHealth(appUrl: string, secret: string, maxAttempts = 30
     }
     await new Promise((r) => setTimeout(r, 2000));
   }
-  throw new Error(`Sync endpoint did not come online within ${maxAttempts * 2}s`);
+  throw new Error((await getServerTSafe())("deployText.flyLive.syncTimeout", { seconds: maxAttempts * 2 }));
 }

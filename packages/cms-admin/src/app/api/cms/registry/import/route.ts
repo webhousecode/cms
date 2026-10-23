@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/cms/registry/import
@@ -10,10 +11,11 @@ import { join, resolve } from "node:path";
  * and returns auto-detected values for the "New site" form.
  */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const { folderPath } = (await request.json()) as { folderPath: string };
 
   if (!folderPath) {
-    return NextResponse.json({ error: "folderPath is required" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.registryImport.folderPathRequired") }, { status: 400 });
   }
 
   const absPath = resolve(folderPath);
@@ -22,10 +24,10 @@ export async function POST(request: NextRequest) {
   try {
     const s = await stat(absPath);
     if (!s.isDirectory()) {
-      return NextResponse.json({ error: "Path is not a directory" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.registryImport.notDirectory") }, { status: 400 });
     }
   } catch {
-    return NextResponse.json({ error: `Directory not found: ${absPath}` }, { status: 404 });
+    return NextResponse.json({ error: t("errCms.registryImport.dirNotFound", { path: absPath }) }, { status: 404 });
   }
 
   // Find cms.config.ts
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
 
   if (!configFile) {
     return NextResponse.json(
-      { error: `No cms.config.ts found in ${absPath}` },
+      { error: t("errCms.registryImport.noConfig", { path: absPath }) },
       { status: 400 },
     );
   }

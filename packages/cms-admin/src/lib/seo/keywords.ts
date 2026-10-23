@@ -8,6 +8,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getActiveSitePaths } from "../site-paths";
 import type { SeoFields } from "./score";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface TrackedKeyword {
   keyword: string;
@@ -59,9 +60,10 @@ export async function addKeyword(
 ): Promise<KeywordStore> {
   const store = await readKeywordStore();
   const normalized = keyword.trim().toLowerCase();
-  if (!normalized) throw new Error("Keyword cannot be empty");
+  const t = await getServerTSafe();
+  if (!normalized) throw new Error(t("libText.seoKeywords.empty"));
   if (store.keywords.some((k) => k.keyword === normalized)) {
-    throw new Error(`Keyword "${normalized}" is already tracked`);
+    throw new Error(t("libText.seoKeywords.alreadyTracked", { keyword: normalized }));
   }
   store.keywords.push({
     keyword: normalized,

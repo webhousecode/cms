@@ -59,7 +59,7 @@ export const BRAND_PACKS: BrandPack[] = [
     colorForeground: "#FFFFFF",
     colorDark: "#5FB3B3",
     // Manrope is fysio.work's heading/button/menu face (their CSS, 22/10-2026).
-    font: { family: "Manrope", stylesheet: "/brands/fysio-work/fonts.css" },
+    font: { family: "Manrope", stylesheet: "/brands/fysio-work/fonts.css" }, // i18n-ignore: font family name
     // F211.3 — Danish clinics: the admin opens in Danish unless the user picked
     // another language under Account → Language.
     defaultLocale: "da",
@@ -99,7 +99,7 @@ export function brandForRequest(headers: { get(name: string): string | null }): 
 const HEX =/^#[0-9a-fA-F]{6}$/;
 
 function hex(value: string, field: string): string {
-  if (!HEX.test(value)) throw new Error(`brand ${field} must be a 6-digit hex colour, got ${JSON.stringify(value)}`);
+  if (!HEX.test(value)) throw new Error(`brand ${field} must be a 6-digit hex colour, got ${JSON.stringify(value)}`); // i18n-ignore: developer config validation (brand pack), thrown at build/boot
   return value;
 }
 
@@ -162,8 +162,8 @@ const FONT_STYLESHEET = /^\/brands\/[a-z0-9-]+\/[a-z0-9-]+\.css$/;
 /** The brand's typeface, checked — it lands inside a <style> and a <link>. */
 export function brandFont(brand: BrandPack): { family: string; stylesheet: string } | null {
   if (!brand.font) return null;
-  if (!FONT_FAMILY.test(brand.font.family)) throw new Error(`brand font family must be a plain name, got ${JSON.stringify(brand.font.family)}`);
-  if (!FONT_STYLESHEET.test(brand.font.stylesheet)) throw new Error(`brand font stylesheet must be a self-hosted /brands/<id>/<name>.css, got ${JSON.stringify(brand.font.stylesheet)}`);
+  if (!FONT_FAMILY.test(brand.font.family)) throw new Error(`brand font family must be a plain name, got ${JSON.stringify(brand.font.family)}`); // i18n-ignore: developer config validation (brand pack)
+  if (!FONT_STYLESHEET.test(brand.font.stylesheet)) throw new Error(`brand font stylesheet must be a self-hosted /brands/<id>/<name>.css, got ${JSON.stringify(brand.font.stylesheet)}`); // i18n-ignore: developer config validation (brand pack)
   return brand.font;
 }
 

@@ -1,3 +1,4 @@
+/* i18n-ignore-file: machine-to-machine endpoint (builder VM / GitHub webhook) — responses and persisted build-log events are read by machines, not shown as UI text */
 /**
  * F144 P8 — GitHub push webhook → ephemeral SSR build trigger.
  *

@@ -16,6 +16,7 @@ import { createReadStream } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface CloudflarePagesConfig {
   accountId: string;
@@ -40,7 +41,8 @@ export async function cloudflarePagesDeploy(
   localDir: string,
 ): Promise<CloudflarePagesDeployResult> {
   const start = Date.now();
-  assertProjectSlug(config.projectName);
+  await assertProjectSlug(config.projectName);
+  const t = await getServerTSafe();
 
   // Ensure project exists (idempotent)
   await ensureProject(config);
@@ -48,7 +50,7 @@ export async function cloudflarePagesDeploy(
   // Collect files for upload
   const files = await collectFiles(localDir);
   if (files.length === 0) {
-    throw new Error("No files to deploy — the build directory is empty.");
+    throw new Error(t("deployText.cloudflarePages.noFiles"));
   }
 
   // Create deployment via multipart form
@@ -65,6 +67,7 @@ export async function cloudflarePagesDeploy(
 // ── Project management ────────────────────────────────────────────────────
 
 async function ensureProject(config: CloudflarePagesConfig): Promise<void> {
+  const t = await getServerTSafe();
   const { accountId, projectName, apiToken } = config;
   const getRes = await fetch(
     `${API_BASE}/accounts/${accountId}/pages/projects/${encodeURIComponent(projectName)}`,
@@ -76,7 +79,7 @@ async function ensureProject(config: CloudflarePagesConfig): Promise<void> {
   if (getRes.ok) return;
   if (getRes.status !== 404) {
     const err = await getRes.text().catch(() => "");
-    throw new Error(`Cloudflare Pages: fetching project failed (${getRes.status}): ${err.slice(0, 200)}`);
+    throw new Error(t("deployText.cloudflarePages.fetchProjectFailed", { status: getRes.status, error: err.slice(0, 200) }));
   }
 
   // Create — "Direct Upload" project type
@@ -94,7 +97,7 @@ async function ensureProject(config: CloudflarePagesConfig): Promise<void> {
   });
   if (!createRes.ok) {
     const err = await createRes.text().catch(() => "");
-    throw new Error(`Cloudflare Pages: creating project failed (${createRes.status}): ${err.slice(0, 300)}`);
+    throw new Error(t("deployText.cloudflarePages.createProjectFailed", { status: createRes.status, error: err.slice(0, 300) }));
   }
   console.log(`[cloudflare-pages] Created project ${projectName}`);
 }
@@ -106,6 +109,7 @@ async function createDeployment(
   rootDir: string,
   files: string[],
 ): Promise<{ id: string; url: string }> {
+  const t = await getServerTSafe();
   const { accountId, projectName, apiToken } = config;
 
   // Cloudflare expects multipart/form-data with one part per file. In Node 20+
@@ -133,7 +137,7 @@ async function createDeployment(
   );
   if (!res.ok) {
     const err = await res.text().catch(() => "");
-    throw new Error(`Cloudflare Pages: deployment failed (${res.status}): ${err.slice(0, 400)}`);
+    throw new Error(t("deployText.cloudflarePages.deploymentFailed", { status: res.status, error: err.slice(0, 400) }));
   }
 
   const json = (await res.json()) as {
@@ -142,8 +146,8 @@ async function createDeployment(
     errors?: Array<{ message: string }>;
   };
   if (!json.success || !json.result) {
-    const msg = json.errors?.map((e) => e.message).join("; ") ?? "unknown error";
-    throw new Error(`Cloudflare Pages: deployment rejected: ${msg}`);
+    const msg = json.errors?.map((e) => e.message).join("; ") ?? t("deployText.cloudflarePages.unknownError");
+    throw new Error(t("deployText.cloudflarePages.deploymentRejected", { error: msg }));
   }
   return {
     id: json.result.id,
@@ -180,11 +184,9 @@ async function readFileAsUint8Array(fullPath: string): Promise<Uint8Array> {
   return new Uint8Array(Buffer.concat(chunks));
 }
 
-function assertProjectSlug(name: string): void {
+async function assertProjectSlug(name: string): Promise<void> {
   // Cloudflare Pages project names: lowercase letters, digits, hyphens.
   if (!/^[a-z0-9]([a-z0-9-]{0,56}[a-z0-9])?$/.test(name)) {
-    throw new Error(
-      `Cloudflare Pages project name "${name}" is invalid. Use lowercase letters, digits, and hyphens (max 58 chars).`,
-    );
+    throw new Error((await getServerTSafe())("deployText.cloudflarePages.invalidProjectName", { name }));
   }
 }

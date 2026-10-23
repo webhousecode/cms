@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/forms/[name]/widget.js — embeddable form widget script.
@@ -11,6 +12,7 @@ import { NextRequest, NextResponse } from "next/server";
  * submission via fetch, and shows success/error inline. ~4KB, zero deps.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
+  const t = await getServerTSafe();
   const { name } = await params;
   const fwdHost = req.headers.get("x-forwarded-host");
   const fwdProto = req.headers.get("x-forwarded-proto");
@@ -94,7 +96,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ name
           msgEl.style.display = "block";
           msgEl.style.background = "#d4edda";
           msgEl.style.color = "#155724";
-          msgEl.textContent = res.data.message || ${JSON.stringify("Thank you!")};
+          msgEl.textContent = res.data.message || ${JSON.stringify(t("errApi.common.thankYou"))};
           form.reset();
         } else {
           msgEl.style.display = "block";

@@ -8,6 +8,7 @@ import {
   parseSitemapLocs,
   type CmsDocIndexEntry,
 } from "@/lib/linkable-pages";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * `GET /api/inline-edit/pages` — the link picker's page list (F164.2/F164.5).
@@ -37,6 +38,7 @@ export async function OPTIONS() {
 }
 
 export async function GET() {
+  const t = await getServerTSafe();
   // Permission-gated, not "has any role" — a viewer has no business enumerating
   // a site's pages.
   //
@@ -50,7 +52,7 @@ export async function GET() {
   const role = await getSiteRole();
   if (!role || !hasPermission(ROLE_PERMISSIONS[role] ?? [], "content.edit")) {
     return NextResponse.json(
-      { error: "Forbidden — content.edit required" },
+      { error: t("errApi.common.forbiddenContentEdit") },
       { status: 403, headers: CORS_HEADERS },
     );
   }
@@ -63,7 +65,7 @@ export async function GET() {
         pages: [],
         error: "no-preview-url",
         message:
-          "Sitet har ingen adresse i indstillingerne, så vi kan ikke hente dets sideoversigt. Sæt site-adressen under Site Settings.",
+          t("errApi.inlineEdit.noSiteUrl"),
       },
       { headers: CORS_HEADERS },
     );
@@ -75,7 +77,7 @@ export async function GET() {
       headers: { accept: "application/xml,text/xml" },
       signal: AbortSignal.timeout(10_000),
     });
-    if (!res.ok) throw new Error(`sitemap ${res.status}`);
+    if (!res.ok) throw new Error(`sitemap ${res.status}`); // i18n-ignore: internal exception, caught and replaced by a translated message
     locs = parseSitemapLocs(await res.text());
   } catch {
     // Explicit and visible — NEVER a silent fall back to computed paths. Guessed
@@ -85,7 +87,7 @@ export async function GET() {
       {
         pages: [],
         error: "no-sitemap",
-        message: `Kunne ikke hente ${base}/sitemap.xml. Vælgeren viser kun sider sitet selv oplyser, så listen er tom indtil sitemappet svarer.`,
+        message: t("errApi.inlineEdit.sitemapFailed", { base: String(base) }),
       },
       { headers: CORS_HEADERS },
     );
@@ -124,7 +126,7 @@ export async function GET() {
   }
 
   return NextResponse.json(
-    { pages: buildLinkablePages(locs, index), source: "sitemap" },
+    { pages: buildLinkablePages(locs, index, t), source: "sitemap" },
     { headers: CORS_HEADERS },
   );
 }

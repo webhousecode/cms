@@ -7,6 +7,7 @@
  */
 
 import type { DeployProvider } from "../deploy-service";
+import { getServerTSafe } from "@/i18n/server";
 
 const DEFAULT_TIMEOUT = 15000;
 
@@ -34,13 +35,13 @@ export function isDnsApiConfigured(): boolean {
 
 function dnsApiBase(): string {
   const url = process.env.DNS_API_URL;
-  if (!url) throw new Error("DNS_API_URL not configured");
+  if (!url) throw new Error("DNS_API_URL not configured"); // i18n-ignore: operator configuration invariant (env var), for the host operator
   return url.replace(/\/+$/, "");
 }
 
 function dnsApiKey(): string {
   const key = process.env.DNS_API_KEY;
-  if (!key) throw new Error("DNS_API_KEY not configured");
+  if (!key) throw new Error("DNS_API_KEY not configured"); // i18n-ignore: operator configuration invariant (env var), for the host operator
   return key;
 }
 
@@ -53,7 +54,7 @@ function dnsApiKey(): string {
  */
 export async function parseCustomDomain(domain: string): Promise<{ subdomain: string; zone: string; managed: boolean }> {
   const clean = domain.trim().toLowerCase().replace(/\.$/, "");
-  if (!clean.includes(".")) throw new Error(`"${domain}" is not a valid domain`);
+  if (!clean.includes(".")) throw new Error((await getServerTSafe())("deployText.dnsClient.invalidDomain", { domain }));
 
   let zones: string[] = [];
   try {
@@ -100,13 +101,13 @@ export function cnameTargetForProvider(
       // Netlify subdomain isn't always inferable; default to a sensible target.
       // Users with a custom Netlify subdomain should override manually.
       const sub = config.deployAppName ?? "";
-      const target = sub ? `${sub}.netlify.app.` : "apex-loadbalancer.netlify.com.";
-      return { target, providerLabel: "Netlify" };
+      const target = sub ? `${sub}.netlify.app.` : "apex-loadbalancer.netlify.com."; // i18n-ignore: DNS target
+      return { target, providerLabel: "Netlify" }; // i18n-ignore: brand name
     }
     case "cloudflare-pages": {
       const project = config.deployCloudflareProjectName;
       if (!project) return null;
-      return { target: `${project}.pages.dev.`, providerLabel: "Cloudflare Pages" };
+      return { target: `${project}.pages.dev.`, providerLabel: "Cloudflare Pages" }; // i18n-ignore: product name
     }
     case "flyio":
     case "flyio-live": {
@@ -136,7 +137,7 @@ async function dnsFetch(method: string, path: string, body?: unknown): Promise<R
 
 export async function listManagedZones(): Promise<string[]> {
   const res = await dnsFetch("GET", "/zones");
-  if (!res.ok) throw new Error(`DNS API: zones list failed (${res.status})`);
+  if (!res.ok) throw new Error((await getServerTSafe())("deployText.dnsClient.zonesFailed", { status: res.status }));
   const zones = (await res.json()) as Array<{ name: string }>;
   return zones.map((z) => z.name);
 }
@@ -144,7 +145,7 @@ export async function listManagedZones(): Promise<string[]> {
 export async function findCname(zone: string, name: string): Promise<DnsRecord | null> {
   const params = new URLSearchParams({ type: "CNAME", name });
   const res = await dnsFetch("GET", `/zones/${encodeURIComponent(zone)}/records?${params.toString()}`);
-  if (!res.ok) throw new Error(`DNS API: lookup failed (${res.status})`);
+  if (!res.ok) throw new Error((await getServerTSafe())("deployText.dnsClient.lookupFailed", { status: res.status }));
   const records = (await res.json()) as DnsRecord[];
   return records[0] ?? null;
 }
@@ -158,7 +159,7 @@ export async function createCname(zone: string, name: string, target: string): P
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`DNS API: create failed (${res.status}): ${body.slice(0, 200)}`);
+    throw new Error((await getServerTSafe())("deployText.dnsClient.createFailed", { status: res.status, body: body.slice(0, 200) }));
   }
   return (await res.json()) as DnsRecord;
 }
@@ -171,7 +172,7 @@ export async function updateCname(zone: string, recordId: string, target: string
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`DNS API: update failed (${res.status}): ${body.slice(0, 200)}`);
+    throw new Error((await getServerTSafe())("deployText.dnsClient.updateFailed", { status: res.status, body: body.slice(0, 200) }));
   }
   return (await res.json()) as DnsRecord;
 }
@@ -233,14 +234,14 @@ export interface RegistrarConfirmResult {
 export async function searchDomains(query: string, limit = 5): Promise<RegistrarDomainResult[]> {
   const params = new URLSearchParams({ q: query, limit: String(limit) });
   const res = await dnsFetch("GET", `/registrar/search?${params.toString()}`);
-  if (!res.ok) throw new Error(`Registrar search failed (${res.status})`);
+  if (!res.ok) throw new Error((await getServerTSafe())("deployText.dnsClient.searchFailed", { status: res.status }));
   const data = (await res.json()) as { results: RegistrarDomainResult[] };
   return data.results ?? [];
 }
 
 export async function checkDomains(domains: string[]): Promise<{ results: RegistrarDomainResult[]; unsupported: string[] }> {
   const res = await dnsFetch("POST", "/registrar/check", { domains });
-  if (!res.ok) throw new Error(`Registrar check failed (${res.status})`);
+  if (!res.ok) throw new Error((await getServerTSafe())("deployText.dnsClient.checkFailed", { status: res.status }));
   return (await res.json()) as { results: RegistrarDomainResult[]; unsupported: string[] };
 }
 
@@ -248,7 +249,7 @@ export async function initiateRegistration(domainName: string): Promise<Registra
   const res = await dnsFetch("POST", "/registrar/register", { domain_name: domainName });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`Registration failed (${res.status}): ${body.slice(0, 200)}`);
+    throw new Error((await getServerTSafe())("deployText.dnsClient.registrationFailed", { status: res.status, body: body.slice(0, 200) }));
   }
   return (await res.json()) as RegistrarInitResult;
 }
@@ -257,7 +258,7 @@ export async function confirmRegistration(domainName: string, confirmToken: stri
   const res = await dnsFetch("POST", "/registrar/register", { domain_name: domainName, confirm_token: confirmToken });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`Registration confirmation failed (${res.status}): ${body.slice(0, 200)}`);
+    throw new Error((await getServerTSafe())("deployText.dnsClient.confirmFailed", { status: res.status, body: body.slice(0, 200) }));
   }
   return (await res.json()) as RegistrarConfirmResult;
 }

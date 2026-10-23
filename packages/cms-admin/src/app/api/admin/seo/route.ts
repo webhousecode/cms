@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { calculateSeoScore, calculateGeoScore, type SeoFields } from "@/lib/seo/score";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface SeoDocSummary {
   collection: string;
@@ -24,6 +25,7 @@ export interface SeoDocSummary {
  * Returns SEO summary for all published/draft documents across all collections.
  */
 export async function GET() {
+  const t = await getServerTSafe();
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
     const results: SeoDocSummary[] = [];
@@ -95,7 +97,7 @@ export async function GET() {
     });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed" },
+      { error: err instanceof Error ? err.message : t("errAdmin.common.failed") },
       { status: 500 },
     );
   }

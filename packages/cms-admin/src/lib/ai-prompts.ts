@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { getActiveSitePaths } from "./site-paths";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface AIPromptDef {
   id: string;
@@ -9,11 +10,12 @@ export interface AIPromptDef {
   value: string;
 }
 
-/** Default prompts — used as fallback when no custom value is stored */
+/** Default prompts — used as fallback when no custom value is stored. label/description are i18n keys. */
 export const DEFAULT_PROMPTS: Record<string, { label: string; description: string; default: string }> = {
   "chat.system": {
-    label: "AI Chat — System Prompt",
-    description: "System prompt for the in-editor AI Assistant chat. Variables: {collectionName}, {fieldDescriptions}",
+    label: "libText.aiPrompts.chatSystem.label",
+    description: "libText.aiPrompts.chatSystem.description",
+    // i18n-ignore: model prompt sent to the AI, editable in settings
     default: `You are a content writer inside a CMS. {collectionName}
 {fieldDescriptions}
 
@@ -26,21 +28,24 @@ ABSOLUTE RULES — violating any of these makes your output useless:
 6. Use Markdown for formatting. Use "- " for bullet lists. Never use ">" for lists.`,
   },
   "generate.system": {
-    label: "Generate Article — System Prompt",
-    description: "System prompt for full-article generation from collection list or editor. Variables: {brandVoice}, {schemaInstructions}",
+    label: "libText.aiPrompts.generateSystem.label",
+    description: "libText.aiPrompts.generateSystem.description",
+    // i18n-ignore: model prompt sent to the AI, editable in settings
     default: `You are a professional content writer. Generate publication-ready content.{brandVoice}
 
 ## Output format
 {schemaInstructions}`,
   },
   "rewrite.system": {
-    label: "Rewrite — System Prompt",
-    description: "System prompt for the inline rewrite feature (bubble menu).",
+    label: "libText.aiPrompts.rewriteSystem.label",
+    description: "libText.aiPrompts.rewriteSystem.description",
+    // i18n-ignore: model prompt sent to the AI, editable in settings
     default: "You are a professional content editor. Rewrite the provided text according to the instruction. Return ONLY the rewritten text — no explanation, no quotes, no preamble.",
   },
   "agent-runner.schema": {
-    label: "Agent Runner — Schema Instructions",
-    description: "Appended to every agent run. Tells the LLM how to format JSON output. Variables: {fieldList}",
+    label: "libText.aiPrompts.agentRunnerSchema.label",
+    description: "libText.aiPrompts.agentRunnerSchema.description",
+    // i18n-ignore: model prompt sent to the AI, editable in settings
     default: `Respond with ONLY a valid JSON object. No markdown fences, no explanation. Use this exact shape:
 {
 {fieldList}
@@ -52,18 +57,21 @@ ABSOLUTE RULES — violating any of these makes your output useless:
 - Omit fields you have no meaningful value for`,
   },
   "agent-generate-prompt": {
-    label: "Agent — Auto-Generate System Prompt",
-    description: "Prompt used to auto-generate an agent's system prompt from role + name.",
+    label: "libText.aiPrompts.agentGeneratePrompt.label",
+    description: "libText.aiPrompts.agentGeneratePrompt.description",
+    // i18n-ignore: model prompt sent to the AI, editable in settings
     default: "You are a CMS configuration assistant. Generate a concise, professional system prompt for an AI content agent. The prompt should define the agent's role, tone, constraints, and output format. Write in English. Return only the system prompt text — no explanations or markdown.",
   },
   "agent-create-from-description": {
-    label: "Agent — Create from Description",
-    description: "System prompt for generating a full agent config from a natural language description.",
+    label: "libText.aiPrompts.agentCreateFromDescription.label",
+    description: "libText.aiPrompts.agentCreateFromDescription.description",
+    // i18n-ignore: model prompt sent to the AI, editable in settings
     default: `You are an AI agent configurator for a headless CMS. Given a natural language description of a desired content agent, return a single valid JSON object — no markdown, no explanation, no code fences.`,
   },
   "interactives.generate": {
-    label: "Interactives — Create with AI",
-    description: "System prompt for generating new standalone HTML interactives from a user description.",
+    label: "libText.aiPrompts.interactivesGenerate.label",
+    description: "libText.aiPrompts.interactivesGenerate.description",
+    // i18n-ignore: model prompt sent to the AI, editable in settings
     default: `Generate a standalone HTML file with inline CSS and JavaScript.
 The HTML should be a complete, self-contained interactive component.
 Include <!DOCTYPE html>, <html>, <head>, <body> tags.
@@ -75,8 +83,9 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
 Wrap your response in \`\`\`html code fences.`,
   },
   "interactives.edit": {
-    label: "Interactives — Edit with AI",
-    description: "System prompt for modifying existing HTML interactives via chat. Variables: {title}, {interactiveId}",
+    label: "libText.aiPrompts.interactivesEdit.label",
+    description: "libText.aiPrompts.interactivesEdit.description",
+    // i18n-ignore: model prompt sent to the AI, editable in settings
     default: `You are an expert web developer editing an interactive HTML component.
 The component is called "{title}" (ID: {interactiveId}).
 When the user asks you to modify the component, respond with the COMPLETE updated HTML.
@@ -120,10 +129,11 @@ export async function getPrompt(id: string): Promise<string> {
 /** Get all prompts with current values for the UI */
 export async function getAllPrompts(): Promise<AIPromptDef[]> {
   const custom = await readPrompts();
+  const t = await getServerTSafe();
   return Object.entries(DEFAULT_PROMPTS).map(([id, def]) => ({
     id,
-    label: def.label,
-    description: def.description,
+    label: t(def.label),
+    description: t(def.description),
     value: custom[id] ?? def.default,
   }));
 }

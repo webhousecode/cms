@@ -68,7 +68,7 @@ export async function getPageBuildSecret(): Promise<string | null> {
 export async function recordHookRegistration(opts: { hookId: number; repo: string }): Promise<void> {
   const file = await secretPath();
   const cur = readFile(file);
-  if (!cur) throw new Error("Cannot record hook before secret exists");
+  if (!cur) throw new Error("Cannot record hook before secret exists"); // i18n-ignore: internal invariant, caught and logged by deploy-service
   writeFile(file, { ...cur, hookId: opts.hookId, repo: opts.repo });
 }
 

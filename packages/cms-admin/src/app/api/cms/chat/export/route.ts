@@ -4,11 +4,13 @@ import { buildExportZip } from "@/lib/chat/chat-export";
 import { readSiteConfig } from "@/lib/site-config";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { cookies } from "next/headers";
+import { getServerTSafe } from "@/i18n/server";
 
 /** GET /api/cms/chat/export — download full chat export as ZIP */
 export async function GET() {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   // Resolve site name
   let siteName = "webhouse-site";

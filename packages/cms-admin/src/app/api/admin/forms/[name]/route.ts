@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAllForms } from "@/lib/forms/store";
 import { deleteAdminForm } from "@/lib/forms/store";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 /** GET /api/admin/forms/[name] — full form config (for the builder). */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
+  const t = await getServerTSafe();
   // Had NO check at all — not even "is anyone logged in". `forms.read` and not
   // `forms.manage`: an editor holds read but not manage, and reading a form's
   // configuration is what the builder page does before it saves.
@@ -12,18 +14,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ nam
   const { name } = await params;
   const forms = await getAllForms();
   const form = forms.find((f) => f.name === name);
-  if (!form) return NextResponse.json({ error: "Form not found" }, { status: 404 });
+  if (!form) return NextResponse.json({ error: t("errAdmin.forms.notFound") }, { status: 404 });
   return NextResponse.json({ form });
 }
 
 /** DELETE /api/admin/forms/[name] — delete an admin-defined form. */
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("forms.manage"); if (denied) return denied;
   const { name } = await params;
   try {
     await deleteAdminForm(name);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 400 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : t("errAdmin.common.failed") }, { status: 400 });
   }
 }

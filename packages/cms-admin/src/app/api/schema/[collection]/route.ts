@@ -8,17 +8,19 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { denyViewers, getSiteRole } from "@/lib/require-role";
 import { invalidateActiveSite } from "@/lib/site-pool";
 import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
+import { getServerTSafe } from "@/i18n/server";
 
 type Ctx = { params: Promise<{ collection: string }> };
 
 export async function PUT(req: NextRequest, { params }: Ctx) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   try {
     const role = await getSiteRole();
     if (role !== "admin") {
       const { schemaEditEnabled } = await readSiteConfig();
       if (!schemaEditEnabled) {
-        return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+        return NextResponse.json({ error: t("errApi.common.schemaEditingDisabled") }, { status: 403 });
       }
     }
     const { collection } = await params;
@@ -49,12 +51,13 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const role = await getSiteRole();
   if (role !== "admin") {
     const { schemaEditEnabled } = await readSiteConfig();
     if (!schemaEditEnabled) {
-      return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+      return NextResponse.json({ error: t("errApi.common.schemaEditingDisabled") }, { status: 403 });
     }
   }
   const { collection } = await params;

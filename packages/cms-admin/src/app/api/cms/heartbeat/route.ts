@@ -1,3 +1,4 @@
+/* i18n-ignore-file: heartbeat status lines are read only by the external cron caller (service token), never shown in the admin */
 import { NextResponse } from "next/server";
 
 /**
@@ -42,7 +43,7 @@ export async function GET() {
       ran.push(`agents: ${result.ran.join(", ")}`);
     }
     if (result.errors.length > 0) {
-      errors.push(...result.errors.map((e) => `agent: ${e}`));
+      errors.push(...result.errors.map((e) => `agent: ${e}`)); // i18n-ignore: cron heartbeat status for the service caller, not shown in the admin
     }
   } catch (err) {
     errors.push(`agents: ${err instanceof Error ? err.message : String(err)}`);
@@ -55,7 +56,7 @@ export async function GET() {
     if (result.backupRan) ran.push("backup: completed");
     if (result.linkCheckRan) ran.push("link-check: completed");
     if (result.errors.length > 0) {
-      errors.push(...result.errors.map((e) => `tools: ${e}`));
+      errors.push(...result.errors.map((e) => `tools: ${e}`)); // i18n-ignore: cron heartbeat status for the service caller, not shown in the admin
     }
   } catch (err) {
     errors.push(`tools: ${err instanceof Error ? err.message : String(err)}`);

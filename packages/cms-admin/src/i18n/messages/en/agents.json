@@ -106,6 +106,8 @@
     "runPromptPlaceholder": "Prompt to start the pipeline (sent to step 1)",
     "running": "Running…",
     "done": "Done",
-    "run": "Run"
+    "run": "Run",
+    "nameMustBeString": "name must be a string",
+    "stepsMustBeArray": "steps must be an array"
   }
 }

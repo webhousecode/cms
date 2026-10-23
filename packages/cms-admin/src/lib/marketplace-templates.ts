@@ -112,11 +112,16 @@ export async function fetchMarketplaceTemplates(opts: {
   return {
     templates: [],
     source: "empty",
-    error: "Marketplace unreachable. Try again later or use a local template.",
+    error: (await serverT())("system.agents.marketplaceUnreachable"),
   };
 }
 
 /** Force a fresh fetch on next call. */
 export function clearMarketplaceCache(): void {
   cache = null;
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

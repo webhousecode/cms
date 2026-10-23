@@ -4,10 +4,11 @@ import { readSiteConfig, generateCalendarToken } from "@/lib/site-config";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { listBackups } from "@/lib/backup-service";
 import { cookies } from "next/headers";
+import { getServerTSafe } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
-function getExcerpt(data: Record<string, unknown>): string | undefined {
+function getExcerpt(data: Record<string, unknown>, t: (key: string, vars?: Record<string, string | number>) => string): string | undefined {
   for (const key of ["excerpt", "description", "summary"]) {
     if (typeof data[key] === "string" && data[key]) return (data[key] as string).slice(0, 120);
   }
@@ -23,8 +24,8 @@ function getExcerpt(data: Record<string, unknown>): string | undefined {
       if (firstLine) return firstLine.trim().slice(0, 120);
     }
   }
-  if (Array.isArray(data.tags) && data.tags.length > 0) return `Tags: ${(data.tags as string[]).join(", ")}`;
-  if (typeof data.category === "string") return `Category: ${data.category}`;
+  if (Array.isArray(data.tags) && data.tags.length > 0) return t("errAdmin.scheduledEvents.tags", { tags: (data.tags as string[]).join(", ") });
+  if (typeof data.category === "string") return t("errAdmin.scheduledEvents.category", { category: data.category });
   return undefined;
 }
 
@@ -42,6 +43,7 @@ function localISO(d: Date): string {
 }
 
 export async function GET() {
+  const t = await getServerTSafe();
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
 
@@ -67,7 +69,7 @@ export async function GET() {
       for (const doc of documents) {
         const publishAt = doc.publishAt;
         const unpublishAt = doc.unpublishAt;
-        const excerpt = getExcerpt(doc.data);
+        const excerpt = getExcerpt(doc.data, t);
         const base = {
           title: String(doc.data?.title ?? doc.data?.name ?? doc.slug),
           subtitle: col.label ?? col.name,
@@ -92,8 +94,8 @@ export async function GET() {
           id: `bak-${snap.id}`,
           type: "backup",
           date: snap.timestamp,
-          title: `Backup (${snap.documentCount} docs)`,
-          subtitle: "Scheduled backup",
+          title: t("errAdmin.scheduledEvents.backupTitle", { count: snap.documentCount }),
+          subtitle: t("errAdmin.scheduledEvents.scheduledBackupSub"),
           href: "/admin/backup",
         });
       }
@@ -112,8 +114,8 @@ export async function GET() {
           id: `bak-sched-${localISO(d)}`,
           type: "backup",
           date: localISO(d),
-          title: "Scheduled Backup",
-          subtitle: siteConf.backupSchedule === "daily" ? "Daily backup" : "Weekly backup",
+          title: t("errAdmin.scheduledEvents.scheduledBackup"),
+          subtitle: siteConf.backupSchedule === "daily" ? t("errAdmin.scheduledEvents.dailyBackup") : t("errAdmin.scheduledEvents.weeklyBackup"),
           href: "/admin/backup",
         });
       }
@@ -131,8 +133,8 @@ export async function GET() {
           id: `lc-sched-${localISO(d)}`,
           type: "link-check",
           date: localISO(d),
-          title: "Scheduled Link Check",
-          subtitle: siteConf.linkCheckSchedule === "daily" ? "Daily check" : "Weekly check",
+          title: t("errAdmin.scheduledEvents.scheduledLinkCheck"),
+          subtitle: siteConf.linkCheckSchedule === "daily" ? t("errAdmin.scheduledEvents.dailyCheck") : t("errAdmin.scheduledEvents.weeklyCheck"),
           href: "/admin/link-checker",
         });
       }
@@ -152,7 +154,7 @@ export async function GET() {
     return NextResponse.json({ events, calendarToken, orgId, siteId });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to load scheduled events" },
+      { error: err instanceof Error ? err.message : t("errAdmin.scheduledEvents.loadFailed") },
       { status: 500 },
     );
   }

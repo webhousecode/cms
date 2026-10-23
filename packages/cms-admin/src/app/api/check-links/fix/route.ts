@@ -5,8 +5,10 @@ import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const body = await req.json() as {
     url: string;
@@ -41,7 +43,7 @@ export async function POST(req: NextRequest) {
     if (slugMatch) {
       return NextResponse.json({
         suggestion: slugMatch.url,
-        reason: `Document "${slugMatch.title}" exists at ${slugMatch.url}`,
+        reason: t("errApi.checkLinks.docExistsAt", { title: String(slugMatch.title), url: String(slugMatch.url) }),
         confidence: "high",
       });
     }
@@ -62,11 +64,11 @@ export async function POST(req: NextRequest) {
     if (scored.length > 0 && scored[0].score > 0.3) {
       return NextResponse.json({
         suggestion: scored[0].url,
-        reason: `Best match: "${scored[0].title}" (similarity)`,
+        reason: t("errApi.checkLinks.bestMatch", { title: String(scored[0].title) }),
         confidence: "medium",
       });
     }
-    return NextResponse.json({ suggestion: null, reason: "No similar document found and no AI key configured" });
+    return NextResponse.json({ suggestion: null, reason: t("errApi.checkLinks.noMatchNoAi") });
   }
 
   const ai = await getAI();
@@ -76,6 +78,7 @@ export async function POST(req: NextRequest) {
   const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
 
   const contentModel = await getModel("content");
+  const promptError = body.error ?? "Not found"; // i18n-ignore: model prompt
   const { text } = await ai.chat({
     ...mistralModel(contentModel),
     maxTokens: 256,
@@ -90,7 +93,7 @@ Broken link:
 - URL: ${body.url}
 - Link text: "${body.text}"
 - Found in: ${body.docCollection}/${body.docSlug}
-- Error: ${body.error ?? "Not found"}
+- Error: ${promptError}
 
 Available URLs:
 ${urlList}
@@ -104,11 +107,11 @@ If no good match exists, respond: {"suggestion": null, "reason": "why"}`,
 
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return NextResponse.json({ suggestion: null, reason: "AI returned no suggestion" });
+    if (!jsonMatch) return NextResponse.json({ suggestion: null, reason: t("errApi.checkLinks.aiNoSuggestion") });
     const parsed = JSON.parse(jsonMatch[0]);
     return NextResponse.json({ ...parsed, confidence: parsed.suggestion ? "high" : undefined });
   } catch {
-    return NextResponse.json({ suggestion: null, reason: "Failed to parse AI response" });
+    return NextResponse.json({ suggestion: null, reason: t("errApi.checkLinks.aiParseFailed") });
   }
 }
 

@@ -10,6 +10,7 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
 import type { SeoFields } from "@/lib/seo/score";
+import { getServerTSafe } from "@/i18n/server";
 
 /** Strip HTML/markdown to plain text for keyword density analysis */
 function stripToText(content: string): string {
@@ -27,6 +28,7 @@ function stripToText(content: string): string {
  * Returns tracked keywords with coverage analysis across all documents.
  */
 export async function GET() {
+  const t = await getServerTSafe();
   try {
     const store = await readKeywordStore();
     if (store.keywords.length === 0) {
@@ -64,7 +66,7 @@ export async function GET() {
     return NextResponse.json({ keywords: store.keywords, analyses });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed" },
+      { error: err instanceof Error ? err.message : t("errAdmin.common.failed") },
       { status: 500 },
     );
   }
@@ -76,6 +78,7 @@ export async function GET() {
  * Body: { action: "add" | "remove", keyword: string, target?: "primary" | "secondary" | "long-tail" }
  */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("seo"); if (capDenied) return capDenied;
   try {
@@ -86,7 +89,7 @@ export async function POST(request: NextRequest) {
     };
 
     if (!body.keyword?.trim()) {
-      return NextResponse.json({ error: "keyword required" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.seo.keywordRequired") }, { status: 400 });
     }
 
     let store;
@@ -99,7 +102,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ keywords: store.keywords });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed" },
+      { error: err instanceof Error ? err.message : t("errAdmin.common.failed") },
       { status: err instanceof Error && err.message.includes("already") ? 409 : 500 },
     );
   }

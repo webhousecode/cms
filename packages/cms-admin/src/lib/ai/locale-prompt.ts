@@ -18,7 +18,7 @@ import { LOCALE_LABELS } from "../locale";
 export function buildLocaleInstruction(locale: string | null | undefined): string {
   const safeLocale = locale && locale.trim() ? locale : "en";
   const langName = LOCALE_LABELS[safeLocale] ?? safeLocale;
-  return `LANGUAGE: Write ALL output in ${langName} (${safeLocale}). This is non-negotiable — every word of generated content must be in ${langName}.`;
+  return `LANGUAGE: Write ALL output in ${langName} (${safeLocale}). This is non-negotiable — every word of generated content must be in ${langName}.`; // i18n-ignore: model prompt language instruction
 }
 
 /**

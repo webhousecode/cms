@@ -69,8 +69,8 @@ export async function runChangedFieldTranslation(args: {
     const seen = await getActiveSiteEntry();
     if (!seen || seen.id !== args.expectSiteId) {
       const msg =
-        `tenant lost: expected site ${args.expectSiteId}, resolved ` +
-        `${seen?.id ?? "(none)"} — refusing rather than writing to the wrong site`;
+        `tenant lost: expected site ${args.expectSiteId}, resolved ` + // i18n-ignore: skip reason only written to the server log
+        `${seen?.id ?? "(none)"} — refusing rather than writing to the wrong site`; // i18n-ignore: skip reason only written to the server log
       console.error(`[auto-translate] ${msg}`);
       return { ok: false, reason: msg, missingSibling: false };
     }
@@ -102,10 +102,10 @@ export async function runChangedFieldTranslation(args: {
         const grp = args.source.translationGroup;
         const medGruppe = siblings.filter((d) => d.translationGroup === grp);
         console.log(
-          `[auto-translate] lookup: ${siblings.length} docs in ${args.collection}, ` +
-            `source.translationGroup=${grp ?? "(none)"}, ` +
-            `${medGruppe.length} share it [${medGruppe.map((d) => `${d.locale ?? "?"}:${d.slug}`).join(", ")}], ` +
-            `looking for locale=${args.targetLocale}, source.id=${args.source.id}`,
+          `[auto-translate] lookup: ${siblings.length} docs in ${args.collection}, ` + // i18n-ignore: console log line
+            `source.translationGroup=${grp ?? "(none)"}, ` + // i18n-ignore: console log line
+            `${medGruppe.length} share it [${medGruppe.map((d) => `${d.locale ?? "?"}:${d.slug}`).join(", ")}], ` + // i18n-ignore: console log line
+            `looking for locale=${args.targetLocale}, source.id=${args.source.id}`, // i18n-ignore: console log line
         );
       }
       return { ok: false, reason: plan.reason, missingSibling: plan.missingSibling };
@@ -138,7 +138,7 @@ export async function runChangedFieldTranslation(args: {
       const match = text.match(/\{[\s\S]*\}/);
       translated = JSON.parse(match?.[0] ?? text);
     } catch {
-      return { ok: false, reason: "could not parse the model's JSON" };
+      return { ok: false, reason: "could not parse the model's JSON" }; // i18n-ignore: skip reason only written to the server log
     }
 
     const requested = Object.keys(plan.fields);
@@ -172,6 +172,6 @@ export async function runChangedFieldTranslation(args: {
 
     return { ok: true, targetSlug: plan.target.slug, fields: requested };
   } catch (err) {
-    return { ok: false, reason: err instanceof Error ? err.message : "unknown error" };
+    return { ok: false, reason: err instanceof Error ? err.message : "unknown error" }; // i18n-ignore: skip reason only written to the server log
   }
 }

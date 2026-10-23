@@ -1,0 +1,258 @@
+{
+  "common": {
+    "unknown": "ukendt",
+    "unauthorized": "Ikke logget ind",
+    "internalServerError": "Intern serverfejl",
+    "emailPasswordRequired": "E-mail og adgangskode er påkrævet",
+    "missingResponse": "Svar mangler",
+    "notFound": "Ikke fundet",
+    "userGone": "Brugeren findes ikke længere",
+    "setupComplete": "Opsætningen er allerede gennemført",
+    "failed": "Mislykkedes",
+    "missingCode": "Kode mangler",
+    "userNotFound": "Bruger ikke fundet",
+    "invalidBeamSession": "Ugyldig eller udløbet Beam-session",
+    "siteNotFoundId": "Site ikke fundet: {site}",
+    "conversationNotFound": "Samtalen blev ikke fundet",
+    "invalidBody": "Ugyldig forespørgsel",
+    "noFile": "Ingen fil",
+    "thankYou": "Tak!",
+    "formNotFound": "Formularen blev ikke fundet",
+    "unknownAction": "Ukendt handling",
+    "forbiddenContentEdit": "Ingen adgang — kræver content.edit",
+    "siteNotFoundLower": "Site ikke fundet",
+    "internalError": "Intern fejl",
+    "invalidMediaPath": "Ugyldig mediesti",
+    "fileParamRequired": "Parameteren file er påkrævet",
+    "fileNotFound": "Filen blev ikke fundet",
+    "filenameRequired": "filename er påkrævet",
+    "invalidPath": "Ugyldig sti",
+    "notAuthenticated": "Ikke logget ind",
+    "orgSiteRequired": "orgId og siteId er påkrævet",
+    "invalidRequestOrNotAuthenticated": "Ugyldig forespørgsel eller ikke logget ind",
+    "slugParamRequired": "Query-parameteren slug er påkrævet",
+    "siteNotFound": "Site ikke fundet",
+    "deployFailed": "Udgivelsen mislykkedes",
+    "forbidden": "Ingen adgang",
+    "invalidJsonBody": "Ugyldig JSON i forespørgslen",
+    "missingParams": "Parametre mangler",
+    "buildFailed": "Bygningen mislykkedes",
+    "schemaEditingDisabled": "Redigering af skemaer er slået fra"
+  },
+  "podcast": {
+    "unknown": "ukendt",
+    "unknownError": "ukendt fejl",
+    "episodeNotFound": "afsnittet «{slug}» findes ikke",
+    "notAList": "ikke en liste",
+    "udtalerUnreadable": "«udtaler» kunne ikke læses: {error}",
+    "artikelMissing": "«artikel» (slug) mangler",
+    "needsReplikker": "kroppen skal have en liste «replikker»",
+    "scriptRejected": "manuskriptet blev afvist: {reason}",
+    "sponsorNotFound": "indslaget «{slug}» findes ikke",
+    "sponsorUnusable": "indslaget kan ikke bruges: {reason}",
+    "efterReplikInteger": "«efterReplik» skal være et helt tal",
+    "efterReplikRange": "«efterReplik» skal være mellem 0 og {max} — afsnittet har {count} replikker",
+    "notAState": "«{state}» er ikke en tilstand",
+    "slugFormatEpisode": "«slug» skal være små bogstaver, tal og bindestreger — fx «afsnit-01»",
+    "nonNegativeInteger": "«{name}» skal være et helt tal på 0 eller derover",
+    "noScript": "der er intet manuskript at indtale",
+    "noVoice": "der er ingen stemme valgt. En reklame læst af en af værterne lyder som at værten sælger noget — vælg en anden.",
+    "recordingFailed": "indtalingen fejlede: {error}",
+    "audioNotSaved": "lyden blev lavet (og betalt) men kunne ikke gemmes: {error}",
+    "usageLookupFailed": "brugen kunne ikke slås op: {reason}",
+    "slugFormatSponsor": "«slug» skal være små bogstaver, tal og bindestreger — fx «broberg-efteraar»",
+    "sponsorExists": "indslaget «{slug}» findes allerede",
+    "udtalerList": "«udtaler» skal være en liste",
+    "maxRows": "højst {max} rækker",
+    "rowNeedsWord": "hver række skal have et ord",
+    "noPhonetic": "«{word}» har ingen lydskrift — så er der intet at rette udtalen med",
+    "tooLong": "«{word}» er for lang (højst {max} tegn)"
+  },
+  "authBid": {
+    "notConfigured": "Login er ikke sat op på denne server"
+  },
+  "authGithub": {
+    "notConfigured": "GITHUB_OAUTH_CLIENT_ID er ikke sat op"
+  },
+  "authLogin": {
+    "useGithub": "Denne konto logger ind med GitHub — klik på \"Log ind med GitHub\" nedenfor",
+    "invalidCredentials": "Forkert e-mail eller adgangskode"
+  },
+  "authPasskey": {
+    "removeFailed": "Kunne ikke fjerne",
+    "noChallenge": "Ingen ventende udfordring",
+    "authFailed": "Godkendelsen mislykkedes",
+    "defaultName": "Adgangsnøgle",
+    "registrationFailed": "Registreringen mislykkedes"
+  },
+  "authQr": {
+    "approvalFailed": "Godkendelsen mislykkedes",
+    "notApproved": "Ikke godkendt eller allerede brugt",
+    "disabled": "QR-login er slået fra",
+    "missingSessionId": "sessionId mangler"
+  },
+  "authSetup": {
+    "disabled": "Opsætningen er slået fra. Sæt CMS_SETUP_TOKEN på serveren for at slå førstegangsopsætning til.",
+    "invalidToken": "Ugyldig opsætningsnøgle",
+    "fieldsRequired": "E-mail, adgangskode og navn er påkrævet",
+    "passwordLength": "Adgangskoden skal være mindst 8 tegn"
+  },
+  "authTotp": {
+    "verificationFailed": "Bekræftelsen mislykkedes",
+    "noPendingLogin": "Intet ventende login",
+    "pendingExpired": "Login-forsøget er udløbet",
+    "invalidCode": "Forkert kode"
+  },
+  "beamReceive": {
+    "missingFileFields": "Påkrævede felter mangler: beamId, path, file",
+    "invalidSiteId": "Ugyldigt site-id",
+    "pathTraversal": "Ugyldig sti uden for sitet",
+    "fileFailed": "Modtagelsen af filen mislykkedes",
+    "defaultOrg": "Standard",
+    "finalizeFailed": "Afslutningen mislykkedes",
+    "missingInitFields": "Påkrævede felter mangler: token, beamId, siteName, orgId",
+    "invalidIds": "Ugyldigt siteId, orgId eller beamId",
+    "invalidToken": "Beam-nøglen er ugyldig, udløbet eller allerede brugt",
+    "initiateFailed": "Opstarten mislykkedes"
+  },
+  "builder": {
+    "siteParamRequired": "Query-parameteren site er påkrævet",
+    "siteShaRequired": "Query-parametrene site og sha er påkrævet",
+    "noBuildRecord": "Ingen bygning fundet",
+    "tokenNeedsSite": "Start med nøgle kræver ?site=<siteId>",
+    "staticSite": "Statiske sites bygges i selve CMS'et. Separate byggemaskiner er kun til SSR-sites.",
+    "needsDeployApp": "deployAppName skal være sat op, før du kan starte en bygning.",
+    "needsGhcrToken": "GHCR push-nøgle er påkrævet (body.registryToken eller GHCR_PUSH_TOKEN).",
+    "corruptRecord": "(beskadiget byggepost)"
+  },
+  "checkLinks": {
+    "docNotFound": "Dokumentet blev ikke fundet",
+    "linkNotInField": "Linket findes ikke i dokumentets felt",
+    "docExistsAt": "Dokumentet \"{title}\" findes på {url}",
+    "bestMatch": "Bedste match: \"{title}\" (lighed)",
+    "noMatchNoAi": "Intet lignende dokument fundet, og ingen AI-nøgle er sat op",
+    "aiNoSuggestion": "AI'en kom ikke med et forslag",
+    "aiParseFailed": "AI'ens svar kunne ikke læses",
+    "cronSecretMissing": "CMS_CRON_SECRET er ikke sat op"
+  },
+  "conversations": {
+    "sourceRequired": "source er påkrævet",
+    "turnsArray": "turns skal være en liste",
+    "turnShape": "hver tur skal have role ('visitor' | 'assistant') og text"
+  },
+  "extractText": {
+    "noReadable": "Ingen læsbar tekst (måske en scannet PDF eller en billed-PDF)",
+    "noText": "Ingen tekst fundet",
+    "unsupported": "Filtypen understøttes ikke",
+    "error": "Fejl ved udtræk: {error}"
+  },
+  "forms": {
+    "tooMany": "For mange indsendelser — prøv igen senere",
+    "verificationFailed": "Bekræftelsen mislykkedes — prøv igen",
+    "invalidEmail": "{field} er ikke en gyldig e-mailadresse",
+    "invalidPhone": "{field} er ikke et gyldigt telefonnummer",
+    "invalidField": "{field} er ugyldigt"
+  },
+  "github": {
+    "fetchUserFailed": "Kunne ikke hente brugeren",
+    "orgRequired": "Parameteren org er påkrævet",
+    "fetchReposFailed": "Kunne ikke hente repositories",
+    "apiError": "Fejl fra GitHub API",
+    "notConnected": "Ikke forbundet til GitHub",
+    "nameRequired": "name er påkrævet"
+  },
+  "inlineEdit": {
+    "noSiteUrl": "Sitet har ingen adresse i indstillingerne, så vi kan ikke hente dets sideoversigt. Sæt site-adressen under Site Settings.",
+    "sitemapFailed": "Kunne ikke hente {base}/sitemap.xml. Vælgeren viser kun sider sitet selv oplyser, så listen er tom indtil sitemappet svarer.",
+    "adminOnly": "Kun for administratorer",
+    "enabledRequired": "enabled (boolean) er påkrævet",
+    "siteInBody": "Angiv sitet som query-parameteren ?site=, ikke i body — et `site` i body blev ignoreret og ville have lavet en nøgle til et andet site.",
+    "lensReadOnly": "Lens-sessionen er skrivebeskyttet — brug skrive-nøglen for at få en redigeringssession"
+  },
+  "interactives": {
+    "internalErrorDetail": "Intern fejl: {error}",
+    "targetLocaleRequired": "targetLocale er påkrævet",
+    "notFound": "Det interaktive element blev ikke fundet",
+    "noOtherLocale": "Der er ikke noget andet sprog at oversætte til",
+    "aiInvalidHtml": "AI'en returnerede ugyldig HTML",
+    "aiTranslationFailed": "AI-oversættelsen mislykkedes",
+    "noFile": "Ingen fil sendt med"
+  },
+  "lensSession": {
+    "methodNotAllowed": "Metoden er ikke tilladt"
+  },
+  "media": {
+    "videoThumbFailed": "Video-miniaturen mislykkedes (kræver ffmpeg)",
+    "videoThumbNotGenerated": "Kunne ikke lave video-miniature (kræver ffmpeg)",
+    "noExif": "Ingen EXIF-data",
+    "exifFailed": "Kunne ikke læse EXIF",
+    "noUploadDir": "Ingen upload-mappe fundet",
+    "optimizeFailed": "Optimeringen mislykkedes",
+    "renameNamesRequired": "oldName og newName er påkrævet",
+    "namesIdentical": "Navnene er ens",
+    "invalidFilename": "Ugyldigt filnavn",
+    "nameExists": "Der findes allerede en fil med det navn",
+    "rotateParams": "file og angle (90, -90, 180) er påkrævet",
+    "rotateFailed": "Rotationen mislykkedes",
+    "tagsParams": "key og tags[] er påkrævet"
+  },
+  "mobile": {
+    "jobIdRequired": "jobId er påkrævet",
+    "jobNotFound": "Jobbet blev ikke fundet",
+    "chatFailed": "Chatten mislykkedes",
+    "slugRequired": "slug er påkrævet",
+    "slugExists": "Slug findes allerede",
+    "resolveParams": "orgId, siteId og path er påkrævet",
+    "noDocForUrl": "Intet dokument passer til denne URL",
+    "searchFailed": "Søgningen mislykkedes",
+    "noWriteAccess": "Ingen skriveadgang",
+    "listDeploysFailed": "Kunne ikke hente udgivelser",
+    "loginInvalid": "Forkert e-mail eller adgangskode, eller også er 2FA slået til — brug QR-parringen fra computeren",
+    "analysisEmpty": "Analysen gav ingen resultater",
+    "analysisFailed": "Analysen mislykkedes",
+    "missingParams": "Parametre mangler",
+    "invalidUrlParam": "Parameteren url mangler eller er ugyldig",
+    "missingToken": "Nøgle mangler",
+    "pairingTokenInvalid": "Parringsnøglen er udløbet, ugyldig eller allerede brugt",
+    "proxyUnavailable": "Forhåndsvisnings-proxyen findes ikke på denne server",
+    "proxyUpstreamInvalid": "Upstream skal være en lokal udviklingsserver, og stien skal blive på den",
+    "proxyDirInvalid": "dir skal være dist/ for et registreret site",
+    "proxyUpstreamFailed": "Upstream-proxyen fejlede: {error}",
+    "distNotFound": "dist/ blev ikke fundet",
+    "sirvFailed": "Sirv-proxyen fejlede: {error}",
+    "proxyMissingParam": "Parameteren upstream eller dir mangler",
+    "missingTopics": "Emner mangler",
+    "missingTokenPlatform": "Nøgle eller platform mangler",
+    "invalidPlatform": "Ugyldig platform",
+    "pushTestTitle": "webhouse.app-test",
+    "pushTestBody": "Kan du læse dette, virker push-beskederne.",
+    "uploadFailed": "Upload mislykkedes",
+    "invalidToken": "Ugyldig eller udløbet nøgle",
+    "streamError": "Fejl i datastrømmen: {error}"
+  },
+  "preview": {
+    "built": "Byggede {pages} sider til {dir}",
+    "noDist": "Ingen dist/-mappe fundet i {dir}. Byg sitet først.",
+    "noDistIndex": "Ingen dist/index.html fundet. Byg sitet først."
+  },
+  "publishScheduled": {
+    "notAuthorized": "Ingen adgang"
+  },
+  "schema": {
+    "collectionNameChars": "Samlingens navn må kun indeholde bogstaver, tal, - og _",
+    "collectionExists": "Samlingen findes allerede",
+    "formsArray": "forms skal være en liste med mindst ét element",
+    "formName": "hver formular skal have et navn som tekst",
+    "blocksArray": "blocks skal være en liste med mindst ét element",
+    "blockName": "hver blok skal have et navn som tekst",
+    "collectionsArray": "collections skal være en liste med mindst ét element",
+    "collectionName": "hver samling skal have et navn som tekst"
+  },
+  "trash": {
+    "mediaLabel": "Medier",
+    "interactivesLabel": "Interaktive elementer"
+  },
+  "search": {
+    "mediaLabel": "Medier"
+  }
+}

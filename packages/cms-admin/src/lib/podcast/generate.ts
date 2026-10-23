@@ -18,6 +18,7 @@ import {
 } from "./manuscript";
 import { efterManuskriptRettelse } from "./state";
 import { hentAfsnit, skrivAfsnit, type Afsnit, type StoreSvar } from "./store";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Rollerne bor i CMS'et, ikke i koden — så de kan justeres uden en udrulning.
@@ -66,6 +67,7 @@ export async function genererManuskript(args: {
   artikelSamling: string;
   artikelSlug: string;
 }): Promise<GenererSvar> {
+  const t = await getServerTSafe();
   // 1. Er afsnittet i en tilstand hvor manuskriptet må skrives om?
   const eksisterende = await hentAfsnit(args.afsnitSlug);
   if (!eksisterende.ok) return eksisterende;
@@ -79,10 +81,7 @@ export async function genererManuskript(args: {
     if (nuvaerende.data.tilstand === "godkendt" || nuvaerende.data.tilstand === "indspillet" || nuvaerende.data.tilstand === "udgivet") {
       return {
         ok: false,
-        grund:
-          `afsnittet står som «${nuvaerende.data.tilstand}» — træk godkendelsen tilbage først ` +
-          `(sæt tilstanden til «${efter}»). En genskrivning uden det ville lave teksten om ` +
-          `under en godkendelse der stadig stod ved magt.`,
+        grund: t("libText.podcastGenerate.withdrawApprovalFirst", { state: nuvaerende.data.tilstand, next: efter }),
       };
     }
   }
@@ -91,7 +90,7 @@ export async function genererManuskript(args: {
   const cms = await getAdminCms();
   const artikel = await cms.content.findBySlug(args.artikelSamling, args.artikelSlug);
   if (!artikel) {
-    return { ok: false, grund: `artiklen «${args.artikelSamling}/${args.artikelSlug}» findes ikke` };
+    return { ok: false, grund: t("libText.podcastGenerate.articleNotFound", { article: `${args.artikelSamling}/${args.artikelSlug}` }) };
   }
   const data = (artikel.data ?? {}) as Record<string, unknown>;
   const titel = typeof data.title === "string" ? data.title.replace(/<[^>]+>/g, "") : args.artikelSlug;
@@ -99,7 +98,7 @@ export async function genererManuskript(args: {
   if (tekst.length < 200) {
     return {
       ok: false,
-      grund: `artiklen har kun ${tekst.length} tegn brødtekst — for lidt til et afsnit`,
+      grund: t("libText.podcastGenerate.articleTooShort", { count: tekst.length }),
     };
   }
 
@@ -125,14 +124,14 @@ export async function genererManuskript(args: {
   } catch (err) {
     return {
       ok: false,
-      grund: `modellen svarede ikke: ${err instanceof Error ? err.message : "ukendt fejl"}`,
+      grund: t("libText.podcastGenerate.modelNoAnswer", { error: err instanceof Error ? err.message : t("libText.podcastCommon.unknownError") }),
     };
   }
 
   // 4. VALIDÉR. Herfra og opad er dokumentet urørt.
-  const parset = parseManuskript(raa);
+  const parset = parseManuskript(raa, t);
   if (!parset.ok) {
-    return { ok: false, grund: `manuskriptet blev afvist: ${parset.grund}` };
+    return { ok: false, grund: t("libText.podcastGenerate.scriptRejected", { reason: parset.grund }) };
   }
 
   // 5. Først nu skrives der.

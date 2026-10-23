@@ -4,6 +4,7 @@ import { createServer, type Server } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import path from "path";
 import sirv from "sirv";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Starts (or reuses) a lightweight static file server for the active site's dist/ directory.
@@ -45,13 +46,14 @@ async function findFreePort(): Promise<number> {
         const port = addr.port;
         s.close(() => resolve(port));
       } else {
-        reject(new Error("Could not get port"));
+        reject(new Error("Could not get port")); // i18n-ignore: internal exception from port allocation
       }
     });
   });
 }
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const sitePaths = await getActiveSitePaths();
   const distDir = path.join(sitePaths.projectDir, "dist");
 
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest) {
     // how it read: F193.2 spent a CI cycle chasing "404 on /agents" that was
     // this route honestly reporting an unbuilt site.
     return NextResponse.json(
-      { error: `No dist/ directory found at ${distDir}. Run the site's build first.` },
+      { error: t("errApi.preview.noDist", { dir: String(distDir) }) },
       { status: 409 },
     );
   }

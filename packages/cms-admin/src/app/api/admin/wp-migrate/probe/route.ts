@@ -7,17 +7,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { probeWpSite } from "@/lib/wp-migration/probe";
 import { getSiteRole } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
+    return NextResponse.json({ error: t("errAdmin.common.adminOnly") }, { status: 403 });
   }
 
   try {
     const { url } = await request.json();
     if (!url || typeof url !== "string") {
-      return NextResponse.json({ error: "Missing url" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.wpMigrate.missingUrl") }, { status: 400 });
     }
 
     // Basic URL validation
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
     const result = await probeWpSite(normalizedUrl);
     return NextResponse.json(result);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Probe failed";
+    const message = err instanceof Error ? err.message : t("errAdmin.wpMigrate.probeFailed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

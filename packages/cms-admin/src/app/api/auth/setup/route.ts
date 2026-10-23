@@ -4,6 +4,7 @@ import path from "node:path";
 import { getUsers, createUser, createToken, COOKIE_NAME } from "@/lib/auth";
 import { getAdminDataDir } from "@/lib/site-registry";
 import { isBidConfigured } from "@/lib/bid";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Setup endpoint — used ONCE on first install to create the initial admin.
@@ -91,13 +92,14 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const ip = clientIp(request);
 
   try {
     // Layer 1: marker file beats everything.
     if (isSetupComplete()) {
       await logAttempt("auth.setup.blocked", { reason: "setup-complete-marker" }, ip);
-      return NextResponse.json({ error: "Setup already complete" }, { status: 403 });
+      return NextResponse.json({ error: t("errApi.common.setupComplete") }, { status: 403 });
     }
 
     // Layer 2: strict users.json read. Distinguish "empty array" (legit
@@ -107,7 +109,7 @@ export async function POST(request: NextRequest) {
       // Users exist but marker missing — close the gate now and refuse.
       markSetupComplete();
       await logAttempt("auth.setup.blocked", { reason: "users-exist-no-marker" }, ip);
-      return NextResponse.json({ error: "Setup already complete" }, { status: 403 });
+      return NextResponse.json({ error: t("errApi.common.setupComplete") }, { status: 403 });
     }
 
     // Layer 3: in production, require explicit setup token.
@@ -124,21 +126,21 @@ export async function POST(request: NextRequest) {
       if (!expectedToken) {
         await logAttempt("auth.setup.blocked", { reason: "no-server-token-configured" }, ip);
         return NextResponse.json({
-          error: "Setup is disabled. Set CMS_SETUP_TOKEN on the server to enable first-run setup.",
+          error: t("errApi.authSetup.disabled"),
         }, { status: 403 });
       }
       if (!body.setupToken || body.setupToken !== expectedToken) {
         await logAttempt("auth.setup.blocked", { reason: "bad-setup-token", email: body.email }, ip);
-        return NextResponse.json({ error: "Invalid setup token" }, { status: 403 });
+        return NextResponse.json({ error: t("errApi.authSetup.invalidToken") }, { status: 403 });
       }
     }
 
     const { email, password, name } = body;
     if (!email || !password || !name) {
-      return NextResponse.json({ error: "Email, password, and name required" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.authSetup.fieldsRequired") }, { status: 400 });
     }
     if (password.length < 8) {
-      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.authSetup.passwordLength") }, { status: 400 });
     }
 
     const user = await createUser(email, password, name);
@@ -157,7 +159,7 @@ export async function POST(request: NextRequest) {
     });
     return response;
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Internal server error";
+    const msg = err instanceof Error ? err.message : t("errApi.common.internalServerError");
     await logAttempt("auth.setup.error", { error: msg }, ip);
     return NextResponse.json({ error: msg }, { status: 500 });
   }

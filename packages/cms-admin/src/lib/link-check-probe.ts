@@ -53,7 +53,7 @@ async function once(url: string, method: "HEAD" | "GET", redirect: RequestRedire
     // rendered as one generic sentence and an editor could not tell them apart
     // — information the code this replaced actually had.
     const raw = (err as Error)?.message ?? String(err);
-    const cause = /abort/i.test(raw) ? `Intet svar inden ${TIMEOUT_MS / 1000}s` : raw.slice(0, 120);
+    const cause = /abort/i.test(raw) ? (await serverT())("system.linkCheck.timeout", { seconds: TIMEOUT_MS / 1000 }) : raw.slice(0, 120);
     return { res: null, cause };
   } finally {
     clearTimeout(timer);
@@ -76,9 +76,14 @@ export async function probeUrl(url: string, fetchImpl: typeof fetch = fetch): Pr
   // honours can settle it.
   if (head.status >= 400) {
     const viaGet = await once(url, "GET", "follow", fetchImpl);
-    if (!viaGet.res) return { status: "error", error: `HEAD ${head.status}, og GET: ${viaGet.cause}` };
+    if (!viaGet.res) return { status: "error", error: (await serverT())("system.linkCheck.headThenGet", { status: head.status, cause: viaGet.cause }) };
     if (viaGet.res.status < 400) return { status: "ok", httpStatus: viaGet.res.status };
     return { status: "broken", httpStatus: viaGet.res.status };
   }
   return { status: "ok", httpStatus: head.status };
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

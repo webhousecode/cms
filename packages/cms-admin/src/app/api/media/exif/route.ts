@@ -8,10 +8,12 @@ import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { extractExif } from "@/lib/media/image-processor";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const fileUrl = req.nextUrl.searchParams.get("file");
-  if (!fileUrl) return NextResponse.json({ error: "file param required" }, { status: 400 });
+  if (!fileUrl) return NextResponse.json({ error: t("errApi.common.fileParamRequired") }, { status: 400 });
 
   try {
     const sitePaths = await getActiveSitePaths();
@@ -20,24 +22,24 @@ export async function GET(req: NextRequest) {
     const fullPath = resolve(join(sitePaths.uploadDir, relativePath));
 
     if (!fullPath.startsWith(resolve(sitePaths.uploadDir) + "/")) {
-      return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.common.invalidPath") }, { status: 400 });
     }
 
     if (!existsSync(fullPath)) {
-      return NextResponse.json({ error: "File not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errApi.common.fileNotFound") }, { status: 404 });
     }
 
     const buffer = await readFile(fullPath);
     const exif = await extractExif(buffer);
 
     if (!exif) {
-      return NextResponse.json({ exif: null, message: "No EXIF data" });
+      return NextResponse.json({ exif: null, message: t("errApi.media.noExif") });
     }
 
     return NextResponse.json({ exif });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to read EXIF" },
+      { error: err instanceof Error ? err.message : t("errApi.media.exifFailed") },
       { status: 500 },
     );
   }

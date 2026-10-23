@@ -37,7 +37,7 @@ describe("et indslag kan kun bruges når det HAR lyd", () => {
     const r = maaBruges({ ...helt, lydUrl: undefined });
     expect(r.ok).toBe(false);
     if (r.ok) return;
-    expect(r.grund).toContain("ingen lyd");
+    expect(r.grund).toContain("no audio"); // English by default (F211.2)
   });
 
   it("et indslag på pause må ikke bruges", () => {

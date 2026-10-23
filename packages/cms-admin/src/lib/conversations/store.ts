@@ -55,7 +55,7 @@ export class ConversationStore {
   /** Store a conversation. Rejects one with no usable turns. */
   async create(input: NewConversation): Promise<Conversation> {
     const source = input.source?.trim();
-    if (!source) throw new EmptyConversationError("source is required");
+    if (!source) throw new EmptyConversationError("source is required"); // i18n-ignore: returned to the site's server-to-server recording call, not to a person
 
     const turns = (input.turns ?? [])
       .filter((t) => typeof t?.text === "string" && t.text.trim() !== "")
@@ -68,7 +68,7 @@ export class ConversationStore {
       }));
 
     if (turns.length === 0) {
-      throw new EmptyConversationError("a conversation must have at least one turn with text");
+      throw new EmptyConversationError("a conversation must have at least one turn with text"); // i18n-ignore: returned to the site's server-to-server recording call, not to a person
     }
 
     const now = new Date().toISOString();

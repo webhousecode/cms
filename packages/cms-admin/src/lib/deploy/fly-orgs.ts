@@ -10,23 +10,25 @@
  * picker is the silent version of that.
  */
 import { FlyApiError, FlyClient } from "@broberg/deploy-core";
+import { getServerTSafe } from "@/i18n/server";
 
 export type FlyOrgsResult =
   | { ok: true; orgs: Array<{ slug: string; name: string }> }
   | { ok: false; status: number; error: string };
 
 export async function listFlyOrgsForToken(token: string, fetchImpl?: typeof fetch): Promise<FlyOrgsResult> {
-  if (!token.trim()) return { ok: false, status: 400, error: "Missing Fly API token" };
+  const t = await getServerTSafe();
+  if (!token.trim()) return { ok: false, status: 400, error: t("deployText.flyOrgs.missingToken") };
   try {
     const orgs = await new FlyClient({ token, ...(fetchImpl ? { fetch: fetchImpl } : {}) }).listOrgs();
-    if (orgs.length === 0) return { ok: false, status: 422, error: "No organizations found for this token" };
+    if (orgs.length === 0) return { ok: false, status: 422, error: t("deployText.flyOrgs.noOrgs") };
     return { ok: true, orgs: orgs.map((o) => ({ slug: o.slug, name: o.name })) };
   } catch (err) {
     if (err instanceof FlyApiError && (err.status === 401 || err.status === 403)) {
-      return { ok: false, status: 401, error: "Fly rejected this token" };
+      return { ok: false, status: 401, error: t("deployText.flyOrgs.rejected") };
     }
     // Never echo Fly's body to the client — it can carry request details.
     console.error("[fly-orgs] listOrgs failed:", err instanceof Error ? err.message : err);
-    return { ok: false, status: 502, error: "Could not reach Fly to verify the token" };
+    return { ok: false, status: 502, error: t("deployText.flyOrgs.unreachable") };
   }
 }

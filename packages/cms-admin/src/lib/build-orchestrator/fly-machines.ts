@@ -23,6 +23,7 @@
  */
 
 import { FlyApiError, FlyClient, FlyTimeoutError, isRetryableStatus } from "@broberg/deploy-core";
+import { getServerTSafe } from "@/i18n/server";
 
 
 export interface SpawnBuilderOptions {
@@ -73,8 +74,9 @@ function resolveToken(override?: string): string {
   const t = override ?? process.env.FLY_API_TOKEN;
   if (!t) {
     throw new Error(
+      // i18n-ignore: operator/server-configuration invariant naming env vars, for the host operator, not an editor
       "F144: FLY_API_TOKEN env var is required to spawn build VMs. " +
-        "Set it on cms-admin (Fly secret) before triggering an SSR deploy.",
+        "Set it on cms-admin (Fly secret) before triggering an SSR deploy.", // i18n-ignore: continuation of the operator invariant above
     );
   }
   return t;
@@ -90,6 +92,7 @@ export async function spawnBuilder(opts: SpawnBuilderOptions): Promise<SpawnedBu
   const cpus = opts.cpus ?? 4;
   const memoryMb = opts.memoryMb ?? 4096;
 
+  // i18n-ignore: machine name
   const machineName = `build-${opts.siteId}-${opts.sha.slice(0, 8)}-${Date.now().toString(36)}`;
 
   const payload = {
@@ -126,7 +129,7 @@ export async function spawnBuilder(opts: SpawnBuilderOptions): Promise<SpawnedBu
     region: payload.region,
   });
   if (!machine?.id) {
-    throw new Error(`Fly Machines spawn returned no machine id: ${JSON.stringify(machine)}`);
+    throw new Error((await getServerTSafe())("deployText.flyBuilder.noMachineId", { detail: JSON.stringify(machine) }));
   }
   return { machineId: machine.id, region: machine.region ?? region, state: machine.state ?? "unknown" };
 }
@@ -245,7 +248,7 @@ export async function runBuilderEndToEnd(opts: SpawnBuilderOptions & {
       machineId: spawn.machineId,
       ...(opts.flyToken ? { flyToken: opts.flyToken } : {}),
     });
-    const imageTag = `ghcr.io/webhousecode/${opts.siteId}:${opts.sha}`;
+    const imageTag = `ghcr.io/webhousecode/${opts.siteId}:${opts.sha}`; // i18n-ignore: image reference
     return { machineId: spawn.machineId, completion, imageTag };
   } finally {
     cancelLogs?.();

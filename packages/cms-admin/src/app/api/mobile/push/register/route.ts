@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { registerDeviceToken, type PushPlatform } from "@/lib/push-store";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/mobile/push/register
@@ -12,27 +13,28 @@ import { registerDeviceToken, type PushPlatform } from "@/lib/push-store";
  * same (user, token) pair exists, lastSeen is refreshed.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   let body: { token?: string; platform?: PushPlatform; deviceLabel?: string };
   try {
     body = (await req.json()) as typeof body;
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.invalidJsonBody") }, { status: 400 });
   }
 
   if (!body.token || !body.platform) {
     return NextResponse.json(
-      { error: "Missing token or platform" },
+      { error: t("errApi.mobile.missingTokenPlatform") },
       { status: 400 },
     );
   }
 
   if (!["ios", "android", "web"].includes(body.platform)) {
-    return NextResponse.json({ error: "Invalid platform" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.mobile.invalidPlatform") }, { status: 400 });
   }
 
   const stored = await registerDeviceToken(

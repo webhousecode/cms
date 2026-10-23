@@ -40,12 +40,12 @@ function getTabIcon(path: string) {
 }
 import { useState, useEffect, useRef } from "react";
 
-const STATUS_DOT: Record<string, { color: string; title: string }> = {
-  published: { color: "rgb(74 222 128)",  title: "Published" },
-  draft:     { color: "rgb(234 179 8)",   title: "Draft" },
-  scheduled: { color: "rgb(139 92 246)",  title: "Scheduled" },
-  expired:   { color: "rgb(239 68 68)",   title: "Expired" },
-  trashed:   { color: "rgb(248 113 113)", title: "Trashed" },
+const STATUS_DOT: Record<string, { color: string; titleKey: string }> = {
+  published: { color: "rgb(74 222 128)",  titleKey: "shell.tabBar.status.published" },
+  draft:     { color: "rgb(234 179 8)",   titleKey: "shell.tabBar.status.draft" },
+  scheduled: { color: "rgb(139 92 246)",  titleKey: "shell.tabBar.status.scheduled" },
+  expired:   { color: "rgb(239 68 68)",   titleKey: "shell.tabBar.status.expired" },
+  trashed:   { color: "rgb(248 113 113)", titleKey: "shell.tabBar.status.trashed" },
 };
 import { useTabs, displayTabTitle } from "@/lib/tabs-context";
 import { cn } from "@/lib/utils";
@@ -72,7 +72,7 @@ export function TabBar() {
       return;
     }
     const update = () => {
-      document.documentElement.style.setProperty("--cms-chrome-top", `${48 + el.offsetHeight}px`);
+      document.documentElement.style.setProperty("--cms-chrome-top", `${48 + el.offsetHeight}px`); // i18n-ignore: CSS value
     };
     update();
     const ro = new ResizeObserver(update);
@@ -168,7 +168,7 @@ export function TabBar() {
             {/* Status dot — only for document tabs (collection/slug paths) */}
             {tab.status && STATUS_DOT[tab.status] && tab.path.replace(/^\/admin\/?/, "").split("/").length >= 2 && (
               <span
-                title={STATUS_DOT[tab.status]!.title}
+                title={t(STATUS_DOT[tab.status]!.titleKey)}
                 style={{
                   flexShrink: 0,
                   width: "6px",

@@ -2,21 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
+import { getServerTSafe } from "@/i18n/server";
 
 /* ─── GET: get interactive metadata + content ────────────────── */
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const t = await getServerTSafe();
   try {
     const { id } = await params;
     const adapter = await getMediaAdapter();
     const result = await adapter.getInteractive(id);
-    if (!result) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!result) return NextResponse.json({ error: t("errApi.common.notFound") }, { status: 404 });
     return NextResponse.json({ ...result.meta, content: result.content });
   } catch (err) {
     console.error("[interactives] get error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }
 
@@ -25,6 +27,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("interactives"); if (capDenied) return capDenied;
   try {
@@ -40,11 +43,11 @@ export async function PUT(
       translationOf: body.translationOf,
       translationGroup: body.translationGroup,
     });
-    if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!updated) return NextResponse.json({ error: t("errApi.common.notFound") }, { status: 404 });
     return NextResponse.json(updated);
   } catch (err) {
     console.error("[interactives] update error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }
 
@@ -53,16 +56,17 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("interactives"); if (capDenied) return capDenied;
   try {
     const { id } = await params;
     const adapter = await getMediaAdapter();
     const ok = await adapter.deleteInteractive(id);
-    if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!ok) return NextResponse.json({ error: t("errApi.common.notFound") }, { status: 404 });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[interactives] delete error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

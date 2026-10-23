@@ -7,6 +7,7 @@
 import { cookies } from "next/headers";
 import { findSite, getDefaultSite, loadRegistry } from "./site-registry";
 import type { SiteEntry } from "./site-registry";
+import { getServerTSafe } from "@/i18n/server";
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -60,7 +61,7 @@ export class GitHubMediaClient {
    * Returns empty array if directory doesn't exist.
    */
   async listDir(dirPath: string): Promise<GitHubMediaFile[]> {
-    const url = `${this.url(dirPath)}?ref=${this.branch}`;
+    const url = `${this.url(dirPath)}?ref=${this.branch}`; // i18n-ignore: URL
     const res = await fetch(url, { headers: this.headers(), cache: "no-store" });
 
     if (res.status === 404) return [];
@@ -106,7 +107,7 @@ export class GitHubMediaClient {
    * Get a single file's content (decoded from base64).
    */
   async getFile(filePath: string): Promise<{ content: string; sha: string } | null> {
-    const url = `${this.url(filePath)}?ref=${this.branch}`;
+    const url = `${this.url(filePath)}?ref=${this.branch}`; // i18n-ignore: URL
     const res = await fetch(url, { headers: this.headers(), cache: "no-store" });
 
     if (res.status === 404) return null;
@@ -122,7 +123,7 @@ export class GitHubMediaClient {
    * Handles files >1MB where GitHub returns download_url instead of base64 content.
    */
   async getFileRaw(filePath: string): Promise<{ buffer: Buffer; sha: string } | null> {
-    const url = `${this.url(filePath)}?ref=${this.branch}`;
+    const url = `${this.url(filePath)}?ref=${this.branch}`; // i18n-ignore: URL
     const res = await fetch(url, { headers: this.headers(), cache: "no-store" });
 
     if (res.status === 404) return null;
@@ -235,7 +236,7 @@ export async function getGitHubMediaClient(): Promise<{
     const { resolveToken } = await import("./site-pool");
     token = await resolveToken(gh.token);
   } catch {
-    throw new Error("GitHub not connected — connect via Sites → Settings");
+    throw new Error((await getServerTSafe())("deployText.githubMedia.notConnected"));
   }
 
   const client = new GitHubMediaClient(

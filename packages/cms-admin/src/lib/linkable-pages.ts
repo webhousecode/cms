@@ -26,6 +26,9 @@
  * is enrichment: a title that cannot be matched degrades to one derived from the
  * URL. An address is never invented.
  */
+import { getT } from "@/i18n/locale";
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
+
 
 export interface LinkablePage {
   collection: string;
@@ -64,9 +67,9 @@ export function toPath(loc: string): string | null {
 }
 
 /** "min-lange-side" → "Min lange side" — a readable last resort for a title. */
-export function titleFromPath(path: string): string {
+export function titleFromPath(path: string, t: Translate = getT("en")): string {
   const seg = path.split("/").filter(Boolean).pop();
-  if (!seg) return "Forside";
+  if (!seg) return t("system.lib.homePage");
   const words = decodeURIComponent(seg).replace(/[-_]+/g, " ").trim();
   return words ? words.charAt(0).toUpperCase() + words.slice(1) : path;
 }
@@ -115,6 +118,7 @@ export function isUsableTitle(title: string): boolean {
 export function buildLinkablePages(
   locs: string[],
   index: Map<string, CmsDocIndexEntry>,
+  t: Translate = getT("en"),
 ): LinkablePage[] {
   const seen = new Set<string>();
   const pages: LinkablePage[] = [];
@@ -127,9 +131,9 @@ export function buildLinkablePages(
     pages.push({
       collection: doc?.collection ?? "",
       slug: doc?.slug ?? path,
-      title: usable ? usable.title : titleFromPath(path),
+      title: usable ? usable.title : titleFromPath(path, t),
       path,
-      label: doc?.label ?? "Side",
+      label: doc?.label ?? t("system.lib.linkablePageLabel"),
     });
   }
   pages.sort((a, b) => a.title.localeCompare(b.title, "da"));

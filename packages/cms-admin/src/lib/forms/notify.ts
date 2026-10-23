@@ -115,20 +115,20 @@ const COPY = {
     // it lowercase produced "Ny henvendelse via contact". Which form it was is
     // already in the footer line and in the subject; the heading only has to
     // say what happened.
-    heading: (_label: string) => `Ny henvendelse`,
-    received: "Modtaget",
-    reply: "Svar til afsenderen",
-    open: "Åbn i CMS",
+    heading: (_label: string) => `Ny henvendelse`, // i18n-ignore: notification e-mail wording in the site's language (F210.4)
+    received: "Modtaget", // i18n-ignore: notification e-mail wording in the site's language (F210.4)
+    reply: "Svar til afsenderen", // i18n-ignore: notification e-mail wording in the site's language (F210.4)
+    open: "Åbn i CMS", // i18n-ignore: notification e-mail wording in the site's language (F210.4)
     replySubject: "Sv:",
-    footerNote: (site: string) => `Sendt fra kontaktformularen på ${site}`,
+    footerNote: (site: string) => `Sendt fra kontaktformularen på ${site}`, // i18n-ignore: notification e-mail wording in the site's language (F210.4)
   },
   en: {
-    heading: (_label: string) => `New enquiry`,
-    received: "Received",
-    reply: "Reply to sender",
-    open: "Open in the CMS",
+    heading: (_label: string) => `New enquiry`, // i18n-ignore: notification e-mail wording in the site's language (F210.4)
+    received: "Received", // i18n-ignore: notification e-mail wording in the site's language (F210.4)
+    reply: "Reply to sender", // i18n-ignore: notification e-mail wording in the site's language (F210.4)
+    open: "Open in the CMS", // i18n-ignore: notification e-mail wording in the site's language (F210.4)
     replySubject: "Re:",
-    footerNote: (site: string) => `Sent from the contact form on ${site}`,
+    footerNote: (site: string) => `Sent from the contact form on ${site}`, // i18n-ignore: notification e-mail wording in the site's language (F210.4)
   },
 } as const;
 
@@ -159,13 +159,13 @@ async function sendEmailNotification(form: FormConfig, sub: FormSubmission): Pro
       path: `/admin/forms/${encodeURIComponent(form.name)}`,
       orgId,
       siteId: site?.id ?? null,
-      label: `form.submitted → ${form.label}`,
+      label: `form.submitted → ${form.label}`, // i18n-ignore: goto-link audit label, not shown as UI text
     });
   } catch {
     // No link is better than a link into the wrong workspace.
   }
 
-  const subject = lang === "da" ? `Ny henvendelse: ${form.label}` : `New enquiry: ${form.label}`;
+  const subject = lang === "da" ? `Ny henvendelse: ${form.label}` : `New enquiry: ${form.label}`; // i18n-ignore: notification e-mail wording in the site's language (F210.4)
   const to = form.notifications!.email!;
   const { apiKey, from } = await resolveMailer();
 
@@ -230,7 +230,7 @@ async function fireFormWebhookEvent(form: FormConfig, sub: FormSubmission): Prom
       "form.submitted" as Parameters<typeof fireContentEvent>[0],
       form.name,
       sub.id,
-      { data: { title: `${form.label}: new submission`, ...sub.data } } as Parameters<typeof fireContentEvent>[3],
+      { data: { title: `${form.label}: new submission`, ...sub.data } } as Parameters<typeof fireContentEvent>[3], // i18n-ignore: outgoing webhook payload (F210.4)
       "form-engine",
     );
   } catch {
@@ -258,11 +258,11 @@ async function sendAutoReply(form: FormConfig, sub: FormSubmission): Promise<voi
     body: textBody,
     links,
     brand: brandForSite(cfg),
-    laesOgsaa: "Læs også",
+    laesOgsaa: "Læs også", // i18n-ignore: notification e-mail wording in the site's language (F210.4)
   });
 
   const text = links.length
-    ? `${textBody}\n\nLæs også:\n${links.map((l) => `${l.label}: ${l.url}`).join("\n")}`
+    ? `${textBody}\n\nLæs også:\n${links.map((l) => `${l.label}: ${l.url}`).join("\n")}` // i18n-ignore: notification e-mail wording in the site's language (F210.4)
     : textBody;
 
   await getMailer(apiKey).send({ from, to, subject, html, text });

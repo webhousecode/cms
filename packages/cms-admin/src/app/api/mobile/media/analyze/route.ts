@@ -5,6 +5,7 @@ import { readFile, writeFile, mkdir } from "fs/promises";
 import { getSitePathsFor } from "@/lib/site-paths";
 import { readSiteConfigForSite } from "@/lib/site-config";
 import { FilesystemMediaAdapter } from "@/lib/media/filesystem";
+import { getServerTSafe } from "@/i18n/server";
 
 /** Read/write media-meta.json directly from a known dataDir (no cookies) */
 async function appendMetaDirect(dataDir: string, key: string, data: Record<string, unknown>) {
@@ -31,26 +32,27 @@ async function appendMetaDirect(dataDir: string, key: string, data: Record<strin
  * Reads the file from the site's upload dir, runs AI analysis, saves metadata.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   const orgId = req.nextUrl.searchParams.get("orgId");
   const siteId = req.nextUrl.searchParams.get("siteId");
   if (!orgId || !siteId) {
-    return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.orgSiteRequired") }, { status: 400 });
   }
 
   try {
     const body = (await req.json()) as { filename: string; folder?: string };
     if (!body.filename) {
-      return NextResponse.json({ error: "filename required" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.common.filenameRequired") }, { status: 400 });
     }
 
     const paths = await getSitePathsFor(orgId, siteId);
     if (!paths) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errApi.common.siteNotFound") }, { status: 404 });
     }
 
     // Read the file
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
     const segments = body.folder ? [body.folder, body.filename] : [body.filename];
     const data = await adapter.readFile(segments);
     if (!data) {
-      return NextResponse.json({ error: "File not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errApi.common.fileNotFound") }, { status: 404 });
     }
 
     const buffer = Buffer.from(data);
@@ -96,7 +98,7 @@ export async function POST(req: NextRequest) {
       const { analyzeImage } = await import("@/lib/ai/image-analysis");
       const analysis = await analyzeImage(buffer, mimeType);
       if (!analysis) {
-        return NextResponse.json({ error: "Analysis returned no results" }, { status: 500 });
+        return NextResponse.json({ error: t("errApi.mobile.analysisEmpty") }, { status: 500 });
       }
 
       await appendMetaDirect(dataDir, metaKey, {
@@ -115,6 +117,6 @@ export async function POST(req: NextRequest) {
     }
   } catch (err) {
     console.error("[mobile/media/analyze] Error:", err);
-    return NextResponse.json({ error: "Analysis failed" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.mobile.analysisFailed") }, { status: 500 });
   }
 }

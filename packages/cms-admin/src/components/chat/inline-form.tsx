@@ -44,7 +44,7 @@ export function InlineForm({ form, onSaved }: InlineFormProps) {
           .filter((f) => JSON.stringify(values[f.name]) !== JSON.stringify(f.value))
           .map((f) => f.label)
           .join(", ");
-        onSaved?.(changedFields ? `Updated: ${changedFields}` : "No changes");
+        onSaved?.(changedFields ? t("chat.inlineForm.updated", { fields: changedFields }) : t("chat.inlineForm.noChanges"));
         setTimeout(() => setSaved(false), 3000);
       }
     } catch {

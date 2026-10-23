@@ -42,7 +42,7 @@ export async function generateOgImage(
 
     // Create dark gradient overlay (bottom half gets darker)
     const gradient = Buffer.from(
-      `<svg width="${OG_WIDTH}" height="${OG_HEIGHT}">
+      /* i18n-ignore: SVG markup */ `<svg width="${OG_WIDTH}" height="${OG_HEIGHT}">
         <defs>
           <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="black" stop-opacity="0.1"/>
@@ -81,7 +81,7 @@ export async function generateOgImage(
     // Write to uploads/og/
     const ogDir = join(uploadDir, "og");
     mkdirSync(ogDir, { recursive: true });
-    const filename = `${slug}.jpg`;
+    const filename = `${slug}.jpg`; // i18n-ignore: file name
     writeFileSync(join(ogDir, filename), result);
 
     return `/uploads/og/${filename}`;

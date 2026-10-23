@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { getServerTSafe } from "@/i18n/server";
 
 const SYSTEM_KEYS = new Set([
   "slug", "status", "id", "createdAt", "updatedAt",
@@ -25,6 +26,7 @@ export interface CollectionDrift {
  * content has fields that are NOT in the schema (= silent data loss risk).
  */
 export async function GET() {
+  const t = await getServerTSafe();
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
     const results: CollectionDrift[] = [];
@@ -72,7 +74,7 @@ export async function GET() {
     return NextResponse.json(results);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Schema drift check failed" },
+      { error: err instanceof Error ? err.message : t("errCms.schemaDrift.checkFailed") },
       { status: 500 },
     );
   }

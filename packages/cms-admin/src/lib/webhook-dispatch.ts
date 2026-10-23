@@ -69,7 +69,7 @@ function formatDiscord(evt: WebhookEvent): Record<string, unknown> {
     description: evt.message,
     color: evt.color ?? 0xF7BB2E,
     timestamp: new Date().toISOString(),
-    footer: { text: `webhouse.app${evt.instanceUrl ? ` · ${evt.instanceUrl}` : ""}` },
+    footer: { text: `webhouse.app${evt.instanceUrl ? ` · ${evt.instanceUrl}` : ""}` }, // i18n-ignore: webhook payload (F210.4)
   };
   // Discord requires absolute http(s) URLs for embed.url and embed.image —
   // a relative path causes the entire dispatch to fail with HTTP 400.
@@ -81,7 +81,7 @@ function formatDiscord(evt: WebhookEvent): Record<string, unknown> {
   const site = evt.siteName ?? "—";
   const org = evt.orgName ?? "—";
   return {
-    content: `**${evt.event}** on ${site} (${org})`,
+    content: `**${evt.event}** on ${site} (${org})`, // i18n-ignore: webhook payload (F210.4)
     embeds: [embed],
   };
 }
@@ -204,7 +204,7 @@ async function deliverSingle(
     webhookId: wh.id,
     success: false,
     statusCode: lastStatus,
-    error: lastError ?? "Delivery failed",
+    error: lastError ?? (await serverT())("system.lib.webhookDeliveryFailed"),
     attempts: maxAttempts,
     deliveryId,
   };
@@ -287,4 +287,9 @@ async function appendDeliveryLog(
       await fs.writeFile(logPath, trimmed);
     }
   } catch { /* ignore */ }
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

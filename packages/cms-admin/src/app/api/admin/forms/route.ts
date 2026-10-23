@@ -4,6 +4,7 @@ import { FormService } from "@/lib/forms/service";
 import { getAllForms, upsertAdminForm } from "@/lib/forms/store";
 import { requirePermission } from "@/lib/permissions";
 import { requireCapability } from "@/lib/capabilities";
+import { getServerTSafe } from "@/i18n/server";
 
 /** GET /api/admin/forms — list ALL forms (config + admin) + unread counts. */
 export async function GET() {
@@ -33,16 +34,17 @@ export async function GET() {
 
 /** POST /api/admin/forms — create or update an admin-defined form. */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("forms.manage"); if (denied) return denied;
   const capDenied = await requireCapability("forms"); if (capDenied) return capDenied;
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   if (!body.name || !body.label || !Array.isArray(body.fields)) {
-    return NextResponse.json({ error: "name, label, and fields are required" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.forms.fieldsRequired") }, { status: 400 });
   }
   try {
     await upsertAdminForm(body as unknown as Parameters<typeof upsertAdminForm>[0]);
     return NextResponse.json({ ok: true });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 400 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : t("errAdmin.common.failed") }, { status: 400 });
   }
 }

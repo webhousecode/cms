@@ -133,12 +133,12 @@ export async function fetchLiveContentTree(
   opts?: FetchLiveTreeOptions,
 ): Promise<ContentTree> {
   const site = await getActiveSiteEntry();
-  if (!site) throw new Error("no active site for drift check");
+  if (!site) throw new Error("no active site for drift check"); // i18n-ignore: tool result for the model; only caller chat/tools.ts matches on this text
   if (!site.revalidateUrl) {
-    throw new Error("active site has no revalidateUrl — cannot derive content-tree URL");
+    throw new Error("active site has no revalidateUrl — cannot derive content-tree URL"); // i18n-ignore: tool result for the model; only caller chat/tools.ts matches on this text
   }
   if (!site.revalidateSecret) {
-    throw new Error("active site has no revalidateSecret — cannot authenticate content-tree call");
+    throw new Error("active site has no revalidateSecret — cannot authenticate content-tree call"); // i18n-ignore: tool result for the model; only caller chat/tools.ts matches on this text
   }
 
   // Convention: /api/admin/content-tree on the same origin as /api/revalidate.
@@ -151,7 +151,7 @@ export async function fetchLiveContentTree(
   const timestamp = String(Math.floor(Date.now() / 1000));
   const signatureV2 = crypto
     .createHmac("sha256", site.revalidateSecret)
-    .update(`content-tree:${timestamp}`)
+    .update(`content-tree:${timestamp}`) // i18n-ignore: HMAC signing input
     .digest("hex");
 
   const fetchFn = opts?.fetchImpl ?? fetch;
@@ -166,12 +166,12 @@ export async function fetchLiveContentTree(
   });
 
   if (!res.ok) {
-    throw new Error(`live content-tree returned HTTP ${res.status}: ${await res.text().catch(() => "")}`);
+    throw new Error(`live content-tree returned HTTP ${res.status}: ${await res.text().catch(() => "")}`); // i18n-ignore: tool result for the model; only caller chat/tools.ts matches on this text
   }
 
   const data = await res.json() as ContentTree;
   if (!Array.isArray(data.tree)) {
-    throw new Error("live content-tree response missing 'tree' array");
+    throw new Error("live content-tree response missing 'tree' array"); // i18n-ignore: tool result for the model; only caller chat/tools.ts matches on this text
   }
   return data;
 }

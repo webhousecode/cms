@@ -5,6 +5,8 @@
  * fetching template files from GitHub.
  */
 
+import { getServerTSafe } from "@/i18n/server";
+
 export interface TemplateDefinition {
   id: string;
   name: string;
@@ -21,7 +23,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "blog",
     name: "Blog",
-    description: "A clean blog with posts, categories, and rich text editing.",
+    description: "A clean blog with posts, categories, and rich text editing.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "blog",
     tags: ["blog", "minimal", "content"],
     githubPath: "examples/blog",
@@ -30,7 +32,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "landing",
     name: "Landing Page",
-    description: "Marketing landing page with hero, features, and call-to-action blocks.",
+    description: "Marketing landing page with hero, features, and call-to-action blocks.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "landing",
     tags: ["landing", "marketing", "blocks"],
     githubPath: "examples/landing",
@@ -39,7 +41,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "static/agency",
     name: "Agency",
-    description: "Dark, modern agency template with case studies and team sections.",
+    description: "Dark, modern agency template with case studies and team sections.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "agency",
     tags: ["agency", "dark", "case-studies"],
     githubPath: "examples/static/agency",
@@ -48,7 +50,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "static/freelancer",
     name: "Freelancer",
-    description: "Minimal freelancer portfolio with projects and about page.",
+    description: "Minimal freelancer portfolio with projects and about page.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "portfolio",
     tags: ["freelancer", "minimal", "portfolio"],
     githubPath: "examples/static/freelancer",
@@ -57,7 +59,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "static/portfolio",
     name: "Portfolio",
-    description: "Creative portfolio with full-bleed images and project grid.",
+    description: "Creative portfolio with full-bleed images and project grid.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "portfolio",
     tags: ["portfolio", "creative", "images"],
     githubPath: "examples/static/portfolio",
@@ -66,7 +68,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "static/portfolio-squared",
     name: "Portfolio Squared",
-    description: "Grid-based portfolio with square image thumbnails.",
+    description: "Grid-based portfolio with square image thumbnails.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "portfolio",
     tags: ["portfolio", "grid", "gallery"],
     githubPath: "examples/static/portfolio-squared",
@@ -75,7 +77,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "static/boutique",
     name: "Boutique",
-    description: "Elegant boutique template for fashion and lifestyle brands.",
+    description: "Elegant boutique template for fashion and lifestyle brands.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "other",
     tags: ["boutique", "fashion", "elegant"],
     githubPath: "examples/static/boutique",
@@ -84,7 +86,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "static/studio",
     name: "Studio",
-    description: "Creative studio template with project showcases.",
+    description: "Creative studio template with project showcases.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "agency",
     tags: ["studio", "creative", "design"],
     githubPath: "examples/static/studio",
@@ -93,7 +95,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "static/bridgeberg",
     name: "Bridgeberg",
-    description: "Corporate consulting template with services and timeline.",
+    description: "Corporate consulting template with services and timeline.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "other",
     tags: ["corporate", "consulting", "professional"],
     githubPath: "examples/static/bridgeberg",
@@ -102,7 +104,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "static/cmsdemo",
     name: "CMS Demo",
-    description: "Full demo site showcasing all CMS features. Ships as Docker default.",
+    description: "Full demo site showcasing all CMS features. Ships as Docker default.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "other",
     tags: ["demo", "default", "all-features"],
     githubPath: "examples/static/cmsdemo",
@@ -111,7 +113,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "static-boilerplate",
     name: "Static Boilerplate",
-    description: "Minimal static site starter — HTML output with build pipeline.",
+    description: "Minimal static site starter — HTML output with build pipeline.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "boilerplate",
     tags: ["boilerplate", "static", "starter"],
     githubPath: "examples/static-boilerplate",
@@ -120,13 +122,25 @@ export const TEMPLATES: TemplateDefinition[] = [
   {
     id: "nextjs-boilerplate",
     name: "Next.js Boilerplate",
-    description: "Next.js App Router with CMS helpers, SEO, and Fly.io deploy.",
+    description: "Next.js App Router with CMS helpers, SEO, and Fly.io deploy.", // i18n-ignore: English fallback; served translated by localizedTemplates()
     category: "boilerplate",
     tags: ["nextjs", "ssr", "boilerplate"],
     githubPath: "examples/nextjs-boilerplate",
     hasContent: false,
   },
 ];
+
+/** Catalog key for a template's description, e.g. "static/portfolio-squared" → deployText.templates.staticPortfolioSquared. */
+function descriptionKey(id: string): string {
+  const [first, ...rest] = id.split(/[/-]/);
+  return `deployText.templates.${first}${rest.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join("")}`; // i18n-ignore: catalog key
+}
+
+/** TEMPLATES with each description in the requesting user's language (F211.2). */
+export async function localizedTemplates(): Promise<TemplateDefinition[]> {
+  const t = await getServerTSafe();
+  return TEMPLATES.map((tpl) => ({ ...tpl, description: t(descriptionKey(tpl.id)) }));
+}
 
 /**
  * Get screenshot URL for a template.
@@ -148,8 +162,9 @@ export async function fetchTemplateFromGitHub(
   templateId: string,
 ): Promise<{ files: Map<string, Buffer>; error?: string }> {
   const template = TEMPLATES.find((t) => t.id === templateId);
+  const t = await getServerTSafe();
   if (!template) {
-    return { files: new Map(), error: `Template "${templateId}" not found` };
+    return { files: new Map(), error: t("deployText.templateRegistry.notFound", { id: templateId }) };
   }
 
   try {
@@ -161,7 +176,7 @@ export async function fetchTemplateFromGitHub(
   } catch (err) {
     return {
       files: new Map(),
-      error: err instanceof Error ? err.message : "Failed to fetch template",
+      error: err instanceof Error ? err.message : t("deployText.templateRegistry.fetchFailed"),
     };
   }
 }
@@ -174,7 +189,7 @@ async function fetchDirectoryRecursive(
   const res = await fetch(apiUrl, {
     headers: { Accept: "application/vnd.github.v3+json" },
   });
-  if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+  if (!res.ok) throw new Error((await getServerTSafe())("deployText.templateRegistry.githubError", { status: res.status }));
 
   const entries = (await res.json()) as Array<{
     name: string;

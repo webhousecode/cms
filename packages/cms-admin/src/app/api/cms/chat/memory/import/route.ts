@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { importMemories } from "@/lib/chat/memory-store";
+import { getServerTSafe } from "@/i18n/server";
 
 /** POST /api/cms/chat/memory/import — import memories from text or JSON */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const contentType = request.headers.get("content-type") ?? "";
   let input: string;
@@ -18,7 +20,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!input.trim()) {
-    return NextResponse.json({ error: "No data to import" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.chatMemory.noData") }, { status: 400 });
   }
 
   const result = await importMemories(input);

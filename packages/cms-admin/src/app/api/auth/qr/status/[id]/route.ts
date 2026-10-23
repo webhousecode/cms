@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { getQrSession } from "@/lib/qr-sessions";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * SSE stream of QR session status. Closes when the session reaches a
@@ -9,11 +10,12 @@ import { getQrSession } from "@/lib/qr-sessions";
  * Accept: text/event-stream and we'll return a one-shot JSON snapshot.
  */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const t = await getServerTSafe();
   const { id } = await params;
 
   if (req.headers.get("accept") !== "text/event-stream") {
     const s = getQrSession(id);
-    if (!s) return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    if (!s) return new Response(JSON.stringify({ error: t("errApi.common.notFound") }), { status: 404 });
     return new Response(JSON.stringify({ status: s.status, expiresAt: s.expiresAt }), {
       headers: { "content-type": "application/json" },
     });

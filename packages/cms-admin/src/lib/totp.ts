@@ -24,7 +24,7 @@ import crypto from "crypto";
 import QRCode from "qrcode";
 import { getUserById, saveUser, type TotpConfig, type User } from "./auth";
 
-const ISSUER = "webhouse.app CMS";
+const ISSUER = "webhouse.app CMS"; // i18n-ignore: brand name shown as issuer in authenticator apps
 const BACKUP_CODE_COUNT = 10;
 
 /** Build a TOTP instance for a given secret + user email. */
@@ -68,7 +68,7 @@ export interface EnrollStartResult {
 /** Generate a fresh secret + QR code, store it on the user as pending. */
 export async function startEnrollment(userId: string): Promise<EnrollStartResult> {
   const user = await getUserById(userId);
-  if (!user) throw new Error("User not found");
+  if (!user) throw new Error((await serverT())("system.auth.userNotFound"));
 
   const secret = new OTPAuth.Secret({ size: 20 }).base32;
   const totp = buildTotp(secret, user.email);
@@ -92,13 +92,13 @@ export interface EnrollVerifyResult {
 /** Verify the first code, promote pending secret to user.totp, issue codes. */
 export async function verifyEnrollment(userId: string, code: string): Promise<EnrollVerifyResult> {
   const user = await getUserById(userId);
-  if (!user) throw new Error("User not found");
-  if (!user.totpEnrollSecret) throw new Error("No pending TOTP enrollment");
+  if (!user) throw new Error((await serverT())("system.auth.userNotFound"));
+  if (!user.totpEnrollSecret) throw new Error((await serverT())("system.auth.noPendingTotp"));
 
   const totp = buildTotp(user.totpEnrollSecret, user.email);
   // Allow ±1 step (30s before/after) to be forgiving on clock skew
   const delta = totp.validate({ token: code.replace(/\s+/g, ""), window: 1 });
-  if (delta === null) throw new Error("Invalid code");
+  if (delta === null) throw new Error((await serverT())("system.auth.invalidCode"));
 
   const backupCodes = generateBackupCodes();
   const backupCodeHashes = backupCodes.map(hashBackupCode);
@@ -152,16 +152,21 @@ export async function verifyLoginCode(user: User, code: string): Promise<boolean
 /** Disable TOTP for a user (requires current code or backup code). */
 export async function disableTotp(userId: string, code: string): Promise<void> {
   const user = await getUserById(userId);
-  if (!user) throw new Error("User not found");
-  if (!user.totp) throw new Error("TOTP not enabled");
+  if (!user) throw new Error((await serverT())("system.auth.userNotFound"));
+  if (!user.totp) throw new Error((await serverT())("system.auth.totpNotEnabled"));
   const ok = await verifyLoginCode(user, code);
-  if (!ok) throw new Error("Invalid code");
+  if (!ok) throw new Error((await serverT())("system.auth.invalidCode"));
   // Re-fetch — verifyLoginCode may have mutated lastUsedAt
   const fresh = await getUserById(userId);
-  if (!fresh) throw new Error("User not found");
+  if (!fresh) throw new Error((await serverT())("system.auth.userNotFound"));
   await saveUser({ ...fresh, totp: undefined });
 }
 
 export function isTotpEnabled(user: User): boolean {
   return !!user.totp;
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

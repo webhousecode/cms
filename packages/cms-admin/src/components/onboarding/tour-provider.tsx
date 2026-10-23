@@ -24,11 +24,10 @@ export function useTour() {
 interface TourProviderProps {
   children: React.ReactNode;
   initialOnboarding: OnboardingState;
-  locale: string;
   forceOnboarding?: boolean;
 }
 
-export function TourProvider({ children, initialOnboarding, locale, forceOnboarding }: TourProviderProps) {
+export function TourProvider({ children, initialOnboarding, forceOnboarding }: TourProviderProps) {
   const [activeTour, setActiveTour] = useState<Tour | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
   const [targetEl, setTargetEl] = useState<HTMLElement | null>(null);
@@ -143,7 +142,6 @@ export function TourProvider({ children, initialOnboarding, locale, forceOnboard
           {targetEl && (
             <TourTooltip
               step={currentStep}
-              locale={locale}
               currentStep={stepIndex}
               totalSteps={activeTour.steps.length}
               onNext={handleNext}

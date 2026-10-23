@@ -14,16 +14,18 @@ import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
 import { cloneSite } from "@/lib/site-clone";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   // Admin-only
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: t("errAdmin.common.unauthorized") }, { status: 401 });
   const members = await getTeamMembers();
   const membership = members.find((m) => m.userId === session.sub);
   if (!membership || membership.role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
+    return NextResponse.json({ error: t("errAdmin.common.adminOnly") }, { status: 403 });
   }
 
   try {
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (!body.sourceSiteId || !body.newName) {
       return NextResponse.json(
-        { error: "sourceSiteId and newName required" },
+        { error: t("errAdmin.sitesClone.fieldsRequired") },
         { status: 400 },
       );
     }
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, ...result });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Clone failed";
+    const message = err instanceof Error ? err.message : t("errAdmin.sitesClone.failed");
     console.error("[sites/clone]", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

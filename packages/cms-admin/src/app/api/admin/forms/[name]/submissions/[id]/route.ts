@@ -3,9 +3,11 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { FormService } from "@/lib/forms/service";
 import { denyViewers } from "@/lib/require-role";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 /** GET — single submission. */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ name: string; id: string }> }) {
+  const t = await getServerTSafe();
   // This handler had NO check at all — not even "is anyone logged in". It leaned
   // entirely on proxy.ts protecting /api/admin/*, which answers a different
   // question: authenticated, not permitted.
@@ -14,17 +16,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ nam
   const { dataDir } = await getActiveSitePaths();
   const svc = new FormService(dataDir);
   const sub = await svc.get(name, id);
-  if (!sub) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!sub) return NextResponse.json({ error: t("errAdmin.common.notFound") }, { status: 404 });
   return NextResponse.json(sub);
 }
 
 /** PATCH — update status (new → read → archived). */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ name: string; id: string }> }) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const { name, id } = await params;
   const body = (await req.json().catch(() => ({}))) as { status?: string };
   if (!body.status || !["new", "read", "archived"].includes(body.status)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.forms.invalidStatus") }, { status: 400 });
   }
   const { dataDir } = await getActiveSitePaths();
   const svc = new FormService(dataDir);
@@ -32,12 +35,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ na
     const sub = await svc.updateStatus(name, id, body.status as "new" | "read" | "archived");
     return NextResponse.json(sub);
   } catch {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errAdmin.common.notFound") }, { status: 404 });
   }
 }
 
 /** DELETE — remove a submission permanently. */
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ name: string; id: string }> }) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const { name, id } = await params;
   const { dataDir } = await getActiveSitePaths();
@@ -46,6 +50,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     await svc.delete(name, id);
     return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errAdmin.common.notFound") }, { status: 404 });
   }
 }

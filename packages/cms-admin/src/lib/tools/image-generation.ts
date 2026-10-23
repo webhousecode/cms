@@ -1,3 +1,4 @@
+/* i18n-ignore-file: agent tool description and tool results returned to the model (the failure prefix is a contract the model reads), not shown to a person */
 /**
  * `generate_image` agent tool — FLUX 2 on Black Forest Labs' EU route.
  *

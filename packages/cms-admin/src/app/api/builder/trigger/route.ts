@@ -30,6 +30,7 @@ import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import { readSiteConfig } from "@/lib/site-config";
 import type { Resource } from "@/lib/access-tokens";
+import { getServerTSafe } from "@/i18n/server";
 
 interface TriggerBody {
   sha?: string;
@@ -47,8 +48,9 @@ async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteI
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
+  const t = await getServerTSafe();
   const siteId = req.nextUrl.searchParams.get("site");
-  const resource: Resource = siteId ? `site:${siteId}` : "site:*";
+  const resource: Resource = siteId ? `site:${siteId}` : "site:*"; // i18n-ignore: permission resource identifier
 
   const auth = await requireToken(req, "deploy:trigger", resource);
   if (auth instanceof NextResponse) return auth;
@@ -58,13 +60,13 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (denied) return denied;
   } else if (!siteId) {
     return NextResponse.json(
-      { error: "Token-based trigger requires ?site=<siteId>" },
+      { error: t("errApi.builder.tokenNeedsSite") },
       { status: 400 },
     );
   }
 
   const body: TriggerBody = await req.json().catch(() => ({}));
-  const sha = body.sha ?? `manual-${Date.now().toString(36)}`;
+  const sha = body.sha ?? `manual-${Date.now().toString(36)}`; // i18n-ignore: build sha identifier
 
   const targetSiteId = siteId ?? null;
   const ctx = targetSiteId ? await resolveOrgForSite(targetSiteId) : null;
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     if (framework === "static") {
       return NextResponse.json(
-        { error: "Static sites use the F143 in-process build path. F144 builders are SSR-only." },
+        { error: t("errApi.builder.staticSite") },
         { status: 400 },
       );
     }
@@ -84,7 +86,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const targetApp = config.deployAppName;
     if (!targetApp) {
       return NextResponse.json(
-        { error: "deployAppName must be configured before triggering a build." },
+        { error: t("errApi.builder.needsDeployApp") },
         { status: 400 },
       );
     }
@@ -92,7 +94,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const registryToken = body.registryToken ?? process.env.GHCR_PUSH_TOKEN ?? "";
     if (!registryToken) {
       return NextResponse.json(
-        { error: "GHCR push token required (body.registryToken or GHCR_PUSH_TOKEN env)." },
+        { error: t("errApi.builder.needsGhcrToken") },
         { status: 400 },
       );
     }
@@ -102,7 +104,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const baseUrl =
       process.env.NEXTAUTH_URL ||
       `${req.nextUrl.protocol}//${req.nextUrl.host}`;
-    const callbackUrl = `${baseUrl}/api/builder/callback`;
+    const callbackUrl = `${baseUrl}/api/builder/callback`; // i18n-ignore: callback URL
 
     // Pre-write the build record so the UI has something to poll even
     // before the VM posts its first callback.
@@ -110,7 +112,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       siteId: effectiveSiteId,
       sha,
       phase: "init",
-      message: `orchestrator triggered build (framework=${framework})`,
+      message: `orchestrator triggered build (framework=${framework})`, // i18n-ignore: persisted build-log event, shared record written in English like the builder VM's own events
     });
 
     // Kick off async — don't await the full build (could be 5+ min).
@@ -131,7 +133,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         siteId: effectiveSiteId,
         sha,
         phase: "failed",
-        message: `orchestrator error: ${msg}`,
+        message: `orchestrator error: ${msg}`, // i18n-ignore: persisted build-log event, shared record written in English like the builder VM's own events
         final: { success: false },
       }).catch(() => { /* swallow — best-effort */ });
     });

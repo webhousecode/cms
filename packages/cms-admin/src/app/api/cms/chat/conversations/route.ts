@@ -6,10 +6,12 @@ import {
   saveConversation,
   type StoredConversation,
 } from "@/lib/chat/conversation-store";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const q = request.nextUrl.searchParams.get("q")?.trim();
   const conversations = q
@@ -19,15 +21,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const body = (await request.json()) as Partial<StoredConversation>;
 
   const conv: StoredConversation = {
     id: body.id ?? crypto.randomUUID(),
     userId: session.userId,
-    title: body.title ?? "New conversation",
+    title: body.title ?? t("errCms.chat.newConversation"),
     messages: body.messages ?? [],
     createdAt: body.createdAt ?? new Date().toISOString(),
     updatedAt: new Date().toISOString(),

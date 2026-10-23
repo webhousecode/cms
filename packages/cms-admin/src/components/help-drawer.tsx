@@ -165,7 +165,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
             <><span style={{ color: "#fff", fontWeight: 600 }}>{brand.name.slice(0, dot)}</span><span style={{ color: "var(--primary)" }}>{brand.name.slice(dot)}</span></>
           ) : (
             <span style={{ color: "#fff", fontWeight: 600 }}>{brand.name}</span>
-          )} · v0.2.10
+          )}{" · v0.2.10"}{/* i18n-ignore: version number */}
         </div>
     </div>,
     document.body

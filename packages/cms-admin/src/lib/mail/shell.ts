@@ -63,7 +63,7 @@ export interface MailFelter {
 
 /** Byg en CMS-mail i et sites eget brand. */
 export function bygMail(o: MailFelter, brand: MailBrand): string {
-  if (!o.preheader) throw new Error("preheader er påkrævet — den er det indbakken viser før mailen åbnes");
+  if (!o.preheader) throw new Error("preheader er påkrævet — den er det indbakken viser før mailen åbnes"); // i18n-ignore: developer guard for mail templates
 
   const dele = [
     // Den rene brandfarve hele vejen. Shell 3 justerer selv en TEKST-accent op

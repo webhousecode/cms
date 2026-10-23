@@ -1536,10 +1536,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             className={cn(
               "flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full",
               isPublished
-                ? "bg-green-500/10 text-green-400"
+                ? "bg-green-500/10 text-green-400" // i18n-ignore: CSS class names
                 : isExpired
-                ? "bg-red-500/10 text-red-400"
-                : "bg-status-warning/10 text-status-warning"
+                ? "bg-red-500/10 text-red-400" // i18n-ignore: CSS class names
+                : "bg-status-warning/10 text-status-warning" // i18n-ignore: CSS class names
             )}
           >
             {isPublished ? <Globe className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
@@ -2052,7 +2052,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
             // Richtext fields get a collapsible TEXT header (like blocks)
             if (field.type === "richtext") {
-              const rtKey = `cms-rt-open:${collection}:${doc.slug}:${field.name}`;
+              const rtKey = `cms-rt-open:${collection}:${doc.slug}:${field.name}`; // i18n-ignore: localStorage key
               return (
                 <RichtextCollapsible
                   key={field.name}
@@ -2132,7 +2132,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                         const mins = computeReadingMinutes(body);
                         if (mins <= 0) return;
                         // Match field type: number → number, anything else → "N min read"
-                        updateField(field.name, field.type === "number" ? mins : `${mins} min read`);
+                        updateField(field.name, field.type === "number" ? mins : `${mins} min read`); // i18n-ignore: value written into the document's own field (site content), not admin UI
                         toast.success(t("editor.documentEditor.readTime", { mins }));
                       }}
                       style={{

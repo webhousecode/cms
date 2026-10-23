@@ -13,6 +13,7 @@ import { fetchMarketplaceTemplates } from "@/lib/marketplace-templates";
 import { denyViewers } from "@/lib/require-role";
 import { requirePermission } from "@/lib/permissions";
 import { cookies } from "next/headers";
+import { getServerTSafe } from "@/i18n/server";
 
 async function getActiveOrgId(): Promise<string | null> {
   try {
@@ -51,18 +52,19 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers();
   if (denied) return denied;
 
   const orgId = await getActiveOrgId();
   if (!orgId) {
-    return NextResponse.json({ error: "No active org" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.shared.noActiveOrg") }, { status: 400 });
   }
 
   const body = (await request.json().catch(() => null)) as Partial<AgentTemplate> | null;
   if (!body || !body.name || !body.payload) {
     return NextResponse.json(
-      { error: "name and payload are required" },
+      { error: t("errCms.agentTemplates.namePayloadRequired") },
       { status: 400 },
     );
   }
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(template);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to save template";
+    const msg = err instanceof Error ? err.message : t("errCms.agentTemplates.saveFailed");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

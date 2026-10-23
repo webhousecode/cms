@@ -12,6 +12,7 @@ import { listSponsorer, skrivSponsor, hentSponsor, brugtI } from "@/lib/podcast/
 import { listAfsnit } from "@/lib/podcast/store";
 import { estimatForTekst } from "@/lib/podcast/preflight";
 import { hentKurs } from "@/lib/podcast/valutakurs";
+import { getServerTSafe } from "@/i18n/server";
 
 export const OPTIONS = preflight;
 
@@ -19,6 +20,7 @@ export const OPTIONS = preflight;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.read);
   if (afvist) return afvist.svar;
 
@@ -49,11 +51,12 @@ export async function GET(req: NextRequest) {
         kursMaalt: e.kursMaalt,
       };
     }),
-    ...(brug ? {} : { advarsel: `brugen kunne ikke slås op: ${afsnit.ok ? "" : afsnit.grund}` }),
+    ...(brug ? {} : { advarsel: t("errApi.podcast.usageLookupFailed", { reason: afsnit.ok ? "" : String(afsnit.grund) }) }),
   });
 }
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.edit);
   if (afvist) return afvist.svar;
 
@@ -67,12 +70,12 @@ export async function POST(req: NextRequest) {
 
   const slug = typeof krop?.slug === "string" ? krop.slug.trim() : "";
   if (!SLUG.test(slug)) {
-    return svar(req, { error: "«slug» skal være små bogstaver, tal og bindestreger — fx «broberg-efteraar»" }, 400);
+    return svar(req, { error: t("errApi.podcast.slugFormatSponsor") }, 400);
   }
 
   const findes = await hentSponsor(slug);
   if (!findes.ok) return svar(req, { error: findes.grund }, 409);
-  if (findes.vaerdi) return svar(req, { error: `indslaget «${slug}» findes allerede` }, 409);
+  if (findes.vaerdi) return svar(req, { error: t("errApi.podcast.sponsorExists", { slug }) }, 409);
 
   const skrevet = await skrivSponsor(slug, {
     titel: typeof krop?.titel === "string" ? krop.titel : "",

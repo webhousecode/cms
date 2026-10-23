@@ -24,5 +24,6 @@ export async function getCapabilities(): Promise<CapabilityMap> {
 export async function requireCapability(key: string): Promise<Response | null> {
   const caps = await getCapabilities();
   if (hasCapability(caps, key)) return null;
-  return NextResponse.json({ error: "This feature is not enabled for this site" }, { status: 404 });
+  const t = await (await import("@/i18n/server")).getServerTSafe();
+  return NextResponse.json({ error: t("system.lib.capabilityOff") }, { status: 404 });
 }

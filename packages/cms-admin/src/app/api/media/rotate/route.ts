@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import path from "node:path";
 import { resolve } from "node:path";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/media/rotate
@@ -10,9 +11,10 @@ import { resolve } from "node:path";
  * Rotates an image in-place using Sharp. Also rotates any WebP variants.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const { file, angle } = (await req.json()) as { file?: string; angle?: number };
   if (!file || !angle || ![90, -90, 180].includes(angle)) {
-    return NextResponse.json({ error: "file and angle (90, -90, 180) required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.media.rotateParams") }, { status: 400 });
   }
 
   const sitePaths = await getActiveSitePaths();
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   // Path containment guard
   if (!fullPath.startsWith(resolve(sitePaths.uploadDir) + "/")) {
-    return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.invalidPath") }, { status: 400 });
   }
 
   try {
@@ -54,7 +56,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Rotate failed" },
+      { error: err instanceof Error ? err.message : t("errApi.media.rotateFailed") },
       { status: 500 },
     );
   }

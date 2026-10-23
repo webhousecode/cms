@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "crypto";
 import { createToken, getUserById } from "@/lib/auth";
 import { claimQrSession } from "@/lib/qr-sessions";
+import { getServerTSafe } from "@/i18n/server";
 
 function resolveAvatarUrl(user: { email: string; githubUsername?: string }): string {
   if (user.githubUsername) return `https://github.com/${user.githubUsername}.png?size=128`;
@@ -23,9 +24,10 @@ function resolveAvatarUrl(user: { email: string; githubUsername?: string }): str
  * `fetch` with `credentials: "omit"`.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const body = (await req.json().catch(() => ({}))) as { token?: string };
   if (!body.token) {
-    return NextResponse.json({ error: "Missing token" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.mobile.missingToken") }, { status: 400 });
   }
 
   const { _debugQrSessions } = await import("@/lib/qr-sessions");
@@ -33,14 +35,14 @@ export async function POST(req: NextRequest) {
   const claim = claimQrSession(body.token);
   if (!claim) {
     return NextResponse.json(
-      { error: "Pairing token expired, invalid, or already used" },
+      { error: t("errApi.mobile.pairingTokenInvalid") },
       { status: 410 },
     );
   }
 
   const user = await getUserById(claim.userId);
   if (!user) {
-    return NextResponse.json({ error: "User no longer exists" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.common.userGone") }, { status: 404 });
   }
 
   const jwt = await createToken(user);

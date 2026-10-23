@@ -12,13 +12,15 @@ import {
   type TokenScope,
 } from "@/lib/access-tokens";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 const VALID_LEGACY_SCOPES: TokenScope[] = ["admin", "content:read", "content:write", "deploy", "media"];
 
 /** GET — list user's tokens (hashes only) */
 export async function GET() {
+  const t = await getServerTSafe();
   const user = await getSessionUser(await cookies());
-  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("errAdmin.common.notAuthenticated") }, { status: 401 });
 
   const tokens = await listTokens(user.id);
   return NextResponse.json({ tokens });
@@ -33,9 +35,10 @@ export async function GET() {
  *  { name, scopes: TokenScope[] }
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("tokens.manage"); if (denied) return denied;
   const user = await getSessionUser(await cookies());
-  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("errAdmin.common.notAuthenticated") }, { status: 401 });
 
   let body: {
     name?: string;
@@ -50,17 +53,17 @@ export async function POST(req: NextRequest) {
   try {
     body = (await req.json()) as typeof body;
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.common.invalidJson") }, { status: 400 });
   }
 
   const name = body.name?.trim();
-  if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  if (!name) return NextResponse.json({ error: t("errAdmin.accessTokens.nameRequired") }, { status: 400 });
 
   // Legacy shape — translate scopes -> let access-tokens.ts do the synth
   if (body.scopes && !body.permissions) {
     const scopes = body.scopes.filter((s): s is TokenScope => VALID_LEGACY_SCOPES.includes(s as TokenScope));
     if (scopes.length === 0) {
-      return NextResponse.json({ error: "At least one valid scope required" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.accessTokens.scopeRequired") }, { status: 400 });
     }
     const { token, stored } = await createAccessToken({
       name, userId: user.id, scopes,
@@ -81,7 +84,7 @@ export async function POST(req: NextRequest) {
   permissionSet.add("*");
   const permissions = (body.permissions ?? []).filter((p): p is Permission => permissionSet.has(p as Permission));
   if (permissions.length === 0) {
-    return NextResponse.json({ error: "At least one valid permission required" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.accessTokens.permissionRequired") }, { status: 400 });
   }
 
   const resources = Array.isArray(body.resources) ? body.resources : [];
@@ -90,12 +93,12 @@ export async function POST(req: NextRequest) {
   // Basic shape validation — bail early on malformed rules
   for (const r of resources) {
     if (!r.scope || !r.effect || !("targets" in r)) {
-      return NextResponse.json({ error: "Invalid resource filter shape" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.accessTokens.invalidResourceFilter") }, { status: 400 });
     }
   }
   for (const f of ipFilters) {
     if (!f.op || !Array.isArray(f.cidrs)) {
-      return NextResponse.json({ error: "Invalid IP filter shape" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.accessTokens.invalidIpFilter") }, { status: 400 });
     }
   }
 
@@ -124,12 +127,13 @@ export async function POST(req: NextRequest) {
 
 /** DELETE — revoke a token by ID */
 export async function DELETE(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("tokens.manage"); if (denied) return denied;
   const user = await getSessionUser(await cookies());
-  if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("errAdmin.common.notAuthenticated") }, { status: 401 });
 
   const id = req.nextUrl.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "Missing token id" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: t("errAdmin.accessTokens.missingId") }, { status: 400 });
 
   const ok = await revokeToken(id, user.id);
   return NextResponse.json({ ok });

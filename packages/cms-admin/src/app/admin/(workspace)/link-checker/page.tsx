@@ -209,7 +209,7 @@ export default function LinkCheckerPage() {
 
     try {
       const res = await fetch("/api/check-links", { signal: ctrl.signal });
-      if (!res.body) throw new Error("No response body");
+      if (!res.body) throw new Error("No response body"); // i18n-ignore: internal exception, never shown
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -495,10 +495,10 @@ export default function LinkCheckerPage() {
                       <span
                         className={cn(
                           "text-xs font-mono px-2 py-0.5 rounded-full",
-                          r.status === "ok" && "bg-green-500/10 text-green-400",
-                          r.status === "redirect" && "bg-status-warning/10 text-status-warning",
-                          (r.status === "broken" || r.status === "error") && "bg-red-500/10 text-red-400",
-                          (r.status === "schemeless" || r.status === "unverified") && "bg-status-warning/10 text-status-warning",
+                          r.status === "ok" && "bg-green-500/10 text-green-400", // i18n-ignore: CSS class names
+                          r.status === "redirect" && "bg-status-warning/10 text-status-warning", // i18n-ignore: CSS class names
+                          (r.status === "broken" || r.status === "error") && "bg-red-500/10 text-red-400", // i18n-ignore: CSS class names
+                          (r.status === "schemeless" || r.status === "unverified") && "bg-status-warning/10 text-status-warning", // i18n-ignore: CSS class names
                           r.status === "skipped" && "bg-muted text-muted-foreground",
                         )}
                       >

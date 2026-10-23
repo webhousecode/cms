@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { readFile } from "fs/promises";
 import path from "path";
+import { getServerTSafe } from "@/i18n/server";
 
 const MIME: Record<string, string> = {
   jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
@@ -21,7 +22,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
 
   // Prevent path traversal
   if (segments.some((s) => s === ".." || s.includes("\0"))) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: (await getServerTSafe())("errApi.common.forbidden") }, { status: 403 });
   }
 
   const sitePaths = await getActiveSitePaths();
@@ -58,5 +59,5 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
     } catch { /* fall through */ }
   }
 
-  return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json({ error: (await getServerTSafe())("errApi.common.notFound") }, { status: 404 });
 }

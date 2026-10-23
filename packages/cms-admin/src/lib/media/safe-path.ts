@@ -11,7 +11,7 @@
 export class UnsafeMediaPathError extends Error {
   readonly code = "EBADPATH";
   constructor(what: string) {
-    super(`Invalid media path: ${what}`);
+    super(`Invalid media path: ${what}`); // i18n-ignore: internal error; routes map code EBADPATH to a translated message
     this.name = "UnsafeMediaPathError";
   }
 }

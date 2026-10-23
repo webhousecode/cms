@@ -4,15 +4,17 @@ import type { ImageAnalysis, MultiLocaleImageAnalysis } from "@/lib/ai/image-ana
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
 import { readSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 const VIDEO_EXTS = new Set(["mp4", "mov", "webm", "avi", "mkv", "m4v"]);
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   try {
     const { filename, folder = "", language = "da" } = await req.json();
     if (!filename) {
-      return NextResponse.json({ error: "filename required" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.common.filenameRequired") }, { status: 400 });
     }
 
     const ext = filename.toLowerCase().split(".").pop() ?? "";
@@ -27,7 +29,7 @@ export async function POST(req: NextRequest) {
       const fileUrl = folder ? `/uploads/${folder}/${filename}` : `/uploads/${filename}`;
       buffer = await getVideoThumbnail(fileUrl);
       if (!buffer) {
-        return NextResponse.json({ error: "Could not generate video thumbnail (ffmpeg required)" }, { status: 400 });
+        return NextResponse.json({ error: t("errApi.media.videoThumbNotGenerated") }, { status: 400 });
       }
       mimeType = "image/jpeg";
     } else {
@@ -36,7 +38,7 @@ export async function POST(req: NextRequest) {
       const segments = folder ? [folder, filename] : [filename];
       buffer = await adapter.readFile(segments);
       if (!buffer) {
-        return NextResponse.json({ error: "File not found" }, { status: 404 });
+        return NextResponse.json({ error: t("errApi.common.fileNotFound") }, { status: 404 });
       }
 
       const mimeMap: Record<string, string> = {

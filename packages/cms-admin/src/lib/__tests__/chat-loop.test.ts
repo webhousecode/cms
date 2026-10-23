@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { frameToEvents } from "@/lib/chat/frames";
+import { frameToEvents as frameToEventsFor } from "@/lib/chat/frames";
+import { getT } from "@/i18n/locale";
+
+// The sentences a user reads follow their admin language (F211.2). These tests
+// read them in Danish — the route passes the request's translator.
+const frameToEvents = (frame: Parameters<typeof frameToEventsFor>[0]) => frameToEventsFor(frame, getT("da"));
 import {
   maxInputTokens, estimateDanish, resolveProfile, buildHistoryConfig,
   TOOL_SCHEMA_TOKENS, CHARS_PER_TOKEN, ASSUMED_CONTEXT_TOKENS,

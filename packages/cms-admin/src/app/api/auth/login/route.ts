@@ -1,9 +1,10 @@
-import { authAttemptLimited, clientIp, TOO_MANY_ATTEMPTS } from "@/lib/auth-rate-limit";
+import { authAttemptLimited, clientIp, tooManyAttempts } from "@/lib/auth-rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { verifyPassword, createToken, getUsers, COOKIE_NAME } from "@/lib/auth";
 import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
-import { legacyLoginAllowed, LEGACY_LOGIN_REFUSED } from "@/lib/bid";
+import { legacyLoginAllowed, legacyLoginRefused } from "@/lib/bid";
+import { getServerTSafe } from "@/i18n/server";
 
 const TOTP_PENDING_COOKIE = "cms-totp-pending";
 
@@ -18,16 +19,17 @@ async function createTotpPendingToken(userId: string): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   try {
     const { email, password } = (await request.json()) as { email?: string; password?: string };
     if (!email || !password) {
-      return NextResponse.json({ error: "Email and password required" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.common.emailPasswordRequired") }, { status: 400 });
     }
-    if (authAttemptLimited("login", clientIp(request.headers))) return NextResponse.json(TOO_MANY_ATTEMPTS, { status: 429 });
+    if (authAttemptLimited("login", clientIp(request.headers))) return NextResponse.json(await tooManyAttempts(), { status: 429 });
     // Security W41 H7 — with BID on, refuse BEFORE checking the password: the
     // old order answered 403 for a right password and 401 for a wrong one.
     if (!legacyLoginAllowed({})) {
-      return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
+      return NextResponse.json({ error: await legacyLoginRefused(), bid: true }, { status: 403 });
     }
 
     const user = await verifyPassword(email, password);
@@ -36,19 +38,19 @@ export async function POST(request: NextRequest) {
       const users = await getUsers();
       const exists = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
       if (exists && !exists.passwordHash) {
-        return NextResponse.json({ error: "This account uses GitHub login — click \"Sign in with GitHub\" below" }, { status: 401 });
+        return NextResponse.json({ error: t("errApi.authLogin.useGithub") }, { status: 401 });
       }
       try {
         const { logLoginFailed, hashIp } = await import("@/lib/event-log");
         const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
         await logLoginFailed(String(email), "invalid_credentials", hashIp(ip));
       } catch { /* non-fatal */ }
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      return NextResponse.json({ error: t("errApi.authLogin.invalidCredentials") }, { status: 401 });
     }
 
     // F199.3 — with Broberg ID on, the password is the admin-only emergency door.
     if (!legacyLoginAllowed(user)) {
-      return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
+      return NextResponse.json({ error: await legacyLoginRefused(), bid: true }, { status: 403 });
     }
 
     // If TOTP is enabled, don't issue the real session cookie yet —
@@ -97,6 +99,6 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalServerError") }, { status: 500 });
   }
 }

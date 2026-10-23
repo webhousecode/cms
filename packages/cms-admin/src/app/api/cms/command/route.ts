@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readCockpit, writeCockpit } from "@/lib/cockpit";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET() {
   const params = await readCockpit();
@@ -8,6 +9,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   try {
     const body = await request.json();
@@ -15,7 +17,7 @@ export async function POST(request: NextRequest) {
     const params = await readCockpit();
     return NextResponse.json(params);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to save";
+    const msg = err instanceof Error ? err.message : t("errCms.shared.failedToSave");
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

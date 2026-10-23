@@ -40,13 +40,13 @@ export async function getVideoThumbnail(fileUrl: string): Promise<Buffer | null>
   // Generate with ffmpeg
   try {
     execSync(
-      `ffmpeg -y -i ${JSON.stringify(filePath)} -ss 00:00:01 -frames:v 1 -vf "scale=320:-1" -q:v 3 ${JSON.stringify(thumbPath)}`,
+      `ffmpeg -y -i ${JSON.stringify(filePath)} -ss 00:00:01 -frames:v 1 -vf "scale=320:-1" -q:v 3 ${JSON.stringify(thumbPath)}`, // i18n-ignore: shell command
       { timeout: 10000, stdio: "pipe" },
     );
   } catch {
     try {
       execSync(
-        `ffmpeg -y -i ${JSON.stringify(filePath)} -frames:v 1 -vf "scale=320:-1" -q:v 3 ${JSON.stringify(thumbPath)}`,
+        `ffmpeg -y -i ${JSON.stringify(filePath)} -frames:v 1 -vf "scale=320:-1" -q:v 3 ${JSON.stringify(thumbPath)}`, // i18n-ignore: shell command
         { timeout: 10000, stdio: "pipe" },
       );
     } catch {

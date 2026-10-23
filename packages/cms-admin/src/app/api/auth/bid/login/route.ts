@@ -6,6 +6,7 @@ import {
   BID_FLOW_COOKIE, BID_FLOW_COOKIE_MAX_AGE, BID_FLOW_MAX_AGE,
   getBid, isBidConfigured, requestHost, safeReturnTo, type BidFlow,
 } from "@/lib/bid";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/auth/bid/login — F199.2: start a Broberg ID login.
@@ -22,8 +23,9 @@ import {
  * deploy between start and callback does not break a login in progress.
  */
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   if (!isBidConfigured()) {
-    return NextResponse.json({ error: "Broberg ID is not configured on this server" }, { status: 503 });
+    return NextResponse.json({ error: t("errApi.authBid.notConfigured") }, { status: 503 });
   }
 
   let linkUserId: string | null = null;

@@ -18,6 +18,7 @@ import { requireToken, isTokenAuth } from "@/lib/require-token";
 import { denyViewers } from "@/lib/require-role";
 import type { Resource } from "@/lib/access-tokens";
 import type { BuildRecord } from "@/lib/build-orchestrator/build-log";
+import { getServerTSafe } from "@/i18n/server";
 
 interface BuildSummary {
   sha: string;
@@ -39,12 +40,13 @@ async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteI
 }
 
 export async function GET(req: NextRequest): Promise<Response> {
+  const t = await getServerTSafe();
   const siteId = req.nextUrl.searchParams.get("site");
   if (!siteId) {
-    return NextResponse.json({ error: "site query param required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.builder.siteParamRequired") }, { status: 400 });
   }
   const limit = Math.min(parseInt(req.nextUrl.searchParams.get("limit") ?? "20", 10) || 20, 100);
-  const resource: Resource = `site:${siteId}`;
+  const resource: Resource = `site:${siteId}`; // i18n-ignore: permission resource identifier
 
   const auth = await requireToken(req, "deploy:read", resource);
   if (auth instanceof NextResponse) return auth;
@@ -55,7 +57,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   const ctx = await resolveOrgForSite(siteId);
   if (!ctx) {
-    return NextResponse.json({ error: `site not found: ${siteId}` }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.common.siteNotFoundId", { site: siteId }) }, { status: 404 });
   }
 
   const builds = await withSiteContext(ctx, async () => {
@@ -88,7 +90,7 @@ export async function GET(req: NextRequest): Promise<Response> {
             startedAt: stat.birthtime.toISOString(),
             updatedAt: stat.mtime.toISOString(),
             phase: "failed",
-            message: "(corrupt build record)",
+            message: t("errApi.builder.corruptRecord"),
           });
         } catch { /* drop */ }
       }

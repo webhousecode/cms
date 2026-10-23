@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { calculateSeoScore, type SeoFields } from "@/lib/seo/score";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/admin/seo/export?format=csv|json
  * Export SEO report for all documents.
  */
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   const format = request.nextUrl.searchParams.get("format") ?? "csv";
 
   try {
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest) {
           if ((doc.status as string) === "trashed") continue;
           const data = (doc as { data?: Record<string, unknown> }).data ?? {};
           const seo = (data._seo as SeoFields) ?? {};
-          const { score, details } = calculateSeoScore({ slug: doc.slug, data }, seo);
+          const { score, details } = calculateSeoScore({ slug: doc.slug, data }, seo, undefined, undefined, t);
 
           rows.push({
             collection: col.name,
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     // CSV export
     if (rows.length === 0) {
-      return new NextResponse("No data", { status: 204 });
+      return new NextResponse(t("errAdmin.seo.noData"), { status: 204 });
     }
 
     const headers = Object.keys(rows[0]);
@@ -76,7 +78,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Export failed" },
+      { error: err instanceof Error ? err.message : t("errAdmin.seo.exportFailed") },
       { status: 500 },
     );
   }

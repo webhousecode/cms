@@ -107,7 +107,7 @@ function migrate(raw: unknown): AgentWorkflow {
   const wf = raw as Partial<AgentWorkflow> & Record<string, unknown>;
   return {
     id: String(wf.id ?? ""),
-    name: String(wf.name ?? "Untitled"),
+    name: String(wf.name ?? "Untitled"), // i18n-ignore: default name stored in the workflow record (data)
     description: typeof wf.description === "string" ? wf.description : "",
     steps: Array.isArray(wf.steps) ? (wf.steps as WorkflowStep[]) : [],
     schedule: wf.schedule ?? { enabled: false, frequency: "manual", time: "06:00", maxPerRun: 1 },
@@ -124,7 +124,7 @@ export async function createWorkflow(
 ): Promise<AgentWorkflow> {
   const dir = await getWorkflowsDir();
   await fs.mkdir(dir, { recursive: true });
-  const id = `wf-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const id = `wf-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; // i18n-ignore: generated id
   const now = new Date().toISOString();
   const workflow: AgentWorkflow = {
     ...data,
@@ -145,7 +145,7 @@ export async function updateWorkflow(
   data: Partial<AgentWorkflow>,
 ): Promise<AgentWorkflow> {
   const existing = await getWorkflow(id);
-  if (!existing) throw new Error(`Workflow ${id} not found`);
+  if (!existing) throw new Error((await (await import("@/i18n/server")).getServerTSafe())("system.agents.workflowNotFound", { id }));
   const updated: AgentWorkflow = {
     ...existing,
     ...data,

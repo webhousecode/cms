@@ -13,14 +13,16 @@ import { readSiteConfig } from "@/lib/site-config";
 import { generateVariants, isProcessableImage, variantFilename, extractExif, DEFAULT_VARIANTS, type VariantConfig } from "@/lib/media/image-processor";
 import { appendMediaMeta } from "@/lib/media/media-meta";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   try {
     const sitePaths = await getActiveSitePaths();
     const uploadDir = sitePaths.uploadDir;
     if (!uploadDir || !existsSync(uploadDir)) {
-      return NextResponse.json({ error: "No upload directory found" }, { status: 404 });
+      return NextResponse.json({ error: t("errApi.media.noUploadDir") }, { status: 404 });
     }
 
     // Optional: only process selected files (URLs like /uploads/IMG_0051.jpeg)
@@ -98,7 +100,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Optimization failed" },
+      { error: err instanceof Error ? err.message : t("errApi.media.optimizeFailed") },
       { status: 500 },
     );
   }

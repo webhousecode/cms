@@ -16,6 +16,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { quickActionByKey } from "@/lib/chat/quick-actions";
+import { getT } from "@/i18n/locale";
 
 interface CacheEntry {
   markdown: string;
@@ -80,12 +81,12 @@ export interface QuickResult {
   stale?: boolean;
 }
 
-/** Minutes/hours since `t`, in Danish, for the staleness note. */
-function ageLabel(t: number): string {
-  const min = Math.max(1, Math.round((Date.now() - t) / 60000));
-  if (min < 60) return `${min} min`;
+/** Minutes/hours since `at`, in the reader's admin language, for the staleness note. */
+function ageLabel(at: number, t: ReturnType<typeof getT>): string {
+  const min = Math.max(1, Math.round((Date.now() - at) / 60000));
+  if (min < 60) return t("chat.quickCache.ageMinutes", { count: min });
   const h = Math.round(min / 60);
-  return h === 1 ? "1 time" : `${h} timer`;
+  return h === 1 ? t("chat.quickCache.ageOneHour") : t("chat.quickCache.ageHours", { count: h });
 }
 
 /**
@@ -99,10 +100,13 @@ function ageLabel(t: number): string {
  * The note is not decoration: without it, someone who has just edited content
  * sees old numbers and reasonably concludes the CMS did not register the edit.
  * That misreading is worse than the slowness this replaces, so the answer must
- * say what it is. Written in Danish because every site on this deployment is
- * Danish-primary; if that stops being true, this line needs the site's locale.
+ * say what it is. Written in the reader's admin language (F211.2).
  */
-export async function peekQuick(key: string): Promise<QuickResult> {
+export async function peekQuick(
+  key: string,
+  /** The reader's translator — the route passes the request's; English otherwise. */
+  t: ReturnType<typeof getT> = getT("en"),
+): Promise<QuickResult> {
   const action = quickActionByKey(key);
   if (!action) return { cached: false, markdown: "", cachedAt: 0 };
   const cache = await readCache();
@@ -118,7 +122,7 @@ export async function peekQuick(key: string): Promise<QuickResult> {
     return { cached: false, markdown: "", cachedAt: 0 };
   }
 
-  const note = `\n\n---\n_Vist fra hukommelsen (${ageLabel(hit.cachedAt)} gammel). Et opdateret svar hentes nu._`;
+  const note = `\n\n---\n_${t("chat.quickCache.staleNote", { age: ageLabel(hit.cachedAt, t) })}_`;
   return { cached: true, stale: true, markdown: hit.markdown + note, cachedAt: hit.cachedAt };
 }
 

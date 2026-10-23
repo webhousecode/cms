@@ -6,6 +6,7 @@ import {
   isDnsApiConfigured,
   parseCustomDomain,
 } from "@/lib/deploy/dns-client";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/admin/deploy/dns/availability?domain=foo.webhouse.app
@@ -21,6 +22,7 @@ import {
  *   - "invalid"       domain string is malformed
  */
 export async function GET(request: Request) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("deploy.trigger");
   if (denied) return denied;
 
@@ -31,10 +33,10 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const domain = (url.searchParams.get("domain") ?? "").trim();
   if (!domain) {
-    return NextResponse.json({ state: "invalid", reason: "domain query param required" }, { status: 400 });
+    return NextResponse.json({ state: "invalid", reason: t("errAdmin.deploy.domainParamRequired") }, { status: 400 });
   }
   if (!/^[a-z0-9._-]+$/i.test(domain) || !domain.includes(".")) {
-    return NextResponse.json({ state: "invalid", reason: "not a valid domain" });
+    return NextResponse.json({ state: "invalid", reason: t("errAdmin.deploy.invalidDomain") });
   }
 
   try {
@@ -90,7 +92,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ state: "available", subdomain, zone, expectedTarget });
   } catch (err) {
     return NextResponse.json(
-      { state: "invalid", reason: err instanceof Error ? err.message : "lookup failed" },
+      { state: "invalid", reason: err instanceof Error ? err.message : t("errAdmin.deploy.lookupFailed") },
       { status: 500 },
     );
   }

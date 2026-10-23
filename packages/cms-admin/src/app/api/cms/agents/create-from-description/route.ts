@@ -7,6 +7,7 @@ import { requireCapability } from "@/lib/capabilities";
 import { readSiteConfig } from "@/lib/site-config";
 import { LOCALE_LABELS } from "@/lib/locale";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { getServerTSafe } from "@/i18n/server";
 
 const SYSTEM = `You are an AI agent configurator for a headless CMS. Given a natural language description of a desired content agent, return a single valid JSON object — no markdown, no explanation, no code fences.
 
@@ -46,19 +47,20 @@ Rules:
 - active defaults to true`;
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("agents"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Anthropic API key not configured — add it in Settings → AI" },
+      { error: t("errCms.shared.aiKeyMissing") },
       { status: 503 }
     );
   }
 
   const { description } = (await request.json()) as { description?: string };
   if (!description?.trim()) {
-    return NextResponse.json({ error: "description is required" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.agents.descriptionRequired") }, { status: 400 });
   }
 
   const ai = await getAI();
@@ -83,7 +85,7 @@ export async function POST(request: NextRequest) {
     const config = JSON.parse(raw.trim());
     return NextResponse.json({ config });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "AI error";
+    const msg = err instanceof Error ? err.message : t("errCms.shared.aiError");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

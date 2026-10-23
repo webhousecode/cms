@@ -7,6 +7,7 @@
 import type { NextRequest } from "next/server";
 import { kraevTilladelse, preflight, svar, PODCAST_PERMISSIONS } from "@/lib/podcast/api";
 import { listAfsnit, opretAfsnit } from "@/lib/podcast/store";
+import { getServerTSafe } from "@/i18n/server";
 
 export const OPTIONS = preflight;
 
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest) {
  * manuskript-handlinger.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.edit);
   if (afvist) return afvist.svar;
 
@@ -58,7 +60,7 @@ export async function POST(req: NextRequest) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
     return svar(
       req,
-      { error: "«slug» skal være små bogstaver, tal og bindestreger — fx «afsnit-01»" },
+      { error: t("errApi.podcast.slugFormatEpisode") },
       400,
     );
   }
@@ -70,7 +72,7 @@ export async function POST(req: NextRequest) {
     if (v === undefined || v === null || v === "") return undefined;
     const n = Number(v);
     if (!Number.isInteger(n) || n < 0) {
-      return { fejl: `«${navn}» skal være et helt tal på 0 eller derover` };
+      return { fejl: t("errApi.podcast.nonNegativeInteger", { name: navn }) };
     }
     return n;
   };

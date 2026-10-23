@@ -11,11 +11,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { pushBeamToTarget } from "@/lib/beam/push";
 import { getSiteRole } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
+    return NextResponse.json({ error: t("errAdmin.common.adminOnly") }, { status: 403 });
   }
 
   try {
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     if (!targetUrl || !token || !orgId) {
       return NextResponse.json(
-        { error: "Missing required fields: targetUrl, token, orgId" },
+        { error: t("errAdmin.beam.pushMissingFields") },
         { status: 400 },
       );
     }
@@ -63,18 +65,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         beamId: earlyBeamId,
-        message: "Beam transfer started — track progress via SSE",
+        message: t("errAdmin.beam.transferStarted"),
       });
     }
 
     // No beamId — must have failed before session was created
     try { await pushPromise; } catch (err) {
-      const message = err instanceof Error ? err.message : "Push failed";
+      const message = err instanceof Error ? err.message : t("errAdmin.beam.pushFailed");
       return NextResponse.json({ error: message }, { status: 500 });
     }
-    return NextResponse.json({ success: true, beamId: "pending", message: "Started" });
+    return NextResponse.json({ success: true, beamId: "pending", message: t("errAdmin.beam.started") });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Push failed";
+    const message = err instanceof Error ? err.message : t("errAdmin.beam.pushFailed");
     console.error("[beam/push]", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

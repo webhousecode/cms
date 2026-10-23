@@ -58,6 +58,7 @@ const DELIBERATE_KEYS: Array<[key: string, reason: string]> = [
   ["tools.account.mobileIntro", "same — the mobile app's name"],
   ["misc.deployWizard.configure.adminEmailPlaceholder", "the deploy wizard installs a self-hosted @webhouse/cms; its default admin login"],
   ["settings.general.downloadedSchema", "the schema file's name, webhouse-schema.json"],
+  ["errApi.mobile.pushTestTitle", "push to the mobile app, which is named webhouse.app (one app, not per brand — F210 non-goal)"],
 ];
 
 function catalogTexts(): Map<string, string> {

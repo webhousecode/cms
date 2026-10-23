@@ -1,3 +1,4 @@
+/* i18n-ignore-file: converts ANSI escape codes to HTML/CSS markup — no human-readable text of its own */
 /**
  * F126 — Lightweight ANSI escape code → HTML converter.
  *

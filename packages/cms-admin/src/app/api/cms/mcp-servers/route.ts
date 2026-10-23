@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { listMcpServers, addMcpServer, updateMcpServer, deleteMcpServer } from "@/lib/mcp-servers";
 import { requirePermission } from "@/lib/permissions";
 import { requireInstanceAdmin } from "@/lib/instance-admin";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Security W41 NY-K4 — an MCP server entry is a COMMAND the server spawns
@@ -30,17 +31,19 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requireInstanceAdmin(); if (denied) return denied;
   const body = await request.json();
-  if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  if (!body.id) return NextResponse.json({ error: t("errCms.shared.idRequired") }, { status: 400 });
   const server = await updateMcpServer(body.id, body);
   return NextResponse.json(server);
 }
 
 export async function DELETE(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requireInstanceAdmin(); if (denied) return denied;
   const { id } = (await request.json()) as { id?: string };
-  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  if (!id) return NextResponse.json({ error: t("errCms.shared.idRequired") }, { status: 400 });
   await deleteMcpServer(id);
   return NextResponse.json({ ok: true });
 }

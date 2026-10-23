@@ -81,7 +81,7 @@ export async function denyViewers(): Promise<Response | null> {
     const token = await verifyAccessToken(raw);
     if (!token) {
       const { NextResponse } = await import("next/server");
-      return NextResponse.json({ error: "Invalid access token" }, { status: 401 });
+      return NextResponse.json({ error: (await serverT())("system.auth.invalidAccessToken") }, { status: 401 });
     }
     const WRITE_SUFFIXES = [":write", ":publish", ":delete", ":trigger", ":manage"];
     const hasWrite = (token.permissions ?? []).some(
@@ -89,14 +89,14 @@ export async function denyViewers(): Promise<Response | null> {
     );
     if (hasWrite) return null;
     const { NextResponse } = await import("next/server");
-    return NextResponse.json({ error: "No write access" }, { status: 403 });
+    return NextResponse.json({ error: (await serverT())("system.auth.noWriteAccess") }, { status: 403 });
   }
 
   // No Bearer — existing session + role behaviour.
   const role = await getSiteRole();
   if (!role || role === "viewer") {
     const { NextResponse } = await import("next/server");
-    return NextResponse.json({ error: "No write access" }, { status: 403 });
+    return NextResponse.json({ error: (await serverT())("system.auth.noWriteAccess") }, { status: 403 });
   }
   return null;
 }
@@ -131,4 +131,9 @@ export async function getSessionWithSiteRole(): Promise<{
     name: session.name,
     siteRole: membership?.role ?? null,
   };
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

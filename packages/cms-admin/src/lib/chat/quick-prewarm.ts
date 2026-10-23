@@ -1,3 +1,4 @@
+/* i18n-ignore-file: failure reasons are console.warn log lines for the prewarm job, never shown to a person */
 /**
  * Server-side generation + pre-warm for the quick-action cache (F158).
  *

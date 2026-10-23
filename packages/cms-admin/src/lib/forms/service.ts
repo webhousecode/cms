@@ -11,6 +11,12 @@ import path from "path";
 import crypto from "crypto";
 import type { FormSubmission } from "./types";
 
+/** Loaded on the error path only — the i18n server module pulls in the auth chain. */
+async function notFoundMessage(): Promise<string> {
+  const { getServerTSafe } = await import("@/i18n/server");
+  return (await getServerTSafe())("libText.formsService.submissionNotFound");
+}
+
 export class FormService {
   constructor(private dataDir: string) {}
 
@@ -76,7 +82,7 @@ export class FormService {
 
   async updateStatus(formName: string, id: string, status: FormSubmission["status"]): Promise<FormSubmission> {
     const sub = await this.get(formName, id);
-    if (!sub) throw new Error("Submission not found");
+    if (!sub) throw new Error(await notFoundMessage());
     sub.status = status;
     if (status === "read" && !sub.readAt) sub.readAt = new Date().toISOString();
     await fs.writeFile(path.join(this.dir(formName), `${id}.json`), JSON.stringify(sub, null, 2));
@@ -87,7 +93,7 @@ export class FormService {
     try {
       await fs.unlink(path.join(this.dir(formName), `${id}.json`));
     } catch {
-      throw new Error("Submission not found");
+      throw new Error(await notFoundMessage());
     }
   }
 

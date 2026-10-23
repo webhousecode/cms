@@ -9,18 +9,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createGotoLink } from "@/lib/goto-links";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   let body: { orgId?: string; siteId?: string; path?: string; label?: string };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.goto.invalidJson") }, { status: 400 });
   }
   if (!body.orgId || !body.siteId || !body.path) {
     return NextResponse.json(
-      { error: "orgId, siteId and path are required" },
+      { error: t("errAdmin.goto.fieldsRequired") },
       { status: 400 },
     );
   }

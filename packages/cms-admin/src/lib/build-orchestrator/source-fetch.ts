@@ -20,13 +20,15 @@ import { mkdtempSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { getServerTSafe } from "@/i18n/server";
 
 export type ParsedSource =
   | { kind: "github"; owner: string; repo: string; subdir?: string }
   | { kind: "local"; path: string };
 
 export class SourceParseError extends Error {
-  constructor(message: string) {
+  /** Catalog key + vars so an async caller can translate the message (F211.2). */
+  constructor(message: string, readonly i18nKey?: string, readonly i18nVars?: Record<string, string>) {
     super(message);
     this.name = "SourceParseError";
   }
@@ -37,7 +39,7 @@ const LOCAL_RE = /^local:(\/.+)$/;
 
 export function parseSourceUrl(source: string): ParsedSource {
   const trimmed = source.trim();
-  if (!trimmed) throw new SourceParseError("source is empty");
+  if (!trimmed) throw new SourceParseError("source is empty", "deployText.sourceFetch.empty"); // i18n-ignore: English fallback; fetchSource translates it via the key
 
   const ghMatch = GITHUB_RE.exec(trimmed);
   if (ghMatch) {
@@ -55,7 +57,10 @@ export function parseSourceUrl(source: string): ParsedSource {
   }
 
   throw new SourceParseError(
+    // i18n-ignore: English fallback; fetchSource translates it via the key
     `Invalid source URL: "${source}". Expected "github:owner/repo[:subdir]" or "local:/absolute/path".`,
+    "deployText.sourceFetch.invalidUrl",
+    { source },
   );
 }
 
@@ -103,12 +108,21 @@ const CLONE_TIMEOUT_MS = 120_000;
 const REV_PARSE_TIMEOUT_MS = 10_000;
 
 export async function fetchSource(opts: FetchSourceOptions): Promise<FetchedSource> {
-  const parsed = parseSourceUrl(opts.source);
+  const t = await getServerTSafe();
+  let parsed: ParsedSource;
+  try {
+    parsed = parseSourceUrl(opts.source);
+  } catch (err) {
+    if (err instanceof SourceParseError && err.i18nKey) {
+      throw new SourceParseError(t(err.i18nKey, err.i18nVars), err.i18nKey, err.i18nVars);
+    }
+    throw err;
+  }
   const branch = opts.branch?.trim() || "main";
 
   if (parsed.kind === "local") {
     if (!existsSync(parsed.path)) {
-      throw new Error(`local source path does not exist: ${parsed.path}`);
+      throw new Error(t("deployText.sourceFetch.localMissing", { path: parsed.path }));
     }
     return {
       dir: parsed.path,
@@ -148,7 +162,7 @@ export async function fetchSource(opts: FetchSourceOptions): Promise<FetchedSour
 
     const finalDir = parsed.subdir ? path.join(cloneDir, parsed.subdir) : cloneDir;
     if (!existsSync(finalDir)) {
-      throw new Error(`subdir not found in cloned repo: ${parsed.subdir}`);
+      throw new Error(t("deployText.sourceFetch.subdirMissing", { subdir: String(parsed.subdir) }));
     }
 
     return {

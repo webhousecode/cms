@@ -1,0 +1,225 @@
+{
+  "backupService": {
+    "fileNotFound": "Backupfilen blev ikke fundet",
+    "githubConfigMissing": "GitHub-opsætning mangler på sitet"
+  },
+  "backupProviders": {
+    "pcloudMissing": "pCloud-opsætning mangler",
+    "s3Missing": "S3-opsætning mangler",
+    "unknown": "Ukendt backup-udbyder: {type}"
+  },
+  "pcloud": {
+    "nearlyFull": "pCloud-lageret er næsten fuldt: {freeMB} MB ledigt, kræver {needMB} MB. Frigør plads, eller opgradér din pCloud-plan.",
+    "authFailed": "pCloud-login mislykkedes — tjek e-mail og adgangskode under Indstillinger → Backup.",
+    "quotaExceeded": "pCloud-lagerkvoten er overskredet. Frigør plads, eller opgradér din pCloud-plan.",
+    "uploadFailed": "Upload til pCloud mislykkedes: {status}",
+    "downloadFailed": "Download fra pCloud mislykkedes: {status}",
+    "deleteFailed": "Sletning i pCloud mislykkedes: {status}",
+    "invalidCredentials": "Forkert e-mail eller adgangskode",
+    "connectionFailedStatus": "Forbindelsen mislykkedes: {status}",
+    "connected": "Forbundet — {freeGB} GB ledigt",
+    "connectionFailed": "Forbindelsen mislykkedes",
+    "folderFailed": "Kunne ikke oprette backup-mappen i pCloud: {status}"
+  },
+  "s3": {
+    "connectedOne": "Forbundet til {bucket} — {count} backup gemt",
+    "connectedMany": "Forbundet til {bucket} — {count} backups gemt",
+    "connectionFailed": "Forbindelsen mislykkedes",
+    "accessDenied": "Adgang nægtet — tjek API-nøglens rettigheder",
+    "bucketNotFound": "Bucket \"{bucket}\" blev ikke fundet"
+  },
+  "beamPush": {
+    "initiateFailed": "Kunne ikke starte overførslen",
+    "sendFailed": "Kunne ikke sende {path}",
+    "finalizeFailed": "Kunne ikke afslutte overførslen"
+  },
+  "beamImport": {
+    "missingManifest": "Ugyldigt .beam-arkiv: manifest.json mangler",
+    "unsupportedVersion": "Beam-versionen understøttes ikke: {version}",
+    "invalidSiteId": "Ugyldigt site-id i arkivet: {id}",
+    "invalidOrgId": "Ugyldigt organisations-id: {id}",
+    "otherOrg": "Site-id \"{siteId}\" tilhører en anden organisation",
+    "exists": "Sitet \"{siteId}\" findes allerede i organisationen \"{orgId}\". Vælg at overskrive."
+  },
+  "flyBuilder": {
+    "noMachineId": "Fly kunne ikke starte byg-maskinen (intet maskine-id): {detail}"
+  },
+  "flyEphemeral": {
+    "noSite": "intet aktivt site til fly-ephemeral-udgivelse",
+    "noToken": "fly-ephemeral kræver en Fly API-token (i sitets opsætning eller som FLY_API_TOKEN på cms-admin).",
+    "noAppName": "fly-ephemeral kræver at deployAppName er sat.",
+    "noCallbackUrl": "fly-ephemeral kræver NEXTAUTH_URL (eller tilsvarende), så byg-maskinen kan melde tilbage.",
+    "noRegistryToken": "fly-ephemeral kræver GHCR_PUSH_TOKEN på cms-admin, så byg-maskinen kan skubbe images.",
+    "pathsFailed": "fly-ephemeral kunne ikke finde sitets stier: {error}",
+    "sourceFetchFailed": "Hentning af kildekoden mislykkedes: {error}",
+    "builderExited": "byg-maskinen stoppede med state={state} exit={exit}",
+    "imageDeployFailed": "Udgivelse af image mislykkedes: {error}"
+  },
+  "sourceFetch": {
+    "empty": "kilden er tom",
+    "invalidUrl": "Ugyldig kilde-URL: \"{source}\". Forventede \"github:owner/repo[:subdir]\" eller \"local:/absolute/path\".",
+    "localMissing": "den lokale kildesti findes ikke: {path}",
+    "subdirMissing": "undermappen blev ikke fundet i det klonede repo: {subdir}"
+  },
+  "installer": {
+    "noDeps": "(ingen ekstra pakker nødvendige)",
+    "alreadyInstalled": "(pakkerne er allerede installeret, sprunget over)"
+  },
+  "buildPaths": {
+    "workingDirEscapes": "workingDir \"{dir}\" peger uden for projektmappen",
+    "workingDirMissing": "workingDir \"{dir}\" findes ikke",
+    "workingDirNotDir": "workingDir \"{dir}\" er ikke en mappe",
+    "outDirEscapes": "outDir \"{dir}\" peger uden for projektmappen"
+  },
+  "dockerPresets": {
+    "unknown": "Ukendt Docker-forudindstilling \"{preset}\". Mulige: {available}"
+  },
+  "serverBuildPolicy": {
+    "disabled": "Denne CMS-server kører ikke et sites egen byggekode (CMS_SERVER_BUILDS=off). Byg sitet i dets eget repo, og sæt Site-indstillinger → Udgivelse til «Webhook», så CMS'et kun sender byg-signalet."
+  },
+  "executor": {
+    "envBlocked": "Miljøvariablen \"{key}\" er blokeret af sikkerhedshensyn.",
+    "emptyCommand": "Byg-kommandoen er tom"
+  },
+  "siteBuild": {
+    "depsFailed": "Kunne ikke installere ekstra pakker: {error}\n{log}",
+    "exitCode": "Exit-kode: {code}",
+    "profileFailed": "Bygget \"{name}\" mislykkedes: {error}",
+    "failed": "Bygget mislykkedes",
+    "failedWith": "Bygget mislykkedes: {error}",
+    "noOutDir": "Bygget blev færdigt, men mappen {dir}/ blev ikke oprettet."
+  },
+  "configWriter": {
+    "arrayNotFound": "Kunne ikke finde listen `{key}:` øverst i cms.config.ts",
+    "arrayUnbalanced": "Listen `{key}` i cms.config.ts har ubalancerede klammer",
+    "noFormsAnchor": "Konfigurationen har hverken `forms:` eller `storage:` at placere en ny liste ved",
+    "collectionsNotFound": "Kunne ikke finde `collections:` øverst i cms.config.ts",
+    "noBlocksAnchor": "Konfigurationen har hverken `blocks:` eller `storage:` at placere en ny liste ved",
+    "lostDefineConfig": "Gemmer ikke — resultatet indeholder ikke længere defineConfig",
+    "lostCollection": "Gemmer ikke — samlingen \"{name}\" mangler i resultatet",
+    "lostForm": "Gemmer ikke — formularen \"{name}\" mangler i resultatet",
+    "lostBlock": "Gemmer ikke — blokken \"{name}\" mangler i resultatet",
+    "blockNeedsName": "Gemmer ikke — alle blokke skal have et navn",
+    "githubNotConnected": "GitHub er ikke forbundet — forbind via Sites",
+    "githubReadFailed": "GitHub: læsning af {path} mislykkedes: {status}",
+    "githubWriteFailed": "GitHub: skrivning af {path} mislykkedes: {status} {body}"
+  },
+  "deployService": {
+    "resyncFailed": "{failed} af {total} dokumenter kunne ikke synkroniseres igen (se revalideringsloggen)",
+    "noProvider": "Ingen udgivelsesudbyder er sat op",
+    "noHookUrl": "URL til udgivelses-hook er ikke sat op",
+    "cfNoToken": "Cloudflare Pages kræver en API-token (Pages:Edit-rettighed).",
+    "cfNoAccount": "Cloudflare Pages kræver dit Cloudflare Account ID.",
+    "cfNoProject": "Cloudflare Pages kræver et projektnavn.",
+    "cfNoBuild": "Cloudflare Pages kræver en build.ts eller en build.command i cms.config.ts — den udgiver statisk output.",
+    "noDeployDir": "Bygget blev færdigt, men mappen deploy/ blev ikke oprettet.",
+    "flyLiveNoToken": "Fly.io Live kræver en API-token. Sæt FLY_API_TOKEN som Fly-secret på CMS-serveren (anbefalet — virker for alle sites), eller indsæt en token for sitet under Site-indstillinger → Udgivelse.",
+    "flyLiveNoApp": "Fly.io Live kræver et app-navn.",
+    "flyLiveNoBuild": "Fly.io Live kræver en build.ts eller en build.command i cms.config.ts — den udgiver statisk output. Brug den almindelige 'Fly.io (rebuild)'-udbyder til Next.js/SSR-apps.",
+    "flyNoToken": "Fly.io kræver en API-token. Sæt FLY_API_TOKEN som Fly-secret på CMS-serveren (anbefalet — virker for alle sites), eller indsæt en token for sitet under Site-indstillinger → Udgivelse.",
+    "flyNoApp": "Fly.io kræver et app-navn.",
+    "ghNoBuild": "Ingen build.ts fundet — sitet understøtter ikke statiske byg. Vælg en anden udgivelsesudbyder (Fly.io, Vercel) under Site-indstillinger → Udgivelse.",
+    "ghNoToken": "GitHub Pages kræver en GitHub-token. Forbind GitHub via OAuth, eller tilføj en token under Indstillinger → Automatisering.",
+    "ghUserFailed": "Kunne ikke hente GitHub-brugeren — tjek din token.",
+    "repoCreateFailed": "Kunne ikke oprette repo: {status} {body}",
+    "hookFailed": "Hooket svarede {status}: {body}",
+    "flyNoBuild": "Ingen build.ts, Dockerfile eller build.command fundet — sitet kan ikke udgives til Fly.io. Tilføj en build.ts (statisk), en Dockerfile (Next.js/SSR) eller en build.command i cms.config.ts.",
+    "flyctlMissing": "flyctl CLI blev ikke fundet. Installér det: curl -L https://fly.io/install.sh | sh",
+    "failed": "Mislykkedes",
+    "flyAppCreateFailed": "Kunne ikke oprette Fly-appen \"{app}\" i organisationen \"{org}\": {error}",
+    "deployFailed": "Udgivelsen mislykkedes",
+    "flyDeployFailed": "Udgivelse til Fly.io mislykkedes: {error}",
+    "noStaticBuild": "Ingen build.ts eller build.command fundet — sitet understøtter ikke statiske byg.",
+    "distEmpty": "Bygget blev færdigt, men dist/ er tom.",
+    "blobFailed": "Kunne ikke oprette blob for {path}: {status}",
+    "rateLimited": "GitHubs grænse for antal kald er nået efter 3 forsøg på {path}. Vent et par minutter, og prøv igen.",
+    "treeFailed": "Kunne ikke oprette tree: {status}",
+    "commitFailed": "Kunne ikke oprette commit: {status}",
+    "refUpdateFailed": "Kunne ikke opdatere gh-pages-ref: {status}",
+    "refCreateFailed": "Kunne ikke oprette gh-pages-ref: {status}",
+    "pagesPrivate": "GitHub Pages er ikke tilgængelig for private repos på Free-planen. Gør repoet offentligt, eller opgradér din plan.",
+    "pagesEnableFailed": "Kunne ikke slå GitHub Pages til: {status}",
+    "apiError": "API-fejl: {status}"
+  },
+  "cloudflarePages": {
+    "noFiles": "Ingen filer at udgive — byg-mappen er tom.",
+    "fetchProjectFailed": "Cloudflare Pages: kunne ikke hente projektet ({status}): {error}",
+    "createProjectFailed": "Cloudflare Pages: kunne ikke oprette projektet ({status}): {error}",
+    "deploymentFailed": "Cloudflare Pages: udgivelsen mislykkedes ({status}): {error}",
+    "unknownError": "ukendt fejl",
+    "deploymentRejected": "Cloudflare Pages: udgivelsen blev afvist: {error}",
+    "invalidProjectName": "Cloudflare Pages-projektnavnet \"{name}\" er ugyldigt. Brug små bogstaver, tal og bindestreger (højst 58 tegn)."
+  },
+  "deployEvents": {
+    "liveTitle": "Sitet er live 🌐",
+    "failedTitle": "Udgivelsen mislykkedes",
+    "liveBody": "Dine ændringer er nu live på GitHub Pages.",
+    "failedBody": "GitHub Pages-bygget fejlede — se Site-indstillinger → Udgivelse."
+  },
+  "dnsClient": {
+    "invalidDomain": "\"{domain}\" er ikke et gyldigt domæne",
+    "zonesFailed": "DNS API: kunne ikke hente zoner ({status})",
+    "lookupFailed": "DNS API: opslag mislykkedes ({status})",
+    "createFailed": "DNS API: oprettelse mislykkedes ({status}): {body}",
+    "updateFailed": "DNS API: opdatering mislykkedes ({status}): {body}",
+    "searchFailed": "Domænesøgningen mislykkedes ({status})",
+    "checkFailed": "Domænetjekket mislykkedes ({status})",
+    "registrationFailed": "Registreringen mislykkedes ({status}): {body}",
+    "confirmFailed": "Bekræftelsen af registreringen mislykkedes ({status}): {body}"
+  },
+  "flyLive": {
+    "assetsMissing": "Mappen fly-live-assets mangler i {dir} — cms-admin-pakken er beskadiget",
+    "icdFailed": "ICD {method} {path} mislykkedes: {status} {body}",
+    "syncTimeout": "Synkroniseringspunktet kom ikke online inden for {seconds} s"
+  },
+  "flyOrgs": {
+    "missingToken": "Fly API-token mangler",
+    "noOrgs": "Ingen organisationer fundet for denne token",
+    "rejected": "Fly afviste denne token",
+    "unreachable": "Kunne ikke nå Fly for at bekræfte tokenen"
+  },
+  "outputBrowser": {
+    "tooLarge": "Filen er for stor til forhåndsvisning ({size} bytes > {max})"
+  },
+  "templates": {
+    "blog": "En enkel blog med indlæg, kategorier og redigering af formateret tekst.",
+    "landing": "Markedsføringsside med hero-, feature- og call-to-action-blokke.",
+    "staticAgency": "Mørk, moderne bureauskabelon med cases og teamsektioner.",
+    "staticFreelancer": "Minimal freelance-portfolio med projekter og en om-side.",
+    "staticPortfolio": "Kreativ portfolio med billeder i fuld bredde og projektgitter.",
+    "staticPortfolioSquared": "Gitterbaseret portfolio med kvadratiske miniaturebilleder.",
+    "staticBoutique": "Elegant boutiqueskabelon til mode- og livsstilsbrands.",
+    "staticStudio": "Kreativ studieskabelon med projektfremvisninger.",
+    "staticBridgeberg": "Virksomhedsskabelon til rådgivning med ydelser og tidslinje.",
+    "staticCmsdemo": "Komplet demosite, der viser alle CMS-funktioner. Følger med som Docker-standard.",
+    "staticBoilerplate": "Minimal statisk startskabelon — HTML-output med byg-pipeline.",
+    "nextjsBoilerplate": "Next.js App Router med CMS-hjælpere, SEO og udgivelse til Fly.io."
+  },
+  "templateRegistry": {
+    "notFound": "Skabelonen \"{id}\" blev ikke fundet",
+    "fetchFailed": "Kunne ikke hente skabelonen",
+    "githubError": "GitHub API-fejl: {status}"
+  },
+  "githubMedia": {
+    "notConnected": "GitHub er ikke forbundet — forbind via Sites → Indstillinger"
+  },
+  "sitePool": {
+    "invalidFieldType": "Ugyldig felttype \"{received}\" ved {path}. Gyldige typer: {validTypes}",
+    "validationFailed": "Konfigurationen for sitet \"{site}\" er ugyldig:\n{issues}",
+    "configNotFound": "Sitet \"{site}\": Konfigurationsfilen blev ikke fundet i \"{path}\". Tjek stien i site-indstillingerne.",
+    "unknownError": "Sitet \"{site}\": Ukendt fejl ved indlæsning af konfigurationen",
+    "envNotSet": "Miljøvariablen \"{name}\" er ikke sat (kræves til GitHub-token)",
+    "githubNotConnected": "GitHub er ikke forbundet — forbind via Sites → Nyt site → Forbind GitHub",
+    "ghFileNotFound": "GitHub: filen blev ikke fundet: {file}",
+    "ghBadToken": "GitHub: ugyldig token eller ingen adgang til {repo}",
+    "ghFetchFailed": "GitHub: hentning af {path} mislykkedes: {status}",
+    "noGithubConfig": "Sitet \"{id}\" bruger GitHub-adapteren, men har ingen GitHub-opsætning",
+    "githubConfigDisabled": "Denne CMS-server kører ikke et sites cms.config.ts fra GitHub (CMS_SERVER_BUILDS=off). Behold konfigurationen på serveren (filsystemet), og lad GitHub kun rumme indholdet."
+  },
+  "wpMigration": {
+    "noRestApi": "REST API er ikke tilgængeligt — kan ikke hente indhold"
+  },
+  "beam": {
+    "importedSiteName": "Importeret site"
+  }
+}

@@ -26,17 +26,17 @@
  */
 
 import { hasPermission } from "@/lib/permissions-shared";
+import { getServerTSafe } from "@/i18n/server";
 
 /** Refusal from the ctx — never an HTTP Response; the chat is not a route. */
 export class ToolPermissionError extends Error {
   constructor(
     readonly permission: string,
     readonly operation: string,
+    /** The sentence the reader sees, already in their admin language. */
+    message: string = `This action requires the permission "${permission}", which you do not have. (${operation})`, // i18n-ignore: English fallback only; gate() passes the translated chat.toolContext.permissionDenied
   ) {
-    super(
-      `Denne handling kræver rettigheden "${permission}", som du ikke har. ` +
-      `(${operation})`,
-    );
+    super(message);
     this.name = "ToolPermissionError";
   }
 }
@@ -76,28 +76,37 @@ export function buildToolCtx(engine: ToolEngine, granted: readonly string[]): To
   const own = [...granted];
   const exposed = Object.freeze([...granted]);
 
-  function gate(permission: string, operation: string): void {
+  async function gate(
+    permission: string,
+    describe: (t: Awaited<ReturnType<typeof getServerTSafe>>) => string,
+  ): Promise<void> {
     if (!hasPermission(own, permission)) {
-      throw new ToolPermissionError(permission, operation);
+      const t = await getServerTSafe();
+      const operation = describe(t);
+      throw new ToolPermissionError(
+        permission,
+        operation,
+        t("chat.toolContext.permissionDenied", { permission, operation }),
+      );
     }
   }
 
   return {
     granted: exposed,
     async readDoc(collection, slug) {
-      gate("content.read", `læs ${collection}/${slug}`);
+      await gate("content.read", (t) => t("chat.toolContext.opRead", { path: `${collection}/${slug}` }));
       return engine.findOne(collection, slug);
     },
     async listDocs(collection, opts) {
-      gate("content.read", `list ${collection}`);
+      await gate("content.read", (t) => t("chat.toolContext.opList", { collection }));
       return engine.findMany(collection, opts);
     },
     async createDoc(collection, input) {
-      gate("content.create", `opret i ${collection}`);
+      await gate("content.create", (t) => t("chat.toolContext.opCreate", { collection }));
       return engine.create(collection, input);
     },
     async updateDoc(collection, id, input) {
-      gate("content.edit", `ret ${collection}/${id}`);
+      await gate("content.edit", (t) => t("chat.toolContext.opUpdate", { path: `${collection}/${id}` }));
       return engine.update(collection, id, input);
     },
   };

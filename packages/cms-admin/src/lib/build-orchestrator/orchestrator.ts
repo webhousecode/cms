@@ -104,8 +104,9 @@ export async function buildSsrSite(opts: BuildSsrSiteOptions): Promise<BuildSsrS
 
   if (framework === "static") {
     throw new Error(
+      // i18n-ignore: internal programming invariant (wrong code path), never a user state
       "F144 buildSsrSite called for a static site — use F143 in-process " +
-        "build path instead (cms-admin runs build.ts directly).",
+        "build path instead (cms-admin runs build.ts directly).", // i18n-ignore: continuation of the invariant above
     );
   }
 

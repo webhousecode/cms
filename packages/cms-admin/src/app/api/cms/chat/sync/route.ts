@@ -10,6 +10,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 interface SyncClient {
   controller: ReadableStreamDefaultController;
@@ -23,7 +24,7 @@ if (!g.__chatSyncClients) g.__chatSyncClients = new Set<SyncClient>();
 const clients: Set<SyncClient> = g.__chatSyncClients;
 
 function broadcast(event: string, data: unknown, excludeUserId?: string) {
-  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`; // i18n-ignore: SSE wire frame
   const encoder = new TextEncoder();
   const encoded = encoder.encode(payload);
   for (const client of clients) {
@@ -38,8 +39,9 @@ function broadcast(event: string, data: unknown, excludeUserId?: string) {
 
 /** GET — open SSE connection */
 export async function GET() {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const encoder = new TextEncoder();
   let client: SyncClient;
@@ -50,7 +52,7 @@ export async function GET() {
       clients.add(client);
 
       // Send initial ping
-      controller.enqueue(encoder.encode(`event: connected\ndata: ${JSON.stringify({ clients: clients.size })}\n\n`));
+      controller.enqueue(encoder.encode(`event: connected\ndata: ${JSON.stringify({ clients: clients.size })}\n\n`)); // i18n-ignore: SSE wire frame
     },
     cancel() {
       clients.delete(client);
@@ -69,11 +71,12 @@ export async function GET() {
 
 /** POST — broadcast a sync event */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const { event, data } = await request.json() as { event: string; data: unknown };
-  if (!event) return NextResponse.json({ error: "event required" }, { status: 400 });
+  if (!event) return NextResponse.json({ error: t("errCms.chat.eventRequired") }, { status: 400 });
 
   broadcast(event, data);
   return NextResponse.json({ ok: true, clients: clients.size });

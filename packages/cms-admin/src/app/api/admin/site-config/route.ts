@@ -3,11 +3,13 @@ import { readSiteConfig, writeSiteConfig, type SiteConfig } from "@/lib/site-con
 import { getSiteRole } from "@/lib/require-role";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { stripSecretsForNonAdmin } from "@/lib/site-config-redact";
+import { getServerTSafe } from "@/i18n/server";
 
 
 export async function GET() {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
-  if (!role) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  if (!role) return NextResponse.json({ error: t("errAdmin.common.notAuthenticated") }, { status: 401 });
   const [config, paths] = await Promise.all([readSiteConfig(), getActiveSitePaths()]);
   const result: Record<string, unknown> = { ...config, resolvedContentDir: paths.contentDir };
   // Strip secrets for non-admin users
@@ -16,8 +18,9 @@ export async function GET() {
 }
 
 async function updateAndAudit(request: NextRequest): Promise<NextResponse> {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
-  if (role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
+  if (role !== "admin") return NextResponse.json({ error: t("errAdmin.common.adminOnly") }, { status: 403 });
   const patch = (await request.json()) as Partial<SiteConfig>;
   const updated = await writeSiteConfig(patch);
 

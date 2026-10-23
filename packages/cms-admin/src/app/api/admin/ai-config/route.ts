@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readAiConfig, writeAiConfig, maskAiConfig, type AiConfig } from "@/lib/ai-config";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET() {
+  const t = await getServerTSafe();
   try {
     const config = await readAiConfig();
     return NextResponse.json(maskAiConfig(config));
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Error";
+    const msg = err instanceof Error ? err.message : t("errAdmin.common.error");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("settings.edit"); if (denied) return denied;
   try {
     const body = (await request.json()) as Partial<AiConfig>;
@@ -44,7 +47,7 @@ export async function POST(request: NextRequest) {
     await writeAiConfig(updated);
     return NextResponse.json(maskAiConfig(updated));
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Error";
+    const msg = err instanceof Error ? err.message : t("errAdmin.common.error");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

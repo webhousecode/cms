@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { deleteMemory, updateMemory } from "@/lib/chat/memory-store";
+import { getServerTSafe } from "@/i18n/server";
 
 /** DELETE /api/cms/chat/memory/[id] — delete a memory */
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const { id } = await params;
   const deleted = await deleteMemory(id);
   if (!deleted) {
-    return NextResponse.json({ error: "Memory not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errCms.shared.memoryNotFound") }, { status: 404 });
   }
   return NextResponse.json({ ok: true });
 }
@@ -23,14 +25,15 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const { id } = await params;
   const body = await request.json();
   const updated = await updateMemory(id, body);
   if (!updated) {
-    return NextResponse.json({ error: "Memory not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errCms.shared.memoryNotFound") }, { status: 404 });
   }
   return NextResponse.json({ memory: updated });
 }

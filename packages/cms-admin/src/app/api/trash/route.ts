@@ -2,10 +2,12 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getMediaAdapter } from "@/lib/media";
 import { NextResponse } from "next/server";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 const RETENTION_DAYS = parseInt(process.env.TRASH_RETENTION_DAYS ?? "30");
 
 export async function GET() {
+  const t = await getServerTSafe();
   // Had NO check at all — not even "is anyone logged in". It leaned on proxy.ts
   // protecting /api/*, which answers a different question: authenticated, not
   // permitted. Deleted content is a decision about the site, not something
@@ -44,7 +46,7 @@ export async function GET() {
     for (const m of trashedMedia) {
       allTrashed.push({
         collection: "_media",
-        collectionLabel: "Media",
+        collectionLabel: t("errApi.trash.mediaLabel"),
         doc: {
           id: m.key, slug: m.key, status: "trashed",
           data: { title: m.name, _trashedAt: m.trashedAt },
@@ -59,7 +61,7 @@ export async function GET() {
       if (int.status !== "trashed") continue;
       allTrashed.push({
         collection: "_interactives",
-        collectionLabel: "Interactives",
+        collectionLabel: t("errApi.trash.interactivesLabel"),
         doc: {
           id: int.id, slug: int.id, status: "trashed",
           data: { title: int.name, _trashedAt: int.updatedAt },
@@ -71,11 +73,12 @@ export async function GET() {
     return NextResponse.json(allTrashed);
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }
 
 export async function DELETE() {
+  const t = await getServerTSafe();
   const denied = await requirePermission("content.trash.empty"); if (denied) return denied;
   try {
     const [cms, config, media] = await Promise.all([getAdminCms(), getAdminConfig(), getMediaAdapter()]);
@@ -121,6 +124,6 @@ export async function DELETE() {
     return NextResponse.json({ ok: true, deleted });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

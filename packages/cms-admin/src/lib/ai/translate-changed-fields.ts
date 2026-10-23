@@ -95,7 +95,7 @@ export function planChangedFieldTranslation(args: {
 }): ChangedFieldPlan {
   const { source, changed, collection, siblings, targetLocale, defaultLocale } = args;
 
-  if (!args.autoRetranslateOnUpdate) return refuse("auto-retranslate is off");
+  if (!args.autoRetranslateOnUpdate) return refuse("auto-retranslate is off"); // i18n-ignore: skip reason only written to the server log
 
   // The circular guard runs FIRST, and the order is load-bearing rather than
   // stylistic. Asking "may this source propagate at all?" before "is there a
@@ -106,22 +106,22 @@ export function planChangedFieldTranslation(args: {
   // test now pins the REASON, not just the refusal.
   const sourceLocale = source.locale || defaultLocale;
   if (sourceLocale !== defaultLocale) {
-    return refuse(`source locale ${sourceLocale} is not the default`);
+    return refuse(`source locale ${sourceLocale} is not the default`); // i18n-ignore: skip reason only written to the server log
   }
 
   if (!targetLocale || targetLocale === defaultLocale) {
-    return refuse("no target locale");
+    return refuse("no target locale"); // i18n-ignore: skip reason only written to the server log
   }
 
   const group = source.translationGroup;
-  if (!group) return refuse("source has no translationGroup");
+  if (!group) return refuse("source has no translationGroup"); // i18n-ignore: skip reason only written to the server log
 
   const target = siblings.find(
     (d) => d.translationGroup === group && d.locale === targetLocale && d.id !== source.id,
   );
   // No sibling is NORMAL — an article that has never been translated is not an
   // error, so this does nothing rather than creating a page nobody asked for.
-  if (!target) return { translate: false, reason: `no ${targetLocale} sibling`, missingSibling: true };
+  if (!target) return { translate: false, reason: `no ${targetLocale} sibling`, missingSibling: true }; // i18n-ignore: skip reason only written to the server log
 
   const byName = new Map<string, FieldConfig>(
     ((collection?.fields ?? []) as FieldConfig[]).map((f) => [f.name, f]),
@@ -173,7 +173,7 @@ export function planChangedFieldTranslation(args: {
   }
 
   if (Object.keys(fields).length === 0) {
-    return refuse("no translatable field changed");
+    return refuse("no translatable field changed"); // i18n-ignore: skip reason only written to the server log
   }
   return { translate: true, target, fields };
 }
@@ -245,19 +245,19 @@ export function buildChangedFieldPrompt(args: {
   localeInstruction?: string;
 }): { system: string; user: string } {
   const system = [
-    `You translate CMS field values from ${args.sourceLang} to ${args.targetLang}.`,
+    `You translate CMS field values from ${args.sourceLang} to ${args.targetLang}.`, // i18n-ignore: model prompt
     "",
-    "Return ONLY a JSON object with EXACTLY the same keys you were given.",
-    "Translate the VALUES. Never translate, invent or drop a key.",
-    "Preserve Markdown, HTML tags, links and formatting exactly as they appear.",
-    "Keep proper nouns, product names and code identifiers unchanged.",
+    "Return ONLY a JSON object with EXACTLY the same keys you were given.", // i18n-ignore: model prompt
+    "Translate the VALUES. Never translate, invent or drop a key.", // i18n-ignore: model prompt
+    "Preserve Markdown, HTML tags, links and formatting exactly as they appear.", // i18n-ignore: model prompt
+    "Keep proper nouns, product names and code identifiers unchanged.", // i18n-ignore: model prompt
     args.localeInstruction ?? "",
   ]
     .filter(Boolean)
     .join("\n");
 
   const user = [
-    "Translate these field values:",
+    "Translate these field values:", // i18n-ignore: model prompt
     "",
     JSON.stringify(args.fields, null, 2),
   ].join("\n");

@@ -10,6 +10,7 @@ import { dirname, isAbsolute, join, resolve } from "node:path";
 import { stat } from "node:fs/promises";
 import type { SiteEntry } from "./site-registry";
 import { ZodError } from "zod";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Resolve all relative paths in a CmsConfig to absolute paths anchored at
@@ -31,26 +32,27 @@ function absolutizeConfigPaths(config: CmsConfig, projectDir: string): void {
 /**
  * F79: Format config loading errors into human-readable messages.
  */
-function formatSiteError(err: unknown, site: SiteEntry): string {
+async function formatSiteError(err: unknown, site: SiteEntry): Promise<string> {
+  const t = await getServerTSafe();
   if (err instanceof ZodError) {
     const issues = err.issues.map((issue) => {
       const path = issue.path.join(".");
       if (issue.code === "invalid_enum_value" && path.endsWith(".type")) {
         const received = (issue as { received?: string }).received ?? "";
         const validTypes = VALID_FIELD_TYPES.join(", ");
-        return `Invalid field type "${received}" at ${path}. Valid types: ${validTypes}`;
+        return t("deployText.sitePool.invalidFieldType", { received, path, validTypes });
       }
       return `${path}: ${issue.message}`;
     });
-    return `Site "${site.name}" config validation failed:\n${issues.join("\n")}`;
+    return t("deployText.sitePool.validationFailed", { site: site.name, issues: issues.join("\n") });
   }
   if (err instanceof Error) {
     if (err.message.includes("Cannot find module") || err.message.includes("ENOENT")) {
-      return `Site "${site.name}": Config file not found at "${site.configPath}". Check the path in site settings.`;
+      return t("deployText.sitePool.configNotFound", { site: site.name, path: String(site.configPath) });
     }
     return `Site "${site.name}": ${err.message}`;
   }
-  return `Site "${site.name}": Unknown error loading config`;
+  return t("deployText.sitePool.unknownError", { site: site.name });
 }
 
 // ─── GitHub helpers ────────────────────────────────────────
@@ -65,7 +67,7 @@ export async function resolveToken(token: string): Promise<string> {
   if (token.startsWith("env:")) {
     const envVar = token.slice(4);
     const resolved = process.env[envVar];
-    if (!resolved) throw new Error(`Environment variable "${envVar}" is not set (needed for GitHub token)`);
+    if (!resolved) throw new Error((await getServerTSafe())("deployText.sitePool.envNotSet", { name: envVar }));
     return resolved;
   }
   if (token === "oauth") {
@@ -97,7 +99,7 @@ export async function resolveToken(token: string): Promise<string> {
     // token and "the first token in ANY site's cache dir". Both handed one
     // site's GitHub credential to another. A site without its own token must
     // connect GitHub itself.
-    throw new Error("GitHub not connected — please connect via Sites → New Site → Connect GitHub");
+    throw new Error((await getServerTSafe())("deployText.sitePool.githubNotConnected"));
   }
   return token;
 }
@@ -112,9 +114,10 @@ async function fetchGitHubFile(owner: string, repo: string, path: string, branch
       "X-GitHub-Api-Version": "2022-11-28",
     },
   });
-  if (res.status === 404) throw new Error(`GitHub: file not found: ${owner}/${repo}/${path}`);
-  if (res.status === 401) throw new Error(`GitHub: bad token or no access to ${owner}/${repo}`);
-  if (!res.ok) throw new Error(`GitHub: fetch ${path} failed: ${res.status} ${res.statusText}`);
+  const t = await getServerTSafe();
+  if (res.status === 404) throw new Error(t("deployText.sitePool.ghFileNotFound", { file: `${owner}/${repo}/${path}` }));
+  if (res.status === 401) throw new Error(t("deployText.sitePool.ghBadToken", { repo: `${owner}/${repo}` }));
+  if (!res.ok) throw new Error(t("deployText.sitePool.ghFetchFailed", { path, status: `${res.status} ${res.statusText}` }));
   const data = (await res.json()) as { content: string };
   return Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf-8");
 }
@@ -122,7 +125,7 @@ async function fetchGitHubFile(owner: string, repo: string, path: string, branch
 /** Fetch cms.config.ts from a GitHub repo and evaluate it with jiti */
 export async function loadGitHubConfig(site: SiteEntry): Promise<CmsConfig> {
   const gh = site.github;
-  if (!gh) throw new Error(`Site "${site.id}" is github adapter but has no github config`);
+  if (!gh) throw new Error((await getServerTSafe())("deployText.sitePool.noGithubConfig", { id: site.id }));
 
   // Security W41 NY-H3 — cms.config.ts from the site's GitHub repo is the
   // site's own CODE; jiti runs it inside cms-admin with the whole server
@@ -132,10 +135,7 @@ export async function loadGitHubConfig(site: SiteEntry): Promise<CmsConfig> {
   // Measured 22/10-2026: no site on webhouse.app uses a github:// config.
   const { serverBuildsAllowed } = await import("./build/server-build-policy");
   if (!serverBuildsAllowed()) {
-    throw new Error(
-      "This CMS server does not run a site's cms.config.ts from GitHub (CMS_SERVER_BUILDS=off). " +
-      "Keep the config on the server (filesystem) and let GitHub hold only the content.",
-    );
+    throw new Error((await getServerTSafe())("deployText.sitePool.githubConfigDisabled"));
   }
 
   const token = await resolveToken(gh.token);
@@ -283,7 +283,7 @@ export async function getOrCreateInstance(
     return instance;
   } catch (err) {
     // F79: Graceful error handling — format ZodError and config loading errors
-    const message = formatSiteError(err, site);
+    const message = await formatSiteError(err, site);
     throw new Error(message);
   }
 }

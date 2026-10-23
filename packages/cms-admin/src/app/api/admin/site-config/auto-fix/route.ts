@@ -5,8 +5,10 @@ import { requirePermission } from "@/lib/permissions";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { invalidate } from "@/lib/site-pool";
 import { getAI, mistralModel } from "@/lib/ai/client";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(req: Request) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("sites.write");
   if (denied) return denied;
 
@@ -18,20 +20,20 @@ export async function POST(req: Request) {
 
   const registry = await loadRegistry();
   if (!registry || !activeOrgId || !activeSiteId) {
-    return NextResponse.json({ error: "Could not resolve active site" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.siteConfig.noActiveSite") }, { status: 400 });
   }
 
   const site = findSite(registry, activeOrgId, activeSiteId);
-  if (!site) return NextResponse.json({ error: "Site not found" }, { status: 404 });
+  if (!site) return NextResponse.json({ error: t("errAdmin.siteConfig.siteNotFound") }, { status: 404 });
   if (site.configPath.startsWith("github://")) {
-    return NextResponse.json({ error: "Auto-fix is only available for filesystem sites" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.siteConfig.autoFixFilesystemOnly") }, { status: 400 });
   }
 
   let original: string;
   try {
     original = await readFile(site.configPath, "utf-8");
   } catch {
-    return NextResponse.json({ error: "Could not read config file" }, { status: 500 });
+    return NextResponse.json({ error: t("errAdmin.siteConfig.readConfigFailed") }, { status: 500 });
   }
 
   const system = `You are a TypeScript code fixer for @webhouse/cms configuration files.
@@ -46,6 +48,7 @@ Common fixes:
 
 Return ONLY the raw TypeScript source code. No markdown fences, no explanations.`;
 
+  // i18n-ignore: model prompt
   const user = `Validation errors to fix:
 ${rawErrors}
 
@@ -64,14 +67,14 @@ ${original}`;
     });
     fixed = text;
   } catch {
-    return NextResponse.json({ error: "AI fix generation failed" }, { status: 502 });
+    return NextResponse.json({ error: t("errAdmin.siteConfig.aiFixFailed") }, { status: 502 });
   }
 
   // Strip markdown fences if model added them anyway
   fixed = fixed.replace(/^```(?:typescript|ts)?\n?/m, "").replace(/\n?```\s*$/m, "").trim();
 
   if (!fixed || fixed.length < 50) {
-    return NextResponse.json({ error: "AI returned an empty or unusable fix" }, { status: 502 });
+    return NextResponse.json({ error: t("errAdmin.siteConfig.aiFixEmpty") }, { status: 502 });
   }
 
   // Write corrected config + invalidate site pool cache

@@ -106,6 +106,8 @@
     "runPromptPlaceholder": "Prompt der starter pipelinen (sendes til trin 1)",
     "running": "Kører…",
     "done": "Færdig",
-    "run": "Kør"
+    "run": "Kør",
+    "nameMustBeString": "name skal være en tekst",
+    "stepsMustBeArray": "steps skal være en liste"
   }
 }

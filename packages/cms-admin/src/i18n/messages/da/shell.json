@@ -111,7 +111,9 @@
     "newConversation": "Ny samtale",
     "new": "Ny",
     "conversationHistory": "Samtalehistorik",
-    "history": "Historik"
+    "history": "Historik",
+    "fallbackName": "Admin",
+    "siteFallback": "Site"
   },
   "tabBar": {
     "closeTab": "Luk fane (⌥W)",
@@ -119,7 +121,14 @@
     "closeAllTabs": "Luk alle faner",
     "closeAll": "Luk alle",
     "confirmCloseAll": "Luk alle {count} faner? Alle åbne dokumenter lukkes, og du kommer tilbage til Oversigt.",
-    "cancel": "Annuller"
+    "cancel": "Annuller",
+    "status": {
+      "published": "Udgivet",
+      "draft": "Kladde",
+      "scheduled": "Planlagt",
+      "expired": "Udløbet",
+      "trashed": "I papirkurven"
+    }
   },
   "commandPalette": {
     "items": {
@@ -650,7 +659,9 @@
     "colType": "Type",
     "colAdded": "Tilføjet",
     "remove": "Fjern fra favoritter",
-    "addedOn": "Tilføjet {date}"
+    "addedOn": "Tilføjet {date}",
+    "addToFavorites": "Tilføj til favoritter",
+    "removeFromFavorites": "Fjern fra favoritter"
   },
   "tabTitles": {
     "dashboard": "Oversigt",
@@ -678,5 +689,8 @@
     "favorites": "Favoritter",
     "deployDocker": "Docker-udgivelse",
     "settingsTab": "Indstillinger: {tab}"
+  },
+  "meta": {
+    "description": "AI-native indholdsmotor"
   }
 }

@@ -10,6 +10,10 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { levendeNavne, hentLevendeStemmer } from "../podcast/voices";
 import { foerFlyvning } from "../podcast/preflight";
+import { getT } from "../../i18n/locale";
+
+// F211.2 — teksterne følger admin-sproget; prøverne her læser den danske udgave.
+const foerFlyvningDa = (a: Parameters<typeof foerFlyvning>[0]) => foerFlyvning(a, getT("da"));
 import { resolveVoice, ELEVENLABS_DANISH_VOICES } from "@broberg/ai-sdk";
 
 const RUTE = readFileSync(
@@ -58,7 +62,7 @@ describe("opslaget fejler blødt — og siger hvorfor", () => {
   it("uden nøgle: ikke ok, med en grund der navngiver problemet", async () => {
     const r = await hentLevendeStemmer(undefined);
     expect(r.ok).toBe(false);
-    expect(r.ok === false && r.grund).toContain("nøgle");
+    expect(r.ok === false && r.grund).toContain("ElevenLabs key"); // English outside a request (F211.2)
   });
 
   it("en tom nøglestreng behandles som ingen nøgle", async () => {
@@ -75,7 +79,7 @@ describe("tjeklisten bruger opslaget rigtigt", () => {
   };
 
   it("begge valgte stemmer svarer → tjekket er grønt", () => {
-    const f = foerFlyvning({
+    const f = foerFlyvningDa({
       ...grundlag,
       levendeStemmer: levendeNavne([
         { voiceId: resolveVoice("jesper") },
@@ -87,7 +91,7 @@ describe("tjeklisten bruger opslaget rigtigt", () => {
   });
 
   it("NEGATIV KONTROL: én stemme er død → tjekket er rødt OG navngiver hvilken", () => {
-    const f = foerFlyvning({
+    const f = foerFlyvningDa({
       ...grundlag,
       levendeStemmer: levendeNavne([{ voiceId: resolveVoice("jesper") }]),
     });
@@ -150,7 +154,7 @@ describe("motoren ejer ikke udtale — den validerer den", () => {
   });
 
   it("NEGATIV KONTROL: validatoren virker stadig — en IPA-række navngives", () => {
-    const f = foerFlyvning({
+    const f = foerFlyvningDa({
       replikker: [{ speaker: "aidan" as const, text: "hej" }],
       udtaler: [{ word: "harness", ipa: "ˈhɑːnəs" }],
       stemmer: ["jesper", "camilla"],

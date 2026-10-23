@@ -49,7 +49,7 @@ export async function addMcpServer(server: Omit<McpServerDef, "id">): Promise<Mc
 export async function updateMcpServer(id: string, patch: Partial<McpServerDef>): Promise<McpServerDef> {
   const servers = await listMcpServers();
   const idx = servers.findIndex((s) => s.id === id);
-  if (idx === -1) throw new Error(`MCP server ${id} not found`);
+  if (idx === -1) throw new Error((await serverT())("system.agents.mcpServerNotFound", { id }));
   servers[idx] = { ...servers[idx], ...patch, id };
   await saveMcpServers(servers);
   return servers[idx];
@@ -58,4 +58,9 @@ export async function updateMcpServer(id: string, patch: Partial<McpServerDef>):
 export async function deleteMcpServer(id: string): Promise<void> {
   const servers = await listMcpServers();
   await saveMcpServers(servers.filter((s) => s.id !== id));
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

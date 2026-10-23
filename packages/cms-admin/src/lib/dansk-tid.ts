@@ -30,17 +30,17 @@ export const DK_ZONE = "Europe/Copenhagen";
  *  zone det er i. */
 function tilOejeblik(naar: Date | string): Date {
   if (naar instanceof Date) {
-    if (Number.isNaN(naar.getTime())) throw new Error("dansk-tid: ugyldig Date");
+    if (Number.isNaN(naar.getTime())) throw new Error("dansk-tid: ugyldig Date"); // i18n-ignore: developer guard (programming error)
     return naar;
   }
   if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(naar) && !/(Z|[+-]\d{2}:?\d{2})$/.test(naar)) {
     throw new Error(
-      `dansk-tid: «${naar}» har ingen tidszone. En dato-tid uden zone er et gæt — ` +
-        "send et rigtigt øjeblik (…Z eller ±HH:MM), eller en Date.",
+      `dansk-tid: «${naar}» har ingen tidszone. En dato-tid uden zone er et gæt — ` + // i18n-ignore: developer guard (programming error)
+        "send et rigtigt øjeblik (…Z eller ±HH:MM), eller en Date.", // i18n-ignore: developer guard (programming error)
     );
   }
   const d = new Date(naar);
-  if (Number.isNaN(d.getTime())) throw new Error(`dansk-tid: ugyldigt tidspunkt ${String(naar)}`);
+  if (Number.isNaN(d.getTime())) throw new Error(`dansk-tid: ugyldigt tidspunkt ${String(naar)}`); // i18n-ignore: developer guard (programming error)
   return d;
 }
 

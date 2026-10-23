@@ -4,6 +4,7 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { getSiteRole } from "@/lib/require-role";
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/cms/schema-drift/fix
@@ -15,28 +16,29 @@ import { join } from "node:path";
  * (cms.content.update merges data, which doesn't support field deletion).
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (!role || role === "viewer") {
-    return NextResponse.json({ error: "No write access" }, { status: 403 });
+    return NextResponse.json({ error: t("errCms.shared.noWriteAccess") }, { status: 403 });
   }
 
   try {
     const { collection, fields } = (await req.json()) as { collection?: string; fields?: string[] };
     if (!collection || !fields?.length) {
-      return NextResponse.json({ error: "collection and fields[] required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.shared.collectionFieldsRequired") }, { status: 400 });
     }
 
     const config = await getAdminConfig();
     const colConfig = config.collections.find((c) => c.name === collection);
     if (!colConfig) {
-      return NextResponse.json({ error: `Collection "${collection}" not found` }, { status: 404 });
+      return NextResponse.json({ error: t("errCms.shared.collectionNamedNotFound", { collection }) }, { status: 404 });
     }
 
     // Safety: only allow removing fields that are truly NOT in the schema
     const schemaKeys = new Set(colConfig.fields.map((f) => f.name));
     const safeFields = fields.filter((f) => !schemaKeys.has(f));
     if (safeFields.length === 0) {
-      return NextResponse.json({ error: "All specified fields exist in schema — nothing to remove" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.schemaDrift.nothingToRemove") }, { status: 400 });
     }
 
     // Read content directory directly
@@ -44,10 +46,10 @@ export async function POST(req: NextRequest) {
     const collectionDir = join(contentDir, collection);
     // Path containment — prevent traversal via crafted collection name
     if (!collectionDir.startsWith(contentDir + "/")) {
-      return NextResponse.json({ error: "Invalid collection path" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.shared.invalidCollectionPath") }, { status: 400 });
     }
     if (!existsSync(collectionDir)) {
-      return NextResponse.json({ error: `Content directory not found: ${collection}` }, { status: 404 });
+      return NextResponse.json({ error: t("errCms.schemaDrift.contentDirNotFound", { collection }) }, { status: 404 });
     }
 
     const jsonFiles = readdirSync(collectionDir).filter((f) => f.endsWith(".json"));
@@ -79,7 +81,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Fix failed" },
+      { error: err instanceof Error ? err.message : t("errCms.schemaDrift.fixFailed") },
       { status: 500 },
     );
   }

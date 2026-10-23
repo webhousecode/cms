@@ -7,18 +7,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listWorkflows, createWorkflow } from "@/lib/agent-workflows";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET() {
+  const t = await getServerTSafe();
   try {
     const workflows = await listWorkflows();
     return NextResponse.json(workflows);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to list workflows";
+    const msg = err instanceof Error ? err.message : t("errCms.workflows.listFailed");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers();
   if (denied) return denied;
 
@@ -33,14 +36,14 @@ export async function POST(request: NextRequest) {
 
   if (!body || !body.name || !Array.isArray(body.steps)) {
     return NextResponse.json(
-      { error: "name and steps are required" },
+      { error: t("errCms.workflows.nameStepsRequired") },
       { status: 400 },
     );
   }
 
   // Validate + normalize steps
   const steps = body.steps.map((s, i) => {
-    if (!s.agentId) throw new Error(`Step ${i} is missing agentId`);
+    if (!s.agentId) throw new Error(t("errCms.shared.stepMissingAgent", { index: i }));
     return {
       id: s.id ?? `step-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
       agentId: s.agentId,
@@ -64,7 +67,7 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(workflow);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to create workflow";
+    const msg = err instanceof Error ? err.message : t("errCms.workflows.createFailed");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

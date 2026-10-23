@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readMcpConfig, writeMcpConfig, maskMcpConfig, type McpApiKey } from "@/lib/mcp-config";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET() {
+  const t = await getServerTSafe();
   try {
     const config = await readMcpConfig();
     return NextResponse.json(maskMcpConfig(config));
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Error";
+    const msg = err instanceof Error ? err.message : t("errAdmin.common.error");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("settings.edit"); if (denied) return denied;
   try {
     const body = (await request.json()) as {
@@ -27,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     if (body.action === "add") {
       if (!body.key || !body.label) {
-        return NextResponse.json({ error: "key and label are required" }, { status: 400 });
+        return NextResponse.json({ error: t("errAdmin.mcpConfig.keyLabelRequired") }, { status: 400 });
       }
       const trimmedKey = body.key.trim();
       // Deduplicate — ignore if key already exists
@@ -42,16 +45,16 @@ export async function POST(request: NextRequest) {
 
     if (body.action === "remove") {
       if (!body.id) {
-        return NextResponse.json({ error: "id is required" }, { status: 400 });
+        return NextResponse.json({ error: t("errAdmin.mcpConfig.idRequired") }, { status: 400 });
       }
       config.keys = config.keys.filter((k) => !k.key.startsWith(body.id!));
       await writeMcpConfig(config);
       return NextResponse.json(maskMcpConfig(config));
     }
 
-    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.common.unknownAction") }, { status: 400 });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Error";
+    const msg = err instanceof Error ? err.message : t("errAdmin.common.error");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

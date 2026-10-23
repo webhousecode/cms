@@ -7,6 +7,10 @@
 import Papa from "papaparse";
 import matter from "gray-matter";
 import { randomUUID } from "node:crypto";
+import { getT } from "@/i18n/locale";
+import { getServerTSafe } from "@/i18n/server";
+
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
 
 // ── Types ──
 
@@ -46,12 +50,13 @@ export function parseFile(
   content: string,
   format: ImportFormat,
   fileName?: string,
+  t: Translate = getT("en"),
 ): { records: Record<string, unknown>[]; fields: string[] } {
   switch (format) {
     case "csv":
       return parseCsv(content);
     case "json":
-      return parseJson(content);
+      return parseJson(content, t);
     case "markdown":
       return parseMarkdown(content, fileName);
   }
@@ -67,7 +72,7 @@ function parseCsv(content: string): { records: Record<string, unknown>[]; fields
   return { records: result.data, fields };
 }
 
-function parseJson(content: string): { records: Record<string, unknown>[]; fields: string[] } {
+function parseJson(content: string, t: Translate): { records: Record<string, unknown>[]; fields: string[] } {
   const parsed = JSON.parse(content);
 
   // Array of objects
@@ -84,7 +89,7 @@ function parseJson(content: string): { records: Record<string, unknown>[]; field
   // CMS-style: { data: [...] } or { documents: [...] } or { items: [...] }
   for (const key of ["data", "documents", "items", "records", "entries", "posts"]) {
     if (Array.isArray(parsed[key])) {
-      return parseJson(JSON.stringify(parsed[key]));
+      return parseJson(JSON.stringify(parsed[key]), t);
     }
   }
 
@@ -93,7 +98,7 @@ function parseJson(content: string): { records: Record<string, unknown>[]; field
     return { records: [parsed], fields: Object.keys(parsed) };
   }
 
-  throw new Error("JSON must be an array of objects or an object with a data/items/documents array");
+  throw new Error(t("system.lib.importJsonShape"));
 }
 
 function parseMarkdown(content: string, fileName?: string): { records: Record<string, unknown>[]; fields: string[] } {
@@ -147,6 +152,7 @@ export function applyMappings(
   records: Record<string, unknown>[],
   mappings: FieldMapping[],
   titleField: string,
+  t: Translate = getT("en"),
 ): ImportPreviewRow[] {
   return records.map((sourceData, rowIndex) => {
     const mappedData: Record<string, unknown> = {};
@@ -157,17 +163,17 @@ export function applyMappings(
       if (raw === undefined || raw === null || raw === "") continue;
 
       try {
-        mappedData[mapping.targetField] = applyTransform(raw, mapping.transform ?? "none");
+        mappedData[mapping.targetField] = applyTransform(raw, mapping.transform ?? "none", t);
       } catch (err) {
         errors.push({
           field: mapping.targetField,
-          message: err instanceof Error ? err.message : "Transform failed",
+          message: err instanceof Error ? err.message : t("system.lib.importTransformFailed"),
         });
       }
     }
 
     // Generate slug from title field
-    const titleValue = String(mappedData[titleField] ?? sourceData[titleField] ?? `row-${rowIndex + 1}`);
+    const titleValue = String(mappedData[titleField] ?? sourceData[titleField] ?? `row-${rowIndex + 1}`); // i18n-ignore: slug fallback (data)
     const slug = slugify(titleValue);
 
     return {
@@ -181,7 +187,7 @@ export function applyMappings(
   });
 }
 
-function applyTransform(value: unknown, transform: FieldMapping["transform"]): unknown {
+function applyTransform(value: unknown, transform: FieldMapping["transform"], t: Translate): unknown {
   const str = String(value);
   switch (transform) {
     case "none":
@@ -190,7 +196,7 @@ function applyTransform(value: unknown, transform: FieldMapping["transform"]): u
       return slugify(str);
     case "date-iso": {
       const d = new Date(str);
-      if (isNaN(d.getTime())) throw new Error(`Invalid date: ${str}`);
+      if (isNaN(d.getTime())) throw new Error(t("system.lib.importInvalidDate", { value: str }));
       return d.toISOString();
     }
     case "markdown-to-html":
@@ -200,7 +206,7 @@ function applyTransform(value: unknown, transform: FieldMapping["transform"]): u
       return str.split(",").map((s) => s.trim()).filter(Boolean);
     case "number": {
       const n = Number(str);
-      if (isNaN(n)) throw new Error(`Not a number: ${str}`);
+      if (isNaN(n)) throw new Error(t("system.lib.importNotNumber", { value: str }));
       return n;
     }
     case "boolean":
@@ -296,6 +302,7 @@ export async function executeImport(
   cms: { content: { create: (collection: string, doc: any) => Promise<unknown> } },
   collection: string,
   rows: ImportPreviewRow[],
+  t?: Translate,
 ): Promise<ImportResult> {
   const validRows = rows.filter((r) => r.valid);
   let imported = 0;
@@ -315,7 +322,7 @@ export async function executeImport(
       errors.push({
         row: row.rowIndex,
         field: "_create",
-        message: err instanceof Error ? err.message : "Create failed",
+        message: err instanceof Error ? err.message : (t ?? (await getServerTSafe()))("system.lib.importCreateFailed"),
       });
     }
   }

@@ -107,12 +107,12 @@ export async function fireContentEvent(
     : action === "deleted"
       ? `/admin/content/${collection}`
       : `/admin/content/${collection}/${slug}`;
-  const linkUrl = await deepLink(src, linkPath, `content.${action} → ${title}`);
+  const linkUrl = await deepLink(src, linkPath, `content.${action} → ${title}`); // i18n-ignore: internal goto-link label
 
   const evt: WebhookEvent = {
     event: `content.${action}`,
-    title: `${action.charAt(0).toUpperCase() + action.slice(1)}: ${title}`,
-    message: `${collection}/${slug} was ${action}`,
+    title: `${action.charAt(0).toUpperCase() + action.slice(1)}: ${title}`, // i18n-ignore: webhook payload (F210.4)
+    message: `${collection}/${slug} was ${action}`, // i18n-ignore: webhook payload (F210.4)
     color,
     fields: [
       { name: "Collection", value: collection },
@@ -173,13 +173,13 @@ export async function fireAgentEvent(
       messageParts.push(`**${details.documentTitle}**`);
     }
     if (details?.targetCollection) {
-      messageParts.push(`in \`${details.targetCollection}\``);
+      messageParts.push(`in \`${details.targetCollection}\``); // i18n-ignore: outgoing webhook payload to Discord/Slack (F210.4)
     }
     if (messageParts.length === 0) {
       messageParts.push(`Agent "${agentName}" ${action}`);
     }
     if (details?.imageUrl) {
-      messageParts.push(`\n[🖼 View generated image](${details.imageUrl})`);
+      messageParts.push(`\n[🖼 View generated image](${details.imageUrl})`); // i18n-ignore: outgoing webhook payload to Discord/Slack (F210.4)
     }
   }
 
@@ -202,7 +202,7 @@ export async function fireAgentEvent(
   // Push notification for agent completion/failure
   if (action === "completed" || action === "failed") {
     broadcastPush({
-      title: action === "failed" ? `❌ AI agent failed` : `✅ AI agent done`,
+      title: (await serverT())(action === "failed" ? "system.agents.pushFailed" : "system.agents.pushDone"),
       body: `${agentName}${details?.documentTitle ? ` — ${details.documentTitle}` : ""} (${src.siteName})`,
       topic: "agent_completed",
       url: details?.linkUrl,
@@ -229,12 +229,12 @@ export async function fireDeployEvent(
   if (details?.durationMs !== undefined) fields.push({ name: "Duration", value: `${(details.durationMs / 1000).toFixed(1)}s` });
   if (details?.error) fields.push({ name: "Error", value: details.error });
 
-  const linkUrl = await deepLink(src, "/admin/deploy", `deploy.${action} → ${provider}`);
+  const linkUrl = await deepLink(src, "/admin/deploy", `deploy.${action} → ${provider}`); // i18n-ignore: internal goto-link label
 
   const evt: WebhookEvent = {
     event: `deploy.${action}`,
-    title: `Deploy ${action}: ${provider}`,
-    message: action === "failed" && details?.error ? details.error : `Deploy to ${provider} ${action}`,
+    title: `Deploy ${action}: ${provider}`, // i18n-ignore: webhook payload (F210.4)
+    message: action === "failed" && details?.error ? details.error : `Deploy to ${provider} ${action}`, // i18n-ignore: webhook payload (F210.4)
     color,
     fields,
     siteName: src.siteName,
@@ -247,7 +247,7 @@ export async function fireDeployEvent(
   // Push notification for deploy events
   if (action === "failed" || action === "success") {
     broadcastPush({
-      title: action === "failed" ? `❌ Build failed` : `✅ Build succeeded`,
+      title: (await serverT())(action === "failed" ? "system.agents.pushBuildFailed" : "system.agents.pushBuildSucceeded"),
       body: `${src.siteName} — ${provider}`,
       topic: action === "failed" ? "build_failed" : "build_succeeded",
       url: linkUrl,
@@ -273,12 +273,12 @@ export async function fireMediaEvent(
   if (details?.mimeType) fields.push({ name: "Type", value: details.mimeType });
   if (details?.size !== undefined) fields.push({ name: "Size", value: `${(details.size / 1024).toFixed(1)} KB` });
 
-  const linkUrl = await deepLink(src, "/admin/media", `media.${action} → ${filename}`);
+  const linkUrl = await deepLink(src, "/admin/media", `media.${action} → ${filename}`); // i18n-ignore: internal goto-link label
 
   const evt: WebhookEvent = {
     event: `media.${action}`,
-    title: `Media ${action}: ${filename}`,
-    message: `File ${filename} was ${action}`,
+    title: `Media ${action}: ${filename}`, // i18n-ignore: webhook payload (F210.4)
+    message: `File ${filename} was ${action}`, // i18n-ignore: webhook payload (F210.4)
     color,
     fields,
     siteName: src.siteName,
@@ -287,4 +287,9 @@ export async function fireMediaEvent(
   };
 
   dispatchWebhooks(src.webhooks, evt, src.dataDir).catch(() => {});
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

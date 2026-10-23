@@ -1352,7 +1352,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
   async function downloadFile() {
     try {
       const res = await fetch(file.url);
-      if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
+      if (!res.ok) throw new Error(`fetch failed: ${res.status}`); // i18n-ignore: internal exception, only logged
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -1797,6 +1797,7 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
                   </>
                 ) : (
                   <button data-testid={`media-tag-remove-${tag}`} onClick={() => setConfirmRemove(tag)}
+                    /* i18n-ignore: close glyph entity */
                     style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 0, fontSize: "0.75rem", lineHeight: 1 }}>&times;</button>
                 )}
               </span>
@@ -2160,7 +2161,7 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
         body: JSON.stringify({ language: "da", overwrite: overwriteChoice, files: selectedFiles }),
         signal: ctrl.signal,
       });
-      if (!res.body) throw new Error("No response body");
+      if (!res.body) throw new Error("No response body"); // i18n-ignore: internal exception, never shown
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();

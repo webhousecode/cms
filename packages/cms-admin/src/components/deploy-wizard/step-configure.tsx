@@ -79,6 +79,7 @@ export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }:
           <div style={{ fontSize: "0.68rem", color: appName && !appNameValid ? "var(--destructive)" : "var(--muted-foreground)", marginTop: "0.25rem" }}>
             {appName && !appNameValid
               ? t("misc.deployWizard.configure.appNameInvalid")
+              // i18n-ignore: example hostname
               : t("misc.deployWizard.configure.appNameHint", { host: `${appName || "___"}.fly.dev` })}
           </div>
         </div>

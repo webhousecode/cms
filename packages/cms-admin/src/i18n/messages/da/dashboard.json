@@ -27,6 +27,7 @@
     "visibilityHint": "Søgemaskiner + AI-platforme"
   },
   "siteIntroCard": {
-    "loadingPreview": "Indlæser forhåndsvisning..."
+    "loadingPreview": "Indlæser forhåndsvisning...",
+    "siteFallback": "Site"
   }
 }

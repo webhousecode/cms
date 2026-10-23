@@ -12,6 +12,7 @@
  * Body: { status: "success" | "failure", url?: string, app?: string, duration?: number }
  */
 import { NextRequest, NextResponse } from "next/server";
+import { getServerTSafe } from "@/i18n/server";
 
 // Re-use the same global SSE client pool as chat/sync so events reach all tabs.
 const g = globalThis as Record<string, unknown>;
@@ -32,7 +33,7 @@ export async function GET() {
     start(c) {
       ctrl = c;
       clients.add(ctrl);
-      ctrl.enqueue(new TextEncoder().encode(`: connected\n\n`));
+      ctrl.enqueue(new TextEncoder().encode(`: connected\n\n`)); // i18n-ignore: SSE comment line
     },
     cancel() { clients.delete(ctrl); },
   });
@@ -49,13 +50,14 @@ export async function GET() {
 
 /** POST — receive deploy-done webhook from GitHub Actions */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const secret = process.env.DEPLOY_NOTIFY_SECRET || process.env.CMS_CRON_SECRET;
 
   if (secret) {
     const auth = request.headers.get("authorization") ?? "";
     const token = auth.startsWith("Bearer ") ? auth.slice(7) : auth;
     if (token !== secret) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: t("errAdmin.common.unauthorized") }, { status: 401 });
     }
   }
 

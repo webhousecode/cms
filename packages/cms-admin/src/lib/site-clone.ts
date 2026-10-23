@@ -60,7 +60,7 @@ export async function cloneSite(options: CloneOptions): Promise<CloneResult> {
   // ── 1. Find source site ──
   const registry = await loadRegistry();
   if (!registry) {
-    throw new Error("No registry — single-site mode does not support cloning");
+    throw new Error((await serverT())("system.sites.cloneNoRegistry"));
   }
 
   let sourceOrg = null;
@@ -75,11 +75,11 @@ export async function cloneSite(options: CloneOptions): Promise<CloneResult> {
   }
 
   if (!sourceSite || !sourceOrg) {
-    throw new Error(`Site "${sourceSiteId}" not found`);
+    throw new Error((await serverT())("system.sites.siteNotFound", { id: sourceSiteId }));
   }
 
   if (sourceSite.adapter !== "filesystem") {
-    throw new Error("Only filesystem-backed sites can be cloned");
+    throw new Error((await serverT())("system.sites.cloneFilesystemOnly"));
   }
 
   const targetOrgId = options.targetOrgId ?? sourceOrg.id;
@@ -87,7 +87,7 @@ export async function cloneSite(options: CloneOptions): Promise<CloneResult> {
   // ── 2. Determine source + target paths ──
   const sourceConfigPath = path.resolve(sourceSite.configPath);
   if (!existsSync(sourceConfigPath)) {
-    throw new Error(`Source config not found: ${sourceConfigPath}`);
+    throw new Error((await serverT())("system.sites.sourceConfigMissing", { path: sourceConfigPath }));
   }
   const sourceDir = path.dirname(sourceConfigPath);
 
@@ -96,13 +96,13 @@ export async function cloneSite(options: CloneOptions): Promise<CloneResult> {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    || `cloned-${Date.now()}`;
+    || `cloned-${Date.now()}`; // i18n-ignore: generated id
   const newSiteId = options.newSiteId ?? slug;
 
   // Check for duplicate ID across all orgs
   for (const org of registry.orgs) {
     if (org.sites.some((s) => s.id === newSiteId)) {
-      throw new Error(`Site ID "${newSiteId}" already exists`);
+      throw new Error((await serverT())("system.sites.siteIdExists", { id: newSiteId }));
     }
   }
 
@@ -111,7 +111,7 @@ export async function cloneSite(options: CloneOptions): Promise<CloneResult> {
   const targetDir = path.join(sourceParent, slug);
 
   if (existsSync(targetDir)) {
-    throw new Error(`Target directory already exists: ${targetDir}`);
+    throw new Error((await serverT())("system.sites.targetDirExists", { path: targetDir }));
   }
 
   // ── 3. Copy directory tree ──
@@ -230,4 +230,9 @@ export async function cloneSite(options: CloneOptions): Promise<CloneResult> {
     filesCount,
     totalSizeBytes,
   };
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

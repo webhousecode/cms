@@ -22,6 +22,7 @@ import { readUserState } from "@/lib/user-state";
 import type { Metadata } from "next";
 import { resolveMembershipRole } from "@/lib/require-role";
 import { brandForRequest } from "@/lib/brand";
+import { getServerT } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   // F210.3 — with no site to name the tab after, it carries the brand's name.
@@ -158,7 +159,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       if (role === "admin") {
         return <ConnectGitHubGate />;
       }
-      return <ConnectGitHubGate message="An administrator needs to connect GitHub for this site before you can access it." showButton={false} />;
+      const t = await getServerT();
+      return <ConnectGitHubGate message={t("pages.workspaceLayout.githubAdminNeeded")} showButton={false} />;
     }
     // GitHub API error (rate limit, bad token, etc.) — show recoverable error
     if (message.includes("GitHub:")) {
@@ -169,7 +171,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     // The repair panel diagnoses with Haiku and offers a one-click auto-fix.
     if (message.includes("config validation failed")) {
       const nameMatch = /^Site "([^"]+)"/.exec(message);
-      const siteName = nameMatch?.[1] ?? "Unknown site";
+      const siteName = nameMatch?.[1] ?? (await getServerT())("pages.workspaceLayout.unknownSite");
       const rawErrors = message.slice(message.indexOf(":") + 1).trim();
       return (
         <HeaderDataProvider initialIsAdminEmpty={adminEmpty}>

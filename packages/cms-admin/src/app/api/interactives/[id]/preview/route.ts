@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
+import { getServerTSafe } from "@/i18n/server";
 
 /* ─── GET: serve HTML for iframe preview ─────────────────────── */
 export async function GET(
@@ -10,7 +11,7 @@ export async function GET(
     const { id } = await params;
     const adapter = await getMediaAdapter();
     const result = await adapter.getInteractive(id);
-    if (!result) return new NextResponse("Not found", { status: 404 });
+    if (!result) return new NextResponse((await getServerTSafe())("errApi.common.notFound"), { status: 404 });
 
     return new NextResponse(result.content, {
       status: 200,
@@ -21,6 +22,6 @@ export async function GET(
     });
   } catch (err) {
     console.error("[interactives] preview error:", err);
-    return new NextResponse(`Internal error: ${(err as Error).message}`, { status: 500 });
+    return new NextResponse((await getServerTSafe())("errApi.interactives.internalErrorDetail", { error: (err as Error).message }), { status: 500 });
   }
 }

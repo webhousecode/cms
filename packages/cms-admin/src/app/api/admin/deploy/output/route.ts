@@ -16,6 +16,7 @@ import { listDir, getStats, resolveDeployRoot } from "@/lib/deploy/output-browse
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { getActiveSiteEntry, getActiveSitePaths } from "@/lib/site-paths";
+import { getServerTSafe } from "@/i18n/server";
 
 async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteId: string } | null> {
   const registry = await loadRegistry();
@@ -67,8 +68,9 @@ async function detectSiteHint(): Promise<"icd-only" | "static" | "ssr-ephemeral"
 }
 
 export async function GET(req: NextRequest): Promise<Response> {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
-  if (!role) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!role) return NextResponse.json({ error: t("errAdmin.common.unauthorizedLower") }, { status: 401 });
 
   const rel = req.nextUrl.searchParams.get("path") ?? "";
   const overrideSite = req.nextUrl.searchParams.get("site");
@@ -99,7 +101,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   if (overrideSite) {
     const ctx = await resolveOrgForSite(overrideSite);
-    if (!ctx) return NextResponse.json({ error: `site not found: ${overrideSite}` }, { status: 404 });
+    if (!ctx) return NextResponse.json({ error: t("errAdmin.deploy.siteNotFoundLower", { site: overrideSite }) }, { status: 404 });
     return withSiteContext(ctx, run);
   }
   return run();

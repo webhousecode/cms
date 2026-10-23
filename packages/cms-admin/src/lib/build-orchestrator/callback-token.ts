@@ -24,8 +24,9 @@ function getSecret(): string {
     "";
   if (!secret) {
     throw new Error(
+      // i18n-ignore: operator/server-configuration invariant naming env vars, for the host operator, not an editor
       "F144: CMS_BUILDER_CALLBACK_SECRET (or NEXTAUTH_SECRET in dev) " +
-        "must be set to issue builder callback tokens.",
+        "must be set to issue builder callback tokens.", // i18n-ignore: continuation of the operator invariant above
     );
   }
   return secret;

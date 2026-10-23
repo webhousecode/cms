@@ -3,13 +3,13 @@
     "copyToClipboard": "Kopiér til udklipsholder"
   },
   "bidPanel": {
-    "loadError": "Kunne ikke hente status for Broberg ID",
-    "description": "Log ind med din Broberg ID-konto — det samme login på tværs af broberg.ai-tjenester.",
+    "loadError": "Kunne ikke hente status for BID",
+    "description": "Log ind med din BID-konto — det samme login på tværs af broberg.ai-tjenester.",
     "connected": "FORBUNDET",
     "notConnected": "IKKE FORBUNDET",
-    "justLinked": "Broberg ID er forbundet. Du kan nu logge ind med det.",
-    "opening": "Åbner Broberg ID…",
-    "connect": "Forbind Broberg ID"
+    "justLinked": "BID er forbundet. Du kan nu logge ind med det.",
+    "opening": "Åbner BID…",
+    "connect": "Forbind BID"
   },
   "buildSettings": {
     "noActiveSite": "Intet aktivt site valgt.",
@@ -115,7 +115,8 @@
     "empty": "Ingen adgangsnøgler endnu. Tilføj en for at logge ind uden adgangskode.",
     "addedLastUsed": "Tilføjet {added} · Sidst brugt {lastUsed}",
     "waiting": "Venter på enhed…",
-    "add": "+ Tilføj adgangsnøgle"
+    "add": "+ Tilføj adgangsnøgle",
+    "defaultName": "Adgangsnøgle"
   },
   "totp": {
     "loadError": "Kunne ikke hente status",

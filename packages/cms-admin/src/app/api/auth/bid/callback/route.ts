@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
   if ("error" in match) {
     try {
       const { logLoginFailed } = await import("@/lib/event-log");
-      await logLoginFailed(claims.email ?? `bid:${claims.sub}`, `bid_${match.error}`);
+      await logLoginFailed(claims.email ?? `bid:${claims.sub}`, `bid_${match.error}`); // i18n-ignore: login-audit identifier, not shown
     } catch { /* non-fatal */ }
     return fail(match.error);
   }
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
     await logLogin({ userId: user.id, email: user.email, name: user.name, ipHash: hashIp(ip) }, "bid");
   } catch { /* non-fatal */ }
 
-  const response = redirectTo(flow.linkUserId ? `${flow.returnTo}${flow.returnTo.includes("?") ? "&" : "?"}bid=linked` : flow.returnTo);
+  const response = redirectTo(flow.linkUserId ? `${flow.returnTo}${flow.returnTo.includes("?") ? "&" : "?"}bid=linked` : flow.returnTo); // i18n-ignore: redirect URL query flag
   response.cookies.set(BID_FLOW_COOKIE, "", { path: "/api/auth/bid", maxAge: 0 });
   response.cookies.set(COOKIE_NAME, await createToken(user), {
     httpOnly: true,

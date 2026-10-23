@@ -3,6 +3,7 @@ import { getSessionWithSiteRole } from "@/lib/require-role";
 import { peekQuick, storeQuick } from "@/lib/chat/quick-cache";
 import { scheduleLazyRegen } from "@/lib/chat/quick-prewarm";
 import { getActiveSiteEntry } from "@/lib/site-paths";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * F158 — cached quick-action answers.
@@ -13,10 +14,11 @@ import { getActiveSiteEntry } from "@/lib/site-paths";
  */
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ key: string }> }) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
   const { key } = await params;
-  const result = await peekQuick(key);
+  const result = await peekQuick(key, t);
   // Regen when we have nothing OR when what we have is stale.
   //
   // `!result.cached` alone was correct until stale answers started being served:
@@ -32,9 +34,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ key
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ key: string }> }) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
-  if (session.siteRole === "viewer") return NextResponse.json({ error: "Read-only" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
+  if (session.siteRole === "viewer") return NextResponse.json({ error: t("errCms.chat.readOnly") }, { status: 403 });
   const { key } = await params;
   const { markdown } = (await req.json().catch(() => ({}))) as { markdown?: string };
   await storeQuick(key, typeof markdown === "string" ? markdown : "");

@@ -12,6 +12,7 @@ import { getSiteRole } from "@/lib/require-role";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import { readFile } from "@/lib/deploy/output-browser";
+import { getServerTSafe } from "@/i18n/server";
 
 async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteId: string } | null> {
   const registry = await loadRegistry();
@@ -22,18 +23,19 @@ async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteI
 }
 
 export async function GET(req: NextRequest): Promise<Response> {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
-  if (!role) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!role) return NextResponse.json({ error: t("errAdmin.common.unauthorizedLower") }, { status: 401 });
 
   const rel = req.nextUrl.searchParams.get("path");
-  if (!rel) return NextResponse.json({ error: "path query param required" }, { status: 400 });
+  if (!rel) return NextResponse.json({ error: t("errAdmin.deploy.pathParamRequired") }, { status: 400 });
 
   const overrideSite = req.nextUrl.searchParams.get("site");
 
   const run = async (): Promise<Response> => {
     try {
       const result = await readFile(rel);
-      if (!result) return NextResponse.json({ error: "file not found" }, { status: 404 });
+      if (!result) return NextResponse.json({ error: t("errAdmin.deploy.fileNotFound") }, { status: 404 });
       return new Response(new Uint8Array(result.buffer), {
         headers: {
           "Content-Type": result.mime,
@@ -51,7 +53,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   if (overrideSite) {
     const ctx = await resolveOrgForSite(overrideSite);
-    if (!ctx) return NextResponse.json({ error: `site not found: ${overrideSite}` }, { status: 404 });
+    if (!ctx) return NextResponse.json({ error: t("errAdmin.deploy.siteNotFoundLower", { site: overrideSite }) }, { status: 404 });
     return withSiteContext(ctx, run);
   }
   return run();

@@ -1,3 +1,4 @@
+/* i18n-ignore-file: tool descriptions, parameter descriptions, prompts and tool RESULT strings returned to the model; the chat UI never renders a tool result (ToolCallCard ignores `result`, its labels live in chat.toolCallCard) */
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getAI, mistralModel } from "@/lib/ai/client";
 import { readSiteConfig } from "@/lib/site-config";

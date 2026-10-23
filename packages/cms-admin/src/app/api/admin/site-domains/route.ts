@@ -17,15 +17,17 @@ import type { NextRequest } from "next/server";
 import { readSiteConfig, writeSiteConfig } from "@/lib/site-config";
 import { requirePermission } from "@/lib/permissions";
 import { normalizeDomainList, siteOriginsWithSiblings } from "@/lib/cors-origin";
+import { getServerTSafe } from "@/i18n/server";
 
 /** Where each non-explicit origin comes from, so the UI can say so. */
 async function derived(): Promise<{ origin: string; source: string }[]> {
+  const t = await getServerTSafe();
   const cfg = await readSiteConfig();
   const explicit = new Set(cfg.siteDomains ?? []);
   const labels: Record<string, string> = {
-    previewSiteUrl: "Preview-adresse",
-    deployProductionUrl: "Udrulnings-adresse",
-    deployCustomDomain: "Eget domæne",
+    previewSiteUrl: t("errAdmin.siteDomains.previewUrl"),
+    deployProductionUrl: t("errAdmin.siteDomains.productionUrl"),
+    deployCustomDomain: t("errAdmin.siteDomains.customDomain"),
   };
   const out: { origin: string; source: string }[] = [];
   for (const [field, label] of Object.entries(labels)) {
@@ -53,6 +55,7 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("site.domains");
   if (denied) return denied;
 
@@ -60,13 +63,13 @@ export async function PUT(request: NextRequest) {
   try {
     body = (await request.json()) as { domains?: unknown };
   } catch {
-    return NextResponse.json({ error: "Ugyldig forespørgsel" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.siteDomains.invalidRequest") }, { status: 400 });
   }
   if (!Array.isArray(body.domains) || body.domains.some((d) => typeof d !== "string")) {
-    return NextResponse.json({ error: "domains skal være en liste af tekster" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.siteDomains.domainsMustBeList") }, { status: 400 });
   }
 
-  const result = normalizeDomainList(body.domains as string[]);
+  const result = normalizeDomainList(body.domains as string[], t);
   if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }

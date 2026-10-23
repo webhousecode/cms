@@ -3,17 +3,19 @@ import { rejectQueueItem, getQueueItem } from "@/lib/curation";
 import { getAgent, updateAgent } from "@/lib/agents";
 import { denyViewers } from "@/lib/require-role";
 import { appendFeedback } from "@/lib/agent-feedback";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const { id } = await params;
   try {
     const { feedback } = (await request.json()) as { feedback?: string };
     if (!feedback) {
-      return NextResponse.json({ error: "feedback required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.curation.feedbackRequired") }, { status: 400 });
     }
     const queueItem = await getQueueItem(id);
     const item = await rejectQueueItem(id, feedback);
@@ -36,7 +38,7 @@ export async function POST(
 
     return NextResponse.json(item);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to reject";
+    const msg = err instanceof Error ? err.message : t("errCms.curation.rejectFailed");
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

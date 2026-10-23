@@ -28,7 +28,8 @@
     "copy": "Kopiér",
     "copied": "Kopieret",
     "insert": "Indsæt",
-    "inputPlaceholder": "Bed AI om hjælp til indholdet… (Enter for at sende)"
+    "inputPlaceholder": "Bed AI om hjælp til indholdet… (Enter for at sende)",
+    "aiError": "AI-fejl"
   },
   "interactiveAiPanel": {
     "title": "AI-redigering",
@@ -347,7 +348,8 @@
     },
     "block": {
       "removeConfirm": "Fjern blok?",
-      "remove": "Fjern blok"
+      "remove": "Fjern blok",
+      "doubleClickToChange": "Dobbeltklik for at skifte blok"
     },
     "video": {
       "label": "Video",
@@ -375,7 +377,8 @@
       "insertTitle": "Indsæt interaktivt element",
       "search": "Søg i interaktive elementer…",
       "noneMatching": "Ingen interaktive elementer matcher \"{query}\"",
-      "none": "Ingen interaktive elementer fundet. Opret først et under Interaktive elementer."
+      "none": "Ingen interaktive elementer fundet. Opret først et under Interaktive elementer.",
+      "preview": "Forhåndsvisning af interaktivt element"
     },
     "map": {
       "label": "Kort",
@@ -399,7 +402,8 @@
       "info": "Info",
       "warning": "Advarsel",
       "warn": "Advarsel",
-      "tip": "Tip"
+      "tip": "Tip",
+      "notePlaceholder": "Skriv din note her…"
     },
     "svg": {
       "prefix": "SVG:",
@@ -426,7 +430,9 @@
       "loading": "Indlæser blokke…",
       "noneCreate": "Ingen blokke fundet. Opret først en under {place}.",
       "contentBlocks": "Indholdsblokke",
-      "noneMatch": "Ingen blokke matcher din søgning."
+      "noneMatch": "Ingen blokke matcher din søgning.",
+      "replaceTitle": "Erstat indholdsblok",
+      "insertTitle": "Indsæt indholdsblok"
     },
     "mediaBrowser": {
       "selectImage": "Vælg billede",
@@ -443,7 +449,8 @@
       "rejectAll": "Afvis alle",
       "acceptAll": "Acceptér alle",
       "reject": "✕ Afvis",
-      "accept": "✓ Acceptér"
+      "accept": "✓ Acceptér",
+      "noErrors": "Ingen fejl fundet ({language})"
     },
     "ctx": {
       "floatLeft": "Flyd til venstre",
@@ -553,5 +560,12 @@
     "moveLeft": "Flyt til venstre",
     "moveRight": "Flyt til højre",
     "remove": "Fjern"
+  },
+  "modeToggle": {
+    "switchToJson": "Skift til JSON",
+    "switchToUi": "Skift til UI"
+  },
+  "tagsInput": {
+    "placeholder": "Tilføj tags…"
   }
 }

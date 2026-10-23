@@ -48,7 +48,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
     ...new Set([...baseNames,
     ...builtinNames.filter((n) => !baseNames.includes(n) && configNames.includes(n)),
   ])];
-  const storageKey = `cms-blocks-expanded:${field.name}`;
+  const storageKey = `cms-blocks-expanded:${field.name}`; // i18n-ignore: localStorage key
   const controlled = expandedState !== undefined;
   const [internalExpanded, setInternalExpanded] = useState<Record<number, boolean>>({});
   const expanded = controlled ? expandedState : internalExpanded;

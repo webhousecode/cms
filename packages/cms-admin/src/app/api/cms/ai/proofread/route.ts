@@ -6,20 +6,22 @@ import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("ai"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
-    return NextResponse.json({ error: "Anthropic API key not configured — add it in Settings → AI" }, { status: 503 });
+    return NextResponse.json({ error: t("errCms.shared.aiKeyMissing") }, { status: 503 });
   }
   const ai = await getAI();
 
   try {
     const { text, locale: bodyLocale } = (await request.json()) as { text?: string; locale?: string };
     if (!text?.trim()) {
-      return NextResponse.json({ error: "text required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.ai.textRequired") }, { status: 400 });
     }
 
     const siteConfig = await readSiteConfig();
@@ -65,7 +67,7 @@ Rules:
       // stays as belt-and-braces for paths that do honor it.
       system: proofreaderPrompt,
       messages: [
-        { role: "user", content: `${proofreaderPrompt}\n\n---\nProofread this text:\n\n${text}` },
+        { role: "user", content: `${proofreaderPrompt}\n\n---\nProofread this text:\n\n${text}` }, // i18n-ignore: model prompt
       ],
       purpose: "content.proofread",
     });
@@ -88,7 +90,7 @@ Rules:
     } catch {
       // No usable JSON in the response — fail cleanly (no raw parser message).
       return NextResponse.json(
-        { error: "The proofreader returned an unreadable response — please try again." },
+        { error: t("errCms.ai.proofreadUnreadable") },
         { status: 502 },
       );
     }
@@ -120,7 +122,7 @@ Rules:
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Proofreading failed" },
+      { error: err instanceof Error ? err.message : t("errCms.ai.proofreadFailed") },
       { status: 500 },
     );
   }

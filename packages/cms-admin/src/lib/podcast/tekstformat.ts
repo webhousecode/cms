@@ -24,6 +24,11 @@
  * tres linjer — så leder man selv.
  */
 import { VAERTER, type Replik, type Vaert } from "./manuscript";
+import { getT } from "@/i18n/locale";
+
+/** Translator; defaults to English when the caller has no request language. */
+type T = ReturnType<typeof getT>;
+const EN: T = getT("en");
 
 /** Mindst dette antal replikker, som parseManuskript kræver af modellens svar.
  *  Samme tal, samme grund: et afsnit er en samtale, ikke et oplæg. */
@@ -46,19 +51,20 @@ export type LaesSvar =
 export function tilTekst(
   replikker: Replik[],
   hoved?: { titel?: string; nummer?: number; saeson?: number },
+  t: T = EN,
 ): string {
   const ud: string[] = [];
   if (hoved?.titel) ud.push(`# ${hoved.titel}`);
   const nr = [
-    hoved?.nummer !== undefined ? `afsnit ${hoved.nummer}` : null,
-    hoved?.saeson !== undefined ? `sæson ${hoved.saeson}` : null,
-    `${replikker.length} replikker`,
+    hoved?.nummer !== undefined ? t("libText.podcastTextFormat.episode", { n: hoved.nummer }) : null,
+    hoved?.saeson !== undefined ? t("libText.podcastTextFormat.season", { n: hoved.saeson }) : null,
+    t("libText.podcastTextFormat.lineCount", { count: replikker.length }),
   ].filter(Boolean);
   ud.push(`# ${nr.join(" · ")}`);
   ud.push("#");
-  ud.push("# FORMAT: «AIDAN:» eller «AIRINA:» på sin egen linje, replikken under.");
-  ud.push("# Tomme linjer og linjer der starter med # ignoreres.");
-  ud.push("# Skift ikke navnene — kun de to værter findes.");
+  ud.push(`# ${t("libText.podcastTextFormat.headerFormat")}`);
+  ud.push(`# ${t("libText.podcastTextFormat.headerIgnored")}`);
+  ud.push(`# ${t("libText.podcastTextFormat.headerNames")}`);
   ud.push("");
   for (const r of replikker) {
     ud.push(`${TIL_FIL[r.speaker]}:`);
@@ -75,7 +81,7 @@ export function tilTekst(
  * høflighed: en samlet «ugyldigt format» tvinger den næste til at lede efter
  * fejlen i sin egen fil.
  */
-export function fraTekst(raa: string): LaesSvar {
+export function fraTekst(raa: string, t: T = EN): LaesSvar {
   // \r\n fra Windows og fra en tekst kopieret ud af en mail. Fjernes her frem
   // for at blive en del af replikkens tekst — et usynligt tegn i lyden er
   // netop den slags der ikke opdages.
@@ -92,7 +98,7 @@ export function fraTekst(raa: string): LaesSvar {
       return {
         ok: false,
         linje: aktuel.linje,
-        grund: `linje ${aktuel.linje}: «${TIL_FIL[aktuel.vaert]}:» har ingen tekst under sig`,
+        grund: t("libText.podcastTextFormat.speakerNoText", { line: aktuel.linje, speaker: TIL_FIL[aktuel.vaert] }),
       };
     }
     replikker.push({ speaker: aktuel.vaert, text: tekst });
@@ -126,9 +132,11 @@ export function fraTekst(raa: string): LaesSvar {
         return {
           ok: false,
           linje: nr,
-          grund:
-            `linje ${nr}: «${taler[1]}» er ikke en af værterne. ` +
-            `Kun ${VAERTER.map((v) => TIL_FIL[v]).join(" og ")} findes.`,
+          grund: t("libText.podcastTextFormat.notAHost", {
+            line: nr,
+            speaker: taler[1]!,
+            hosts: VAERTER.map((v) => TIL_FIL[v]).join(t("libText.podcastCommon.and")),
+          }),
         };
       }
       aktuel = { vaert: navn as Vaert, linje: nr, dele: [] };
@@ -140,9 +148,7 @@ export function fraTekst(raa: string): LaesSvar {
       return {
         ok: false,
         linje: nr,
-        grund:
-          `linje ${nr}: der står tekst før den første taler. ` +
-          `Hver replik skal begynde med «AIDAN:» eller «AIRINA:» på sin egen linje.`,
+        grund: t("libText.podcastTextFormat.textBeforeSpeaker", { line: nr }),
       };
     }
     aktuel.dele.push(raw.trimEnd());
@@ -152,13 +158,13 @@ export function fraTekst(raa: string): LaesSvar {
   if (fejl) return fejl;
 
   if (replikker.length === 0) {
-    return { ok: false, grund: "filen indeholder ingen replikker" };
+    return { ok: false, grund: t("libText.podcastTextFormat.noLines") };
   }
   if (replikker.length < MINDST) {
     return {
       ok: false,
       linje: sidsteTaler,
-      grund: `kun ${replikker.length} replik(ker) — et afsnit er en samtale, ikke et oplæg (mindst ${MINDST})`,
+      grund: t("libText.podcastCommon.tooFewLines", { count: replikker.length, min: MINDST }),
     };
   }
   return { ok: true, replikker };

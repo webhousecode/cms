@@ -30,7 +30,7 @@ export function renderFormNotification(input: {
   const { brand } = input;
   return bygMail(
     {
-      emne: input.lang === "da" ? `Ny henvendelse: ${input.formLabel}` : `New enquiry: ${input.formLabel}`,
+      emne: input.lang === "da" ? `Ny henvendelse: ${input.formLabel}` : `New enquiry: ${input.formLabel}`, // i18n-ignore: e-mail body (F210.4)
       preheader: input.fodnote,
       etiket: input.etiket,
       overskrift: input.formLabel,
@@ -105,16 +105,16 @@ export function renderInvite(input: {
   const { brand } = input;
   return bygMail(
     {
-      emne: `You've been invited to ${input.siteName}`,
-      preheader: `${input.inviterName} has invited you to ${input.siteName}.`,
-      etiket: "Invitation",
-      overskrift: `You've been invited to ${input.siteName}`,
+      emne: `You've been invited to ${input.siteName}`, // i18n-ignore: e-mail body (F210.4)
+      preheader: `${input.inviterName} has invited you to ${input.siteName}.`, // i18n-ignore: e-mail body (F210.4)
+      etiket: "Invitation", // i18n-ignore: e-mail body (F210.4)
+      overskrift: `You've been invited to ${input.siteName}`, // i18n-ignore: e-mail body (F210.4)
       fremhaevet: "invited",
       broedtekst: [
-        `${input.inviterName} has invited you to join ${input.siteName} as ${input.role}.`,
-        `This invitation expires in ${input.expiresInDays} days.`,
+        `${input.inviterName} has invited you to join ${input.siteName} as ${input.role}.`, // i18n-ignore: e-mail body (F210.4)
+        `This invitation expires in ${input.expiresInDays} days.`, // i18n-ignore: e-mail body (F210.4)
       ],
-      knap: { tekst: "Accept invitation", url: input.inviteUrl },
+      knap: { tekst: "Accept invitation", url: input.inviteUrl }, // i18n-ignore: e-mail body (F210.4)
       fodlinjer: [brand.navn],
       lang: "en",
     },

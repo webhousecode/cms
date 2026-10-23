@@ -30,7 +30,7 @@ export function safeUploadPath(segments: string[], baseDir?: string): string {
     .filter(Boolean);
   const resolved = path.join(dir, ...clean);
   if (!resolved.startsWith(dir + path.sep) && resolved !== dir) {
-    throw new Error("Path traversal detected");
+    throw new Error("Path traversal detected"); // i18n-ignore: internal guard; uploads route matches on this exact text
   }
   return resolved;
 }

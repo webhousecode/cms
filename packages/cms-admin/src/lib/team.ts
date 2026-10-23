@@ -86,12 +86,12 @@ export async function addTeamMember(userId: string, role: UserRole, addedBy?: st
 export async function updateTeamMemberRole(userId: string, role: UserRole): Promise<TeamMember> {
   const members = await getTeamMembers();
   const member = members.find((m) => m.userId === userId);
-  if (!member) throw new Error("Member not found");
+  if (!member) throw new Error((await serverT())("system.lib.memberNotFound"));
 
   // Prevent removing the last admin
   if (member.role === "admin" && role !== "admin") {
     const adminCount = members.filter((m) => m.role === "admin").length;
-    if (adminCount <= 1) throw new Error("Cannot demote the last admin");
+    if (adminCount <= 1) throw new Error((await serverT())("system.lib.lastAdminDemote"));
   }
 
   member.role = role;
@@ -102,12 +102,12 @@ export async function updateTeamMemberRole(userId: string, role: UserRole): Prom
 export async function removeTeamMember(userId: string): Promise<void> {
   const members = await getTeamMembers();
   const idx = members.findIndex((m) => m.userId === userId);
-  if (idx === -1) throw new Error("Member not found");
+  if (idx === -1) throw new Error((await serverT())("system.lib.memberNotFound"));
 
   // Prevent removing the last admin
   if (members[idx]!.role === "admin") {
     const adminCount = members.filter((m) => m.role === "admin").length;
-    if (adminCount <= 1) throw new Error("Cannot remove the last admin");
+    if (adminCount <= 1) throw new Error((await serverT())("system.lib.lastAdminRemove"));
   }
 
   members.splice(idx, 1);
@@ -128,4 +128,9 @@ export async function getTeamMember(userId: string): Promise<TeamMember | null> 
  */
 export async function isTeamMember(userId: string): Promise<TeamMember | null> {
   return getTeamMember(userId);
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

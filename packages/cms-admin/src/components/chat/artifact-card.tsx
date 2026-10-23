@@ -29,7 +29,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
     setSaveError(null);
     try {
       const blob = new Blob([html], { type: "text/html" });
-      const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}.html`;
+      const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}.html`; // i18n-ignore: file name
       const formData = new FormData();
       formData.append("file", blob, filename);
       const res = await fetch("/api/interactives", { method: "POST", body: formData });
@@ -48,7 +48,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
 
   const handleDownload = useCallback(() => {
     const blob = new Blob([html], { type: "text/html" });
-    const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}.html`;
+    const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60)}.html`; // i18n-ignore: file name
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

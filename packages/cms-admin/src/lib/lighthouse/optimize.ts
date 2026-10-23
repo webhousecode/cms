@@ -8,6 +8,7 @@
 import { getAdminCms, getAdminConfig } from "../cms";
 import { readSiteConfig, writeSiteConfig } from "../site-config";
 import type { LighthouseResult, LighthouseOpportunity, LighthouseDiagnostic } from "./types";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface OptimizeFix {
   id: string;
@@ -30,26 +31,27 @@ const AUTO_FIXES: Record<string, (ctx: FixContext) => Promise<OptimizeFix>> = {
   "html-has-lang": fixMissingHtmlLang,
   "landmark-one-main": fixMissingMainLandmark,
   "image-alt": fixMissingImageAlt,
-  "link-name": manualFix("link-name", "Links do not have discernible name", "Add descriptive text to all <a> links in your content. Avoid empty links or links with only an icon."),
-  "color-contrast": manualFix("color-contrast", "Background/foreground contrast ratio", "Adjust your site's CSS to ensure text has at least 4.5:1 contrast ratio against its background. Use a contrast checker tool."),
-  "render-blocking-resources": manualFix("render-blocking-resources", "Render-blocking resources", "Defer non-critical CSS/JS. For static sites, inline critical CSS. For Next.js, the framework handles this automatically."),
-  "unused-javascript": manualFix("unused-javascript", "Reduce unused JavaScript", "Remove unused JS libraries or use dynamic imports. For Next.js, enable tree-shaking and code splitting."),
-  "uses-responsive-images": manualFix("uses-responsive-images", "Properly size images", "Use the CMS image processing pipeline (F44) to generate responsive variants. Add width/height attributes to all images."),
-  "offscreen-images": manualFix("offscreen-images", "Defer offscreen images", "Add loading=\"lazy\" to images below the fold. The CMS build pipeline does this automatically for static sites."),
-  "largest-contentful-paint": manualFix("largest-contentful-paint", "Largest Contentful Paint", "Optimize your largest visible element. Common fixes: compress hero image, use WebP, preload LCP image, reduce server response time."),
-  "cumulative-layout-shift": manualFix("cumulative-layout-shift", "Cumulative Layout Shift", "Add explicit width/height to images and embeds. Avoid inserting content above existing content. Use font-display: swap."),
-  "first-contentful-paint": manualFix("first-contentful-paint", "First Contentful Paint", "Reduce server response time, eliminate render-blocking resources, preload critical assets."),
-  "server-response-time": manualFix("server-response-time", "Server response time (TTFB)", "Use a CDN, enable caching, optimize server-side rendering. For Fly.io, ensure the machine is in the closest region."),
-  "dom-size": manualFix("dom-size", "DOM size too large", "Simplify your page structure. Lazy-load complex sections. Paginate long lists."),
-  "redirects": manualFix("redirects", "Avoid multiple page redirects", "Update links to point directly to the final URL. Remove unnecessary redirect chains."),
+  "link-name": manualFix("link-name", "linkName"),
+  "color-contrast": manualFix("color-contrast", "colorContrast"),
+  "render-blocking-resources": manualFix("render-blocking-resources", "renderBlockingResources"),
+  "unused-javascript": manualFix("unused-javascript", "unusedJavascript"),
+  "uses-responsive-images": manualFix("uses-responsive-images", "usesResponsiveImages"),
+  "offscreen-images": manualFix("offscreen-images", "offscreenImages"),
+  "largest-contentful-paint": manualFix("largest-contentful-paint", "largestContentfulPaint"),
+  "cumulative-layout-shift": manualFix("cumulative-layout-shift", "cumulativeLayoutShift"),
+  "first-contentful-paint": manualFix("first-contentful-paint", "firstContentfulPaint"),
+  "server-response-time": manualFix("server-response-time", "serverResponseTime"),
+  "dom-size": manualFix("dom-size", "domSize"),
+  "redirects": manualFix("redirects", "redirects"),
   "font-display": fixFontDisplay,
-  "total-byte-weight": manualFix("total-byte-weight", "Total page size too large", "Compress images, remove unused CSS/JS, enable gzip/brotli compression on your server."),
+  "total-byte-weight": manualFix("total-byte-weight", "totalByteWeight"),
 };
 
 interface FixContext {
   cms: Awaited<ReturnType<typeof getAdminCms>>;
   config: Awaited<ReturnType<typeof getAdminConfig>>;
   siteConfig: Awaited<ReturnType<typeof readSiteConfig>>;
+  t: Awaited<ReturnType<typeof getServerTSafe>>;
 }
 
 /**
@@ -60,7 +62,8 @@ export async function optimizeLighthouse(result: LighthouseResult): Promise<Opti
   const cms = await getAdminCms();
   const config = await getAdminConfig();
   const siteConfig = await readSiteConfig();
-  const ctx: FixContext = { cms, config, siteConfig };
+  const t = await getServerTSafe();
+  const ctx: FixContext = { cms, config, siteConfig, t };
 
   const allIssueIds = new Set<string>();
   for (const opp of result.opportunities) allIssueIds.add(opp.id);
@@ -78,7 +81,7 @@ export async function optimizeLighthouse(result: LighthouseResult): Promise<Opti
           id,
           title: id,
           status: "manual",
-          description: `Auto-fix failed: ${err instanceof Error ? err.message : "unknown error"}`,
+          description: t("libText.lighthouseOptimize.autoFixFailed", { error: err instanceof Error ? err.message : t("libText.lighthouseOptimize.unknownError") }),
         });
       }
     }
@@ -110,7 +113,7 @@ async function fixMissingTitle(ctx: FixContext): Promise<OptimizeFix> {
       }
     }
   }
-  return { id: "document-title", title: "Missing page titles", status: "fixed", description: `Added meta titles to ${fixed} documents from their content title.` };
+  return { id: "document-title", title: ctx.t("libText.lighthouseOptimize.documentTitle.title"), status: "fixed", description: ctx.t("libText.lighthouseOptimize.documentTitle.fixed", { count: fixed }) };
 }
 
 async function fixMissingMetaDescription(ctx: FixContext): Promise<OptimizeFix> {
@@ -128,28 +131,28 @@ async function fixMissingMetaDescription(ctx: FixContext): Promise<OptimizeFix> 
       }
     }
   }
-  return { id: "meta-description", title: "Missing meta descriptions", status: "fixed", description: `Added meta descriptions to ${fixed} documents from excerpts.` };
+  return { id: "meta-description", title: ctx.t("libText.lighthouseOptimize.metaDescription.title"), status: "fixed", description: ctx.t("libText.lighthouseOptimize.metaDescription.fixed", { count: fixed }) };
 }
 
 async function fixMissingHreflang(ctx: FixContext): Promise<OptimizeFix> {
   const { locales, defaultLocale, localeStrategy } = ctx.siteConfig;
   if (!locales?.length || locales.length < 2) {
-    return { id: "hreflang", title: "Missing hreflang", status: "manual", description: "Site has only one locale configured. Add additional locales in Site Settings → Language to enable hreflang." };
+    return { id: "hreflang", title: ctx.t("libText.lighthouseOptimize.hreflang.title"), status: "manual", description: ctx.t("libText.lighthouseOptimize.hreflang.oneLocale") };
   }
   // Ensure localeStrategy is set (hreflang needs prefix-based strategy)
   if (localeStrategy === "none") {
     await writeSiteConfig({ localeStrategy: "prefix-other" });
-    return { id: "hreflang", title: "Missing hreflang", status: "fixed", description: `Switched locale strategy from "none" to "prefix-other" — the build pipeline now generates hreflang tags automatically for ${locales.length} locales.` };
+    return { id: "hreflang", title: ctx.t("libText.lighthouseOptimize.hreflang.title"), status: "fixed", description: ctx.t("libText.lighthouseOptimize.hreflang.switched", { count: locales.length }) };
   }
-  return { id: "hreflang", title: "hreflang tags", status: "fixed", description: `hreflang is configured (${locales.join(", ")} with "${localeStrategy}" strategy). The build pipeline generates hreflang tags automatically.` };
+  return { id: "hreflang", title: ctx.t("libText.lighthouseOptimize.hreflang.okTitle"), status: "fixed", description: ctx.t("libText.lighthouseOptimize.hreflang.configured", { locales: locales.join(", "), strategy: String(localeStrategy) }) };
 }
 
 async function fixMissingHtmlLang(ctx: FixContext): Promise<OptimizeFix> {
   const { defaultLocale } = ctx.siteConfig;
   if (!defaultLocale || defaultLocale === "en") {
-    return { id: "html-has-lang", title: "HTML lang attribute", status: "fixed", description: "Default locale is set. The build pipeline adds lang attribute to <html> automatically." };
+    return { id: "html-has-lang", title: ctx.t("libText.lighthouseOptimize.htmlLang.title"), status: "fixed", description: ctx.t("libText.lighthouseOptimize.htmlLang.defaultSet") };
   }
-  return { id: "html-has-lang", title: "HTML lang attribute", status: "fixed", description: `Default locale "${defaultLocale}" is configured. Build pipeline adds lang="${defaultLocale}" to <html>.` };
+  return { id: "html-has-lang", title: ctx.t("libText.lighthouseOptimize.htmlLang.title"), status: "fixed", description: ctx.t("libText.lighthouseOptimize.htmlLang.configured", { locale: defaultLocale }) };
 }
 
 async function fixMissingMainLandmark(ctx: FixContext): Promise<OptimizeFix> {
@@ -157,9 +160,9 @@ async function fixMissingMainLandmark(ctx: FixContext): Promise<OptimizeFix> {
   // We can't directly edit the site's template from here, but we can flag it
   return {
     id: "landmark-one-main",
-    title: "Missing <main> landmark",
+    title: ctx.t("libText.lighthouseOptimize.mainLandmark.title"),
     status: "manual",
-    description: "Wrap your page content in a <main> element. For Next.js: add <main> in layout.tsx. For static sites: the build pipeline template should use <main> around {content}. Check your build.ts or layout component.",
+    description: ctx.t("libText.lighthouseOptimize.mainLandmark.description"),
   };
 }
 
@@ -180,22 +183,27 @@ async function fixMissingImageAlt(ctx: FixContext): Promise<OptimizeFix> {
     }
   }
   if (fixed > 0) {
-    return { id: "image-alt", title: "Images missing alt text", status: "manual", description: `Found ${fixed} images without alt text. Go to Media Library and run "Analyze All" to generate AI alt text, or edit individual documents.` };
+    return { id: "image-alt", title: ctx.t("libText.lighthouseOptimize.imageAlt.missingTitle"), status: "manual", description: ctx.t("libText.lighthouseOptimize.imageAlt.missing", { count: fixed }) };
   }
-  return { id: "image-alt", title: "Image alt text", status: "fixed", description: "All images have alt text." };
+  return { id: "image-alt", title: ctx.t("libText.lighthouseOptimize.imageAlt.okTitle"), status: "fixed", description: ctx.t("libText.lighthouseOptimize.imageAlt.ok") };
 }
 
 async function fixFontDisplay(ctx: FixContext): Promise<OptimizeFix> {
   return {
     id: "font-display",
-    title: "Font display",
+    title: ctx.t("libText.lighthouseOptimize.fontDisplay.title"),
     status: "manual",
-    description: "Add font-display: swap to your @font-face declarations or Google Fonts URL (&display=swap). This prevents invisible text during font loading.",
+    description: ctx.t("libText.lighthouseOptimize.fontDisplay.description"),
   };
 }
 
 // ── Helper for manual-only recommendations ──
 
-function manualFix(id: string, title: string, description: string): (ctx: FixContext) => Promise<OptimizeFix> {
-  return async () => ({ id, title, status: "manual", description });
+function manualFix(id: string, key: string): (ctx: FixContext) => Promise<OptimizeFix> {
+  return async (ctx) => ({
+    id,
+    title: ctx.t(`libText.lighthouseOptimize.${key}.title`),
+    status: "manual",
+    description: ctx.t(`libText.lighthouseOptimize.${key}.description`),
+  });
 }

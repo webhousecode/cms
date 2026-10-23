@@ -25,12 +25,12 @@ function buildAiHandoff(siteName: string, diagnosis: DiagnoseResult): string {
   diagnosis.issues.forEach((issue, i) => {
     lines.push(`### Issue ${i + 1} — \`${issue.field}\``);
     lines.push(`**Problem:** ${issue.problem}`);
-    lines.push(`**Auto-fixable:** ${issue.autoFixable ? "Yes" : "No"}`);
+    lines.push(`**Auto-fixable:** ${issue.autoFixable ? "Yes" : "No"}`); // i18n-ignore: markdown hand-off meant to be pasted into an AI assistant
     lines.push(`**Fix:** ${issue.fix}`);
     lines.push("");
   });
   lines.push("---");
-  lines.push("Fix all issues above in `cms.config.ts`. After fixing, restart the dev server and verify the site loads.");
+  lines.push("Fix all issues above in `cms.config.ts`. After fixing, restart the dev server and verify the site loads."); // i18n-ignore: markdown hand-off meant to be pasted into an AI assistant
   return lines.join("\n");
 }
 

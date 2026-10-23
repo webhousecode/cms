@@ -46,8 +46,8 @@ export function resolveLensKey(bearer: string | null): "none" | "read" | "write"
 
   if (lensKeysCollide()) {
     console.error(
-      "[lens] LENS_WRITE_SECRET is identical to LENS_MINT_SECRET — refusing to mint a " +
-        "write session. The two keys exist to be different; set a distinct value.",
+      "[lens] LENS_WRITE_SECRET is identical to LENS_MINT_SECRET — refusing to mint a " + // i18n-ignore: server log line
+        "write session. The two keys exist to be different; set a distinct value.", // i18n-ignore: server log line
     );
   }
 

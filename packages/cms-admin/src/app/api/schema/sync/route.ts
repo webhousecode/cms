@@ -9,6 +9,7 @@ import { denyViewers, getSiteRole } from "@/lib/require-role";
 import { invalidateActiveSite } from "@/lib/site-pool";
 import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
 import { mergeCollectionsForSync, type SyncMode } from "@/lib/schema-sync";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * F159 — beam-site config auto-sync.
@@ -31,13 +32,14 @@ import { mergeCollectionsForSync, type SyncMode } from "@/lib/schema-sync";
  *     doesn't churn the config or trigger a quick-cache pre-warm.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers();
   if (denied) return denied;
   const role = await getSiteRole();
   if (role !== "admin") {
     const { schemaEditEnabled } = await readSiteConfig();
     if (!schemaEditEnabled) {
-      return NextResponse.json({ ok: false, error: "Schema editing disabled" }, { status: 403 });
+      return NextResponse.json({ ok: false, error: t("errApi.common.schemaEditingDisabled") }, { status: 403 });
     }
   }
 
@@ -55,19 +57,19 @@ export async function POST(req: NextRequest) {
   if (wantsForms) {
     if (!Array.isArray(body.forms) || body.forms.length === 0) {
       return NextResponse.json(
-        { ok: false, error: "forms must be a non-empty array" },
+        { ok: false, error: t("errApi.schema.formsArray") },
         { status: 400 },
       );
     }
     if (!body.forms.every((f) => f && typeof (f as { name?: unknown }).name === "string")) {
-      return NextResponse.json({ ok: false, error: "every form needs a string name" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: t("errApi.schema.formName") }, { status: 400 });
     }
   }
 
   // F206.4 — validate everything before writing anything: blocks are written
   // first, so a bad `collections` found afterwards would leave a half-applied push.
   if (body.collections !== undefined) {
-    const bad = collectionsError(body.collections);
+    const bad = collectionsError(body.collections, t);
     if (bad) return NextResponse.json({ ok: false, error: bad }, { status: 400 });
   }
 
@@ -76,10 +78,10 @@ export async function POST(req: NextRequest) {
   let blocksBody: Record<string, unknown> | undefined;
   if (body.blocks !== undefined) {
     if (!Array.isArray(body.blocks) || body.blocks.length === 0) {
-      return NextResponse.json({ ok: false, error: "blocks must be a non-empty array" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: t("errApi.schema.blocksArray") }, { status: 400 });
     }
     if (!body.blocks.every((b) => b && typeof (b as { name?: unknown }).name === "string" && (b as { name: string }).name.trim() !== "")) {
-      return NextResponse.json({ ok: false, error: "every block needs a string name" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: t("errApi.schema.blockName") }, { status: 400 });
     }
     blocksBody = await syncBlocks(body.blocks as BlockDef[]);
     if (body.collections === undefined && !wantsForms) {
@@ -95,7 +97,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, forms: formsBody, blocks: blocksBody });
   }
 
-  const collectionsBad = collectionsError(body.collections);
+  const collectionsBad = collectionsError(body.collections, t);
   if (collectionsBad) return NextResponse.json({ ok: false, error: collectionsBad }, { status: 400 });
   const payload = body.collections as unknown as CollectionDef[];
 
@@ -131,9 +133,9 @@ export async function POST(req: NextRequest) {
  * payload does not mention stays exactly as it was and an identical re-push
  * rewrites nothing.
  */
-function collectionsError(c: unknown): string | null {
-  if (!Array.isArray(c) || c.length === 0) return "collections must be a non-empty array";
-  if (!c.every((x) => x && typeof (x as { name?: unknown }).name === "string")) return "every collection needs a string name";
+function collectionsError(c: unknown, t: (key: string) => string): string | null {
+  if (!Array.isArray(c) || c.length === 0) return t("errApi.schema.collectionsArray");
+  if (!c.every((x) => x && typeof (x as { name?: unknown }).name === "string")) return t("errApi.schema.collectionName");
   return null;
 }
 

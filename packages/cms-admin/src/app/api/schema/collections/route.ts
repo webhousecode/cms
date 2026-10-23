@@ -8,6 +8,7 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { denyViewers, getSiteRole } from "@/lib/require-role";
 import { invalidateActiveSite } from "@/lib/site-pool";
 import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET() {
   const config = await getAdminConfig();
@@ -18,18 +19,19 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const role = await getSiteRole();
   if (role !== "admin") {
     const { schemaEditEnabled } = await readSiteConfig();
     if (!schemaEditEnabled) {
-      return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+      return NextResponse.json({ error: t("errApi.common.schemaEditingDisabled") }, { status: 403 });
     }
   }
   const body = await req.json() as CollectionDef;
   // Security W41 H2 — the name becomes content/<name>/: one plain segment only.
   if (typeof body?.name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(body.name)) {
-    return NextResponse.json({ error: "Collection name may only use letters, digits, - and _" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.schema.collectionNameChars") }, { status: 400 });
   }
   const config = await getAdminConfig();
   const { configPath } = await getActiveSitePaths();
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
   const existing = config.collections as unknown as CollectionDef[];
 
   if (existing.find((c) => c.name === body.name)) {
-    return NextResponse.json({ error: "Collection already exists" }, { status: 409 });
+    return NextResponse.json({ error: t("errApi.schema.collectionExists") }, { status: 409 });
   }
 
   await writeConfigCollections(configPath, config, [...existing, body]);

@@ -7,7 +7,9 @@
 
 export interface JsonLdTemplate {
   id: string;
+  /** i18n key (libText.jsonLd.*) — render with t() */
   label: string;
+  /** i18n key — render with t() */
   description: string;
   fields: JsonLdFieldDef[];
   generate: (values: Record<string, string>) => Record<string, unknown>;
@@ -15,7 +17,9 @@ export interface JsonLdTemplate {
 
 export interface JsonLdFieldDef {
   key: string;
+  /** i18n key — render with t() */
   label: string;
+  /** i18n key for prose placeholders, literal example value otherwise — render with t() (unknown keys pass through) */
   placeholder: string;
   /** Auto-fill from document data key (e.g. "title", "date", "slug") */
   autoFrom?: string;
@@ -27,33 +31,33 @@ export interface JsonLdFieldDef {
 export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   {
     id: "article",
-    label: "Article",
-    description: "Blog post or news article",
+    label: "libText.jsonLd.article.label",
+    description: "libText.jsonLd.article.description",
     fields: [
-      { key: "headline", label: "Headline", placeholder: "Article title", autoFrom: "title", required: true, hidden: true },
-      { key: "description", label: "Description", placeholder: "Short summary", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "datePublished", label: "Published", placeholder: "2026-01-15", autoFrom: "date" },
-      { key: "dateModified", label: "Modified", placeholder: "2026-01-20", autoFrom: "updatedAt" },
-      { key: "authorName", label: "Author", placeholder: "Author name", autoFrom: "author" },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+      { key: "headline", label: "libText.jsonLd.article.fields.headline.label", placeholder: "libText.jsonLd.article.fields.headline.placeholder", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "libText.jsonLd.article.fields.description.label", placeholder: "libText.jsonLd.article.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "datePublished", label: "libText.jsonLd.article.fields.datePublished.label", placeholder: "2026-01-15", autoFrom: "date" },
+      { key: "dateModified", label: "libText.jsonLd.article.fields.dateModified.label", placeholder: "2026-01-20", autoFrom: "updatedAt" },
+      { key: "authorName", label: "libText.jsonLd.article.fields.authorName.label", placeholder: "libText.jsonLd.article.fields.authorName.placeholder", autoFrom: "author" },
+      { key: "image", label: "libText.jsonLd.article.fields.image.label", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
-      "@type": "Article",
+      "@type": "Article", // i18n-ignore: schema.org type / JSON-LD value, not UI text
       headline: v.headline || undefined,
       description: v.description || undefined,
       datePublished: v.datePublished || undefined,
       dateModified: v.dateModified || undefined,
-      author: v.authorName ? { "@type": "Person", name: v.authorName } : undefined,
+      author: v.authorName ? { "@type": "Person", name: v.authorName } : undefined, // i18n-ignore: schema.org type / JSON-LD value, not UI text
       image: v.image || undefined,
     }),
   },
   {
     id: "faq",
-    label: "FAQ",
-    description: "Frequently asked questions",
+    label: "libText.jsonLd.faq.label",
+    description: "libText.jsonLd.faq.description",
     fields: [
-      { key: "headline", label: "Page title", placeholder: "FAQ page title", autoFrom: "title", hidden: true },
+      { key: "headline", label: "libText.jsonLd.faq.fields.headline.label", placeholder: "libText.jsonLd.faq.fields.headline.placeholder", autoFrom: "title", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
@@ -64,24 +68,24 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   },
   {
     id: "product",
-    label: "Product",
-    description: "Product listing with price",
+    label: "libText.jsonLd.product.label",
+    description: "libText.jsonLd.product.description",
     fields: [
-      { key: "name", label: "Product name", placeholder: "Product title", autoFrom: "title", required: true, hidden: true },
-      { key: "description", label: "Description", placeholder: "Product description", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
-      { key: "price", label: "Price", placeholder: "99.00" },
-      { key: "currency", label: "Currency", placeholder: "DKK" },
-      { key: "availability", label: "Availability", placeholder: "InStock" },
+      { key: "name", label: "libText.jsonLd.product.fields.name.label", placeholder: "libText.jsonLd.product.fields.name.placeholder", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "libText.jsonLd.product.fields.description.label", placeholder: "libText.jsonLd.product.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "image", label: "libText.jsonLd.product.fields.image.label", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+      { key: "price", label: "libText.jsonLd.product.fields.price.label", placeholder: "99.00" },
+      { key: "currency", label: "libText.jsonLd.product.fields.currency.label", placeholder: "DKK" },
+      { key: "availability", label: "libText.jsonLd.product.fields.availability.label", placeholder: "InStock" },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
-      "@type": "Product",
+      "@type": "Product", // i18n-ignore: schema.org type / JSON-LD value, not UI text
       name: v.name || undefined,
       description: v.description || undefined,
       image: v.image || undefined,
       offers: (v.price || v.availability) ? {
-        "@type": "Offer",
+        "@type": "Offer", // i18n-ignore: schema.org type / JSON-LD value, not UI text
         price: v.price || undefined,
         priceCurrency: v.currency || undefined,
         availability: v.availability ? `https://schema.org/${v.availability}` : undefined,
@@ -90,26 +94,26 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   },
   {
     id: "event",
-    label: "Event",
-    description: "Event with date and location",
+    label: "libText.jsonLd.event.label",
+    description: "libText.jsonLd.event.description",
     fields: [
-      { key: "name", label: "Event name", placeholder: "Event title", autoFrom: "title", required: true, hidden: true },
-      { key: "description", label: "Description", placeholder: "Event description", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "startDate", label: "Start date", placeholder: "2026-06-15T19:00", autoFrom: "date" },
-      { key: "endDate", label: "End date", placeholder: "2026-06-15T22:00" },
-      { key: "locationName", label: "Venue", placeholder: "Venue name" },
-      { key: "locationAddress", label: "Address", placeholder: "Street, City" },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+      { key: "name", label: "libText.jsonLd.event.fields.name.label", placeholder: "libText.jsonLd.event.fields.name.placeholder", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "libText.jsonLd.event.fields.description.label", placeholder: "libText.jsonLd.event.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "startDate", label: "libText.jsonLd.event.fields.startDate.label", placeholder: "2026-06-15T19:00", autoFrom: "date" },
+      { key: "endDate", label: "libText.jsonLd.event.fields.endDate.label", placeholder: "2026-06-15T22:00" },
+      { key: "locationName", label: "libText.jsonLd.event.fields.locationName.label", placeholder: "libText.jsonLd.event.fields.locationName.placeholder" },
+      { key: "locationAddress", label: "libText.jsonLd.event.fields.locationAddress.label", placeholder: "libText.jsonLd.event.fields.locationAddress.placeholder" },
+      { key: "image", label: "libText.jsonLd.event.fields.image.label", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
-      "@type": "Event",
+      "@type": "Event", // i18n-ignore: schema.org type / JSON-LD value, not UI text
       name: v.name || undefined,
       description: v.description || undefined,
       startDate: v.startDate || undefined,
       endDate: v.endDate || undefined,
       location: v.locationName ? {
-        "@type": "Place",
+        "@type": "Place", // i18n-ignore: schema.org type / JSON-LD value, not UI text
         name: v.locationName,
         address: v.locationAddress || undefined,
       } : undefined,
@@ -118,18 +122,18 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   },
   {
     id: "person",
-    label: "Person",
-    description: "Person profile page",
+    label: "libText.jsonLd.person.label",
+    description: "libText.jsonLd.person.description",
     fields: [
-      { key: "name", label: "Name", placeholder: "Full name", autoFrom: "title", required: true, hidden: true },
-      { key: "jobTitle", label: "Job title", placeholder: "Software Engineer" },
-      { key: "description", label: "Description", placeholder: "Bio", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
-      { key: "url", label: "Website", placeholder: "https://..." },
+      { key: "name", label: "libText.jsonLd.person.fields.name.label", placeholder: "libText.jsonLd.person.fields.name.placeholder", autoFrom: "title", required: true, hidden: true },
+      { key: "jobTitle", label: "libText.jsonLd.person.fields.jobTitle.label", placeholder: "libText.jsonLd.person.fields.jobTitle.placeholder" },
+      { key: "description", label: "libText.jsonLd.person.fields.description.label", placeholder: "libText.jsonLd.person.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "image", label: "libText.jsonLd.person.fields.image.label", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+      { key: "url", label: "libText.jsonLd.person.fields.url.label", placeholder: "https://..." },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
-      "@type": "Person",
+      "@type": "Person", // i18n-ignore: schema.org type / JSON-LD value, not UI text
       name: v.name || undefined,
       jobTitle: v.jobTitle || undefined,
       description: v.description || undefined,
@@ -139,17 +143,17 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   },
   {
     id: "organization",
-    label: "Organization",
-    description: "Company or organization",
+    label: "libText.jsonLd.organization.label",
+    description: "libText.jsonLd.organization.description",
     fields: [
-      { key: "name", label: "Name", placeholder: "Organization name", autoFrom: "title", required: true, hidden: true },
-      { key: "description", label: "Description", placeholder: "About", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "url", label: "Website", placeholder: "https://..." },
-      { key: "logo", label: "Logo URL", placeholder: "/uploads/logo.png" },
+      { key: "name", label: "libText.jsonLd.organization.fields.name.label", placeholder: "libText.jsonLd.organization.fields.name.placeholder", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "libText.jsonLd.organization.fields.description.label", placeholder: "libText.jsonLd.organization.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "url", label: "libText.jsonLd.organization.fields.url.label", placeholder: "https://..." },
+      { key: "logo", label: "libText.jsonLd.organization.fields.logo.label", placeholder: "/uploads/logo.png" },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
-      "@type": "Organization",
+      "@type": "Organization", // i18n-ignore: schema.org type / JSON-LD value, not UI text
       name: v.name || undefined,
       description: v.description || undefined,
       url: v.url || undefined,
@@ -158,17 +162,17 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   },
   {
     id: "local-business",
-    label: "Local Business",
-    description: "Local business with address",
+    label: "libText.jsonLd.localBusiness.label",
+    description: "libText.jsonLd.localBusiness.description",
     fields: [
-      { key: "name", label: "Business name", placeholder: "Business name", autoFrom: "title", required: true, hidden: true },
-      { key: "description", label: "Description", placeholder: "About", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "streetAddress", label: "Street", placeholder: "123 Main St" },
-      { key: "city", label: "City", placeholder: "Aalborg" },
-      { key: "postalCode", label: "Postal code", placeholder: "9000" },
-      { key: "country", label: "Country", placeholder: "DK" },
-      { key: "phone", label: "Phone", placeholder: "+45..." },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+      { key: "name", label: "libText.jsonLd.localBusiness.fields.name.label", placeholder: "libText.jsonLd.localBusiness.fields.name.placeholder", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "libText.jsonLd.localBusiness.fields.description.label", placeholder: "libText.jsonLd.localBusiness.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "streetAddress", label: "libText.jsonLd.localBusiness.fields.streetAddress.label", placeholder: "libText.jsonLd.localBusiness.fields.streetAddress.placeholder" },
+      { key: "city", label: "libText.jsonLd.localBusiness.fields.city.label", placeholder: "libText.jsonLd.localBusiness.fields.city.placeholder" },
+      { key: "postalCode", label: "libText.jsonLd.localBusiness.fields.postalCode.label", placeholder: "9000" },
+      { key: "country", label: "libText.jsonLd.localBusiness.fields.country.label", placeholder: "DK" },
+      { key: "phone", label: "libText.jsonLd.localBusiness.fields.phone.label", placeholder: "+45..." },
+      { key: "image", label: "libText.jsonLd.localBusiness.fields.image.label", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
@@ -189,13 +193,13 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   // ── F112 G04 — New templates ─────────────────────────────
   {
     id: "howto",
-    label: "HowTo",
-    description: "Step-by-step guide or tutorial",
+    label: "libText.jsonLd.howto.label",
+    description: "libText.jsonLd.howto.description",
     fields: [
-      { key: "name", label: "Guide title", placeholder: "How to...", autoFrom: "title", required: true, hidden: true },
-      { key: "description", label: "Description", placeholder: "What this guide teaches", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "totalTime", label: "Total time", placeholder: "PT30M (30 min)" },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+      { key: "name", label: "libText.jsonLd.howto.fields.name.label", placeholder: "libText.jsonLd.howto.fields.name.placeholder", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "libText.jsonLd.howto.fields.description.label", placeholder: "libText.jsonLd.howto.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "totalTime", label: "libText.jsonLd.howto.fields.totalTime.label", placeholder: "libText.jsonLd.howto.fields.totalTime.placeholder" },
+      { key: "image", label: "libText.jsonLd.howto.fields.image.label", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
@@ -208,18 +212,18 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   },
   {
     id: "service",
-    label: "Service",
-    description: "Professional service offering",
+    label: "libText.jsonLd.service.label",
+    description: "libText.jsonLd.service.description",
     fields: [
-      { key: "name", label: "Service name", placeholder: "Web Development", autoFrom: "title", required: true, hidden: true },
-      { key: "description", label: "Description", placeholder: "What the service includes", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "provider", label: "Provider name", placeholder: "Company name" },
-      { key: "areaServed", label: "Area served", placeholder: "Denmark" },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+      { key: "name", label: "libText.jsonLd.service.fields.name.label", placeholder: "libText.jsonLd.service.fields.name.placeholder", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "libText.jsonLd.service.fields.description.label", placeholder: "libText.jsonLd.service.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "provider", label: "libText.jsonLd.service.fields.provider.label", placeholder: "libText.jsonLd.service.fields.provider.placeholder" },
+      { key: "areaServed", label: "libText.jsonLd.service.fields.areaServed.label", placeholder: "libText.jsonLd.service.fields.areaServed.placeholder" },
+      { key: "image", label: "libText.jsonLd.service.fields.image.label", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
-      "@type": "Service",
+      "@type": "Service", // i18n-ignore: schema.org type / JSON-LD value, not UI text
       name: v.name || undefined,
       description: v.description || undefined,
       provider: v.provider ? { "@type": "Organization", name: v.provider } : undefined,
@@ -229,16 +233,16 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   },
   {
     id: "software",
-    label: "Software",
-    description: "Software application or SaaS product",
+    label: "libText.jsonLd.software.label",
+    description: "libText.jsonLd.software.description",
     fields: [
-      { key: "name", label: "App name", placeholder: "App name", autoFrom: "title", required: true, hidden: true },
-      { key: "description", label: "Description", placeholder: "What the app does", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "applicationCategory", label: "Category", placeholder: "DeveloperApplication" },
-      { key: "operatingSystem", label: "OS", placeholder: "Web, macOS, Windows" },
-      { key: "price", label: "Price", placeholder: "0 (free) or 29.00" },
-      { key: "currency", label: "Currency", placeholder: "USD" },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+      { key: "name", label: "libText.jsonLd.software.fields.name.label", placeholder: "libText.jsonLd.software.fields.name.placeholder", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "libText.jsonLd.software.fields.description.label", placeholder: "libText.jsonLd.software.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "applicationCategory", label: "libText.jsonLd.software.fields.applicationCategory.label", placeholder: "DeveloperApplication" },
+      { key: "operatingSystem", label: "libText.jsonLd.software.fields.operatingSystem.label", placeholder: "libText.jsonLd.software.fields.operatingSystem.placeholder" },
+      { key: "price", label: "libText.jsonLd.software.fields.price.label", placeholder: "libText.jsonLd.software.fields.price.placeholder" },
+      { key: "currency", label: "libText.jsonLd.software.fields.currency.label", placeholder: "USD" },
+      { key: "image", label: "libText.jsonLd.software.fields.image.label", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
@@ -248,7 +252,7 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
       applicationCategory: v.applicationCategory || undefined,
       operatingSystem: v.operatingSystem || undefined,
       offers: v.price !== undefined ? {
-        "@type": "Offer",
+        "@type": "Offer", // i18n-ignore: schema.org type / JSON-LD value, not UI text
         price: v.price,
         priceCurrency: v.currency || "USD",
       } : undefined,
@@ -257,14 +261,14 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   },
   {
     id: "breadcrumb",
-    label: "Breadcrumb",
-    description: "Navigation breadcrumb trail (auto-generated from URL)",
+    label: "libText.jsonLd.breadcrumb.label",
+    description: "libText.jsonLd.breadcrumb.description",
     fields: [
-      { key: "item1Name", label: "Level 1", placeholder: "Home", autoFrom: "_breadcrumb.1" },
-      { key: "item1Url", label: "Level 1 URL", placeholder: "/", autoFrom: "_breadcrumb.1url" },
-      { key: "item2Name", label: "Level 2", placeholder: "Blog", autoFrom: "_breadcrumb.2" },
-      { key: "item2Url", label: "Level 2 URL", placeholder: "/posts/", autoFrom: "_breadcrumb.2url" },
-      { key: "item3Name", label: "Level 3 (current)", placeholder: "Article title", autoFrom: "title" },
+      { key: "item1Name", label: "libText.jsonLd.breadcrumb.fields.item1Name.label", placeholder: "libText.jsonLd.breadcrumb.fields.item1Name.placeholder", autoFrom: "_breadcrumb.1" },
+      { key: "item1Url", label: "libText.jsonLd.breadcrumb.fields.item1Url.label", placeholder: "/", autoFrom: "_breadcrumb.1url" },
+      { key: "item2Name", label: "libText.jsonLd.breadcrumb.fields.item2Name.label", placeholder: "libText.jsonLd.breadcrumb.fields.item2Name.placeholder", autoFrom: "_breadcrumb.2" },
+      { key: "item2Url", label: "libText.jsonLd.breadcrumb.fields.item2Url.label", placeholder: "/posts/", autoFrom: "_breadcrumb.2url" },
+      { key: "item3Name", label: "libText.jsonLd.breadcrumb.fields.item3Name.label", placeholder: "libText.jsonLd.breadcrumb.fields.item3Name.placeholder", autoFrom: "title" },
     ],
     generate: (v) => {
       const items: Record<string, unknown>[] = [];
@@ -280,13 +284,13 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
   },
   {
     id: "website",
-    label: "WebSite",
-    description: "Site-level schema with search action (use on homepage)",
+    label: "libText.jsonLd.website.label",
+    description: "libText.jsonLd.website.description",
     fields: [
-      { key: "name", label: "Site name", placeholder: "My Website", autoFrom: "title", required: true },
-      { key: "url", label: "Site URL", placeholder: "https://example.com" },
-      { key: "description", label: "Description", placeholder: "Site description", autoFrom: "_seo.metaDescription", hidden: true },
-      { key: "searchUrl", label: "Search URL template", placeholder: "https://example.com/search?q={search_term}" },
+      { key: "name", label: "libText.jsonLd.website.fields.name.label", placeholder: "libText.jsonLd.website.fields.name.placeholder", autoFrom: "title", required: true },
+      { key: "url", label: "libText.jsonLd.website.fields.url.label", placeholder: "https://example.com" },
+      { key: "description", label: "libText.jsonLd.website.fields.description.label", placeholder: "libText.jsonLd.website.fields.description.placeholder", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "searchUrl", label: "libText.jsonLd.website.fields.searchUrl.label", placeholder: "https://example.com/search?q={search_term}" },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
@@ -297,7 +301,7 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
       potentialAction: v.searchUrl ? {
         "@type": "SearchAction",
         target: { "@type": "EntryPoint", urlTemplate: v.searchUrl },
-        "query-input": "required name=search_term",
+        "query-input": "required name=search_term", // i18n-ignore: schema.org type / JSON-LD value, not UI text
       } : undefined,
     }),
   },

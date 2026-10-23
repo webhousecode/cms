@@ -96,7 +96,7 @@ describe("FormService", () => {
   it("delete throws for nonexistent", async () => {
     const s = await svc();
     await expect(s.delete("contact", "nope")).rejects.toThrow();
-  });
+  }, 30_000); // the error message loads the i18n server module (auth chain) on first throw
 
   it("unreadCounts returns counts per form", async () => {
     const s = await svc();

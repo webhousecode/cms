@@ -6,6 +6,7 @@ import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 const SYSTEM = `You are a senior brand strategist conducting a discovery interview to define a website's Brand Voice & Goals document. This document will be the foundation for all future AI-generated content on the site — every agent will read it before writing anything.
 
@@ -51,7 +52,7 @@ Begin the interview with a single, warm opening question about the site's purpos
 
 const FETCH_URL_TOOL: Tool = {
   name: "fetch_url",
-  description: "Fetches the text content of a URL. Use this to read a website the user mentions so you can reference what you find in your questions.",
+  description: "Fetches the text content of a URL. Use this to read a website the user mentions so you can reference what you find in your questions.", // i18n-ignore: tool description sent to the model
   parameters: {
     type: "object",
     properties: {
@@ -67,7 +68,7 @@ async function fetchUrl(url: string): Promise<string> {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; webhouse-cms-brand-voice/1.0)" },
       signal: AbortSignal.timeout(8000),
     });
-    if (!res.ok) return `HTTP ${res.status} — could not fetch ${url}`;
+    if (!res.ok) return `HTTP ${res.status} — could not fetch ${url}`; // i18n-ignore: tool result returned to the model
     const html = await res.text();
     // Strip tags, collapse whitespace, limit length
     const text = html
@@ -78,9 +79,9 @@ async function fetchUrl(url: string): Promise<string> {
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 6000);
-    return text || "(empty page)";
+    return text || "(empty page)"; // i18n-ignore: tool result returned to the model
   } catch (err) {
-    return `Could not fetch ${url}: ${(err as Error).message}`;
+    return `Could not fetch ${url}: ${(err as Error).message}`; // i18n-ignore: tool result returned to the model
   }
 }
 
@@ -88,7 +89,8 @@ async function fetchUrl(url: string): Promise<string> {
 async function runWithTools(
   ai: AiClient,
   apiMessages: Message[],
-  systemPrompt: string
+  systemPrompt: string,
+  exhaustedText: string
 ): Promise<string> {
   const messages = [...apiMessages];
 
@@ -116,20 +118,21 @@ async function runWithTools(
         const content = await fetchUrl(input.url);
         messages.push({ role: "tool", toolCallId: tc.id, content });
       } else {
-        messages.push({ role: "tool", toolCallId: tc.id, content: `Unknown tool: ${tc.name}` });
+        messages.push({ role: "tool", toolCallId: tc.id, content: `Unknown tool: ${tc.name}` }); // i18n-ignore: tool result returned to the model
       }
     }
   }
 
-  return "Something went wrong — please try again.";
+  return exhaustedText;
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return new Response(
-      JSON.stringify({ error: "Anthropic API key not configured — add it in Settings → AI" }),
+      JSON.stringify({ error: t("errCms.shared.aiKeyMissing") }),
       { status: 503, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -139,7 +142,7 @@ export async function POST(request: NextRequest) {
   };
 
   const apiMessages: Message[] = messages.length === 0
-    ? [{ role: "user", content: "Start the interview." }]
+    ? [{ role: "user", content: "Start the interview." }] // i18n-ignore: model prompt
     : messages.map((m) => ({ role: m.role, content: m.content }));
 
   const ai = await getAI();
@@ -152,7 +155,7 @@ export async function POST(request: NextRequest) {
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        const text = await runWithTools(ai, apiMessages, systemPrompt);
+        const text = await runWithTools(ai, apiMessages, systemPrompt, t("errCms.brandVoice.somethingWrong"));
 
         // Stream the response in chunks for UI feel
         const CHUNK = 4;

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/mobile/probe-url?url=<encoded-url>
@@ -10,9 +11,10 @@ import { getMobileSession } from "@/lib/mobile-auth";
  * so it gets the mobile auth treatment (Bearer JWT in header).
  */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   const url = req.nextUrl.searchParams.get("url");

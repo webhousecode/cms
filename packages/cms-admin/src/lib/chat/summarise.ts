@@ -1,3 +1,4 @@
+/* i18n-ignore-file: the summarise instruction is a prompt sent to the model, not shown to a person */
 /**
  * Condense the older turns of a conversation — WITHOUT answering them.
  *

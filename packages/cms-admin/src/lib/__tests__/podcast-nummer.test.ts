@@ -10,6 +10,8 @@
  * sæson 1\'s afsnit 24 over sæson 2\'s afsnit 1.
  */
 import { describe, it, expect } from "vitest";
+import daLib from "../../i18n/messages/da/libText.json";
+import enLib from "../../i18n/messages/en/libText.json";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -56,7 +58,8 @@ describe("opretAfsnit — den manuelle vej ind", () => {
   it("afviser hvis afsnittet findes i forvejen", () => {
     // Et «opret» der stiltiende overskriver et manuskript nogen har skrevet,
     // er ikke et opret.
-    expect(STORE).toMatch(/if \(findes\) \{[\s\S]{0,140}findes allerede/);
+    expect(STORE).toMatch(/if \(findes\) \{[\s\S]{0,140}libText\.podcastStore\.alreadyExists/);
+    expect(daLib.podcastStore.alreadyExists).toContain("findes allerede");
   });
 
   it("starter i «kladde» med tomt manuskript", () => {

@@ -3,13 +3,13 @@
     "copyToClipboard": "Copy to clipboard"
   },
   "bidPanel": {
-    "loadError": "Could not load Broberg ID status",
-    "description": "Sign in with your Broberg ID account — the same login across broberg.ai services.",
+    "loadError": "Could not load BID status",
+    "description": "Sign in with your BID account — the same login across broberg.ai services.",
     "connected": "CONNECTED",
     "notConnected": "NOT CONNECTED",
-    "justLinked": "Broberg ID is connected. You can now sign in with it.",
-    "opening": "Opening Broberg ID…",
-    "connect": "Connect Broberg ID"
+    "justLinked": "BID is connected. You can now sign in with it.",
+    "opening": "Opening BID…",
+    "connect": "Connect BID"
   },
   "buildSettings": {
     "noActiveSite": "No active site selected.",
@@ -115,7 +115,8 @@
     "empty": "No passkeys yet. Add one to enable passwordless login.",
     "addedLastUsed": "Added {added} · Last used {lastUsed}",
     "waiting": "Waiting for device…",
-    "add": "+ Add passkey"
+    "add": "+ Add passkey",
+    "defaultName": "Passkey"
   },
   "totp": {
     "loadError": "Could not load status",

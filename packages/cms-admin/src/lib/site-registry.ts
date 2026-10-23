@@ -253,7 +253,7 @@ export async function updateOrg(orgId: string, updates: { name?: string; type?: 
 
 export async function addSite(orgId: string, site: SiteEntry): Promise<void> {
   const current = await loadRegistry();
-  if (!current) throw new Error("No registry");
+  if (!current) throw new Error((await serverT())("system.sites.noRegistry"));
   // Deep-clone before mutating. loadRegistry returns the cached object by
   // reference; if we mutated it directly and saveRegistry's writeFile then
   // failed (EACCES, disk full, etc.), the cache would be left holding a
@@ -261,12 +261,12 @@ export async function addSite(orgId: string, site: SiteEntry): Promise<void> {
   // see the ghost and refuse with "already exists".
   const next: Registry = JSON.parse(JSON.stringify(current));
   const org = findOrg(next, orgId);
-  if (!org) throw new Error(`Org "${orgId}" not found`);
+  if (!org) throw new Error((await serverT())("system.sites.orgNotFound", { id: orgId }));
   if (org.sites.some((s) => s.id === site.id)) return; // already exists
   // F208 — ids are global: a GitHub site's data dir (team.json, token) is
   // keyed on the id alone, so the same id in two orgs would share both.
   if (next.orgs.some((o) => o.sites.some((s) => s.id === site.id))) {
-    throw new Error(`Site ID "${site.id}" already exists in another org`);
+    throw new Error((await serverT())("system.sites.siteIdInOtherOrg", { id: site.id }));
   }
   org.sites.push(site);
   if (!next.defaultSiteId) next.defaultSiteId = site.id;
@@ -279,7 +279,7 @@ export async function updateSite(
   updates: Partial<Pick<SiteEntry, "name" | "previewUrl" | "homepageSlug" | "homepageCollection" | "configPath" | "contentDir" | "uploadDir">>,
 ): Promise<SiteEntry | null> {
   const registry = await loadRegistry();
-  if (!registry) throw new Error("No registry");
+  if (!registry) throw new Error((await serverT())("system.sites.noRegistry"));
   const org = findOrg(registry, orgId);
   if (!org) return null;
   const site = org.sites.find((s) => s.id === siteId);
@@ -311,30 +311,30 @@ export async function updateSite(
 
 export async function removeSite(orgId: string, siteId: string): Promise<void> {
   const registry = await loadRegistry();
-  if (!registry) throw new Error("No registry");
+  if (!registry) throw new Error((await serverT())("system.sites.noRegistry"));
   const org = findOrg(registry, orgId);
-  if (!org) throw new Error(`Org "${orgId}" not found`);
+  if (!org) throw new Error((await serverT())("system.sites.orgNotFound", { id: orgId }));
   org.sites = org.sites.filter((s) => s.id !== siteId);
   await saveRegistry(registry);
 }
 
 export async function moveSite(siteId: string, fromOrgId: string, toOrgId: string): Promise<void> {
-  if (fromOrgId === toOrgId) throw new Error("Source and target org are the same");
+  if (fromOrgId === toOrgId) throw new Error((await serverT())("system.sites.sameOrg"));
 
   const registry = await loadRegistry();
-  if (!registry) throw new Error("No registry");
+  if (!registry) throw new Error((await serverT())("system.sites.noRegistry"));
 
   const fromOrg = findOrg(registry, fromOrgId);
-  if (!fromOrg) throw new Error(`Source org "${fromOrgId}" not found`);
+  if (!fromOrg) throw new Error((await serverT())("system.sites.sourceOrgNotFound", { id: fromOrgId }));
 
   const toOrg = findOrg(registry, toOrgId);
-  if (!toOrg) throw new Error(`Target org "${toOrgId}" not found`);
+  if (!toOrg) throw new Error((await serverT())("system.sites.targetOrgNotFound", { id: toOrgId }));
 
   const siteIdx = fromOrg.sites.findIndex((s) => s.id === siteId);
-  if (siteIdx === -1) throw new Error(`Site "${siteId}" not found in org "${fromOrgId}"`);
+  if (siteIdx === -1) throw new Error((await serverT())("system.sites.siteNotInOrg", { id: siteId, org: fromOrgId }));
 
   if (toOrg.sites.some((s) => s.id === siteId)) {
-    throw new Error(`Site "${siteId}" already exists in org "${toOrgId}"`);
+    throw new Error((await serverT())("system.sites.siteAlreadyInOrg", { id: siteId, org: toOrgId }));
   }
 
   // Atomic move
@@ -351,7 +351,7 @@ export async function moveSite(siteId: string, fromOrgId: string, toOrgId: strin
 
 export async function removeOrg(orgId: string): Promise<void> {
   const registry = await loadRegistry();
-  if (!registry) throw new Error("No registry");
+  if (!registry) throw new Error((await serverT())("system.sites.noRegistry"));
   registry.orgs = registry.orgs.filter((o) => o.id !== orgId);
   await saveRegistry(registry);
 }
@@ -365,7 +365,7 @@ export async function removeOrg(orgId: string): Promise<void> {
  */
 export async function bootstrapRegistryFromEnv(): Promise<Registry> {
   const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
+  if (!configPath) throw new Error("CMS_CONFIG_PATH not set"); // i18n-ignore: operator boot error (env var)
 
   const absoluteConfig = path.resolve(configPath);
   const projectDir = path.dirname(absoluteConfig);
@@ -404,4 +404,9 @@ export type AdminMode = "single-site" | "multi-site";
 export async function getAdminMode(): Promise<AdminMode> {
   const registry = await loadRegistry();
   return registry ? "multi-site" : "single-site";
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

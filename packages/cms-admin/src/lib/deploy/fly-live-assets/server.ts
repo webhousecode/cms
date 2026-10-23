@@ -1,3 +1,4 @@
+/* i18n-ignore-file: standalone sync server shipped inside the customer site's Docker image; its HTTP error strings go to the admin's machine client, not to a person, and it cannot load the admin catalog */
 // Fly Live sync-endpoint server. Runs inside the Docker image.
 // Serves static files from /srv/current AND handles HMAC-signed /_icd/* endpoints.
 //

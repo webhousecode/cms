@@ -1,0 +1,266 @@
+{
+  "common": {
+    "notAuthenticated": "Not authenticated",
+    "unauthorized": "Unauthorized",
+    "adminOnly": "Admin only",
+    "forbidden": "Forbidden",
+    "siteAdminRequired": "Site admin access required",
+    "failed": "Failed",
+    "notFound": "Not found",
+    "error": "Error",
+    "invalidJson": "Invalid JSON",
+    "invalidRole": "Invalid role",
+    "siteNotFound": "Site \"{site}\" not found",
+    "unauthorizedLower": "unauthorized",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "unknownAction": "Unknown action",
+    "internalError": "Internal error",
+    "documentNotFound": "Document not found",
+    "anthropicKeyMissing": "Anthropic API key not configured",
+    "unknownError": "Unknown error"
+  },
+  "accessTokens": {
+    "nameRequired": "Name is required",
+    "scopeRequired": "At least one valid scope required",
+    "permissionRequired": "At least one valid permission required",
+    "invalidResourceFilter": "Invalid resource filter shape",
+    "invalidIpFilter": "Invalid IP filter shape",
+    "missingId": "Missing token id"
+  },
+  "analytics": {
+    "unknownView": "Unknown view: {view}",
+    "fetchFailed": "Failed to fetch analytics",
+    "unknownType": "Unknown type: {type}",
+    "recordFailed": "Failed to record entry"
+  },
+  "backupTest": {
+    "noProvider": "No provider configured",
+    "failed": "Test failed"
+  },
+  "backups": {
+    "notFound": "Backup not found"
+  },
+  "beam": {
+    "exportFailed": "Export failed",
+    "invalidUploadId": "Invalid uploadId",
+    "invalidChunkIndex": "Invalid chunk index",
+    "emptyChunk": "Empty chunk",
+    "missingOrgId": "Missing orgId",
+    "invalidChunkCount": "Invalid chunk count",
+    "notBeamArchive": "File must be a .beam archive",
+    "invalidSha": "Invalid sha256 (must be 64 hex chars)",
+    "missingChunk": "Missing chunk {i} of {total} — upload incomplete. Retry the upload.",
+    "shaMismatch": "SHA-256 mismatch: client said {claimed}, server got {actual}. Upload was corrupted in transit; retry.",
+    "invalidAction": "Missing or invalid ?action= (expected 'chunk', 'finalize', or 'abort')",
+    "importFailed": "Import failed",
+    "pushMissingFields": "Missing required fields: targetUrl, token, orgId",
+    "transferStarted": "Beam transfer started — track progress via SSE",
+    "pushFailed": "Push failed",
+    "started": "Started",
+    "missingBeamId": "Missing beamId",
+    "sessionNotFound": "Beam session not found",
+    "tokenFailed": "Token generation failed",
+    "listTokensFailed": "Failed to list tokens"
+  },
+  "dashboardStats": {
+    "noSite": "No site",
+    "loadFailed": "Failed to load stats"
+  },
+  "deploy": {
+    "domainParamRequired": "domain query param required",
+    "invalidDomain": "not a valid domain",
+    "lookupFailed": "lookup failed",
+    "dnsCheckFailed": "DNS check failed",
+    "dnsApiNotConfiguredEnv": "DNS API not configured. Set DNS_API_URL and DNS_API_KEY in .env.local.",
+    "noCustomDomain": "No custom domain configured.",
+    "zoneNotManaged": "Zone \"{zone}\" is not managed by the DNS API. Create the CNAME manually at your registrar.",
+    "noCnameTarget": "Could not determine CNAME target — make sure the deploy provider is configured.",
+    "cnameFailed": "CNAME creation failed",
+    "invalidBody": "Invalid request body",
+    "dockerMissingFields": "Missing required fields: appName, flyToken, flyOrg",
+    "validatingToken": "Validating Fly.io token...",
+    "orgNotFound": "Organization \"{org}\" not found. Available: {available}",
+    "creatingApp": "Creating app \"{app}\"...",
+    "appExists": "App \"{app}\" already exists, reusing...",
+    "configuringSecrets": "Configuring secrets...",
+    "deployingContainer": "Deploying container...",
+    "waitingContainer": "Waiting for container to start...",
+    "allocatingIp": "Allocating IP addresses...",
+    "liveAt": "Live at {url}",
+    "failed": "Deploy failed",
+    "zipFailed": "Failed to generate package",
+    "siteParamRequired": "site query param required",
+    "siteNotFoundLower": "site not found: {site}",
+    "flyTokenMissing": "Fly.io API token is not configured.",
+    "flyAppMissing": "Fly app name is not configured.",
+    "rebuildFailed": "Rebuild failed",
+    "healthStatus": "Health endpoint returned {status}",
+    "statusFailed": "Failed to check status",
+    "pathParamRequired": "path query param required",
+    "fileNotFound": "file not found",
+    "listFailed": "Failed to list deploys",
+    "tokenNeedsSite": "Token-based deploy requires ?site=<siteId>",
+    "failedUnexpectedly": "Deploy failed unexpectedly",
+    "starting": "Starting deploy...",
+    "building": "Building site and optimizing assets...",
+    "pushing": "Pushing to provider...",
+    "complete": "Deploy complete!"
+  },
+  "dnsRegistrar": {
+    "notConfigured": "DNS API not configured",
+    "qRequired": "q is required",
+    "domainsRequired": "domains is required",
+    "searchAction": "action must be 'search' or 'check'",
+    "domainNameRequired": "domain_name is required",
+    "confirmTokenRequired": "confirm_token is required",
+    "buyAction": "action must be 'initiate' or 'confirm'"
+  },
+  "emailTest": {
+    "recipientRequired": "Recipient email required"
+  },
+  "forms": {
+    "noSubmissions": "No submissions",
+    "notFound": "Form not found",
+    "invalidStatus": "Invalid status",
+    "fieldsRequired": "name, label, and fields are required"
+  },
+  "githubServiceToken": {
+    "noToken": "No GitHub token — connect GitHub first"
+  },
+  "goto": {
+    "invalidJson": "Invalid JSON body",
+    "fieldsRequired": "orgId, siteId and path are required"
+  },
+  "import": {
+    "missingFields": "Missing required fields",
+    "collectionNotFound": "Collection \"{collection}\" not found",
+    "failed": "Import failed",
+    "previewMissing": "Missing content, format, or collection",
+    "previewFailed": "Preview failed",
+    "noFile": "No file uploaded",
+    "parseFailed": "Parse failed"
+  },
+  "invitations": {
+    "revokeFailed": "Failed to revoke invitation",
+    "tokenNameRequired": "Token and name are required",
+    "invalid": "Invalid or expired invitation",
+    "alreadyHasAccount": "This email already has an account. Sign in as {email} and open the link again.",
+    "passwordRequired": "Password is required for new accounts",
+    "createAccountFailed": "Failed to create account",
+    "emailRequired": "Email is required",
+    "alreadyMember": "This user already has access to this site",
+    "mailFailed": "The email could not be sent.",
+    "createFailed": "Failed to create invitation",
+    "tokenRequired": "Token is required"
+  },
+  "lighthouse": {
+    "noResults": "No scan results provided",
+    "optimizeFailed": "Optimize failed",
+    "noUrl": "No URL provided and no production or preview URL configured",
+    "localhost": "Cannot audit localhost URLs — PSI API requires a public URL. Configure a production URL in Site Settings → Deploy.",
+    "scanFailed": "Scan failed"
+  },
+  "log": {
+    "eventsRequired": "events array required",
+    "failed": "Failed to log events"
+  },
+  "mcpConfig": {
+    "keyLabelRequired": "key and label are required",
+    "idRequired": "id is required"
+  },
+  "orgSettings": {
+    "noActiveOrg": "No active org"
+  },
+  "pm2": {
+    "notInProduction": "Not available in production",
+    "error": "pm2 error",
+    "nameActionRequired": "name and action required",
+    "invalidAction": "action must be start, stop, or restart",
+    "cannotControlSelf": "Cannot control cms-admin from the UI"
+  },
+  "profile": {
+    "userNotFound": "User not found",
+    "unsupportedLanguage": "Unsupported language",
+    "currentPasswordRequired": "Current password required",
+    "newPasswordTooShort": "New password must be at least 8 characters",
+    "currentPasswordWrong": "Current password is incorrect"
+  },
+  "push": {
+    "invalidJson": "invalid JSON body",
+    "subscriptionRequired": "subscription object required",
+    "subscriptionIncomplete": "subscription missing endpoint/keys",
+    "macBrowser": "Mac · browser",
+    "windowsBrowser": "Windows · browser",
+    "linuxBrowser": "Linux · browser",
+    "androidBrowser": "Android · browser",
+    "browser": "Browser",
+    "vapidMissing": "VAPID_PUBLIC_KEY not set on cms-admin"
+  },
+  "scheduledEvents": {
+    "tags": "Tags: {tags}",
+    "category": "Category: {category}",
+    "backupTitle": "Backup ({count} docs)",
+    "scheduledBackupSub": "Scheduled backup",
+    "scheduledBackup": "Scheduled Backup",
+    "dailyBackup": "Daily backup",
+    "weeklyBackup": "Weekly backup",
+    "scheduledLinkCheck": "Scheduled Link Check",
+    "dailyCheck": "Daily check",
+    "weeklyCheck": "Weekly check",
+    "loadFailed": "Failed to load scheduled events"
+  },
+  "seo": {
+    "noData": "No data",
+    "exportFailed": "Export failed",
+    "keywordRequired": "keyword required",
+    "collectionSlugRequired": "collection and slug required",
+    "noImage": "No image found in document to use as OG base",
+    "ogFailed": "OG image generation failed"
+  },
+  "siteConfig": {
+    "noActiveSite": "Could not resolve active site",
+    "siteNotFound": "Site not found",
+    "autoFixFilesystemOnly": "Auto-fix is only available for filesystem sites",
+    "readConfigFailed": "Could not read config file",
+    "aiFixFailed": "AI fix generation failed",
+    "aiFixEmpty": "AI returned an empty or unusable fix",
+    "siteNotInRegistry": "Site not found in registry",
+    "diagnoseSummary": "The site configuration has validation errors that prevent it from loading.",
+    "diagnoseFix": "Review the cms.config.ts file and correct the field format.",
+    "aiDiagnosisUnavailable": "AI diagnosis unavailable"
+  },
+  "siteDomains": {
+    "previewUrl": "Preview address",
+    "productionUrl": "Deploy address",
+    "customDomain": "Custom domain",
+    "invalidRequest": "Invalid request",
+    "domainsMustBeList": "domains must be a list of strings"
+  },
+  "sitesClone": {
+    "fieldsRequired": "sourceSiteId and newName required",
+    "failed": "Clone failed"
+  },
+  "translateBulk": {
+    "targetLocaleRequired": "targetLocale required",
+    "nothingToTranslate": "no translatable content"
+  },
+  "users": {
+    "ownRole": "Cannot change your own role",
+    "updateRoleFailed": "Failed to update role",
+    "removeSelf": "Cannot remove yourself from the team",
+    "removeFailed": "Failed to remove member",
+    "noSiteAccess": "You don't have access to this site",
+    "adminRequired": "Admin access required"
+  },
+  "webhooks": {
+    "readFailed": "Failed to read deliveries",
+    "urlRequired": "url required",
+    "testFailed": "Test failed"
+  },
+  "wpMigrate": {
+    "missingUrl": "Missing url",
+    "probeFailed": "Probe failed",
+    "startMissing": "Missing probeResult, orgId, or siteName",
+    "migrationFailed": "Migration failed"
+  }
+}

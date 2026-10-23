@@ -328,7 +328,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
             <button data-testid={`htmldoc-mode-${m}`} key={m} type="button" style={tabStyle(mode === m)} onClick={() => setMode(m)}>
               {m === "preview" && <Eye style={ICON_SIZE} />}
               {m === "code" && <Code2 style={ICON_SIZE} />}
-              {m === "preview" ? "Preview" : "Code"}
+              {m === "preview" ? t("editor.htmldocEditor.modePreview") : t("editor.htmldocEditor.modeCode")}
             </button>
           ))}
         </div>

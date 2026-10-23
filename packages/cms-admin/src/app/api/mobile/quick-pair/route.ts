@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
   const session = createQrSession();
   approveQrSession(session.id, user.id);
 
-  const deepLink = `webhouseapp://login?server=${encodeURIComponent(serverUrl)}&token=${session.id}`;
+  const deepLink = `webhouseapp://login?server=${encodeURIComponent(serverUrl)}&token=${session.id}`; // i18n-ignore: deep-link URL
 
   // Redirect to the /api/mobile/open page which renders the "Open in app" button
   const openUrl = `/api/mobile/open?url=${encodeURIComponent(deepLink)}`;

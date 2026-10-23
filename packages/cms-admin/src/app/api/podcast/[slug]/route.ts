@@ -10,39 +10,42 @@ import { kraevTilladelse, preflight, svar, PODCAST_PERMISSIONS } from "@/lib/pod
 import { hentAfsnit, skrivAfsnit } from "@/lib/podcast/store";
 import { efterManuskriptRettelse } from "@/lib/podcast/state";
 import { parseManuskript } from "@/lib/podcast/manuscript";
+import { getServerTSafe } from "@/i18n/server";
 
 export const OPTIONS = preflight;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.read);
   if (afvist) return afvist.svar;
 
   const { slug } = await params;
   const hentet = await hentAfsnit(slug);
   if (!hentet.ok) return svar(req, { error: hentet.grund }, 409);
-  if (!hentet.vaerdi) return svar(req, { error: `afsnittet «${slug}» findes ikke` }, 404);
+  if (!hentet.vaerdi) return svar(req, { error: t("errApi.podcast.episodeNotFound", { slug }) }, 404);
   return svar(req, { afsnit: hentet.vaerdi });
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.edit);
   if (afvist) return afvist.svar;
 
   const { slug } = await params;
   const krop = (await req.json().catch(() => null)) as { replikker?: unknown } | null;
   if (!krop || !Array.isArray(krop.replikker)) {
-    return svar(req, { error: "kroppen skal have en liste «replikker»" }, 400);
+    return svar(req, { error: t("errApi.podcast.needsReplikker") }, 400);
   }
 
   // SAMME validering som på et genereret manuskript. Et menneske kan også skrive
   // en tom replik eller slette den ene vært; reglen «en samtale har to stemmer»
   // gælder uanset hvem der skrev teksten.
-  const parset = parseManuskript(JSON.stringify(krop.replikker));
-  if (!parset.ok) return svar(req, { error: `manuskriptet blev afvist: ${parset.grund}` }, 400);
+  const parset = parseManuskript(JSON.stringify(krop.replikker), t);
+  if (!parset.ok) return svar(req, { error: t("errApi.podcast.scriptRejected", { reason: String(parset.grund) }) }, 400);
 
   const hentet = await hentAfsnit(slug);
   if (!hentet.ok) return svar(req, { error: hentet.grund }, 409);
-  if (!hentet.vaerdi) return svar(req, { error: `afsnittet «${slug}» findes ikke` }, 404);
+  if (!hentet.vaerdi) return svar(req, { error: t("errApi.podcast.episodeNotFound", { slug }) }, 404);
 
   const skrevet = await skrivAfsnit(slug, {
     replikker: parset.replikker,

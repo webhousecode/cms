@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllForms } from "@/lib/forms/store";
 import { TURNSTILE_TEST_SITE_KEY } from "@/lib/forms/spam";
+import { getServerTSafe } from "@/i18n/server";
 
 // Public, read-only, embeddable from any origin (same intent as widget.js) —
 // this is the runtime delivery point for the Turnstile SITE key (public by
@@ -18,10 +19,11 @@ export async function OPTIONS() {
  * third-party integration) can render the form without hard-coding fields.
  */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
+  const t = await getServerTSafe();
   const { name } = await params;
   const allForms = await getAllForms();
   const form = allForms.find((f) => f.name === name);
-  if (!form) return NextResponse.json({ error: "Form not found" }, { status: 404, headers: CORS_HEADERS });
+  if (!form) return NextResponse.json({ error: t("errApi.common.formNotFound") }, { status: 404, headers: CORS_HEADERS });
 
   return NextResponse.json(
     {
@@ -36,7 +38,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ nam
         options: f.options,
         validation: f.validation,
       })),
-      successMessage: form.successMessage ?? "Thank you!",
+      successMessage: form.successMessage ?? t("errApi.common.thankYou"),
       ...(form.spam?.turnstile === true && {
         turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || TURNSTILE_TEST_SITE_KEY,
       }),

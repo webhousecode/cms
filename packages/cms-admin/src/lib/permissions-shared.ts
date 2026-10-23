@@ -11,20 +11,24 @@
 
 import type { UserRole } from "./auth";
 
+/**
+ * Permission → catalog key of its label (F211.2). Render with t(PERMISSIONS[p]);
+ * the English text lives in i18n/messages/en/system.json.
+ */
 export const PERMISSIONS = {
-  "content.read": "View documents",
-  "content.create": "Create documents",
-  "content.edit": "Edit documents",
-  "content.publish": "Publish / unpublish",
+  "content.read": "system.permissions.contentRead",
+  "content.create": "system.permissions.contentCreate",
+  "content.edit": "system.permissions.contentEdit",
+  "content.publish": "system.permissions.contentPublish",
   // F189 — podcasten. TRE og ikke én, fordi de tre handlinger har vidt
   // forskellig vægt. `podcast.record` er sin egen med vilje: en redaktør der må
   // rette en tekst, er ikke automatisk en der må bruge ~$1,48 af ejerens penge
   // pr. tryk — og var de samme tilladelse, kunne forskellen ikke udtrykkes.
-  "podcast.read": "See podcast episodes and scripts",
-  "podcast.edit": "Write and approve podcast scripts",
-  "podcast.record": "Record an episode (SPENDS MONEY)",
-  "content.delete": "Trash documents",
-  "content.trash.empty": "Empty entire trash",
+  "podcast.read": "system.permissions.podcastRead",
+  "podcast.edit": "system.permissions.podcastEdit",
+  "podcast.record": "system.permissions.podcastRecord",
+  "content.delete": "system.permissions.contentDelete",
+  "content.trash.empty": "system.permissions.contentTrashEmpty",
   /**
    * Trash and old versions — the record of how the published thing came to be.
    *
@@ -38,14 +42,14 @@ export const PERMISSIONS = {
    * Deliberately NOT folded into `content.read`: a viewer needs that for the
    * one job they have. This is the narrower thing they must not have.
    */
-  "content.history": "View trash and old versions",
-  "media.read": "View media library",
-  "media.upload": "Upload files",
-  "media.delete": "Delete files",
-  "deploy.trigger": "Deploy / build sites",
-  "curation.review": "Approve / reject in queue",
-  "forms.read": "View form inbox",
-  "forms.manage": "Create / edit form definitions",
+  "content.history": "system.permissions.contentHistory",
+  "media.read": "system.permissions.mediaRead",
+  "media.upload": "system.permissions.mediaUpload",
+  "media.delete": "system.permissions.mediaDelete",
+  "deploy.trigger": "system.permissions.deployTrigger",
+  "curation.review": "system.permissions.curationReview",
+  "forms.read": "system.permissions.formsRead",
+  "forms.manage": "system.permissions.formsManage",
   /**
    * F188 — visitors' AI conversations.
    *
@@ -60,8 +64,8 @@ export const PERMISSIONS = {
    * read what is PUBLISHED, never the protocol behind it — and a chat log is
    * other people's words about their own business.
    */
-  "conversations.read": "View visitors' conversations",
-  "conversations.write": "Record a conversation (site → CMS)",
+  "conversations.read": "system.permissions.conversationsRead",
+  "conversations.write": "system.permissions.conversationsWrite",
   /**
    * Erasing one conversation before the 90-day sweep reaches it — what an
    * erasure request needs. Its own permission, and admin-only, for the same
@@ -69,26 +73,26 @@ export const PERMISSIONS = {
    * of what a visitor said is a different act from reading it, and it cannot
    * be undone.
    */
-  "conversations.delete": "Delete a single conversation (erasure request)",
-  "chat.use": "Use chat interface",
-  "agents.run": "Run agents manually",
-  "agents.manage": "Create / edit agents + workflows",
-  "settings.edit": "Change site settings",
+  "conversations.delete": "system.permissions.conversationsDelete",
+  "chat.use": "system.permissions.chatUse",
+  "agents.run": "system.permissions.agentsRun",
+  "agents.manage": "system.permissions.agentsManage",
+  "settings.edit": "system.permissions.settingsEdit",
   // The trusted-domain list decides which foreign pages may save content and
   // post forms to this site — it is a security boundary, not a content
   // setting. Deliberately NOT in ROLE_PERMISSIONS.editor: an editor may change
   // what the site says, not who is allowed to talk to it.
-  "site.domains": "Manage the site's trusted domains",
-  "capabilities.manage": "Manage feature capabilities (per-tenant toggles)",
-  "backup.manage": "Create / restore backups",
-  "beam.transfer": "Beam sites",
-  "site.clone": "Clone sites",
-  "webhooks.manage": "Configure webhooks",
-  "tokens.manage": "Create / revoke API tokens",
-  "import.execute": "Run CSV / WP import",
-  "users.manage": "Invite / remove users",
-  "logs.view": "View event log (audit trail)",
-  "logs.export": "Export event log (GDPR data)",
+  "site.domains": "system.permissions.siteDomains",
+  "capabilities.manage": "system.permissions.capabilitiesManage",
+  "backup.manage": "system.permissions.backupManage",
+  "beam.transfer": "system.permissions.beamTransfer",
+  "site.clone": "system.permissions.siteClone",
+  "webhooks.manage": "system.permissions.webhooksManage",
+  "tokens.manage": "system.permissions.tokensManage",
+  "import.execute": "system.permissions.importExecute",
+  "users.manage": "system.permissions.usersManage",
+  "logs.view": "system.permissions.logsView",
+  "logs.export": "system.permissions.logsExport",
 } as const;
 
 export type Permission = keyof typeof PERMISSIONS;

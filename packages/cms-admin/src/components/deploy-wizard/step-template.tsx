@@ -90,7 +90,7 @@ export function StepTemplate({ selected, onSelect }: Props) {
                 data-testid={`deploy-site-select-${site.id}`}
                 key={site.id}
                 type="button"
-                onClick={() => onSelect(`site:${site.id}`)}
+                onClick={() => onSelect(`site:${site.id}`)} // i18n-ignore: selection id passed to onSelect
                 style={{
                   display: "flex",
                   alignItems: "center",

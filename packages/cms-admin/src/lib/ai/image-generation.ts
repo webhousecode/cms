@@ -11,6 +11,7 @@
  * the tool stays off (ship dark).
  */
 import { getAI } from "@/lib/ai/client";
+import { getServerTSafe } from "@/i18n/server";
 
 /** FLUX 2 pro — the SDK's price/quality default for plain text-to-image. */
 const MODEL_ID = "flux-2-pro";
@@ -36,15 +37,16 @@ export async function generateImage(params: {
   prompt: string;
 }): Promise<GeneratedImage> {
   const { prompt } = params;
+  const t = await getServerTSafe();
 
   if (!prompt || !prompt.trim()) {
-    throw new Error("Image generation prompt is required");
+    throw new Error(t("libText.imageGeneration.promptRequired"));
   }
   if (prompt.length > 4000) {
-    throw new Error("Image generation prompt is too long (max 4000 characters)");
+    throw new Error(t("libText.imageGeneration.promptTooLong"));
   }
   if (!getImageGenerationKey()) {
-    throw new Error("Image generation is not set up: BFL_API_KEY is missing.");
+    throw new Error(t("libText.imageGeneration.notSetUp"));
   }
 
   const ai = await getAI();
@@ -57,14 +59,14 @@ export async function generateImage(params: {
   // Residency is read off the RESPONSE — the route that actually answered —
   // never assumed from the request.
   if (usage.region !== "eu") {
-    throw new Error(`Image generation answered outside the EU (provider ${usage.provider}, region ${usage.region}); refused.`);
+    throw new Error(t("libText.imageGeneration.outsideEu", { provider: String(usage.provider), region: String(usage.region) }));
   }
 
   // BFL returns a short-lived delivery URL, not inline bytes.
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Image download failed: ${res.status}`);
+  if (!res.ok) throw new Error(t("libText.imageGeneration.downloadFailed", { status: res.status }));
   const mimeType = (res.headers.get("content-type") ?? "").split(";")[0].trim();
-  if (!mimeType.startsWith("image/")) throw new Error(`Image download was not an image (${mimeType || "no content-type"})`);
+  if (!mimeType.startsWith("image/")) throw new Error(t("libText.imageGeneration.notAnImage", { type: mimeType || t("libText.imageGeneration.noContentType") }));
 
   return {
     buffer: Buffer.from(await res.arrayBuffer()),

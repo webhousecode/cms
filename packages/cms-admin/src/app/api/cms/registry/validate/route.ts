@@ -3,6 +3,7 @@ import { validateSite } from "@webhouse/cms";
 import path from "path";
 import { requirePermission } from "@/lib/permissions";
 import { configLoadAllowed } from "@/lib/code-path-policy";
+import { getServerTSafe } from "@/i18n/server";
 
 /** Security W41 C5 — settings.edit, and only the active site's own config
  *  (an arbitrary path loaded by jiti = code execution). */
@@ -13,7 +14,7 @@ async function guardConfigLoad(configPath: string): Promise<Response | null> {
   let active: string | null = null;
   try { active = (await getActiveSitePaths()).configPath; } catch { active = null; }
   if (!configLoadAllowed(configPath, active, { instanceAdmin: await isInstanceAdmin() })) {
-    return NextResponse.json({ error: "Only the active site's own config can be loaded" }, { status: 403 });
+    return NextResponse.json({ error: (await getServerTSafe())("errCms.shared.activeConfigOnly") }, { status: 403 });
   }
   return null;
 }
@@ -24,6 +25,7 @@ async function guardConfigLoad(configPath: string): Promise<Response | null> {
  * Returns: ValidationResult
  */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   try {
     const { configPath, contentDir } = (await request.json()) as {
       configPath?: string;
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
     };
 
     if (!configPath) {
-      return NextResponse.json({ error: "configPath required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.shared.configPathRequired") }, { status: 400 });
     }
 
     // GitHub configs not validated at file level (handled by GitHub adapter)
@@ -58,8 +60,8 @@ export async function POST(request: NextRequest) {
           level: "error",
           category: "config",
           path: absolutePath,
-          message: `Cannot load config file: ${err instanceof Error ? err.message : "Unknown error"}`,
-          suggestion: "Make sure the file exists and exports a valid config with defineConfig().",
+          message: t("errCms.registryValidate.cannotLoad", { error: err instanceof Error ? err.message : t("errCms.shared.unknownError") }),
+          suggestion: t("errCms.registryValidate.suggestion"),
         }],
         warnings: [],
       });
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Validation failed" },
+      { error: err instanceof Error ? err.message : t("errCms.registryValidate.failed") },
       { status: 500 },
     );
   }

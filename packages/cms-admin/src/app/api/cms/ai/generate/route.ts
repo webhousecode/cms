@@ -12,6 +12,7 @@ import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 interface SelectOption { label: string; value: string }
 interface FieldDef { name: string; type: string; required?: boolean; label?: string; options?: SelectOption[] }
@@ -93,15 +94,16 @@ async function callWithTools(params: {
     }
   }
 
-  return { rawText: "[Max tool iterations reached]", inputTokens: totalIn, outputTokens: totalOut };
+  return { rawText: "[Max tool iterations reached]", inputTokens: totalIn, outputTokens: totalOut }; // i18n-ignore: sentinel returned in place of model output, never a UI message
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("ai"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
-    return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
+    return NextResponse.json({ error: t("errCms.shared.aiKeyMissingShort") }, { status: 503 });
   }
 
   try {
@@ -112,13 +114,13 @@ export async function POST(request: NextRequest) {
       locale?: string;
     };
     if (!prompt?.trim()) {
-      return NextResponse.json({ error: "prompt required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.ai.promptRequired") }, { status: 400 });
     }
 
     const config = await getAdminConfig();
     const colDef = config.collections.find((c) => c.name === collection);
     if (!colDef) {
-      return NextResponse.json({ error: "Collection not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errCms.shared.collectionNotFound") }, { status: 404 });
     }
 
     const fields = colDef.fields as FieldDef[];
@@ -139,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     const systemParts = [
       buildLocaleInstruction(locale),
-      "You are a professional content writer. Generate publication-ready content.",
+      "You are a professional content writer. Generate publication-ready content.", // i18n-ignore: model prompt
       brandContext ? `\n## Brand Voice\n${brandContext}` : null,
       contentContext ? `\n${contentContext}` : null,
       toolNames.length > 0 ? `\n## Available tools\nYou have access to: ${toolNames.join(", ")}. Use them to research facts before writing. After using tools, return the final JSON.` : null,
@@ -147,7 +149,7 @@ export async function POST(request: NextRequest) {
     ].filter(Boolean).join("\n");
 
     const userMessage = existingData
-      ? `Existing document data:\n${JSON.stringify(existingData, null, 2)}\n\n---\n\nTask: ${prompt}`
+      ? `Existing document data:\n${JSON.stringify(existingData, null, 2)}\n\n---\n\nTask: ${prompt}` // i18n-ignore: model prompt
       : prompt;
 
     const cockpit = await readCockpit();
@@ -196,7 +198,7 @@ export async function POST(request: NextRequest) {
         } catch { /* fall through */ }
       }
       // Give up — wrap raw text
-      return { title: "Generated content", content: text };
+      return { title: t("errCms.ai.generatedContent"), content: text };
     }
 
     const title = typeof contentData["title"] === "string"
@@ -213,7 +215,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: contentData, slug, title });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "AI error";
+    const msg = err instanceof Error ? err.message : t("errCms.shared.aiError");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

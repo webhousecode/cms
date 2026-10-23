@@ -11,6 +11,7 @@ import { randomBytes } from "node:crypto";
 import { FlyClient } from "@broberg/deploy-core";
 import { FLY_VM_SIZES } from "@/lib/deploy/fly-machines";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ interface DeployRequest {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers();
   if (denied) return denied;
 
@@ -32,14 +34,14 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.deploy.invalidBody") }, { status: 400 });
   }
 
   const { template, appName, region, vmSize, flyToken, flyOrg, adminEmail } = body;
 
   if (!appName || !flyToken || !flyOrg) {
     return NextResponse.json(
-      { error: "Missing required fields: appName, flyToken, flyOrg" },
+      { error: t("errAdmin.deploy.dockerMissingFields") },
       { status: 400 },
     );
   }
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
         error?: string;
       }) {
         try {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)); // i18n-ignore: SSE wire format
         } catch {
           /* client disconnected */
         }
@@ -68,24 +70,24 @@ export async function POST(request: NextRequest) {
 
       try {
         // ── Step 1: Validate ──
-        send({ step: "init", message: "Validating Fly.io token...", progress: 5, status: "running" });
+        send({ step: "init", message: t("errAdmin.deploy.validatingToken"), progress: 5, status: "running" });
         const orgs = await fly.listOrgs();
         const validOrg = orgs.find((o) => o.slug === flyOrg);
         if (!validOrg) {
-          throw new Error(`Organization "${flyOrg}" not found. Available: ${orgs.map((o) => o.slug).join(", ")}`);
+          throw new Error(t("errAdmin.deploy.orgNotFound", { org: flyOrg, available: orgs.map((o) => o.slug).join(", ") }));
         }
 
         // ── Step 2: Create app ──
-        send({ step: "create-app", message: `Creating app "${appName}"...`, progress: 20, status: "running" });
+        send({ step: "create-app", message: t("errAdmin.deploy.creatingApp", { app: appName }), progress: 20, status: "running" });
         const existing = await fly.getApp(appName);
         if (existing) {
-          send({ step: "create-app", message: `App "${appName}" already exists, reusing...`, progress: 25, status: "running" });
+          send({ step: "create-app", message: t("errAdmin.deploy.appExists", { app: appName }), progress: 25, status: "running" });
         } else {
           await fly.createApp(appName, flyOrg);
         }
 
         // ── Step 3: Set secrets ──
-        send({ step: "set-secrets", message: "Configuring secrets...", progress: 35, status: "running" });
+        send({ step: "set-secrets", message: t("errAdmin.deploy.configuringSecrets"), progress: 35, status: "running" });
         const jwtSecret = randomBytes(32).toString("hex");
         await fly.setSecrets(appName, {
           CMS_JWT_SECRET: jwtSecret,
@@ -95,7 +97,7 @@ export async function POST(request: NextRequest) {
         });
 
         // ── Step 4: Create machine ──
-        send({ step: "create-machine", message: "Deploying container...", progress: 50, status: "running" });
+        send({ step: "create-machine", message: t("errAdmin.deploy.deployingContainer"), progress: 50, status: "running" });
 
         const vmPreset = FLY_VM_SIZES.find((s) => s.value === vmSize) ?? FLY_VM_SIZES[0];
 
@@ -123,11 +125,11 @@ export async function POST(request: NextRequest) {
         }, { region });
 
         // ── Step 5: Wait for healthy ──
-        send({ step: "wait-healthy", message: "Waiting for container to start...", progress: 70, status: "running" });
+        send({ step: "wait-healthy", message: t("errAdmin.deploy.waitingContainer"), progress: 70, status: "running" });
         await fly.waitForState(appName, machine.id, "started", 60);
 
         // ── Step 6: Allocate IPs ──
-        send({ step: "allocate-ip", message: "Allocating IP addresses...", progress: 85, status: "running" });
+        send({ step: "allocate-ip", message: t("errAdmin.deploy.allocatingIp"), progress: 85, status: "running" });
         try {
           await fly.allocateIp(appName, "shared_v4");
         } catch {
@@ -143,13 +145,13 @@ export async function POST(request: NextRequest) {
         const url = `https://${appName}.fly.dev`;
         send({
           step: "done",
-          message: `Live at ${url}`,
+          message: t("errAdmin.deploy.liveAt", { url }),
           progress: 100,
           status: "done",
           url,
         });
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Deploy failed";
+        const message = err instanceof Error ? err.message : t("errAdmin.deploy.failed");
         send({
           step: "error",
           message,

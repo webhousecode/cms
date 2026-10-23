@@ -21,7 +21,7 @@
  *  Den står her som en NØDBREMSE, ikke som sandheden — modsat før, hvor den
  *  VAR sandheden. Bliver den forældet, siger svaret det. */
 export const RESERVE_KURS = 6.43;
-export const RESERVE_MAALT = "8. september 2026";
+export const RESERVE_MAALT = "8. september 2026"; // i18n-ignore: measurement date stamp of the fallback exchange rate (data value, Danish-dated)
 
 const KILDE = "https://open.er-api.com/v6/latest/USD";
 /** Seks timer. Kort nok til at følge en kurs, langt nok til at et opslag ikke

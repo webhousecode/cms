@@ -54,7 +54,7 @@ describe("de fem måder en fil kan være forkert på", () => {
     expect(svar.ok).toBe(false);
     if (svar.ok) return;
     expect(svar.grund).toContain("JESPER");
-    expect(svar.grund).toContain("linje 4");
+    expect(svar.grund).toContain("line 4");
     expect(svar.linje).toBe(4);
   });
 
@@ -62,15 +62,15 @@ describe("de fem måder en fil kan være forkert på", () => {
     const svar = fraTekst("Her står noget løst.\n\nAIDAN:\nen\n");
     expect(svar.ok).toBe(false);
     if (svar.ok) return;
-    expect(svar.grund).toContain("linje 1");
-    expect(svar.grund).toContain("før den første taler");
+    expect(svar.grund).toContain("line 1");
+    expect(svar.grund).toContain("before the first speaker");
   });
 
   it("en taler uden tekst under sig", () => {
     const svar = fraTekst("AIDAN:\nen\n\nAIRINA:\n\nAIDAN:\ntre\n\nAIRINA:\nfire\n");
     expect(svar.ok).toBe(false);
     if (svar.ok) return;
-    expect(svar.grund).toContain("ingen tekst");
+    expect(svar.grund).toContain("has no text");
   });
 
   it("«AIDAN: tekst på samme linje» er IKKE en talerlinje", () => {
@@ -80,14 +80,14 @@ describe("de fem måder en fil kan være forkert på", () => {
     const svar = fraTekst("AIDAN: det er rigtigt\n");
     expect(svar.ok).toBe(false);
     if (svar.ok) return;
-    expect(svar.grund).toContain("før den første taler");
+    expect(svar.grund).toContain("before the first speaker");
   });
 
   it("for få replikker — en samtale, ikke et oplæg", () => {
     const svar = fraTekst("AIDAN:\nen\n\nAIRINA:\nto\n");
     expect(svar.ok).toBe(false);
     if (svar.ok) return;
-    expect(svar.grund).toContain("2 replik");
+    expect(svar.grund).toContain("2 line");
   });
 
   it("tom fil", () => {
@@ -99,7 +99,7 @@ describe("de fem måder en fil kan være forkert på", () => {
     const svar = fraTekst("# titel\n# format\n");
     expect(svar.ok).toBe(false);
     if (svar.ok) return;
-    expect(svar.grund).toContain("ingen replikker");
+    expect(svar.grund).toContain("no lines");
   });
 });
 

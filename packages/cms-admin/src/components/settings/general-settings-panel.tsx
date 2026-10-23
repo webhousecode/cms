@@ -661,7 +661,7 @@ function SiteSection() {
 						description={t("settings.general.configPathHint")}
 						value={configPath}
 						onChange={(e) => setConfigPath(e.target.value)}
-						placeholder="/Users/.../cms.config.ts"
+						placeholder="/Users/.../cms.config.ts" // i18n-ignore: example path
 						style={{ fontFamily: "monospace", fontSize: "0.8rem" }}
 						copiable
 					/>
@@ -670,7 +670,7 @@ function SiteSection() {
 						description={t("settings.general.contentDirHint")}
 						value={contentDir}
 						onChange={(e) => setContentDir(e.target.value)}
-						placeholder="/Users/.../content"
+						placeholder="/Users/.../content" // i18n-ignore: example path
 						style={{ fontFamily: "monospace", fontSize: "0.8rem" }}
 						copiable
 					/>
@@ -688,7 +688,7 @@ function SiteSection() {
 						type="url"
 						value={cfg.previewSiteUrl}
 						onChange={(e) => setCfg((c) => ({ ...c, previewSiteUrl: e.target.value }))}
-						placeholder="http://localhost:3009"
+						placeholder="http://localhost:3009" // i18n-ignore: example URL
 						copiable
 					/>
 					<Toggle
@@ -940,6 +940,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 											}}
 											title={t("settings.general.removeNamed", { name: LOCALE_LABELS[l] || l })}
 										>
+											{/* i18n-ignore: close glyph entity */}
 											&times;
 										</button>
 									)}
@@ -1102,7 +1103,7 @@ function RevalidationSection() {
 	function autoGenerateUrl() {
 		if (!previewUrl) return;
 		const base = previewUrl.replace(/\/+$/, "");
-		setUrl(`${base}/api/revalidate`);
+		setUrl(`${base}/api/revalidate`); // i18n-ignore: URL
 	}
 
 	async function handleSave(e: FormEvent) {
@@ -1806,9 +1807,9 @@ function SchedulerNotificationsSection() {
 			const isDiscord = webhookUrl.includes("discord.com/api/webhooks");
 			const isSlack = webhookUrl.includes("hooks.slack.com");
 			const body = isDiscord
-				? { content: "Test notification from CMS Scheduler", embeds: [{ title: "Test Event", description: "This is a test notification.", color: 0xF7BB2E, footer: { text: "CMS Scheduler" } }] }
+				? { content: "Test notification from CMS Scheduler", embeds: [{ title: "Test Event", description: "This is a test notification.", color: 0xF7BB2E, footer: { text: "CMS Scheduler" } }] } // i18n-ignore: outgoing webhook test payload to Discord/Slack (F210.4)
 				: isSlack
-					? { text: "*CMS Scheduler Test* — This is a test notification." }
+					? { text: "*CMS Scheduler Test* — This is a test notification." } // i18n-ignore: outgoing webhook test payload to Discord/Slack (F210.4)
 					: { event: "scheduler.test", timestamp: new Date().toISOString() };
 
 			const res = await fetch(webhookUrl, {

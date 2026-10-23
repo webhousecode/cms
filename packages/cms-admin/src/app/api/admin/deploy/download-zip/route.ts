@@ -8,8 +8,10 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers();
   if (denied) return denied;
 
@@ -22,7 +24,8 @@ export async function POST(request: NextRequest) {
 
     // Dockerfile
     zip.file(
-      "Dockerfile",
+      "Dockerfile", // i18n-ignore: file name inside the generated zip
+      // i18n-ignore: Dockerfile contents written into the zip, not shown in the admin
       `FROM ghcr.io/webhousecode/cms-admin:latest
 # Your CMS admin is pre-configured with the demo site.
 # Mount a volume at /site to persist your content.
@@ -114,7 +117,7 @@ Built with [@webhouse/cms](https://webhouse.app)
       },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to generate package";
+    const message = err instanceof Error ? err.message : t("errAdmin.deploy.zipFailed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,3 +1,4 @@
+/* i18n-ignore-file: the size complaint is a server log line (console.warn in the chat route), never shown to a person */
 /**
  * An alarm on the chat's system instruction — the half that does NOT grow with
  * the conversation.

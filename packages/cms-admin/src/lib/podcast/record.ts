@@ -23,6 +23,7 @@ import { overgangNoegle, skalHaveOvergang, OVERGANG_RESERVE } from "./bumper";
 import { sitetsUdtaler, SPONSOR_MODEL } from "./udtale";
 import { sySammen } from "./stitch";
 import type { Replik } from "./manuscript";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Lydens identitet: manuskriptet OG stemmerne.
@@ -38,13 +39,13 @@ export function lydNoegle(
 ): string {
   const h = createHash("sha256");
   for (const r of replikker) h.update(`${r.speaker} ${r.text} `);
-  h.update(`voices:${stemmer.aidan}/${stemmer.airina}`);
+  h.update(`voices:${stemmer.aidan}/${stemmer.airina}`); // i18n-ignore: hash input for the audio cache key, never shown
   // F191 — SPONSOREN ER EN DEL AF LYDENS IDENTITET. Uden den ville et afsnit
   // der lige har fået en reklame på genbruge den gamle fil UDEN reklamen: samme
   // manuskript, samme stemmer, samme nøgle. Filen findes, afspilleren virker,
   // og sponsoren er der bare ikke — den tavse slags fejl, og her koster den en
   // kunde penge han har betalt for at få leveret.
-  if (sponsor?.slug) h.update(`sponsor:${sponsor.slug}@${sponsor.efterReplik ?? 0}`);
+  if (sponsor?.slug) h.update(`sponsor:${sponsor.slug}@${sponsor.efterReplik ?? 0}`); // i18n-ignore: hash input for the audio cache key, never shown
   return h.digest("hex").slice(0, 16);
 }
 
@@ -62,19 +63,20 @@ export async function indspil(args: {
    *  udelades den, bruges nødbremsen i bumper.ts. */
   overgangTekst?: string;
 }): Promise<IndspilSvar> {
+  const t = await getServerTSafe();
   const hentet = await hentAfsnit(args.afsnitSlug);
   if (!hentet.ok) return hentet;
   const afsnit = hentet.vaerdi;
-  if (!afsnit) return { ok: false, grund: `afsnittet «${args.afsnitSlug}» findes ikke` };
+  if (!afsnit) return { ok: false, grund: t("libText.podcastRecord.episodeNotFound", { slug: args.afsnitSlug }) };
 
   // SPÆRREN. Server-side, før noget koster noget. maaIndspilles() er den ene
   // regel der står mellem dette kald og rigtige penge — den bor ét sted netop
   // så dette ikke bliver et `=== "godkendt"` nogen kan glemme.
-  const maa = maaIndspilles(afsnit.data.tilstand);
+  const maa = maaIndspilles(afsnit.data.tilstand, t);
   if (!maa.ok) return { ok: false, grund: maa.grund };
 
   if (!afsnit.data.replikker.length) {
-    return { ok: false, grund: "manuskriptet er tomt" };
+    return { ok: false, grund: t("libText.podcastRecord.emptyScript") };
   }
 
   const noegle = lydNoegle(afsnit.data.replikker, args.stemmer, {
@@ -131,7 +133,7 @@ export async function indspil(args: {
     // efterladt et afsnit der ser færdigt ud og ikke kan afspilles.
     return {
       ok: false,
-      grund: `indspilningen fejlede: ${err instanceof Error ? err.message : "ukendt fejl"}`,
+      grund: t("libText.podcastRecord.recordingFailed", { error: err instanceof Error ? err.message : t("libText.podcastCommon.unknownError") }),
     };
   }
 
@@ -140,7 +142,7 @@ export async function indspil(args: {
   let lydUrl: string;
   try {
     const adapter = await getMediaAdapter();
-    const filnavn = `podcast-${args.afsnitSlug}-${noegle}.mp3`;
+    const filnavn = `podcast-${args.afsnitSlug}-${noegle}.mp3`; // i18n-ignore: file name
     const resultat = await adapter.uploadFile(filnavn, Buffer.from(lyd), "podcast");
     // ADAPTERENS URL BRUGES UÆNDRET. Den første udgave satte «/uploads» foran
     // for filesystem-adapteren — men den returnerer ALLEREDE «/uploads/...»,
@@ -158,9 +160,9 @@ export async function indspil(args: {
     // beskeden vide.
     return {
       ok: false,
-      grund:
-        `lyden blev lavet (og betalt) men kunne ikke gemmes: ` +
-        `${err instanceof Error ? err.message : "ukendt fejl"}. Prøv igen — det koster igen.`,
+      grund: t("libText.podcastRecord.paidButNotSaved", {
+        error: err instanceof Error ? err.message : t("libText.podcastCommon.unknownError"),
+      }),
     };
   }
 
@@ -200,11 +202,12 @@ async function indspilMedSponsor(args: {
 }): Promise<StoreSvar<{ mp3: Uint8Array }>> {
   const { afsnit, stemmer, overgangTekst } = args;
   const slug = afsnit.data.sponsorSlug!;
+  const t = await getServerTSafe();
 
   const hentet = await hentSponsor(slug);
   if (!hentet.ok) return hentet;
-  if (!hentet.vaerdi) return { ok: false, grund: `sponsorindslaget «${slug}» findes ikke` };
-  const maa = maaBruges(hentet.vaerdi.data);
+  if (!hentet.vaerdi) return { ok: false, grund: t("libText.podcastRecord.sponsorNotFound", { slug }) };
+  const maa = maaBruges(hentet.vaerdi.data, t);
   if (!maa.ok) return maa;
 
   const adapter = await getMediaAdapter();
@@ -219,7 +222,7 @@ async function indspilMedSponsor(args: {
   if (!reklame) {
     return {
       ok: false,
-      grund: `sponsorindslagets lydfil kunne ikke læses (${url}). Indslaget peger på en fil der ikke er der.`,
+      grund: t("libText.podcastRecord.sponsorAudioUnreadable", { url }),
     };
   }
 

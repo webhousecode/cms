@@ -24,6 +24,7 @@ import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { ensureDepsStoreRoot, normalizeDeps } from "./deps-store";
 import { runInInstallQueue } from "./install-queue";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface InstallResult {
   status: "success" | "failed" | "skipped";
@@ -70,6 +71,7 @@ async function doInstall(opts: InstallOptions): Promise<InstallResult> {
   const { hash, dataDir, timeoutMs = DEFAULT_TIMEOUT_MS } = opts;
   const deps = normalizeDeps(opts.deps);
 
+  const t = await getServerTSafe();
   // Empty dep-set: nothing to install. Treat as success so callers
   // don't have to special-case.
   if (deps.length === 0 || !hash) {
@@ -78,7 +80,7 @@ async function doInstall(opts: InstallOptions): Promise<InstallResult> {
       hash: "",
       storeDir: null,
       durationMs: 0,
-      logTail: "(no extra deps required)",
+      logTail: t("deployText.installer.noDeps"),
       logPath: null,
     };
   }
@@ -101,7 +103,7 @@ async function doInstall(opts: InstallOptions): Promise<InstallResult> {
           hash,
           storeDir,
           durationMs: Date.now() - start,
-          logTail: "(deps already installed, skipped)",
+          logTail: t("deployText.installer.alreadyInstalled"),
           logPath: existsSync(logPath) ? logPath : null,
         };
       }

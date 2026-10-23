@@ -1,3 +1,4 @@
+/* i18n-ignore-file: the chat system prompt sent to the model, not shown to a person */
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getBrandVoiceForLocale, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { loadRegistry, findSite } from "@/lib/site-registry";

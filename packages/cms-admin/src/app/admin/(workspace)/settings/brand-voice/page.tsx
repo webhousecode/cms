@@ -6,12 +6,13 @@ import type { BrandVoice, BrandVoiceVersion } from "@/lib/brand-voice";
 import { useHeaderData } from "@/lib/header-data-context";
 import { useT } from "@/lib/i18n-context";
 
-const TRANSLATE_LANGUAGES = ["English", "Danish", "German", "French", "Spanish", "Norwegian", "Swedish"];
+const TRANSLATE_LANGUAGES = ["English", "Danish", "German", "French", "Spanish", "Norwegian", "Swedish"]; // i18n-ignore: language identifiers sent to the translate API; labels rendered via t(pages.brandVoice.languages.*)
 
+// i18n-ignore: language endonyms, shown the same in every UI language; also sent to the translate API
 const LOCALE_LABELS: Record<string, string> = {
-  da: "Dansk", en: "English", de: "Deutsch", fr: "Français", es: "Español",
-  sv: "Svenska", nb: "Norsk", nl: "Nederlands", fi: "Suomi", it: "Italiano",
-  pt: "Português", pl: "Polski", ja: "日本語", zh: "中文", ko: "한국어",
+  da: "Dansk", en: "English", de: "Deutsch", fr: "Français", es: "Español", // i18n-ignore: language endonyms
+  sv: "Svenska", nb: "Norsk", nl: "Nederlands", fi: "Suomi", it: "Italiano", // i18n-ignore: language endonyms
+  pt: "Português", pl: "Polski", ja: "日本語", zh: "中文", ko: "한국어", // i18n-ignore: language endonyms
 };
 
 /* ─── Shared diff utilities (mirrors document-editor) ───────────── */
@@ -164,9 +165,9 @@ function stripSynthesis(text: string): string {
 
 function timeAgo(iso: string): string {
   const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (secs < 60) return `${secs}s ago`;
-  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`;
-  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`;
+  if (secs < 60) return `${secs}s ago`; // i18n-ignore: dead code, timeAgo() is never called
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`; // i18n-ignore: dead code, timeAgo() is never called
+  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`; // i18n-ignore: dead code, timeAgo() is never called
   return new Date(iso).toLocaleDateString();
 }
 
@@ -485,7 +486,7 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
                       onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
                     >
-                      {lang}
+                      {t(`pages.brandVoice.languages.${lang}`)}
                     </button>
                   ))}
                 </div>
@@ -689,7 +690,7 @@ export default function BrandVoicePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history }),
       });
-      if (!res.ok || !res.body) throw new Error("Stream failed");
+      if (!res.ok || !res.body) throw new Error("Stream failed"); // i18n-ignore: internal exception, caught and replaced by a translated message
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();

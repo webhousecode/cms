@@ -1,0 +1,669 @@
+{
+  "aiPrompts": {
+    "chatSystem": {
+      "label": "AI Chat — System Prompt",
+      "description": "System prompt for the in-editor AI Assistant chat. Variables: {collectionName}, {fieldDescriptions}"
+    },
+    "generateSystem": {
+      "label": "Generate Article — System Prompt",
+      "description": "System prompt for full-article generation from collection list or editor. Variables: {brandVoice}, {schemaInstructions}"
+    },
+    "rewriteSystem": {
+      "label": "Rewrite — System Prompt",
+      "description": "System prompt for the inline rewrite feature (bubble menu)."
+    },
+    "agentRunnerSchema": {
+      "label": "Agent Runner — Schema Instructions",
+      "description": "Appended to every agent run. Tells the LLM how to format JSON output. Variables: {fieldList}"
+    },
+    "agentGeneratePrompt": {
+      "label": "Agent — Auto-Generate System Prompt",
+      "description": "Prompt used to auto-generate an agent's system prompt from role + name."
+    },
+    "agentCreateFromDescription": {
+      "label": "Agent — Create from Description",
+      "description": "System prompt for generating a full agent config from a natural language description."
+    },
+    "interactivesGenerate": {
+      "label": "Interactives — Create with AI",
+      "description": "System prompt for generating new standalone HTML interactives from a user description."
+    },
+    "interactivesEdit": {
+      "label": "Interactives — Edit with AI",
+      "description": "System prompt for modifying existing HTML interactives via chat. Variables: {title}, {interactiveId}"
+    }
+  },
+  "jsonLd": {
+    "article": {
+      "fields": {
+        "headline": {
+          "label": "Headline",
+          "placeholder": "Article title"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Short summary"
+        },
+        "datePublished": {
+          "label": "Published"
+        },
+        "dateModified": {
+          "label": "Modified"
+        },
+        "authorName": {
+          "label": "Author",
+          "placeholder": "Author name"
+        },
+        "image": {
+          "label": "Image URL"
+        }
+      },
+      "label": "Article",
+      "description": "Blog post or news article"
+    },
+    "faq": {
+      "fields": {
+        "headline": {
+          "label": "Page title",
+          "placeholder": "FAQ page title"
+        }
+      },
+      "label": "FAQ",
+      "description": "Frequently asked questions"
+    },
+    "product": {
+      "fields": {
+        "name": {
+          "label": "Product name",
+          "placeholder": "Product title"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Product description"
+        },
+        "image": {
+          "label": "Image URL"
+        },
+        "price": {
+          "label": "Price"
+        },
+        "currency": {
+          "label": "Currency"
+        },
+        "availability": {
+          "label": "Availability"
+        }
+      },
+      "label": "Product",
+      "description": "Product listing with price"
+    },
+    "event": {
+      "fields": {
+        "name": {
+          "label": "Event name",
+          "placeholder": "Event title"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Event description"
+        },
+        "startDate": {
+          "label": "Start date"
+        },
+        "endDate": {
+          "label": "End date"
+        },
+        "locationName": {
+          "label": "Venue",
+          "placeholder": "Venue name"
+        },
+        "locationAddress": {
+          "label": "Address",
+          "placeholder": "Street, City"
+        },
+        "image": {
+          "label": "Image URL"
+        }
+      },
+      "label": "Event",
+      "description": "Event with date and location"
+    },
+    "person": {
+      "fields": {
+        "name": {
+          "label": "Name",
+          "placeholder": "Full name"
+        },
+        "jobTitle": {
+          "label": "Job title",
+          "placeholder": "Software Engineer"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Bio"
+        },
+        "image": {
+          "label": "Image URL"
+        },
+        "url": {
+          "label": "Website"
+        }
+      },
+      "label": "Person",
+      "description": "Person profile page"
+    },
+    "organization": {
+      "fields": {
+        "name": {
+          "label": "Name",
+          "placeholder": "Organization name"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "About"
+        },
+        "url": {
+          "label": "Website"
+        },
+        "logo": {
+          "label": "Logo URL"
+        }
+      },
+      "label": "Organization",
+      "description": "Company or organization"
+    },
+    "localBusiness": {
+      "fields": {
+        "name": {
+          "label": "Business name",
+          "placeholder": "Business name"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "About"
+        },
+        "streetAddress": {
+          "label": "Street",
+          "placeholder": "123 Main St"
+        },
+        "city": {
+          "label": "City",
+          "placeholder": "Aalborg"
+        },
+        "postalCode": {
+          "label": "Postal code"
+        },
+        "country": {
+          "label": "Country"
+        },
+        "phone": {
+          "label": "Phone"
+        },
+        "image": {
+          "label": "Image URL"
+        }
+      },
+      "label": "Local Business",
+      "description": "Local business with address"
+    },
+    "howto": {
+      "fields": {
+        "name": {
+          "label": "Guide title",
+          "placeholder": "How to..."
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "What this guide teaches"
+        },
+        "totalTime": {
+          "label": "Total time",
+          "placeholder": "PT30M (30 min)"
+        },
+        "image": {
+          "label": "Image URL"
+        }
+      },
+      "label": "HowTo",
+      "description": "Step-by-step guide or tutorial"
+    },
+    "service": {
+      "fields": {
+        "name": {
+          "label": "Service name",
+          "placeholder": "Web Development"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "What the service includes"
+        },
+        "provider": {
+          "label": "Provider name",
+          "placeholder": "Company name"
+        },
+        "areaServed": {
+          "label": "Area served",
+          "placeholder": "Denmark"
+        },
+        "image": {
+          "label": "Image URL"
+        }
+      },
+      "label": "Service",
+      "description": "Professional service offering"
+    },
+    "software": {
+      "fields": {
+        "name": {
+          "label": "App name",
+          "placeholder": "App name"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "What the app does"
+        },
+        "applicationCategory": {
+          "label": "Category"
+        },
+        "operatingSystem": {
+          "label": "OS",
+          "placeholder": "Web, macOS, Windows"
+        },
+        "price": {
+          "label": "Price",
+          "placeholder": "0 (free) or 29.00"
+        },
+        "currency": {
+          "label": "Currency"
+        },
+        "image": {
+          "label": "Image URL"
+        }
+      },
+      "label": "Software",
+      "description": "Software application or SaaS product"
+    },
+    "breadcrumb": {
+      "fields": {
+        "item1Name": {
+          "label": "Level 1",
+          "placeholder": "Home"
+        },
+        "item1Url": {
+          "label": "Level 1 URL"
+        },
+        "item2Name": {
+          "label": "Level 2",
+          "placeholder": "Blog"
+        },
+        "item2Url": {
+          "label": "Level 2 URL"
+        },
+        "item3Name": {
+          "label": "Level 3 (current)",
+          "placeholder": "Article title"
+        }
+      },
+      "label": "Breadcrumb",
+      "description": "Navigation breadcrumb trail (auto-generated from URL)"
+    },
+    "website": {
+      "fields": {
+        "name": {
+          "label": "Site name",
+          "placeholder": "My Website"
+        },
+        "url": {
+          "label": "Site URL"
+        },
+        "description": {
+          "label": "Description",
+          "placeholder": "Site description"
+        },
+        "searchUrl": {
+          "label": "Search URL template"
+        }
+      },
+      "label": "WebSite",
+      "description": "Site-level schema with search action (use on homepage)"
+    }
+  },
+  "lighthouseOptimize": {
+    "linkName": {
+      "title": "Links do not have discernible name",
+      "description": "Add descriptive text to all <a> links in your content. Avoid empty links or links with only an icon."
+    },
+    "colorContrast": {
+      "title": "Background/foreground contrast ratio",
+      "description": "Adjust your site's CSS to ensure text has at least 4.5:1 contrast ratio against its background. Use a contrast checker tool."
+    },
+    "renderBlockingResources": {
+      "title": "Render-blocking resources",
+      "description": "Defer non-critical CSS/JS. For static sites, inline critical CSS. For Next.js, the framework handles this automatically."
+    },
+    "unusedJavascript": {
+      "title": "Reduce unused JavaScript",
+      "description": "Remove unused JS libraries or use dynamic imports. For Next.js, enable tree-shaking and code splitting."
+    },
+    "usesResponsiveImages": {
+      "title": "Properly size images",
+      "description": "Use the CMS image processing pipeline (F44) to generate responsive variants. Add width/height attributes to all images."
+    },
+    "offscreenImages": {
+      "title": "Defer offscreen images",
+      "description": "Add loading=\"lazy\" to images below the fold. The CMS build pipeline does this automatically for static sites."
+    },
+    "largestContentfulPaint": {
+      "title": "Largest Contentful Paint",
+      "description": "Optimize your largest visible element. Common fixes: compress hero image, use WebP, preload LCP image, reduce server response time."
+    },
+    "cumulativeLayoutShift": {
+      "title": "Cumulative Layout Shift",
+      "description": "Add explicit width/height to images and embeds. Avoid inserting content above existing content. Use font-display: swap."
+    },
+    "firstContentfulPaint": {
+      "title": "First Contentful Paint",
+      "description": "Reduce server response time, eliminate render-blocking resources, preload critical assets."
+    },
+    "serverResponseTime": {
+      "title": "Server response time (TTFB)",
+      "description": "Use a CDN, enable caching, optimize server-side rendering. For Fly.io, ensure the machine is in the closest region."
+    },
+    "domSize": {
+      "title": "DOM size too large",
+      "description": "Simplify your page structure. Lazy-load complex sections. Paginate long lists."
+    },
+    "redirects": {
+      "title": "Avoid multiple page redirects",
+      "description": "Update links to point directly to the final URL. Remove unnecessary redirect chains."
+    },
+    "totalByteWeight": {
+      "title": "Total page size too large",
+      "description": "Compress images, remove unused CSS/JS, enable gzip/brotli compression on your server."
+    },
+    "autoFixFailed": "Auto-fix failed: {error}",
+    "unknownError": "unknown error",
+    "documentTitle": {
+      "title": "Missing page titles",
+      "fixed": "Added meta titles to {count} documents from their content title."
+    },
+    "metaDescription": {
+      "title": "Missing meta descriptions",
+      "fixed": "Added meta descriptions to {count} documents from excerpts."
+    },
+    "hreflang": {
+      "title": "Missing hreflang",
+      "okTitle": "hreflang tags",
+      "oneLocale": "Site has only one locale configured. Add additional locales in Site Settings → Language to enable hreflang.",
+      "switched": "Switched locale strategy from \"none\" to \"prefix-other\" — the build pipeline now generates hreflang tags automatically for {count} locales.",
+      "configured": "hreflang is configured ({locales} with \"{strategy}\" strategy). The build pipeline generates hreflang tags automatically."
+    },
+    "htmlLang": {
+      "title": "HTML lang attribute",
+      "defaultSet": "Default locale is set. The build pipeline adds lang attribute to <html> automatically.",
+      "configured": "Default locale \"{locale}\" is configured. Build pipeline adds lang=\"{locale}\" to <html>."
+    },
+    "mainLandmark": {
+      "title": "Missing <main> landmark",
+      "description": "Wrap your page content in a <main> element. For Next.js: add <main> in layout.tsx. For static sites: the build pipeline template should use <main> around {content}. Check your build.ts or layout component."
+    },
+    "imageAlt": {
+      "missingTitle": "Images missing alt text",
+      "missing": "Found {count} images without alt text. Go to Media Library and run \"Analyze All\" to generate AI alt text, or edit individual documents.",
+      "okTitle": "Image alt text",
+      "ok": "All images have alt text."
+    },
+    "fontDisplay": {
+      "title": "Font display",
+      "description": "Add font-display: swap to your @font-face declarations or Google Fonts URL (&display=swap). This prevents invisible text during font loading."
+    }
+  },
+  "lighthouseRunner": {
+    "localhost": "Cannot audit localhost URLs — PSI API requires a public URL. Deploy your site first, then scan the production URL."
+  },
+  "psiEngine": {
+    "quotaExceeded": "Daily quota exceeded — add your own PageSpeed Insights API key below to get 25,000 free scans per day.",
+    "invalidUrl": "Invalid URL — make sure the site is publicly accessible (not localhost).",
+    "unavailable": "Google PageSpeed Insights is temporarily unavailable. Try again in a few minutes.",
+    "error": "PageSpeed Insights returned an error ({status}). Check that the URL is correct and the site is online.",
+    "invalidResponse": "Invalid PSI response: missing lighthouseResult"
+  },
+  "imageAnalysis": {
+    "noVisionKey": "No vision API key configured. Add a Mistral or Gemini key in Cockpit → Settings."
+  },
+  "imageGeneration": {
+    "promptRequired": "Image generation prompt is required",
+    "promptTooLong": "Image generation prompt is too long (max 4000 characters)",
+    "notSetUp": "Image generation is not set up: BFL_API_KEY is missing.",
+    "outsideEu": "Image generation answered outside the EU (provider {provider}, region {region}); refused.",
+    "downloadFailed": "Image download failed: {status}",
+    "notAnImage": "Image download was not an image ({type})",
+    "noContentType": "no content-type"
+  },
+  "formsService": {
+    "submissionNotFound": "Submission not found"
+  },
+  "formsStore": {
+    "configFormNotEditable": "Form \"{name}\" is defined in cms.config.ts and cannot be modified from the admin UI",
+    "configFormNotDeletable": "Form \"{name}\" is defined in cms.config.ts and cannot be deleted from the admin UI",
+    "formNotFound": "Form not found"
+  },
+  "seoKeywords": {
+    "empty": "Keyword cannot be empty",
+    "alreadyTracked": "Keyword \"{keyword}\" is already tracked"
+  },
+  "podcastApi": {
+    "unauthorized": "Unauthorized",
+    "lensReadOnly": "Lens session is read-only",
+    "forbidden": "Forbidden",
+    "missingPermission": "missing permission {permission}"
+  },
+  "podcastCommon": {
+    "unknownError": "unknown error",
+    "and": " and ",
+    "or": " or ",
+    "tooFewLines": "only {count} line(s) — an episode is a conversation, not a monologue (at least {min})"
+  },
+  "podcastManuscript": {
+    "noJsonList": "the answer contains no JSON list",
+    "jsonUnreadable": "the JSON list could not be read: {error}",
+    "notAList": "the answer is not a list",
+    "lineNotObject": "line {index} is not an object",
+    "unknownSpeaker": "line {index} has the speaker «{speaker}» — only {hosts} exist",
+    "lineNoText": "line {index} ({speaker}) has no text",
+    "oneHostOnly": "only «{speaker}» speaks — an episode with two hosts must have both"
+  },
+  "podcastState": {
+    "alreadyIn": "the episode is already «{state}»",
+    "unknownState": "unknown state «{state}»",
+    "illegalTransition": "«{from}» cannot go to «{to}» — from here only {allowed} is allowed",
+    "alreadyRecorded": "the episode is already recorded — a new recording costs again. Edit the script first, and the approval falls away by itself.",
+    "notApproved": "the script is not approved (it is «{state}»). Recording costs real money, so it requires that a person has read the text."
+  },
+  "podcastTextFormat": {
+    "episode": "episode {n}",
+    "season": "season {n}",
+    "headerFormat": "FORMAT: «AIDAN:» or «AIRINA:» on a line of its own, the line of dialogue below.",
+    "headerIgnored": "Empty lines and lines starting with # are ignored.",
+    "headerNames": "Do not change the names — only the two hosts exist.",
+    "speakerNoText": "line {line}: «{speaker}:» has no text below it",
+    "notAHost": "line {line}: «{speaker}» is not one of the hosts. Only {hosts} exist.",
+    "textBeforeSpeaker": "line {line}: there is text before the first speaker. Each line of dialogue must start with «AIDAN:» or «AIRINA:» on a line of its own.",
+    "noLines": "the file contains no lines of dialogue",
+    "lineCount": {
+      "one": "{count} line",
+      "other": "{count} lines"
+    }
+  },
+  "podcastStore": {
+    "missingCollection": "this site has no «{collection}» collection. The podcast engine is off until it is declared in cms.config.ts — see docs/features/F189-podcast-engine-api.md for the schema. The engine does not create it itself: an invalid config takes the whole site down, and the way back goes through the same config.",
+    "missingAfterWrite": "the episode «{slug}» does not exist after the write",
+    "alreadyExists": "the episode «{slug}» already exists"
+  },
+  "podcastSponsors": {
+    "missingCollection": "this site has no «{collection}» collection. Sponsor spots are off until it is declared in cms.config.ts — see docs/features/F191-sponsorindslag.md for the schema.",
+    "missingAfterWrite": "the spot «{slug}» does not exist after the write",
+    "paused": "the spot is paused",
+    "noAudio": "the spot has no audio yet",
+    "inUse": "the spot is used in {count} episode(s): {episodes}. Remove it from them first, or pause it instead of deleting it."
+  },
+  "podcastGenerate": {
+    "withdrawApprovalFirst": "the episode is «{state}» — withdraw the approval first (set the state to «{next}»). A rewrite without that would change the text under an approval that still stood.",
+    "articleNotFound": "the article «{article}» does not exist",
+    "articleTooShort": "the article has only {count} characters of body text — too little for an episode",
+    "modelNoAnswer": "the model did not answer: {error}",
+    "scriptRejected": "the script was rejected: {reason}"
+  },
+  "podcastRecord": {
+    "episodeNotFound": "the episode «{slug}» does not exist",
+    "emptyScript": "the script is empty",
+    "recordingFailed": "the recording failed: {error}",
+    "paidButNotSaved": "the audio was made (and paid for) but could not be saved: {error}. Try again — it costs again.",
+    "sponsorNotFound": "the sponsor spot «{slug}» does not exist",
+    "sponsorAudioUnreadable": "the sponsor spot's audio file could not be read ({url}). The spot points to a file that is not there."
+  },
+  "podcastStitch": {
+    "decodeFailed": "decoding failed",
+    "noPieces": "there are no audio pieces to join",
+    "pieceLengthUnknown": "could not measure the length of the audio piece",
+    "ffmpegMissing": "ffmpeg is missing on the server, and without it the audio pieces cannot be joined. Add it to the image (apt-get install ffmpeg) — a plain concatenation gives a file that looks whole and stalls at the joins.",
+    "joinedLengthUnknown": "the joined file could not be measured",
+    "joinFailed": "joining failed"
+  },
+  "podcastVoices": {
+    "noKey": "there is no ElevenLabs key on this site",
+    "noVoices": "the provider answered without a single voice",
+    "lookupFailed": "the lookup failed"
+  },
+  "onboardingTours": {
+    "welcomeDashboard": {
+      "title": "Welcome to your Dashboard",
+      "body": "This is your command center. Content stats, recent activity, and quick actions — all at a glance."
+    },
+    "welcomeContent": {
+      "title": "Your Content",
+      "body": "All your collections live here — pages, posts, and any custom content types you define in cms.config.ts."
+    },
+    "welcomeChat": {
+      "title": "Chat with your site",
+      "body": "Generate pages, translate content, optimize SEO, or manage your entire site through natural conversation. 47 tools at your fingertips."
+    },
+    "welcomeAgents": {
+      "title": "AI Agents",
+      "body": "Automated workers that write, translate, optimize, and refresh your content on schedule. Set them up once, let them run."
+    },
+    "welcomeMedia": {
+      "title": "Media Library",
+      "body": "Upload images, videos, and files. AI automatically generates alt text, captions, and tags for every image."
+    },
+    "welcomeTools": {
+      "title": "Tools & SEO",
+      "body": "SEO scoring, link checker, backup, AI analytics, and visibility dashboard — everything to keep your site healthy and findable."
+    },
+    "welcomeDone": {
+      "title": "You're all set!",
+      "body": "Click any collection to start creating content. Need help? Open Chat and ask anything."
+    },
+    "docTitle": {
+      "title": "Give it a title",
+      "body": "Every document starts with a title. It's used in navigation, SEO, and search across your site."
+    },
+    "docEditor": {
+      "title": "Write your content",
+      "body": "Rich text with markdown, images, tables, and code blocks. Type / for slash commands or just start writing."
+    },
+    "docActionBar": {
+      "title": "Save & publish",
+      "body": "Save your document with ⌘S. Set status to Published when it's ready to go live. The SEO panel optimizes your meta automatically."
+    }
+  },
+  "seoScore": {
+    "labelMetaTitle": "Meta title",
+    "labelMetaDesc": "Meta description",
+    "labelKeywordTitle": "Keyword in title",
+    "labelKeywordDesc": "Keyword in description",
+    "labelContentLength": "Content length",
+    "labelHeadings": "Heading structure",
+    "labelImgAlt": "Image alt text",
+    "labelOgImage": "Social image",
+    "labelKeywordSlug": "Keyword in URL",
+    "labelInternalLinks": "Internal links",
+    "labelTitle": "Page title",
+    "labelReadability": "Readability",
+    "labelUniqueTitle": "Unique title",
+    "labelGeoAnswerFirst": "🤖 Answer-first",
+    "labelGeoQuestionHeaders": "🤖 Question headers",
+    "labelGeoStatistics": "🤖 Statistics",
+    "labelGeoCitations": "🤖 Citations",
+    "labelGeoFreshness": "🤖 Freshness",
+    "labelGeoJsonLd": "🤖 Structured data",
+    "labelGeoAuthor": "🤖 Author",
+    "labelGeoDepth": "🤖 Content depth",
+    "metaTitleMissing": "Meta title is missing. Write a title for search results ({min}-{max} characters).",
+    "metaTitleShort": "Meta title is too short ({len} characters). Add more words to reach {min}-{max} characters.",
+    "metaTitleLong": "Meta title is too long ({len} characters). Google cuts off after {max}. Shorten it.",
+    "metaTitleGood": "Meta title length is good ({len}/{max} characters)",
+    "metaDescMissing": "Meta description is missing. Write a description for search results ({min}-{max} characters).",
+    "metaDescShort": "Meta description is too short ({len} characters). Add {add} more characters to reach {min}.",
+    "metaDescLong": "Meta description is too long ({len} characters). Google cuts off after {max}. Remove {remove} characters.",
+    "metaDescGood": "Meta description length is good ({len}/{max} characters)",
+    "keywordInTitle": "Keyword \"{keyword}\" found in meta title",
+    "keywordNotInTitle": "Add the keyword \"{keyword}\" to the meta title field above.",
+    "keywordInDesc": "Keyword \"{keyword}\" found in meta description",
+    "keywordNotInDesc": "Add the keyword \"{keyword}\" to the meta description field above.",
+    "contentTooThin": "Content is only {wc} words. Write at least 300 words for search engines to index properly.",
+    "contentShort": "Content is {wc} words. Write {more} more words to reach 300 (recommended minimum).",
+    "contentGood": "Content is {wc} words (300+ is good)",
+    "headingsGood": "Content uses H2 headings for structure",
+    "headingsMissing": "Content has no H2 headings. Break up the text with ## subheadings.",
+    "imgAltMissing": "{missing} of {total} images are missing alt text. Edit each image and add a description.",
+    "imgAltGood": "All {total} images have alt text",
+    "ogImageSet": "Social sharing image (OG) is set",
+    "ogImageMissing": "No social image set. Add an image in the \"Social image (OG)\" field above — it shows when someone shares this page on Facebook/LinkedIn.",
+    "keywordInSlug": "Keyword \"{keyword}\" found in the URL",
+    "keywordNotInSlug": "The keyword \"{keyword}\" is not in the URL slug ({slug}). Consider renaming the slug in Properties.",
+    "internalLinksGood": "Content links to other pages on the site",
+    "internalLinksMissing": "No internal links. Add links to other pages on your site (e.g. related posts) to improve SEO.",
+    "titleGood": "Page has a title",
+    "titleMissing": "Page has no title. Fill in the Title field at the top of the editor.",
+    "readabilityEasy": "Readability score is {score}/100 — easy to read",
+    "readabilityMedium": "Readability score is {score}/100 — consider shorter sentences and simpler words",
+    "readabilityHard": "Readability score is {score}/100 — text is very hard to read. Use shorter sentences and simpler words.",
+    "titleDuplicate": "Meta title \"{title}\" is used by {count} documents. Each page should have a unique title.",
+    "titleUnique": "Meta title is unique across all documents",
+    "geoAnswerFirstPass": "First 200 words contain a direct answer with facts",
+    "geoAnswerFirstWarn": "Opening is OK but could lead with a stronger factual answer. Add a number or statistic in the first paragraph.",
+    "geoAnswerFirstFail": "Opening doesn't provide a direct answer. Restructure so the first paragraph answers the page's main question.",
+    "geoQuestionHeadersPass": "{questions}/{total} headings are questions ({pct}% — AI platforms match these to user queries)",
+    "geoQuestionHeadersWarn": "Only {questions}/{total} headings are questions. Rephrase some H2s as questions (e.g. \"How does X work?\") — AI platforms match these to queries.",
+    "geoStatisticsPass": "Content includes specific statistics — AI platforms prefer citing data-backed claims",
+    "geoStatisticsWarn": "Content has numbers but no clear statistics. Add percentages, costs, or measurable data points.",
+    "geoStatisticsFail": "No statistics found. Add specific numbers, percentages, or data points — AI systems strongly prefer citable facts.",
+    "geoCitationsPass": "Content references external sources — adds credibility for AI citation",
+    "geoCitationsWarn": "No external sources cited. Add references to research, data sources, or authoritative sites to boost AI trust.",
+    "geoFreshnessPass": "Updated {days} days ago — AI platforms have strong recency bias",
+    "geoFreshnessWarn": "Updated {days} days ago. Content older than 90 days gets less AI citation. Refresh key facts.",
+    "geoFreshnessFail": "Updated {days} days ago. Stale content is rarely cited by AI. Update with current information.",
+    "geoJsonLdPass": "JSON-LD structured data is configured — helps AI systems understand page content",
+    "geoJsonLdPartial": "JSON-LD template selected but not fully configured. Fill in the fields to help AI understand this content.",
+    "geoJsonLdMissing": "No JSON-LD structured data. Select a template (Article, FAQ, HowTo) in the Advanced section to help AI categorize this content.",
+    "geoAuthorPass": "Author \"{author}\" attributed — builds E-E-A-T trust signals for AI",
+    "geoAuthorMissing": "No author attributed. Add an author name — AI platforms trust content with clear authorship (E-E-A-T).",
+    "geoDepthPass": "{wc} words — comprehensive enough for AI to cite as an authoritative source",
+    "geoDepthWarn": "{wc} words — add more depth (800+ words) for AI platforms to consider this an authoritative source",
+    "geoDepthFail": "Only {wc} words. AI platforms rarely cite thin content. Aim for 800+ words with comprehensive coverage."
+  },
+  "podcastPreflight": {
+    "scriptHasContent": "The script has content",
+    "noLines": "there are no lines to record",
+    "pronunciationClean": "The pronunciation dictionary is clean",
+    "ipaRows": "{count} row(s) use IPA, which the provider rejects: {words}. Rewrite them as sound-alike aliases.",
+    "bothVoices": "Both voices are selected",
+    "tooFewVoices": "only {count} voice(s) selected — a conversation needs two",
+    "voicesRespond": "The voices respond",
+    "unknownVoices": "the provider does not know: {voices}",
+    "voicesNotChecked": "not looked up with the provider yet",
+    "yourApproval": "Your approval",
+    "notApproved": "the audio cannot be made until the script is approved"
+  }
+}

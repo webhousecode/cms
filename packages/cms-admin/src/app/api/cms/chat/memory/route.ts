@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { readMemories, addMemory } from "@/lib/chat/memory-store";
+import { getServerTSafe } from "@/i18n/server";
 
 /** GET /api/cms/chat/memory — list all memories */
 export async function GET() {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const index = await readMemories();
   return NextResponse.json({
@@ -16,8 +18,9 @@ export async function GET() {
 
 /** POST /api/cms/chat/memory — add a memory manually */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const { fact, category, entities } = (await request.json()) as {
     fact?: string;
@@ -26,7 +29,7 @@ export async function POST(request: NextRequest) {
   };
 
   if (!fact || !fact.trim()) {
-    return NextResponse.json({ error: "fact is required" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.chatMemory.factRequired") }, { status: 400 });
   }
 
   const validCategories = ["preference", "decision", "pattern", "correction", "fact"];

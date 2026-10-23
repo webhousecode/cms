@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { sendPushNotification } from "@/lib/push-send";
 import type { TopicKey } from "@/lib/push-store";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/mobile/push/test
@@ -14,9 +15,10 @@ import type { TopicKey } from "@/lib/push-store";
  * Body: { title?: string, body?: string, topic?: TopicKey, url?: string }
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   let body: {
@@ -32,8 +34,8 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await sendPushNotification(session.id, {
-    title: body.title ?? "webhouse.app test",
-    body: body.body ?? "If you can read this, push wiring works.",
+    title: body.title ?? t("errApi.mobile.pushTestTitle"),
+    body: body.body ?? t("errApi.mobile.pushTestBody"),
     topic: body.topic ?? "agent_completed",
     url: body.url ?? "/home",
   });

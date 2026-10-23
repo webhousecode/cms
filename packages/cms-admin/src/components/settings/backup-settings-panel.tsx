@@ -361,7 +361,7 @@ export function BackupSettingsPanel() {
                   type="text"
                   value={config.backupS3Endpoint}
                   onChange={(e) => updateConfig((c) => ({ ...c, backupS3Endpoint: e.target.value }))}
-                  placeholder="https://<account-id>.r2.cloudflarestorage.com"
+                  placeholder="https://<account-id>.r2.cloudflarestorage.com" // i18n-ignore: placeholder example value (URL / identifier), not prose
                   style={inputStyle}
                 />
                 <p style={{ ...descStyle, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap" }}>
@@ -387,7 +387,7 @@ export function BackupSettingsPanel() {
                   type="text"
                   value={config.backupS3Endpoint}
                   onChange={(e) => updateConfig((c) => ({ ...c, backupS3Endpoint: e.target.value }))}
-                  placeholder="https://s3.eu-central-003.backblazeb2.com"
+                  placeholder="https://s3.eu-central-003.backblazeb2.com" // i18n-ignore: placeholder example value (URL / identifier), not prose
                   style={inputStyle}
                 />
               </div>
@@ -402,7 +402,7 @@ export function BackupSettingsPanel() {
                     type="text"
                     value={config.backupS3Endpoint}
                     onChange={(e) => updateConfig((c) => ({ ...c, backupS3Endpoint: e.target.value }))}
-                    placeholder="https://s3.example.com"
+                    placeholder="https://s3.example.com" // i18n-ignore: placeholder example value (URL / identifier), not prose
                     style={inputStyle}
                   />
                 </div>
@@ -413,7 +413,7 @@ export function BackupSettingsPanel() {
                     type="text"
                     value={config.backupS3Region}
                     onChange={(e) => updateConfig((c) => ({ ...c, backupS3Region: e.target.value }))}
-                    placeholder="eu-west-1"
+                    placeholder="eu-west-1" // i18n-ignore: placeholder example value (URL / identifier), not prose
                     style={inputStyle}
                   />
                 </div>
@@ -427,7 +427,7 @@ export function BackupSettingsPanel() {
                 type="text"
                 value={config.backupS3Bucket}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupS3Bucket: e.target.value }))}
-                placeholder="cms-backups"
+                placeholder="cms-backups" // i18n-ignore: placeholder example value (URL / identifier), not prose
                 style={inputStyle}
               />
             </div>
@@ -463,7 +463,7 @@ export function BackupSettingsPanel() {
                 type="text"
                 value={config.backupS3Prefix}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupS3Prefix: e.target.value }))}
-                placeholder="cms-backups/"
+                placeholder="cms-backups/" // i18n-ignore: placeholder example value (URL / identifier), not prose
                 style={{ ...inputStyle, fontFamily: "monospace" }}
               />
             </div>

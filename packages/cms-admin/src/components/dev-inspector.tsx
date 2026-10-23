@@ -24,12 +24,12 @@ function getComponentName(el: Element): string | null {
     "PopoverPortal","PopoverContent","PopoverTrigger",
     "DialogPortal","DialogOverlay","DialogContent",
     "DropdownMenuPortal","DropdownMenuContent",
-    "Primitive","Slot","SlotClone","Root","Portal",
+    "Primitive","Slot","SlotClone","Root","Portal", // i18n-ignore: React component names (dev tool filter list)
     // TipTap internals
     "SegmentViewNode","NodeViewWrapper","NodeViewContent","EditorContent",
     "PureEditorContent","BubbleMenuView","FloatingMenuView",
     // React internals
-    "Suspense","Fragment","Provider","Consumer","Context",
+    "Suspense","Fragment","Provider","Consumer","Context", // i18n-ignore: React component names (dev tool filter list)
     // Next.js internals
     "ServerComponent","InnerLayoutRouter","OuterLayoutRouter","RedirectBoundary",
     "NotFoundBoundary","ScrollAndFocusHandler","RenderFromTemplateContext",

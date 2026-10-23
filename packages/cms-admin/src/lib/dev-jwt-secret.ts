@@ -33,7 +33,7 @@ export function resolveJwtSecret(
   const secret = env.CMS_JWT_SECRET || env.JWT_SECRET;
   if (secret) return secret;
   if (env.NODE_ENV === "production") {
-    throw new Error("CMS_JWT_SECRET is not set. Set it to a random value (openssl rand -hex 32) — a production server will not sign sessions with the public development key.");
+    throw new Error("CMS_JWT_SECRET is not set. Set it to a random value (openssl rand -hex 32) — a production server will not sign sessions with the public development key."); // i18n-ignore: operator boot error (env var)
   }
   return DEV_JWT_SECRET;
 }

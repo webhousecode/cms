@@ -83,7 +83,7 @@ export async function runToolsScheduler(): Promise<{ backupRan: boolean; linkChe
       backupRan = result.backupRan;
       linkCheckRan = result.linkCheckRan;
     } catch (err) {
-      errors.push(`single-site: ${err instanceof Error ? err.message : String(err)}`);
+      errors.push(`single-site: ${err instanceof Error ? err.message : String(err)}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
     }
     return { backupRan, linkCheckRan, errors };
   }
@@ -157,8 +157,8 @@ async function runForSite(
         if (backupWebhooks.length > 0) {
           dispatchWebhooks(backupWebhooks, {
             event: "backup.completed",
-            title: "Backup Complete",
-            message: `Created **${data.fileName}** with ${data.documentCount ?? "?"} documents.`,
+            title: "Backup Complete", // i18n-ignore: webhook payload (F210.4)
+            message: `Created **${data.fileName}** with ${data.documentCount ?? "?"} documents.`, // i18n-ignore: webhook payload (F210.4)
             color: 0x4ade80,
             fields: [
               { name: "File", value: data.fileName ?? "unknown" },
@@ -170,15 +170,15 @@ async function runForSite(
           }, dataDir).catch((err) => console.error(`[tools-scheduler] ${prefix}backup webhook error:`, err));
         }
       } else {
-        errors.push(`${prefix}backup HTTP ${res.status}`);
+        errors.push(`${prefix}backup HTTP ${res.status}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
 
         // Dispatch backup failure webhooks
         const backupWebhooks = config.backupWebhooks ?? [];
         if (backupWebhooks.length > 0) {
           dispatchWebhooks(backupWebhooks, {
             event: "backup.failed",
-            title: "Backup Failed",
-            message: `Backup returned HTTP ${res.status}.`,
+            title: "Backup Failed", // i18n-ignore: webhook payload (F210.4)
+            message: `Backup returned HTTP ${res.status}.`, // i18n-ignore: webhook payload (F210.4)
             color: 0xef4444,
             orgName: label?.split("/")[0],
             siteName: label?.split("/")[1],
@@ -187,7 +187,7 @@ async function runForSite(
       }
       state.lastBackupRun = new Date().toISOString();
     } catch (err) {
-      errors.push(`${prefix}backup error: ${err instanceof Error ? err.message : String(err)}`);
+      errors.push(`${prefix}backup error: ${err instanceof Error ? err.message : String(err)}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
     }
   }
 
@@ -216,7 +216,7 @@ async function runForSite(
             dispatchWebhooks(lcWebhooks, {
               event: "linkcheck.completed",
               title: hasBroken ? `Link Check: ${data.broken} Broken Links` : "Link Check: All Clear",
-              message: `Checked ${data.total ?? "?"} links. ${data.broken ?? 0} broken.`,
+              message: `Checked ${data.total ?? "?"} links. ${data.broken ?? 0} broken.`, // i18n-ignore: webhook payload (F210.4)
               color: hasBroken ? 0xef4444 : 0x4ade80,
               fields: [
                 { name: "Total", value: String(data.total ?? "?") },
@@ -227,12 +227,12 @@ async function runForSite(
             }, dataDir).catch((err) => console.error(`[tools-scheduler] ${prefix}link-check webhook error:`, err));
           }
         } else {
-          errors.push(`${prefix}link-check HTTP ${res.status}`);
+          errors.push(`${prefix}link-check HTTP ${res.status}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
         }
       }
       state.lastLinkCheckRun = new Date().toISOString();
     } catch (err) {
-      errors.push(`${prefix}link-check error: ${err instanceof Error ? err.message : String(err)}`);
+      errors.push(`${prefix}link-check error: ${err instanceof Error ? err.message : String(err)}`); // i18n-ignore: scheduler diagnostic for logs and the cron heartbeat, not shown in the admin
     }
   }
 

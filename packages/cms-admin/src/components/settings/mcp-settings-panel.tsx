@@ -84,8 +84,8 @@ export function MCPSettingsPanel() {
   const [addError, setAddError] = useState("");
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const publicEndpoint = `${origin}/api/mcp`;
-  const adminEndpoint  = `${origin}/api/mcp/admin`;
+  const publicEndpoint = `${origin}/api/mcp`; // i18n-ignore: URL
+  const adminEndpoint  = `${origin}/api/mcp/admin`; // i18n-ignore: URL
 
   useEffect(() => {
     fetch("/api/admin/mcp-config")
@@ -575,6 +575,7 @@ function ExternalMcpServers() {
                       fontSize: "0.6rem", fontWeight: 500, cursor: "pointer",
                     }}>
                     <Braces style={{ width: "0.65rem", height: "0.65rem" }} />
+                    {/* i18n-ignore: format name */}
                     JSON
                   </button>
                   <button data-testid="mcp-server-toggle-enabled" type="button" onClick={() => toggleEnabled(s.id, !s.enabled)} title={s.enabled ? t("integrations.mcp.disableServer") : t("integrations.mcp.enableServer")}
@@ -685,13 +686,13 @@ function ExternalMcpServers() {
             </div>
             <div style={{ width: "80px" }}>
               <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>{t("integrations.mcp.command")}</label>
-              <input data-testid="mcp-custom-server-command" type="text" value={newCommand} onChange={(e) => setNewCommand(e.target.value)} placeholder="npx"
+              <input data-testid="mcp-custom-server-command" type="text" value={newCommand} onChange={(e) => setNewCommand(e.target.value)} placeholder="npx" // i18n-ignore: example command
                 style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace", outline: "none", boxSizing: "border-box" }} />
             </div>
           </div>
           <div>
             <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>{t("integrations.mcp.arguments")}</label>
-            <input data-testid="mcp-custom-server-args" type="text" value={newArgs} onChange={(e) => setNewArgs(e.target.value)} placeholder="-y @anthropic/mcp-memory"
+            <input data-testid="mcp-custom-server-args" type="text" value={newArgs} onChange={(e) => setNewArgs(e.target.value)} placeholder="-y @anthropic/mcp-memory" // i18n-ignore: example command arguments
               style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace", outline: "none", boxSizing: "border-box" }} />
           </div>
 
@@ -710,7 +711,7 @@ function ExternalMcpServers() {
               </div>
             ))}
             <div style={{ display: "flex", gap: "0.375rem" }}>
-              <input data-testid="mcp-env-key-input" type="text" value={newEnvKey} onChange={(e) => setNewEnvKey(e.target.value)} placeholder="KEY_NAME"
+              <input data-testid="mcp-env-key-input" type="text" value={newEnvKey} onChange={(e) => setNewEnvKey(e.target.value)} placeholder="KEY_NAME" // i18n-ignore: example env-var name
                 style={{ width: "120px", padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
               <input data-testid="mcp-env-val-input" type="text" value={newEnvVal} onChange={(e) => setNewEnvVal(e.target.value)} placeholder={t("integrations.mcp.value")}
                 style={{ flex: 1, padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />

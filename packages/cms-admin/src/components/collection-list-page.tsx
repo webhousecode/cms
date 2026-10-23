@@ -54,7 +54,7 @@ export function CollectionListPage({
   const t = useT();
   const can = usePermissions();
   const canUse = useCapabilities();
-  const storageKey = `cms-view-${collection}`;
+  const storageKey = `cms-view-${collection}`; // i18n-ignore: localStorage key
   const [view, setView] = useState<ViewMode>("list");
   const [importOpen, setImportOpen] = useState(false);
 

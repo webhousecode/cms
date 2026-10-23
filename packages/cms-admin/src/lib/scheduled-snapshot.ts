@@ -7,6 +7,7 @@ import { getAdminCms, getAdminConfig } from "./cms";
 import { getActiveSitePaths } from "./site-paths";
 import { readSiteConfig } from "./site-config";
 import { listBackups } from "./backup-service";
+import { getServerTSafe } from "@/i18n/server";
 import fs from "fs/promises";
 import path from "path";
 
@@ -38,6 +39,7 @@ function localISO(d: Date): string {
 
 export async function updateScheduledSnapshot(): Promise<void> {
   try {
+    const t = await getServerTSafe();
     const [cms, config, { dataDir }] = await Promise.all([
       getAdminCms(),
       getAdminConfig(),
@@ -82,8 +84,8 @@ export async function updateScheduledSnapshot(): Promise<void> {
           id: `bak-${snap.id}`,
           type: "backup",
           date: snap.timestamp,
-          title: `Backup (${snap.documentCount} docs)`,
-          subtitle: "Scheduled backup",
+          title: t("errAdmin.scheduledEvents.backupTitle", { count: snap.documentCount }),
+          subtitle: t("errAdmin.scheduledEvents.scheduledBackupSub"),
           href: "/admin/backup",
         });
       }
@@ -103,8 +105,8 @@ export async function updateScheduledSnapshot(): Promise<void> {
             id: `bak-sched-${localISO(d)}`,
             type: "backup",
             date: localISO(d),
-            title: "Scheduled Backup",
-            subtitle: siteConf.backupSchedule === "daily" ? "Daily backup" : "Weekly backup",
+            title: t("errAdmin.scheduledEvents.scheduledBackup"),
+            subtitle: siteConf.backupSchedule === "daily" ? t("errAdmin.scheduledEvents.dailyBackup") : t("errAdmin.scheduledEvents.weeklyBackup"),
             href: "/admin/backup",
           });
         }
@@ -121,8 +123,8 @@ export async function updateScheduledSnapshot(): Promise<void> {
             id: `lc-sched-${localISO(d)}`,
             type: "link-check",
             date: localISO(d),
-            title: "Scheduled Link Check",
-            subtitle: siteConf.linkCheckSchedule === "daily" ? "Daily check" : "Weekly check",
+            title: t("errAdmin.scheduledEvents.scheduledLinkCheck"),
+            subtitle: siteConf.linkCheckSchedule === "daily" ? t("errAdmin.scheduledEvents.dailyCheck") : t("errAdmin.scheduledEvents.weeklyCheck"),
             href: "/admin/link-checker",
           });
         }

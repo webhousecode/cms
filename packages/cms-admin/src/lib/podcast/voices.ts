@@ -12,6 +12,7 @@
  * stemmen svarer.
  */
 import { elevenlabsAdapter, resolveVoice, ELEVENLABS_DANISH_VOICES } from "@broberg/ai-sdk";
+import { getServerTSafe } from "@/i18n/server";
 
 export type StemmeOpslag =
   | { ok: true; navne: string[]; antal: number }
@@ -47,12 +48,13 @@ export function levendeNavne(live: { voiceId: string }[]): string[] {
  * ingen kunne spørge, ser grønt ud — og det er den fejlretning der gør skade.
  */
 export async function hentLevendeStemmer(apiKey?: string): Promise<StemmeOpslag> {
-  if (!apiKey) return { ok: false, grund: "der er ingen ElevenLabs-nøgle på dette site" };
+  const t = await getServerTSafe();
+  if (!apiKey) return { ok: false, grund: t("libText.podcastVoices.noKey") };
   try {
     const live = await elevenlabsAdapter({ apiKey }).listVoices();
-    if (!live.length) return { ok: false, grund: "udbyderen svarede uden en eneste stemme" };
+    if (!live.length) return { ok: false, grund: t("libText.podcastVoices.noVoices") };
     return { ok: true, navne: levendeNavne(live), antal: live.length };
   } catch (err) {
-    return { ok: false, grund: err instanceof Error ? err.message : "opslaget fejlede" };
+    return { ok: false, grund: err instanceof Error ? err.message : t("libText.podcastVoices.lookupFailed") };
   }
 }

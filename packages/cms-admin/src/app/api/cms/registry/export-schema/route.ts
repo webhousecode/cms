@@ -4,6 +4,7 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { requirePermission } from "@/lib/permissions";
 import { configLoadAllowed } from "@/lib/code-path-policy";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * F125 Phase 1 — Schema Export UI endpoint
@@ -24,7 +25,7 @@ async function guardConfigLoad(configPath: string): Promise<Response | null> {
   let active: string | null = null;
   try { active = (await getActiveSitePaths()).configPath; } catch { active = null; }
   if (!configLoadAllowed(configPath, active, { instanceAdmin: await isInstanceAdmin() })) {
-    return NextResponse.json({ error: "Only the active site's own config can be loaded" }, { status: 403 });
+    return NextResponse.json({ error: (await getServerTSafe())("errCms.shared.activeConfigOnly") }, { status: 403 });
   }
   return null;
 }
@@ -42,22 +43,23 @@ async function loadConfig(configPath: string): Promise<unknown> {
 
 /** GET — download the schema as JSON */
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   const configPath = request.nextUrl.searchParams.get("configPath");
   const baseUrl = request.nextUrl.searchParams.get("baseUrl") ?? undefined;
   const download = request.nextUrl.searchParams.get("download") === "1";
 
   if (!configPath) {
-    return NextResponse.json({ error: "configPath required" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.shared.configPathRequired") }, { status: 400 });
   }
   if (configPath.startsWith("github://")) {
-    return NextResponse.json({ error: "Schema export from GitHub configs not supported yet" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.shared.githubExportUnsupported") }, { status: 400 });
   }
   const guarded = await guardConfigLoad(configPath); if (guarded) return guarded;
 
   try {
     const config = await loadConfig(configPath);
     if (!config || typeof config !== "object") {
-      return NextResponse.json({ error: "Invalid config" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.shared.invalidConfig") }, { status: 400 });
     }
     const schema = toJsonSchema(config as Parameters<typeof toJsonSchema>[0], { baseUrl });
     const body = JSON.stringify(schema, null, 2);
@@ -76,27 +78,28 @@ export async function GET(request: NextRequest) {
     });
   } catch (err) {
     return NextResponse.json({
-      error: `Schema export failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+      error: t("errCms.shared.schemaExportFailed", { error: err instanceof Error ? err.message : t("errCms.shared.unknownError") }),
     }, { status: 500 });
   }
 }
 
 /** POST — write the schema to webhouse-schema.json next to cms.config.ts */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const body = (await request.json()) as { configPath?: string; baseUrl?: string; filename?: string };
   const { configPath, baseUrl, filename = "webhouse-schema.json" } = body;
 
   if (!configPath) {
-    return NextResponse.json({ error: "configPath required" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.shared.configPathRequired") }, { status: 400 });
   }
   if (configPath.startsWith("github://")) {
-    return NextResponse.json({ error: "Schema export from GitHub configs not supported yet" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.shared.githubExportUnsupported") }, { status: 400 });
   }
   const guarded = await guardConfigLoad(configPath); if (guarded) return guarded;
 
   // Validate filename — no path traversal
   if (!/^[a-zA-Z0-9._-]+\.(json|yaml|yml)$/.test(filename)) {
-    return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.exportSchema.invalidFilename") }, { status: 400 });
   }
 
   const absolutePath = path.isAbsolute(configPath)
@@ -107,13 +110,13 @@ export async function POST(request: NextRequest) {
 
   // Defense in depth — outPath must be inside projectDir
   if (!outPath.startsWith(projectDir)) {
-    return NextResponse.json({ error: "Output path escapes project directory" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.exportSchema.pathEscapes") }, { status: 400 });
   }
 
   try {
     const config = await loadConfig(configPath);
     if (!config || typeof config !== "object") {
-      return NextResponse.json({ error: "Invalid config" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.shared.invalidConfig") }, { status: 400 });
     }
     const schema = toJsonSchema(config as Parameters<typeof toJsonSchema>[0], { baseUrl });
     const json = JSON.stringify(schema, null, 2);
@@ -132,7 +135,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     return NextResponse.json({
-      error: `Schema export failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+      error: t("errCms.shared.schemaExportFailed", { error: err instanceof Error ? err.message : t("errCms.shared.unknownError") }),
     }, { status: 500 });
   }
 }

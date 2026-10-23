@@ -6,6 +6,7 @@ import { getMobileSession } from "@/lib/mobile-auth";
 import { verifyPreviewToken } from "@/lib/preview-token";
 import { serverBuildsAllowed } from "@/lib/build/server-build-policy";
 import { upstreamTarget, distDirAllowed } from "@/lib/preview-proxy-policy";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/mobile/preview-proxy?upstream=http://localhost:3034&path=/
@@ -98,7 +99,7 @@ async function findFreePort(): Promise<number> {
         const port = addr.port;
         s.close(() => resolve(port));
       } else {
-        reject(new Error("Could not get port"));
+        reject(new Error("Could not get port")); // i18n-ignore: internal exception from port allocation
       }
     });
   });
@@ -154,6 +155,7 @@ async function ensureSirv(distDir: string): Promise<number> {
 }
 
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const upstream = req.nextUrl.searchParams.get("upstream");
   const distDir = req.nextUrl.searchParams.get("dir");
   const filePath = req.nextUrl.searchParams.get("path") ?? "/";
@@ -162,17 +164,17 @@ export async function GET(req: NextRequest) {
   // Security W41 C4 — a local dev tool. A server that runs no site code
   // (webhouse.app) has no localhost dev servers or dist/ to relay.
   if (!serverBuildsAllowed()) {
-    return NextResponse.json({ error: "Preview proxy is not available on this server" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.mobile.proxyUnavailable") }, { status: 404 });
   }
   if (upstream && !upstreamTarget(upstream, filePath)) {
-    return NextResponse.json({ error: "Upstream must be a localhost dev server, and the path must stay on it" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.mobile.proxyUpstreamInvalid") }, { status: 400 });
   }
   if (distDir) {
     const { loadRegistry } = await import("@/lib/site-registry");
     const registry = await loadRegistry();
     const configPaths = registry ? registry.orgs.flatMap((o) => o.sites.map((s) => s.configPath)) : [process.env.CMS_CONFIG_PATH ?? ""];
     if (!distDirAllowed(distDir, configPaths)) {
-      return NextResponse.json({ error: "dir must be a registered site's dist/" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.mobile.proxyDirInvalid") }, { status: 400 });
     }
   }
 
@@ -183,7 +185,7 @@ export async function GET(req: NextRequest) {
   if (!tokenValid) {
     const session = await getMobileSession(req);
     if (!session) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
     }
   }
 
@@ -224,7 +226,7 @@ export async function GET(req: NextRequest) {
         // Inject <base> so relative assets (images, CSS, JS, fonts) resolve
         // against the upstream origin instead of cms-admin's origin.
         const baseUrl = upstream.endsWith("/") ? upstream : upstream + "/";
-        const baseTag = `<base href="${baseUrl}">`;
+        const baseTag = `<base href="${baseUrl}">`; // i18n-ignore: HTML tag injected into proxied page
         if (html.includes("<head>")) {
           html = html.replace("<head>", `<head>${baseTag}`);
         } else if (html.match(/<html[^>]*>/i)) {
@@ -240,7 +242,7 @@ export async function GET(req: NextRequest) {
       });
     } catch (err) {
       return NextResponse.json(
-        { error: `Upstream proxy failed: ${(err as Error).message}` },
+        { error: t("errApi.mobile.proxyUpstreamFailed", { error: (err as Error).message }) },
         { status: 502 },
       );
     }
@@ -249,7 +251,7 @@ export async function GET(req: NextRequest) {
   // Mode 2: Sirv on-demand for dist/ directory
   if (distDir) {
     if (!existsSync(distDir)) {
-      return NextResponse.json({ error: "dist/ not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errApi.mobile.distNotFound") }, { status: 404 });
     }
     try {
       const port = await ensureSirv(distDir);
@@ -270,11 +272,11 @@ export async function GET(req: NextRequest) {
       return new NextResponse(res.body, { status: res.status, headers });
     } catch (err) {
       return NextResponse.json(
-        { error: `Sirv proxy failed: ${(err as Error).message}` },
+        { error: t("errApi.mobile.sirvFailed", { error: (err as Error).message }) },
         { status: 502 },
       );
     }
   }
 
-  return NextResponse.json({ error: "Missing upstream or dir parameter" }, { status: 400 });
+  return NextResponse.json({ error: t("errApi.mobile.proxyMissingParam") }, { status: 400 });
 }

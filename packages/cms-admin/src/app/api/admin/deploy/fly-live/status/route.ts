@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requirePermission } from "@/lib/permissions";
 import { readSiteConfig } from "@/lib/site-config";
 import { createHmac, createHash } from "node:crypto";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/admin/deploy/fly-live/status
@@ -14,6 +15,7 @@ import { createHmac, createHash } from "node:crypto";
  * - isOutdated: true if the live version lags the bundle → Rebuild infra recommended
  */
 export async function GET() {
+  const t = await getServerTSafe();
   const denied = await requirePermission("deploy.trigger");
   if (denied) return denied;
 
@@ -56,7 +58,7 @@ export async function GET() {
     // Sign a GET /_icd/health and check response
     const ts = String(Math.floor(Date.now() / 1000));
     const bodyHash = createHash("sha256").update(new Uint8Array()).digest("hex");
-    const payload = `${ts}\nGET\n/_icd/health\n${bodyHash}`;
+    const payload = `${ts}\nGET\n/_icd/health\n${bodyHash}`; // i18n-ignore: HMAC signing payload
     const sig = createHmac("sha256", config.deployFlyLiveSyncSecret).update(payload).digest("hex");
 
     try {
@@ -73,7 +75,7 @@ export async function GET() {
         result.version = json.version ?? null;
         result.isOutdated = !!json.version && json.version !== EXPECTED_VERSION;
       } else {
-        result.error = `Health endpoint returned ${res.status}`;
+        result.error = t("errAdmin.deploy.healthStatus", { status: res.status });
       }
     } catch (e) {
       result.error = (e as Error).message;
@@ -82,7 +84,7 @@ export async function GET() {
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to check status" },
+      { error: err instanceof Error ? err.message : t("errAdmin.deploy.statusFailed") },
       { status: 500 },
     );
   }

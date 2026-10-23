@@ -140,7 +140,7 @@ export default function InteractivesPage() {
     if (!res.ok) return;
     const data = await res.json();
     const blob = new Blob([data.content], { type: "text/html" });
-    const file = new File([blob], `${item.name}-copy.html`, { type: "text/html" });
+    const file = new File([blob], `${item.name}-copy.html`, { type: "text/html" }); // i18n-ignore: file name
     const fd = new FormData();
     fd.append("file", file);
     await fetch("/api/interactives", { method: "POST", body: fd });
@@ -258,7 +258,7 @@ export default function InteractivesPage() {
       const blob = new Blob([html], { type: "text/html" });
       // Derive filename from first few words of prompt
       const safeName = prompt.replace(/[^a-zA-Z0-9 ]/g, "").trim().split(/\s+/).slice(0, 4).join("-").toLowerCase() || "ai-generated";
-      const file = new File([blob], `${safeName}.html`, { type: "text/html" });
+      const file = new File([blob], `${safeName}.html`, { type: "text/html" }); // i18n-ignore: file name
       const fd = new FormData();
       fd.append("file", file);
       const createRes = await fetch("/api/interactives", { method: "POST", body: fd });
@@ -350,7 +350,7 @@ export default function InteractivesPage() {
               className={cn(
                 "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md",
                 "bg-primary text-primary-foreground hover:opacity-90 transition-opacity",
-                uploading && "opacity-70 cursor-wait"
+                uploading && "opacity-70 cursor-wait" // i18n-ignore: CSS class names
               )}
             >
               <Upload style={{ width: "0.875rem", height: "0.875rem" }} />
@@ -451,6 +451,7 @@ export default function InteractivesPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p className="text-xs font-semibold text-foreground truncate mb-1" title={item.name}>{item.name}</p>
                   <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}>
+                    {/* i18n-ignore: HTML entity separator */}
                     {formatSize(item.size)} &middot; {formatDate(item.updatedAt)}
                     <StatusBadge status={item.status} />
                     {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "color-mix(in srgb, var(--brand) 12%, transparent)", color: "var(--brand)" }}>{item.locale.toUpperCase()}</span>}

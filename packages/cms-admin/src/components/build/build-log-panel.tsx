@@ -609,7 +609,7 @@ function StatusBadge({ status }: { status: BuildStatus }) {
 }
 
 function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
+  if (ms < 1000) return `${ms}ms`; // i18n-ignore: unit suffix
   const s = Math.round(ms / 1000);
   if (s < 60) return `${s}s`;
   const m = Math.floor(s / 60);

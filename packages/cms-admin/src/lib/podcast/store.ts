@@ -17,6 +17,7 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { erTilstand, type Tilstand } from "./state";
 import type { Replik } from "./manuscript";
+import { getServerTSafe } from "@/i18n/server";
 
 export const PODCAST_SAMLING = "podcast";
 
@@ -83,12 +84,7 @@ export async function kraevPodcastSamling(): Promise<StoreSvar<true>> {
   if (fundet) return { ok: true, vaerdi: true };
   return {
     ok: false,
-    grund:
-      `dette site har ingen «${PODCAST_SAMLING}»-samling. ` +
-      `Podcast-motoren er slået fra indtil den er erklæret i cms.config.ts — ` +
-      `se docs/features/F189-podcast-engine-api.md for skemaet. ` +
-      `Motoren opretter den ikke selv: en ugyldig config tager hele sitet ned, ` +
-      `og vejen tilbage går gennem den samme config.`,
+    grund: (await getServerTSafe())("libText.podcastStore.missingCollection", { collection: PODCAST_SAMLING }),
   };
 }
 
@@ -169,7 +165,7 @@ export async function skrivAfsnit(
   // bevist før værdien er læst tilbage.
   const efter = await cms.content.findBySlug(PODCAST_SAMLING, slug);
   if (!efter) {
-    return { ok: false, grund: `afsnittet «${slug}» findes ikke efter skrivningen` };
+    return { ok: false, grund: (await getServerTSafe())("libText.podcastStore.missingAfterWrite", { slug }) };
   }
   return { ok: true, vaerdi: { slug, data: laesData(efter.data) } };
 }
@@ -200,7 +196,7 @@ export async function opretAfsnit(
   const cms = await getAdminCms();
   const findes = await cms.content.findBySlug(PODCAST_SAMLING, slug);
   if (findes) {
-    return { ok: false, grund: `afsnittet «${slug}» findes allerede` };
+    return { ok: false, grund: (await getServerTSafe())("libText.podcastStore.alreadyExists", { slug }) };
   }
 
   return skrivAfsnit(slug, {

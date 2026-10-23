@@ -3,6 +3,7 @@ import { runLinkCheck, type LinkResult } from "@/lib/link-check-runner";
 import { writeLinkCheckResult } from "@/lib/link-check-store";
 import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
+import { getServerTSafe } from "@/i18n/server";
 
 export type { LinkResult };
 
@@ -49,14 +50,15 @@ export async function GET() {
  * Requires: Authorization: Bearer <CMS_CRON_SECRET>
  */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("quality"); if (capDenied) return capDenied;
   const cronSecret = process.env.CMS_CRON_SECRET;
   if (!cronSecret) {
-    return NextResponse.json({ error: "CMS_CRON_SECRET not configured" }, { status: 503 });
+    return NextResponse.json({ error: t("errApi.checkLinks.cronSecretMissing") }, { status: 503 });
   }
   if (request.headers.get("authorization") !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.unauthorized") }, { status: 401 });
   }
 
   try {

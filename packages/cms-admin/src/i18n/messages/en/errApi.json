@@ -1,0 +1,258 @@
+{
+  "common": {
+    "unknown": "unknown",
+    "unauthorized": "Unauthorized",
+    "internalServerError": "Internal server error",
+    "emailPasswordRequired": "Email and password required",
+    "missingResponse": "Missing response",
+    "notFound": "Not found",
+    "userGone": "User no longer exists",
+    "setupComplete": "Setup already complete",
+    "failed": "Failed",
+    "missingCode": "Missing code",
+    "userNotFound": "User not found",
+    "invalidBeamSession": "Invalid or expired beam session",
+    "siteNotFoundId": "site not found: {site}",
+    "conversationNotFound": "Conversation not found",
+    "invalidBody": "Invalid body",
+    "noFile": "No file",
+    "thankYou": "Thank you!",
+    "formNotFound": "Form not found",
+    "unknownAction": "Unknown action",
+    "forbiddenContentEdit": "Forbidden — content.edit required",
+    "siteNotFoundLower": "site not found",
+    "internalError": "Internal error",
+    "invalidMediaPath": "Invalid media path",
+    "fileParamRequired": "file param required",
+    "fileNotFound": "File not found",
+    "filenameRequired": "filename required",
+    "invalidPath": "Invalid path",
+    "notAuthenticated": "Not authenticated",
+    "orgSiteRequired": "orgId and siteId required",
+    "invalidRequestOrNotAuthenticated": "Invalid request or not authenticated",
+    "slugParamRequired": "slug query param required",
+    "siteNotFound": "Site not found",
+    "deployFailed": "Deploy failed",
+    "forbidden": "Forbidden",
+    "invalidJsonBody": "Invalid JSON body",
+    "missingParams": "Missing parameters",
+    "buildFailed": "Build failed",
+    "schemaEditingDisabled": "Schema editing disabled"
+  },
+  "podcast": {
+    "unknown": "unknown",
+    "unknownError": "unknown error",
+    "episodeNotFound": "episode «{slug}» does not exist",
+    "notAList": "not a list",
+    "udtalerUnreadable": "«udtaler» could not be read: {error}",
+    "artikelMissing": "«artikel» (slug) is missing",
+    "needsReplikker": "the body must contain a list «replikker»",
+    "scriptRejected": "the script was rejected: {reason}",
+    "sponsorNotFound": "sponsor spot «{slug}» does not exist",
+    "sponsorUnusable": "the sponsor spot can't be used: {reason}",
+    "efterReplikInteger": "«efterReplik» must be a whole number",
+    "efterReplikRange": "«efterReplik» must be between 0 and {max} — the episode has {count} lines",
+    "notAState": "«{state}» is not a state",
+    "slugFormatEpisode": "«slug» must be lowercase letters, digits and hyphens — e.g. «afsnit-01»",
+    "nonNegativeInteger": "«{name}» must be a whole number of 0 or more",
+    "noScript": "there is no script to record",
+    "noVoice": "no voice is selected. An ad read by one of the hosts sounds like the host is selling something — choose another.",
+    "recordingFailed": "the recording failed: {error}",
+    "audioNotSaved": "the audio was made (and paid for) but could not be saved: {error}",
+    "usageLookupFailed": "usage could not be looked up: {reason}",
+    "slugFormatSponsor": "«slug» must be lowercase letters, digits and hyphens — e.g. «broberg-efteraar»",
+    "sponsorExists": "sponsor spot «{slug}» already exists",
+    "udtalerList": "«udtaler» must be a list",
+    "maxRows": "at most {max} rows",
+    "rowNeedsWord": "every row needs a word",
+    "noPhonetic": "«{word}» has no phonetic spelling — so there is nothing to correct the pronunciation with",
+    "tooLong": "«{word}» is too long (at most {max} characters)"
+  },
+  "authBid": {
+    "notConfigured": "BID is not configured on this server"
+  },
+  "authGithub": {
+    "notConfigured": "GITHUB_OAUTH_CLIENT_ID not configured"
+  },
+  "authLogin": {
+    "useGithub": "This account uses GitHub login — click \"Sign in with GitHub\" below",
+    "invalidCredentials": "Invalid credentials"
+  },
+  "authPasskey": {
+    "removeFailed": "Remove failed",
+    "noChallenge": "No pending challenge",
+    "authFailed": "Authentication failed",
+    "defaultName": "Passkey",
+    "registrationFailed": "Registration failed"
+  },
+  "authQr": {
+    "approvalFailed": "Approval failed",
+    "notApproved": "Not approved or already claimed",
+    "disabled": "QR login is disabled",
+    "missingSessionId": "Missing sessionId"
+  },
+  "authSetup": {
+    "disabled": "Setup is disabled. Set CMS_SETUP_TOKEN on the server to enable first-run setup.",
+    "invalidToken": "Invalid setup token",
+    "fieldsRequired": "Email, password, and name required",
+    "passwordLength": "Password must be at least 8 characters"
+  },
+  "authTotp": {
+    "verificationFailed": "Verification failed",
+    "noPendingLogin": "No pending login",
+    "pendingExpired": "Pending login expired",
+    "invalidCode": "Invalid code"
+  },
+  "beamReceive": {
+    "missingFileFields": "Missing required fields: beamId, path, file",
+    "invalidSiteId": "Invalid site id",
+    "pathTraversal": "Path traversal detected",
+    "fileFailed": "File receive failed",
+    "defaultOrg": "Default",
+    "finalizeFailed": "Finalize failed",
+    "missingInitFields": "Missing required fields: token, beamId, siteName, orgId",
+    "invalidIds": "Invalid siteId, orgId or beamId",
+    "invalidToken": "Invalid, expired, or already-used beam token",
+    "initiateFailed": "Initiate failed"
+  },
+  "builder": {
+    "siteParamRequired": "site query param required",
+    "siteShaRequired": "site + sha query params required",
+    "noBuildRecord": "no build record found",
+    "tokenNeedsSite": "Token-based trigger requires ?site=<siteId>",
+    "staticSite": "Static sites use the F143 in-process build path. F144 builders are SSR-only.",
+    "needsDeployApp": "deployAppName must be configured before triggering a build.",
+    "needsGhcrToken": "GHCR push token required (body.registryToken or GHCR_PUSH_TOKEN env).",
+    "corruptRecord": "(corrupt build record)"
+  },
+  "checkLinks": {
+    "docNotFound": "Document not found",
+    "linkNotInField": "Link not found in document field",
+    "docExistsAt": "Document \"{title}\" exists at {url}",
+    "bestMatch": "Best match: \"{title}\" (similarity)",
+    "noMatchNoAi": "No similar document found and no AI key configured",
+    "aiNoSuggestion": "AI returned no suggestion",
+    "aiParseFailed": "Failed to parse AI response",
+    "cronSecretMissing": "CMS_CRON_SECRET not configured"
+  },
+  "conversations": {
+    "sourceRequired": "source is required",
+    "turnsArray": "turns must be an array",
+    "turnShape": "each turn needs role ('visitor' | 'assistant') and text"
+  },
+  "extractText": {
+    "noReadable": "No readable text (possibly scanned/image PDF)",
+    "noText": "No text found",
+    "unsupported": "Unsupported file type",
+    "error": "Extraction error: {error}"
+  },
+  "forms": {
+    "tooMany": "Too many submissions — try again later",
+    "verificationFailed": "Verification failed — please try again",
+    "invalidEmail": "{field} is not a valid email address",
+    "invalidPhone": "{field} is not a valid phone number",
+    "invalidField": "{field} is invalid"
+  },
+  "github": {
+    "fetchUserFailed": "Failed to fetch user",
+    "orgRequired": "org param required",
+    "fetchReposFailed": "Failed to fetch repos",
+    "apiError": "GitHub API error",
+    "notConnected": "Not connected to GitHub",
+    "nameRequired": "name required"
+  },
+  "inlineEdit": {
+    "noSiteUrl": "The site has no address in its settings, so we can't fetch its page list. Set the site address under Site Settings.",
+    "sitemapFailed": "Couldn't fetch {base}/sitemap.xml. The picker only shows pages the site lists itself, so the list stays empty until the sitemap responds.",
+    "adminOnly": "Admin only",
+    "enabledRequired": "enabled (boolean) is required",
+    "siteInBody": "Pass the target site as the ?site= query parameter, not in the body — a body `site` was ignored and would have minted a token for a different site.",
+    "lensReadOnly": "Lens session is read-only — mint with the write key to get an edit session"
+  },
+  "interactives": {
+    "internalErrorDetail": "Internal error: {error}",
+    "targetLocaleRequired": "targetLocale required",
+    "notFound": "Interactive not found",
+    "noOtherLocale": "No other locale available to translate to",
+    "aiInvalidHtml": "AI returned invalid HTML",
+    "aiTranslationFailed": "AI translation failed",
+    "noFile": "No file provided"
+  },
+  "lensSession": {
+    "methodNotAllowed": "Method not allowed"
+  },
+  "media": {
+    "videoThumbFailed": "Video thumbnail failed (ffmpeg required)",
+    "videoThumbNotGenerated": "Could not generate video thumbnail (ffmpeg required)",
+    "noExif": "No EXIF data",
+    "exifFailed": "Failed to read EXIF",
+    "noUploadDir": "No upload directory found",
+    "optimizeFailed": "Optimization failed",
+    "renameNamesRequired": "oldName and newName are required",
+    "namesIdentical": "Names are identical",
+    "invalidFilename": "Invalid filename",
+    "nameExists": "A file with that name already exists",
+    "rotateParams": "file and angle (90, -90, 180) required",
+    "rotateFailed": "Rotate failed",
+    "tagsParams": "key and tags[] required"
+  },
+  "mobile": {
+    "jobIdRequired": "jobId required",
+    "jobNotFound": "Job not found",
+    "chatFailed": "Chat failed",
+    "slugRequired": "slug is required",
+    "slugExists": "Slug already exists",
+    "resolveParams": "orgId, siteId, and path required",
+    "noDocForUrl": "No matching document found for this URL",
+    "searchFailed": "Search failed",
+    "noWriteAccess": "No write access",
+    "listDeploysFailed": "Failed to list deploys",
+    "loginInvalid": "Invalid credentials, or 2FA is on — use the QR pairing flow from desktop",
+    "analysisEmpty": "Analysis returned no results",
+    "analysisFailed": "Analysis failed",
+    "missingParams": "Missing params",
+    "invalidUrlParam": "Missing or invalid url param",
+    "missingToken": "Missing token",
+    "pairingTokenInvalid": "Pairing token expired, invalid, or already used",
+    "proxyUnavailable": "Preview proxy is not available on this server",
+    "proxyUpstreamInvalid": "Upstream must be a localhost dev server, and the path must stay on it",
+    "proxyDirInvalid": "dir must be a registered site's dist/",
+    "proxyUpstreamFailed": "Upstream proxy failed: {error}",
+    "distNotFound": "dist/ not found",
+    "sirvFailed": "Sirv proxy failed: {error}",
+    "proxyMissingParam": "Missing upstream or dir parameter",
+    "missingTopics": "Missing topics",
+    "missingTokenPlatform": "Missing token or platform",
+    "invalidPlatform": "Invalid platform",
+    "pushTestTitle": "webhouse.app test",
+    "pushTestBody": "If you can read this, push wiring works.",
+    "uploadFailed": "Upload failed",
+    "invalidToken": "Invalid or expired token",
+    "streamError": "Stream error: {error}"
+  },
+  "preview": {
+    "built": "Built {pages} pages to {dir}",
+    "noDist": "No dist/ directory found at {dir}. Run the site's build first.",
+    "noDistIndex": "No dist/index.html found. Run build first."
+  },
+  "publishScheduled": {
+    "notAuthorized": "Not authorized"
+  },
+  "schema": {
+    "collectionNameChars": "Collection name may only use letters, digits, - and _",
+    "collectionExists": "Collection already exists",
+    "formsArray": "forms must be a non-empty array",
+    "formName": "every form needs a string name",
+    "blocksArray": "blocks must be a non-empty array",
+    "blockName": "every block needs a string name",
+    "collectionsArray": "collections must be a non-empty array",
+    "collectionName": "every collection needs a string name"
+  },
+  "trash": {
+    "mediaLabel": "Media",
+    "interactivesLabel": "Interactives"
+  },
+  "search": {
+    "mediaLabel": "Media"
+  }
+}

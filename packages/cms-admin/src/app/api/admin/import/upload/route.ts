@@ -7,8 +7,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseFile, parseMarkdownFiles, detectFormat, type ImportFormat } from "@/lib/import-engine";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("import.execute"); if (denied) return denied;
 
   try {
@@ -16,7 +18,7 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll("file") as File[];
 
     if (files.length === 0) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.import.noFile") }, { status: 400 });
     }
 
     const firstFile = files[0];
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
       fields = parsed.fields;
     } else {
       const content = await firstFile.text();
-      const parsed = parseFile(content, format, firstFile.name);
+      const parsed = parseFile(content, format, firstFile.name, t);
       records = parsed.records;
       fields = parsed.fields;
     }
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
       preview: records.slice(0, 5),
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Parse failed";
+    const message = err instanceof Error ? err.message : t("errAdmin.import.parseFailed");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }

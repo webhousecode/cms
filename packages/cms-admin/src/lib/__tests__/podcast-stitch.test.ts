@@ -11,6 +11,8 @@
  * tror.
  */
 import { describe, it, expect, beforeAll } from "vitest";
+import daLib from "../../i18n/messages/da/libText.json";
+import enLib from "../../i18n/messages/en/libText.json";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -72,8 +74,11 @@ describe("uden ffmpeg siger den HVAD der mangler", () => {
     // Læst af koden frem for fremtvunget: teksten er det eneste en driftsperson
     // får at se, og «sammenføjningen fejlede» ville ikke fortælle noget.
     const kilde = await readFile(new URL("../podcast/stitch.ts", import.meta.url), "utf8");
-    expect(kilde).toContain("apt-get install ffmpeg");
-    expect(kilde).toContain("går i stå ved samlingen");
+    // F211.2: the text lives in the i18n catalog; the code names its key.
+    expect(kilde).toContain("libText.podcastStitch.ffmpegMissing");
+    expect(enLib.podcastStitch.ffmpegMissing).toContain("apt-get install ffmpeg");
+    expect(daLib.podcastStitch.ffmpegMissing).toContain("apt-get install ffmpeg");
+    expect(daLib.podcastStitch.ffmpegMissing).toContain("går i stå ved samlingen");
   });
 });
 
@@ -146,6 +151,6 @@ describe("sammenføjningen", () => {
     const r = await sySammen([]);
     expect(r.ok).toBe(false);
     if (r.ok) return;
-    expect(r.grund).toContain("ingen lydstykker");
+    expect(r.grund).toContain("no audio pieces"); // English outside a request (F211.2)
   });
 });

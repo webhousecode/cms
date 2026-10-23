@@ -6,13 +6,15 @@ import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("ai"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
-    return NextResponse.json({ error: "Anthropic API key not configured — add it in Settings → AI" }, { status: 503 });
+    return NextResponse.json({ error: t("errCms.shared.aiKeyMissing") }, { status: 503 });
   }
   const ai = await getAI();
 
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
       locale?: string;
     };
     if (!text || !instruction) {
-      return NextResponse.json({ error: "text and instruction required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.ai.textInstructionRequired") }, { status: 400 });
     }
 
     const siteConfig = await readSiteConfig();
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "user",
-          content: `Text to rewrite:\n${text}\n\nInstruction: ${instruction}`,
+          content: `Text to rewrite:\n${text}\n\nInstruction: ${instruction}`, // i18n-ignore: model prompt
         },
       ],
       purpose: "content.rewrite",
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ result });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "AI error";
+    const msg = err instanceof Error ? err.message : t("errCms.shared.aiError");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

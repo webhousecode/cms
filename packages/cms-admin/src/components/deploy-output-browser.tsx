@@ -78,13 +78,13 @@ export function DeployOutputBrowser({ siteId }: Props) {
         setSiteHint(root.siteHint ?? "unknown");
         setTree({ "": { entries: root.entries, loading: false, expanded: true } });
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "failed to load");
+        if (!cancelled) setError(e instanceof Error ? e.message : t("misc.deployOutput.loadFailed"));
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [fetchDir]);
+  }, [fetchDir, t]);
 
   const toggleDir = useCallback(async (relPath: string) => {
     const node = tree[relPath];
@@ -101,12 +101,13 @@ export function DeployOutputBrowser({ siteId }: Props) {
       const data = await fetchDir(relPath);
       setTree((t) => ({ ...t, [relPath]: { entries: data.entries, loading: false, expanded: true } }));
     } catch (e) {
+      const failed = e instanceof Error ? e.message : t("misc.deployOutput.dirFailed");
       setTree((t) => ({
         ...t,
-        [relPath]: { entries: [], loading: false, expanded: true, error: e instanceof Error ? e.message : "failed" },
+        [relPath]: { entries: [], loading: false, expanded: true, error: failed },
       }));
     }
-  }, [tree, fetchDir]);
+  }, [tree, fetchDir, t]);
 
   const refresh = useCallback(async () => {
     setLoading(true);

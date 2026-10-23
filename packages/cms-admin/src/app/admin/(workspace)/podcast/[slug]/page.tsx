@@ -53,11 +53,11 @@ const STATUS: Record<Tilstand, string> = {
 /** De fem danske stemmer @broberg/ai-sdk kender. Navnene er SDK'ets egne
  *  aliasser, ikke rå id'er — motoren slår dem op. */
 const STEMMER = [
-  { value: "soren", label: "Søren" },
-  { value: "jesper", label: "Jesper" },
-  { value: "mads", label: "Mads" },
-  { value: "noam", label: "Noam" },
-  { value: "camilla", label: "Camilla" },
+  { value: "soren", label: "Søren" }, // i18n-ignore: voice names (proper nouns)
+  { value: "jesper", label: "Jesper" }, // i18n-ignore: voice names (proper nouns)
+  { value: "mads", label: "Mads" }, // i18n-ignore: voice names (proper nouns)
+  { value: "noam", label: "Noam" }, // i18n-ignore: voice names (proper nouns)
+  { value: "camilla", label: "Camilla" }, // i18n-ignore: voice names (proper nouns)
 ];
 
 const knap = (primaer: boolean, slukket = false): React.CSSProperties => ({
@@ -460,6 +460,7 @@ export default function PodcastAfsnitPage() {
                 <audio controls src={afsnit!.data.lydUrl} data-testid="podcast-afspiller" style={{ width: "100%" }} />
                 {typeof afsnit!.data.faktiskPrisUsd === "number" && (
                   <p style={{ margin: 0, fontSize: ".72rem", color: "var(--muted-foreground)" }}>
+                    {/* i18n-ignore: amount formatting (number + unit); DKK-prefix format is a separate decision */}
                     {t("tools.podcast.cost", { amount: kurs ? `${(afsnit!.data.faktiskPrisUsd * kurs).toFixed(2).replace(".", ",")} kr` : `$${afsnit!.data.faktiskPrisUsd.toFixed(2)}` })}
                   </p>
                 )}

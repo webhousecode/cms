@@ -184,7 +184,7 @@ export function TeamPanel() {
         return;
       }
       // Build invite link
-      const link = `${window.location.origin}/admin/invite/${data.invitation.token}`;
+      const link = `${window.location.origin}/admin/invite/${data.invitation.token}`; // i18n-ignore: URL
       setLastInviteLink(link);
       setEmailStatus({ sent: data.emailSent ?? false, error: data.emailError });
       toast.success(t("settings.team.invitationSent"), { description: inviteEmail.trim() });

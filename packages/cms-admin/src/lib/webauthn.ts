@@ -38,7 +38,7 @@ export function getRpFromRequest(req: Request): { rpID: string; origin: string; 
   const proto = fwdProto ?? url.protocol.replace(":", "");
   const rpID = host.split(":")[0]!; // strip port
   const origin = `${proto}://${host}`;
-  const rpName = "webhouse.app CMS";
+  const rpName = "webhouse.app CMS"; // i18n-ignore: brand name (WebAuthn relying-party name)
   return { rpID, origin, rpName };
 }
 
@@ -85,9 +85,9 @@ export async function confirmRegistration(
   name: string,
 ): Promise<StoredPasskey> {
   const user = await getUserById(userId);
-  if (!user) throw new Error("User not found");
+  if (!user) throw new Error((await serverT())("system.auth.userNotFound"));
   const expectedChallenge = user.webauthnChallenge;
-  if (!expectedChallenge) throw new Error("No pending registration challenge");
+  if (!expectedChallenge) throw new Error((await serverT())("system.auth.noPendingPasskey"));
 
   const verification = await verifyRegistrationResponse({
     response,
@@ -100,7 +100,7 @@ export async function confirmRegistration(
   });
 
   if (!verification.verified || !verification.registrationInfo) {
-    throw new Error("Passkey verification failed");
+    throw new Error((await serverT())("system.auth.passkeyFailed"));
   }
 
   const info = verification.registrationInfo;
@@ -161,7 +161,7 @@ export async function confirmAuthentication(
   const { getUsers } = await import("./auth");
   const users = await getUsers();
   const user = users.find((u) => (u.passkeys ?? []).some((p) => p.id === response.id));
-  if (!user) throw new Error("Unknown credential");
+  if (!user) throw new Error((await serverT())("system.auth.unknownCredential"));
   const passkey = user.passkeys!.find((p) => p.id === response.id)!;
 
   const verification = await verifyAuthenticationResponse({
@@ -178,7 +178,7 @@ export async function confirmAuthentication(
     requireUserVerification: false,
   });
 
-  if (!verification.verified) throw new Error("Authentication failed");
+  if (!verification.verified) throw new Error((await serverT())("system.auth.authFailed"));
 
   // Update counter + lastUsedAt
   const updatedPasskeys = user.passkeys!.map((p) =>
@@ -192,9 +192,14 @@ export async function confirmAuthentication(
 
 export async function removePasskey(userId: string, credentialId: string): Promise<void> {
   const user = await getUserById(userId);
-  if (!user) throw new Error("User not found");
+  if (!user) throw new Error((await serverT())("system.auth.userNotFound"));
   await saveUser({
     ...user,
     passkeys: (user.passkeys ?? []).filter((p) => p.id !== credentialId),
   });
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

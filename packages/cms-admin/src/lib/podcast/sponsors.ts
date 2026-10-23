@@ -20,6 +20,12 @@
  */
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import type { StoreSvar } from "./store";
+import { getServerTSafe } from "@/i18n/server";
+import { getT } from "@/i18n/locale";
+
+/** Translator; defaults to English when the caller has no request language. */
+type T = ReturnType<typeof getT>;
+const EN: T = getT("en");
 
 export const SPONSOR_SAMLING = "sponsorer";
 
@@ -55,10 +61,7 @@ export async function kraevSponsorSamling(): Promise<StoreSvar<true>> {
   }
   return {
     ok: false,
-    grund:
-      `dette site har ingen «${SPONSOR_SAMLING}»-samling. ` +
-      `Sponsorindslag er slået fra indtil den er erklæret i cms.config.ts — ` +
-      `se docs/features/F191-sponsorindslag.md for skemaet.`,
+    grund: (await getServerTSafe())("libText.podcastSponsors.missingCollection", { collection: SPONSOR_SAMLING }),
   };
 }
 
@@ -136,7 +139,7 @@ export async function skrivSponsor(
   // at kaste.
   const efter = await cms.content.findBySlug(SPONSOR_SAMLING, slug);
   if (!efter) {
-    return { ok: false, grund: `indslaget «${slug}» findes ikke efter skrivningen` };
+    return { ok: false, grund: (await getServerTSafe())("libText.podcastSponsors.missingAfterWrite", { slug }) };
   }
   return { ok: true, vaerdi: { slug, data: laes(efter.data) } };
 }
@@ -148,9 +151,9 @@ export async function skrivSponsor(
  * mangler et stykke — og resultatet ville være en fil hvor Aidan siger «vi
  * tager en kort pause» og derefter ingenting.
  */
-export function maaBruges(d: SponsorData): StoreSvar<true> {
-  if (d.aktiv === false) return { ok: false, grund: "indslaget er sat på pause" };
-  if (!d.lydUrl) return { ok: false, grund: "indslaget har ingen lyd endnu" };
+export function maaBruges(d: SponsorData, t: T = EN): StoreSvar<true> {
+  if (d.aktiv === false) return { ok: false, grund: t("libText.podcastSponsors.paused") };
+  if (!d.lydUrl) return { ok: false, grund: t("libText.podcastSponsors.noAudio") };
   return { ok: true, vaerdi: true };
 }
 
@@ -177,13 +180,15 @@ export function brugtI(sponsorSlug: string, afsnit: { slug: string; sponsorSlug?
  * ville efterlade afsnit der peger på ingenting, og det opdages først når
  * nogen indspiller dem igen.
  */
-export function maaSlettes(sponsorSlug: string, afsnit: { slug: string; sponsorSlug?: string }[]): StoreSvar<true> {
+export function maaSlettes(
+  sponsorSlug: string,
+  afsnit: { slug: string; sponsorSlug?: string }[],
+  t: T = EN,
+): StoreSvar<true> {
   const brugt = brugtI(sponsorSlug, afsnit);
   if (!brugt.length) return { ok: true, vaerdi: true };
   return {
     ok: false,
-    grund:
-      `indslaget er i brug i ${brugt.length} afsnit: ${brugt.join(", ")}. ` +
-      `Fjern det fra dem først, eller sæt det på pause i stedet for at slette det.`,
+    grund: t("libText.podcastSponsors.inUse", { count: brugt.length, episodes: brugt.join(", ") }),
   };
 }

@@ -581,8 +581,8 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
     } else {
       try {
         const parsed = JSON.parse(jsonDraft);
-        if (typeof parsed.name !== "string") throw new Error("name must be a string");
-        if (!Array.isArray(parsed.steps)) throw new Error("steps must be an array");
+        if (typeof parsed.name !== "string") throw new Error(t("agents.agentsTabs.nameMustBeString"));
+        if (!Array.isArray(parsed.steps)) throw new Error(t("agents.agentsTabs.stepsMustBeArray"));
         setNewName(parsed.name ?? "");
         setNewSteps(
           (parsed.steps as { id?: string; agentId?: string }[]).map((s, i) => ({

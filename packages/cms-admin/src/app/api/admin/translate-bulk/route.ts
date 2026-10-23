@@ -14,6 +14,7 @@ import {
   findPrimaryBodyField,
   computeReadingMinutes,
 } from "@/lib/ai/translation-helpers";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/admin/translate-bulk
@@ -23,16 +24,17 @@ import {
  * Returns NDJSON stream with progress events.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
-  if (role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
+  if (role !== "admin") return NextResponse.json({ error: t("errAdmin.common.adminOnly") }, { status: 403 });
 
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
-    return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
+    return NextResponse.json({ error: t("errAdmin.common.anthropicKeyMissing") }, { status: 503 });
   }
 
   const { targetLocale, publish } = await req.json() as { targetLocale: string; publish?: boolean };
-  if (!targetLocale) return NextResponse.json({ error: "targetLocale required" }, { status: 400 });
+  if (!targetLocale) return NextResponse.json({ error: t("errAdmin.translateBulk.targetLocaleRequired") }, { status: 400 });
 
   const [cms, config, siteConfig, model] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig(), getModel("content")]);
 
@@ -112,7 +114,7 @@ export async function POST(req: NextRequest) {
           if (Object.keys(sourceData).length === 0) {
             done++;
             controller.enqueue(encoder.encode(JSON.stringify({
-              type: "skip", collection: item.collection, slug: item.slug, title: item.title, reason: "no translatable content", done,
+              type: "skip", collection: item.collection, slug: item.slug, title: item.title, reason: t("errAdmin.translateBulk.nothingToTranslate"), done,
             }) + "\n"));
             continue;
           }
@@ -121,17 +123,20 @@ export async function POST(req: NextRequest) {
           const targetLang = LOCALE_LABELS[targetLocale] ?? targetLocale;
           const seoLimits = getSeoLimits(targetLocale);
 
-          const seoInstruction = hasSeoToTranslate
+          const seoInstruction = hasSeoToTranslate // i18n-ignore: model prompt
+            /* i18n-ignore: model prompt */
             ? `\nSEO fields (_seo_metaTitle, _seo_metaDescription, _seo_keywords):
 - metaTitle: ${seoLimits.titleMin}-${seoLimits.titleMax} characters for ${targetLang}
 - metaDescription: ${seoLimits.descMin}-${seoLimits.descMax} characters for ${targetLang}
 - keywords: translate each keyword naturally, keep as array of strings`
             : "";
 
-          const tagsInstruction = hasTagsToTranslate
+          const tagsInstruction = hasTagsToTranslate // i18n-ignore: model prompt
+            /* i18n-ignore: model prompt */
             ? `\nTag/array fields (any field whose source value is a JSON array of strings) must remain a JSON array of strings. Translate each entry naturally for ${targetLang}, keep the count, and use lowercase unless the source uses proper nouns. Do not merge or split tags.`
             : "";
 
+          // i18n-ignore: model prompt
           const systemPrompt = `You are a professional translator. Translate from ${sourceLang} to ${targetLang}.
 ${buildLocaleInstruction(targetLocale)}
 
@@ -147,7 +152,7 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
             ...mistralModel(model),
             maxTokens: 4096,
             system: systemPrompt,
-            messages: [{ role: "user", content: `Translate these fields from ${sourceLang} to ${targetLang}:\n\n${JSON.stringify(sourceData, null, 2)}` }],
+            messages: [{ role: "user", content: `Translate these fields from ${sourceLang} to ${targetLang}:\n\n${JSON.stringify(sourceData, null, 2)}` }], // i18n-ignore: model prompt
             responseFormat: "json",
             purpose: "translate.bulk",
           });
@@ -220,7 +225,7 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
           done++;
           controller.enqueue(encoder.encode(JSON.stringify({
             type: "error", collection: item.collection, slug: item.slug,
-            title: item.title, error: err?.message ?? "Unknown error", done,
+            title: item.title, error: err?.message ?? t("errAdmin.common.unknownError"), done,
           }) + "\n"));
         }
       }

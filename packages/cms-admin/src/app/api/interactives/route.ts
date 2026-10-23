@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
+import { getServerTSafe } from "@/i18n/server";
 
 /* ─── GET: list all interactives ─────────────────────────────── */
 export async function GET() {
+  const t = await getServerTSafe();
   try {
     const adapter = await getMediaAdapter();
     const all = await adapter.listInteractives();
@@ -13,18 +15,19 @@ export async function GET() {
     return NextResponse.json(meta);
   } catch (err) {
     console.error("[interactives] list error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }
 
 /* ─── POST: upload new interactive ───────────────────────────── */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("interactives"); if (capDenied) return capDenied;
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    if (!file) return NextResponse.json({ error: t("errApi.interactives.noFile") }, { status: 400 });
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -42,6 +45,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ...entry, locale }, { status: 201 });
   } catch (err) {
     console.error("[interactives] upload error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

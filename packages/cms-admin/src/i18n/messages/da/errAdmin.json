@@ -1,0 +1,266 @@
+{
+  "common": {
+    "notAuthenticated": "Ikke logget ind",
+    "unauthorized": "Ikke logget ind",
+    "adminOnly": "Kun for administratorer",
+    "forbidden": "Ingen adgang",
+    "siteAdminRequired": "Kræver administratoradgang til sitet",
+    "failed": "Mislykkedes",
+    "notFound": "Ikke fundet",
+    "error": "Fejl",
+    "invalidJson": "Ugyldig JSON",
+    "invalidRole": "Ugyldig rolle",
+    "siteNotFound": "Sitet \"{site}\" blev ikke fundet",
+    "unauthorizedLower": "ikke logget ind",
+    "passwordTooShort": "Adgangskoden skal være mindst 8 tegn",
+    "unknownAction": "Ukendt handling",
+    "internalError": "Intern fejl",
+    "documentNotFound": "Dokumentet blev ikke fundet",
+    "anthropicKeyMissing": "Anthropic API-nøglen er ikke sat op",
+    "unknownError": "Ukendt fejl"
+  },
+  "accessTokens": {
+    "nameRequired": "Navn skal udfyldes",
+    "scopeRequired": "Vælg mindst ét gyldigt scope",
+    "permissionRequired": "Vælg mindst én gyldig rettighed",
+    "invalidResourceFilter": "Ugyldigt format på ressourcefilter",
+    "invalidIpFilter": "Ugyldigt format på IP-filter",
+    "missingId": "Token-id mangler"
+  },
+  "analytics": {
+    "unknownView": "Ukendt visning: {view}",
+    "fetchFailed": "Kunne ikke hente statistik",
+    "unknownType": "Ukendt type: {type}",
+    "recordFailed": "Kunne ikke registrere posten"
+  },
+  "backupTest": {
+    "noProvider": "Ingen udbyder er sat op",
+    "failed": "Testen mislykkedes"
+  },
+  "backups": {
+    "notFound": "Backuppen blev ikke fundet"
+  },
+  "beam": {
+    "exportFailed": "Eksporten mislykkedes",
+    "invalidUploadId": "Ugyldigt uploadId",
+    "invalidChunkIndex": "Ugyldigt del-nummer",
+    "emptyChunk": "Tom del",
+    "missingOrgId": "orgId mangler",
+    "invalidChunkCount": "Ugyldigt antal dele",
+    "notBeamArchive": "Filen skal være et .beam-arkiv",
+    "invalidSha": "Ugyldig sha256 (skal være 64 hex-tegn)",
+    "missingChunk": "Del {i} af {total} mangler — uploaden er ufuldstændig. Prøv at uploade igen.",
+    "shaMismatch": "SHA-256 passer ikke: klienten sagde {claimed}, serveren fik {actual}. Uploaden blev beskadiget undervejs; prøv igen.",
+    "invalidAction": "Manglende eller ugyldig ?action= (forventede 'chunk', 'finalize' eller 'abort')",
+    "importFailed": "Importen mislykkedes",
+    "pushMissingFields": "Påkrævede felter mangler: targetUrl, token, orgId",
+    "transferStarted": "Beam-overførslen er startet — følg den via SSE",
+    "pushFailed": "Overførslen mislykkedes",
+    "started": "Startet",
+    "missingBeamId": "beamId mangler",
+    "sessionNotFound": "Beam-sessionen blev ikke fundet",
+    "tokenFailed": "Kunne ikke oprette token",
+    "listTokensFailed": "Kunne ikke hente tokens"
+  },
+  "dashboardStats": {
+    "noSite": "Intet site",
+    "loadFailed": "Kunne ikke hente statistik"
+  },
+  "deploy": {
+    "domainParamRequired": "domain-parameteren mangler",
+    "invalidDomain": "ikke et gyldigt domæne",
+    "lookupFailed": "opslaget mislykkedes",
+    "dnsCheckFailed": "DNS-tjekket mislykkedes",
+    "dnsApiNotConfiguredEnv": "DNS API er ikke sat op. Angiv DNS_API_URL og DNS_API_KEY i .env.local.",
+    "noCustomDomain": "Der er ikke sat et eget domæne op.",
+    "zoneNotManaged": "Zonen \"{zone}\" styres ikke af DNS API'et. Opret CNAME-posten manuelt hos din registrar.",
+    "noCnameTarget": "Kunne ikke finde CNAME-målet — tjek at udgivelsesudbyderen er sat op.",
+    "cnameFailed": "Oprettelse af CNAME mislykkedes",
+    "invalidBody": "Ugyldig forespørgsel",
+    "dockerMissingFields": "Påkrævede felter mangler: appName, flyToken, flyOrg",
+    "validatingToken": "Kontrollerer Fly.io-token...",
+    "orgNotFound": "Organisationen \"{org}\" blev ikke fundet. Tilgængelige: {available}",
+    "creatingApp": "Opretter appen \"{app}\"...",
+    "appExists": "Appen \"{app}\" findes allerede, genbruger den...",
+    "configuringSecrets": "Sætter hemmeligheder op...",
+    "deployingContainer": "Udgiver container...",
+    "waitingContainer": "Venter på at containeren starter...",
+    "allocatingIp": "Tildeler IP-adresser...",
+    "liveAt": "Live på {url}",
+    "failed": "Udgivelsen mislykkedes",
+    "zipFailed": "Kunne ikke lave pakken",
+    "siteParamRequired": "site-parameteren mangler",
+    "siteNotFoundLower": "site ikke fundet: {site}",
+    "flyTokenMissing": "Fly.io API-token er ikke sat op.",
+    "flyAppMissing": "Fly-appnavnet er ikke sat op.",
+    "rebuildFailed": "Genopbygningen mislykkedes",
+    "healthStatus": "Health-endpointet svarede {status}",
+    "statusFailed": "Kunne ikke tjekke status",
+    "pathParamRequired": "path-parameteren mangler",
+    "fileNotFound": "filen blev ikke fundet",
+    "listFailed": "Kunne ikke hente udgivelser",
+    "tokenNeedsSite": "Udgivelse med token kræver ?site=<siteId>",
+    "failedUnexpectedly": "Udgivelsen fejlede uventet",
+    "starting": "Starter udgivelse...",
+    "building": "Bygger sitet og optimerer filer...",
+    "pushing": "Sender til udbyderen...",
+    "complete": "Udgivelsen er færdig!"
+  },
+  "dnsRegistrar": {
+    "notConfigured": "DNS API er ikke sat op",
+    "qRequired": "q skal udfyldes",
+    "domainsRequired": "domains skal udfyldes",
+    "searchAction": "action skal være 'search' eller 'check'",
+    "domainNameRequired": "domain_name skal udfyldes",
+    "confirmTokenRequired": "confirm_token skal udfyldes",
+    "buyAction": "action skal være 'initiate' eller 'confirm'"
+  },
+  "emailTest": {
+    "recipientRequired": "Modtagerens e-mail skal udfyldes"
+  },
+  "forms": {
+    "noSubmissions": "Ingen indsendelser",
+    "notFound": "Formularen blev ikke fundet",
+    "invalidStatus": "Ugyldig status",
+    "fieldsRequired": "name, label og fields skal udfyldes"
+  },
+  "githubServiceToken": {
+    "noToken": "Intet GitHub-token — forbind GitHub først"
+  },
+  "goto": {
+    "invalidJson": "Ugyldig JSON i forespørgslen",
+    "fieldsRequired": "orgId, siteId og path skal udfyldes"
+  },
+  "import": {
+    "missingFields": "Påkrævede felter mangler",
+    "collectionNotFound": "Samlingen \"{collection}\" blev ikke fundet",
+    "failed": "Importen mislykkedes",
+    "previewMissing": "Indhold, format eller samling mangler",
+    "previewFailed": "Forhåndsvisningen mislykkedes",
+    "noFile": "Ingen fil uploadet",
+    "parseFailed": "Filen kunne ikke læses"
+  },
+  "invitations": {
+    "revokeFailed": "Kunne ikke tilbagekalde invitationen",
+    "tokenNameRequired": "Token og navn skal udfyldes",
+    "invalid": "Invitationen er ugyldig eller udløbet",
+    "alreadyHasAccount": "Denne e-mail har allerede en konto. Log ind som {email} og åbn linket igen.",
+    "passwordRequired": "Nye konti skal have en adgangskode",
+    "createAccountFailed": "Kunne ikke oprette kontoen",
+    "emailRequired": "E-mail skal udfyldes",
+    "alreadyMember": "Brugeren har allerede adgang til dette site",
+    "mailFailed": "Mailen kunne ikke sendes.",
+    "createFailed": "Kunne ikke oprette invitationen",
+    "tokenRequired": "Token skal udfyldes"
+  },
+  "lighthouse": {
+    "noResults": "Ingen scanningsresultater modtaget",
+    "optimizeFailed": "Optimeringen mislykkedes",
+    "noUrl": "Ingen URL angivet, og der er ikke sat en produktions- eller forhåndsvisnings-URL op",
+    "localhost": "Kan ikke teste localhost-URL'er — PSI API kræver en offentlig URL. Angiv en produktions-URL under Site-indstillinger → Udgivelse.",
+    "scanFailed": "Scanningen mislykkedes"
+  },
+  "log": {
+    "eventsRequired": "events-listen mangler",
+    "failed": "Kunne ikke logge hændelserne"
+  },
+  "mcpConfig": {
+    "keyLabelRequired": "key og label skal udfyldes",
+    "idRequired": "id skal udfyldes"
+  },
+  "orgSettings": {
+    "noActiveOrg": "Ingen aktiv organisation"
+  },
+  "pm2": {
+    "notInProduction": "Ikke tilgængelig i produktion",
+    "error": "pm2-fejl",
+    "nameActionRequired": "name og action skal udfyldes",
+    "invalidAction": "action skal være start, stop eller restart",
+    "cannotControlSelf": "cms-admin kan ikke styres fra brugerfladen"
+  },
+  "profile": {
+    "userNotFound": "Brugeren blev ikke fundet",
+    "unsupportedLanguage": "Sproget understøttes ikke",
+    "currentPasswordRequired": "Nuværende adgangskode skal udfyldes",
+    "newPasswordTooShort": "Den nye adgangskode skal være mindst 8 tegn",
+    "currentPasswordWrong": "Den nuværende adgangskode er forkert"
+  },
+  "push": {
+    "invalidJson": "ugyldig JSON i forespørgslen",
+    "subscriptionRequired": "subscription-objektet mangler",
+    "subscriptionIncomplete": "subscription mangler endpoint/keys",
+    "macBrowser": "Mac · browser",
+    "windowsBrowser": "Windows · browser",
+    "linuxBrowser": "Linux · browser",
+    "androidBrowser": "Android · browser",
+    "browser": "Browser",
+    "vapidMissing": "VAPID_PUBLIC_KEY er ikke sat på cms-admin"
+  },
+  "scheduledEvents": {
+    "tags": "Tags: {tags}",
+    "category": "Kategori: {category}",
+    "backupTitle": "Backup ({count} dok.)",
+    "scheduledBackupSub": "Planlagt backup",
+    "scheduledBackup": "Planlagt backup",
+    "dailyBackup": "Daglig backup",
+    "weeklyBackup": "Ugentlig backup",
+    "scheduledLinkCheck": "Planlagt linktjek",
+    "dailyCheck": "Dagligt tjek",
+    "weeklyCheck": "Ugentligt tjek",
+    "loadFailed": "Kunne ikke hente planlagte hændelser"
+  },
+  "seo": {
+    "noData": "Ingen data",
+    "exportFailed": "Eksporten mislykkedes",
+    "keywordRequired": "søgeordet mangler",
+    "collectionSlugRequired": "collection og slug skal udfyldes",
+    "noImage": "Dokumentet har intet billede, der kan bruges som OG-grundlag",
+    "ogFailed": "OG-billedet kunne ikke laves"
+  },
+  "siteConfig": {
+    "noActiveSite": "Kunne ikke finde det aktive site",
+    "siteNotFound": "Sitet blev ikke fundet",
+    "autoFixFilesystemOnly": "Automatisk rettelse findes kun for sites på filsystemet",
+    "readConfigFailed": "Kunne ikke læse konfigurationsfilen",
+    "aiFixFailed": "AI kunne ikke lave en rettelse",
+    "aiFixEmpty": "AI returnerede en tom eller ubrugelig rettelse",
+    "siteNotInRegistry": "Sitet findes ikke i registret",
+    "diagnoseSummary": "Sitets konfiguration har fejl, der forhindrer den i at blive indlæst.",
+    "diagnoseFix": "Gennemgå filen cms.config.ts og ret feltets format.",
+    "aiDiagnosisUnavailable": "AI-diagnosen er ikke tilgængelig"
+  },
+  "siteDomains": {
+    "previewUrl": "Preview-adresse",
+    "productionUrl": "Udrulnings-adresse",
+    "customDomain": "Eget domæne",
+    "invalidRequest": "Ugyldig forespørgsel",
+    "domainsMustBeList": "domains skal være en liste af tekster"
+  },
+  "sitesClone": {
+    "fieldsRequired": "sourceSiteId og newName skal udfyldes",
+    "failed": "Kloningen mislykkedes"
+  },
+  "translateBulk": {
+    "targetLocaleRequired": "targetLocale mangler",
+    "nothingToTranslate": "intet indhold at oversætte"
+  },
+  "users": {
+    "ownRole": "Du kan ikke ændre din egen rolle",
+    "updateRoleFailed": "Kunne ikke ændre rollen",
+    "removeSelf": "Du kan ikke fjerne dig selv fra teamet",
+    "removeFailed": "Kunne ikke fjerne medlemmet",
+    "noSiteAccess": "Du har ikke adgang til dette site",
+    "adminRequired": "Kræver administratoradgang"
+  },
+  "webhooks": {
+    "readFailed": "Kunne ikke hente leveringer",
+    "urlRequired": "url mangler",
+    "testFailed": "Testen mislykkedes"
+  },
+  "wpMigrate": {
+    "missingUrl": "URL mangler",
+    "probeFailed": "Undersøgelsen mislykkedes",
+    "startMissing": "probeResult, orgId eller siteName mangler",
+    "migrationFailed": "Migreringen mislykkedes"
+  }
+}

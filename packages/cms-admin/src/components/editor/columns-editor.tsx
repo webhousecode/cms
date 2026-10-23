@@ -17,8 +17,8 @@ const LAYOUT_PRESETS = [
   { value: "1-1", label: "50 / 50", cols: "1fr 1fr" },
   { value: "2-1", label: "66 / 33", cols: "2fr 1fr" },
   { value: "1-2", label: "33 / 66", cols: "1fr 2fr" },
-  { value: "1-1-1", label: "3 equal", labelKey: "editor.columnsEditor.threeEqual", cols: "1fr 1fr 1fr" },
-  { value: "1-1-1-1", label: "4 equal", labelKey: "editor.columnsEditor.fourEqual", cols: "repeat(4, 1fr)" },
+  { value: "1-1-1", label: "3 equal", labelKey: "editor.columnsEditor.threeEqual", cols: "1fr 1fr 1fr" }, // i18n-ignore: fallback label; rendered via t(labelKey)
+  { value: "1-1-1-1", label: "4 equal", labelKey: "editor.columnsEditor.fourEqual", cols: "repeat(4, 1fr)" }, // i18n-ignore: fallback label; rendered via t(labelKey)
 ];
 
 function getColumnCount(layout: string): number {

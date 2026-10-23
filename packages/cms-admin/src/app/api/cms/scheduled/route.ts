@@ -2,11 +2,13 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getSiteRole } from "@/lib/require-role";
 import { NextResponse } from "next/server";
 import { requireCapability } from "@/lib/capabilities";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET() {
+  const t = await getServerTSafe();
   const capDenied = await requireCapability("scheduling"); if (capDenied) return capDenied;
   const role = await getSiteRole();
-  if (!role) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!role) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
@@ -50,6 +52,6 @@ export async function GET() {
     return NextResponse.json(items);
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errCms.shared.internalError") }, { status: 500 });
   }
 }

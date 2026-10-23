@@ -21,6 +21,12 @@ import en_misc from "./en/misc.json";
 import en_integrations from "./en/integrations.json";
 import en_tools from "./en/tools.json";
 import en_help from "./en/help.json";
+import en_system from "./en/system.json";
+import en_deployText from "./en/deployText.json";
+import en_libText from "./en/libText.json";
+import en_errApi from "./en/errApi.json";
+import en_errCms from "./en/errCms.json";
+import en_errAdmin from "./en/errAdmin.json";
 import da_account from "./da/account.json";
 import da_common from "./da/common.json";
 import da_shell from "./da/shell.json";
@@ -37,6 +43,12 @@ import da_misc from "./da/misc.json";
 import da_integrations from "./da/integrations.json";
 import da_tools from "./da/tools.json";
 import da_help from "./da/help.json";
+import da_system from "./da/system.json";
+import da_deployText from "./da/deployText.json";
+import da_libText from "./da/libText.json";
+import da_errApi from "./da/errApi.json";
+import da_errCms from "./da/errCms.json";
+import da_errAdmin from "./da/errAdmin.json";
 
 export const en: Dict = {
   account: en_account,
@@ -55,6 +67,12 @@ export const en: Dict = {
   integrations: en_integrations,
   tools: en_tools,
   help: en_help,
+  system: en_system,
+  deployText: en_deployText,
+  libText: en_libText,
+  errApi: en_errApi,
+  errCms: en_errCms,
+  errAdmin: en_errAdmin,
 };
 export const da: Dict = {
   account: da_account,
@@ -73,4 +91,10 @@ export const da: Dict = {
   integrations: da_integrations,
   tools: da_tools,
   help: da_help,
+  system: da_system,
+  deployText: da_deployText,
+  libText: da_libText,
+  errApi: da_errApi,
+  errCms: da_errCms,
+  errAdmin: da_errAdmin,
 };

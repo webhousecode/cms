@@ -54,7 +54,7 @@ function renderPreviousAsPrompt(prevContent: Record<string, unknown>): string {
     : "";
 
   const parts: string[] = [
-    "You are processing existing content as part of a multi-step workflow. Apply your role to the draft below and return the improved version using the same JSON schema.",
+    "You are processing existing content as part of a multi-step workflow. Apply your role to the draft below and return the improved version using the same JSON schema.", // i18n-ignore: model prompt
     "",
     "## Current draft",
   ];
@@ -75,10 +75,11 @@ export async function runWorkflow(
 ): Promise<WorkflowRunResult> {
   const startedAt = Date.now();
   const workflow = await getWorkflow(workflowId);
-  if (!workflow) throw new Error(`Workflow ${workflowId} not found`);
-  if (!workflow.active) throw new Error(`Workflow ${workflowId} is not active`);
+  const t = await serverT();
+  if (!workflow) throw new Error(t("system.agents.workflowNotFound", { id: workflowId }));
+  if (!workflow.active) throw new Error(t("system.agents.workflowNotActive", { id: workflowId }));
   if (workflow.steps.length === 0) {
-    throw new Error("Workflow has no steps");
+    throw new Error(t("system.agents.workflowNoSteps"));
   }
 
   // Fire workflow.started webhook
@@ -124,7 +125,7 @@ export async function runWorkflow(
       // end with model="A → B → C" which broke the model breakdown.
       await recordRun({
         agentId: step.agentId,
-        agentName: `${result.agent.name} (workflow: ${workflow.name})`,
+        agentName: `${result.agent.name} (workflow: ${workflow.name})`, // i18n-ignore: agent name stored in the run record (data)
         timestamp: new Date().toISOString(),
         collection: result.targetCollection,
         documentsProcessed: 1,
@@ -233,4 +234,9 @@ export async function runWorkflow(
     steps: stepResults,
     totalDurationMs: Date.now() - startedAt,
   };
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

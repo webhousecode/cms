@@ -27,6 +27,7 @@ import { getTeamMembers } from "@/lib/team";
 import { hasPermission, ROLE_PERMISSIONS } from "@/lib/permissions";
 import { readSiteConfig } from "@/lib/site-config";
 import { originAllowed, siteOriginsWithSiblings } from "@/lib/cors-origin";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Podcastens egne tilladelser.
@@ -77,8 +78,9 @@ export async function kraevTilladelse(
   tilladelse: PodcastPermission,
 ): Promise<Afvisning | null> {
   const kalder = await laesKalder(req);
+  const t = await getServerTSafe();
   if (!kalder) {
-    return { svar: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
+    return { svar: NextResponse.json({ error: t("libText.podcastApi.unauthorized") }, { status: 401 }) };
   }
 
   // En read-only Lens-session må se, ikke skrive — samme grænse som proxy'ens,
@@ -86,7 +88,7 @@ export async function kraevTilladelse(
   const lensReadOnly = kalder.lens === true && kalder.lensWrite !== true;
   if (lensReadOnly && tilladelse !== PODCAST_PERMISSIONS.read) {
     return {
-      svar: NextResponse.json({ error: "Lens session is read-only" }, { status: 403 }),
+      svar: NextResponse.json({ error: t("libText.podcastApi.lensReadOnly") }, { status: 403 }),
     };
   }
 
@@ -109,7 +111,7 @@ export async function kraevTilladelse(
   if (!rolle || !hasPermission(ROLE_PERMISSIONS[rolle] ?? [], tilladelse)) {
     return {
       svar: NextResponse.json(
-        { error: "Forbidden", reason: `missing permission ${tilladelse}`, permission: tilladelse },
+        { error: t("libText.podcastApi.forbidden"), reason: t("libText.podcastApi.missingPermission", { permission: tilladelse }), permission: tilladelse },
         { status: 403 },
       ),
     };

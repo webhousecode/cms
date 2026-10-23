@@ -24,6 +24,7 @@ import {
   completeBeamSession,
   failBeamSession,
 } from "./session";
+import { getServerTSafe } from "@/i18n/server";
 
 interface PushOptions {
   targetUrl: string;
@@ -90,7 +91,7 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
         const d = doc as { slug?: string; id?: string };
         const slug = d.slug ?? d.id ?? "unknown";
         const jsonStr = JSON.stringify(doc, null, 2);
-        const archivePath = `content/${col.name}/${slug}.json`;
+        const archivePath = `content/${col.name}/${slug}.json`; // i18n-ignore: archive path
         const checksum = sha256(jsonStr);
         checksums[archivePath] = checksum;
         files.push({ archivePath, content: Buffer.from(jsonStr), checksum });
@@ -124,7 +125,7 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
   // ── Media (uploads/) ──
   if (existsSync(uploadDir)) {
     walkDir(uploadDir, (absPath, relPath) => {
-      const archivePath = `uploads/${relPath}`;
+      const archivePath = `uploads/${relPath}`; // i18n-ignore: archive path
       const buf = readFileSync(absPath);
       const checksum = sha256(buf);
       checksums[archivePath] = checksum;
@@ -193,7 +194,7 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
         if (entry !== "public") continue;
         walkDir(abs, (absPath, relPath) => {
           if (relPath.startsWith("uploads/") || relPath === "uploads") return;
-          const archivePath = `source/public/${relPath}`;
+          const archivePath = `source/public/${relPath}`; // i18n-ignore: archive path
           const buf = readFileSync(absPath);
           const checksum = sha256(buf);
           checksums[archivePath] = checksum;
@@ -201,7 +202,7 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
           stats.sourceFiles = (stats.sourceFiles ?? 0) + 1;
         });
       } else if (SOURCE_ROOT_FILES.has(entry)) {
-        const archivePath = `source/${entry}`;
+        const archivePath = `source/${entry}`; // i18n-ignore: archive path
         const buf = readFileSync(abs);
         const checksum = sha256(buf);
         checksums[archivePath] = checksum;
@@ -239,8 +240,9 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
     }),
   });
 
+  const t = await getServerTSafe();
   if (!initRes.ok) {
-    const err = await initRes.json().catch(() => ({ error: "Initiate failed" }));
+    const err = await initRes.json().catch(() => ({ error: t("deployText.beamPush.initiateFailed") }));
     failBeamSession(beamId, err.error);
     throw new Error(err.error);
   }
@@ -262,7 +264,7 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
     });
 
     if (!fileRes.ok) {
-      const err = await fileRes.json().catch(() => ({ error: `Failed to send ${file.archivePath}` }));
+      const err = await fileRes.json().catch(() => ({ error: t("deployText.beamPush.sendFailed", { path: file.archivePath }) }));
       failBeamSession(beamId, err.error);
       throw new Error(err.error);
     }
@@ -299,7 +301,7 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
   });
 
   if (!finalRes.ok) {
-    const err = await finalRes.json().catch(() => ({ error: "Finalize failed" }));
+    const err = await finalRes.json().catch(() => ({ error: t("deployText.beamPush.finalizeFailed") }));
     failBeamSession(beamId, err.error);
     throw new Error(err.error);
   }

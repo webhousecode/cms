@@ -11,6 +11,8 @@
  *     reklamen lander et sted ingen forventer.
  */
 import { describe, it, expect } from "vitest";
+import daLib from "../../i18n/messages/da/libText.json";
+import enLib from "../../i18n/messages/en/libText.json";
 import { readFileSync } from "node:fs";
 import { lydNoegle } from "../podcast/record";
 import type { Replik } from "../podcast/manuscript";
@@ -102,7 +104,8 @@ describe("reklamens bytes læses fra mediebiblioteket, ikke over HTTP", () => {
   });
 
   it("en manglende fil giver en besked der siger HVAD der peger forkert", () => {
-    expect(KODE).toContain("peger på en fil der ikke er der");
+    expect(KODE).toContain("libText.podcastRecord.sponsorAudioUnreadable");
+    expect(daLib.podcastRecord.sponsorAudioUnreadable).toContain("peger på en fil der ikke er der");
   });
 });
 

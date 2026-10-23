@@ -80,7 +80,7 @@ export async function findSitesByGitHubRepo(repoFullName: string): Promise<Match
   const registry = await loadRegistry();
   if (!registry) return [];
   const matches: MatchedSite[] = [];
-  const prefix = `github://${repoFullName.toLowerCase()}/`;
+  const prefix = `github://${repoFullName.toLowerCase()}/`; // i18n-ignore: URL prefix
   for (const org of registry.orgs) {
     for (const site of org.sites ?? []) {
       if (typeof site.configPath !== "string") continue;

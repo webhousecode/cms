@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n-context";
 
 interface Props {
   value: string[];
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function TagsInput({ value, onChange, disabled }: Props) {
+  const t = useT();
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,7 +33,7 @@ export function TagsInput({ value, onChange, disabled }: Props) {
       onClick={() => inputRef.current?.focus()}
       className={cn(
         "flex flex-wrap gap-2 p-2 rounded-md bg-input border border-border focus-within:ring-1 focus-within:ring-ring transition-colors min-h-[42px] cursor-text",
-        disabled && "opacity-40 cursor-not-allowed"
+        disabled && "opacity-40 cursor-not-allowed" // i18n-ignore: CSS class names
       )}
     >
       {value.map((tag) => (
@@ -86,7 +88,7 @@ export function TagsInput({ value, onChange, disabled }: Props) {
           onBlur={() => {
             if (input.trim()) addTag(input);
           }}
-          placeholder={value.length === 0 ? "Add tags…" : ""}
+          placeholder={value.length === 0 ? t("editor.tagsInput.placeholder") : ""}
           className="flex-1 min-w-20 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
       )}

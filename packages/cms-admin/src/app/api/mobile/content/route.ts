@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { getAdminCmsForSite, getAdminConfigForSite } from "@/lib/cms";
 import { loadRegistry } from "@/lib/site-registry";
+import { getServerTSafe } from "@/i18n/server";
 
 /** Recursively serialize a field config for mobile consumption */
 function serializeField(f: any): any {
@@ -28,15 +29,16 @@ function serializeField(f: any): any {
  * Mobile equivalent of GET /api/schema + GET /api/cms/:collection combined.
  */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   const orgId = req.nextUrl.searchParams.get("orgId");
   const siteId = req.nextUrl.searchParams.get("siteId");
   if (!orgId || !siteId) {
-    return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.orgSiteRequired") }, { status: 400 });
   }
 
   try {
@@ -45,7 +47,7 @@ export async function GET(req: NextRequest) {
       getAdminConfigForSite(orgId, siteId),
     ]);
     if (!cms || !config) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errApi.common.siteNotFound") }, { status: 404 });
     }
 
     // Fetch doc counts in parallel
@@ -72,6 +74,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ collections });
   } catch (err) {
     console.error("[mobile/content] Error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

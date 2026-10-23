@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminConfig } from "@/lib/cms";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ name: string }> }
 ) {
+  const t = await getServerTSafe();
   const { name } = await params;
   const config = await getAdminConfig();
   const col = config.collections.find((c) => c.name === name);
-  if (!col) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!col) return NextResponse.json({ error: t("errCms.shared.notFound") }, { status: 404 });
   return NextResponse.json({
     name: col.name,
     label: col.label,

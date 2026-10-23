@@ -40,7 +40,7 @@ export function AdminLanguageSection() {
       });
       const body = (await res.json().catch(() => null)) as { uiLocale?: string | null } | null;
       // The server echoes what it stored — a 200 that stored something else is not a save.
-      if (!res.ok || (body?.uiLocale ?? AUTOMATIC) !== next) throw new Error("not saved");
+      if (!res.ok || (body?.uiLocale ?? AUTOMATIC) !== next) throw new Error("not saved"); // i18n-ignore: internal exception, caught and replaced by a translated toast
       toast.success(t("account.language.saved"));
       router.refresh();
     } catch {

@@ -10,15 +10,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { dispatchWebhooks } from "@/lib/webhook-dispatch";
 import { getActiveSitePaths, getActiveSiteEntry } from "@/lib/site-paths";
 import { requirePermission } from "@/lib/permissions";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("webhooks.manage");
   if (denied) return denied;
 
   try {
     const body = await request.json() as { url: string; secret?: string; category?: string };
     if (!body.url) {
-      return NextResponse.json({ error: "url required" }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.webhooks.urlRequired") }, { status: 400 });
     }
 
     const [sitePaths, siteEntry] = await Promise.all([
@@ -27,10 +29,11 @@ export async function POST(request: NextRequest) {
     ]);
 
     const results = await dispatchWebhooks(
-      [{ id: "test", url: body.url, secret: body.secret, label: "Test" }],
+      [{ id: "test", url: body.url, secret: body.secret, label: "Test" }], // i18n-ignore: outgoing webhook payload (F210.4)
       {
         event: `${body.category ?? "test"}.test`,
-        title: "Webhook Test",
+        title: "Webhook Test", // i18n-ignore: outgoing webhook payload (F210.4)
+        // i18n-ignore: outgoing webhook payload (F210.4)
         message: "This is a test event from your webhouse.app CMS admin. If you see this in your webhook receiver, your configuration is working correctly.",
         color: 0xF7BB2E,
         siteName: siteEntry?.name,
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
       deliveryId: result.deliveryId,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Test failed";
+    const message = err instanceof Error ? err.message : t("errAdmin.webhooks.testFailed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

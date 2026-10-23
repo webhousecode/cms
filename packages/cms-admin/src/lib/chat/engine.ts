@@ -128,8 +128,8 @@ export function createCmsChat(opts: {
       opts.model ??
       (async function* () {
         throw new Error(
-          "[chat/engine] createCmsChat was built without a model and then asked to run. " +
-            "Pass cmsModel({resolvedModel, maxTokens}) — do not let a listing-only chat answer a user.",
+          "[chat/engine] createCmsChat was built without a model and then asked to run. " + // i18n-ignore: developer exception
+            "Pass cmsModel({resolvedModel, maxTokens}) — do not let a listing-only chat answer a user.", // i18n-ignore: developer exception
         );
       } as ModelFn),
     tools: opts.tools,

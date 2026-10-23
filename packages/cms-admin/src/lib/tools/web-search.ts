@@ -1,3 +1,4 @@
+/* i18n-ignore-file: agent tool description and tool results returned to the model, not shown to a person */
 import { getWebSearchKey } from "@/lib/ai-config";
 import type { ToolDefinition, ToolHandler } from "./index";
 

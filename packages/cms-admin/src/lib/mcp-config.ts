@@ -83,7 +83,7 @@ export async function getMcpApiKeys(): Promise<McpApiKey[]> {
   }
   const single = process.env.MCP_API_KEY;
   if (single && keys.length === 0) {
-    keys.push({ key: single, label: "Default", scopes: ["read", "write", "publish", "deploy", "ai"] });
+    keys.push({ key: single, label: "Default", scopes: ["read", "write", "publish", "deploy", "ai"] }); // i18n-ignore: name of the env-configured key, its identity in audit logs
   }
   return keys;
 }
@@ -129,7 +129,7 @@ export async function resolveApiKeyToSite(bearerHeader: string | null, clientIp 
       // Same rules as every other door: the token's own window/IP/sites, and
       // its owner must be able to act on the bound site.
       const { evaluateToken } = await import("./access-tokens");
-      const check = evaluateToken({ ...stored, permissions: ["*"] }, "content:read", `site:${siteId}` as never, clientIp);
+      const check = evaluateToken({ ...stored, permissions: ["*"] }, "content:read", `site:${siteId}` as never, clientIp); // i18n-ignore: resource identifier
       if (!check.allow) return null;
       const { getUsers } = await import("./auth");
       const { getTeamMembersForSite } = await import("./team");

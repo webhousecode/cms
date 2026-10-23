@@ -7,6 +7,8 @@
  * Runtime-beviset er F189.7.
  */
 import { describe, it, expect } from "vitest";
+import daLib from "../../i18n/messages/da/libText.json";
+import enLib from "../../i18n/messages/en/libText.json";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -58,7 +60,7 @@ describe("lydNoegle — lydens identitet", () => {
 
 describe("rækkefølgen — pengene må ikke bruges før spærren er passeret", () => {
   it("maaIndspilles kaldes FØR ai.podcast", () => {
-    const spaerre = kilde.indexOf("maaIndspilles(afsnit.data.tilstand)");
+    const spaerre = kilde.indexOf("maaIndspilles(afsnit.data.tilstand");
     const studie = kilde.indexOf("ai.podcast(");
     expect(spaerre).toBeGreaterThan(-1);
     expect(studie).toBeGreaterThan(-1);
@@ -87,8 +89,9 @@ describe("rækkefølgen — pengene må ikke bruges før spærren er passeret", 
 
   it("en gemme-fejl siger EKSPLICIT at pengene er brugt", () => {
     // Den der læser beskeden skal vide at et nyt forsøg koster igen.
-    expect(kilde).toMatch(/lavet \(og betalt\)/);
-    expect(kilde).toMatch(/det koster igen/);
+    expect(kilde).toContain("libText.podcastRecord.paidButNotSaved");
+    expect(daLib.podcastRecord.paidButNotSaved).toMatch(/lavet \(og betalt\)/);
+    expect(daLib.podcastRecord.paidButNotSaved).toMatch(/det koster igen/);
   });
 
   it("samme nøgle genbruger filen frem for at betale igen", () => {

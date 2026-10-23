@@ -11,8 +11,10 @@ import { requirePermission } from "@/lib/permissions";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { ConversationStore } from "@/lib/conversations/store";
 import { CONVERSATION_TEXT_RETENTION_DAYS } from "@/lib/conversations/retention";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("conversations.read");
   if (denied) return denied;
 
@@ -20,7 +22,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const { dataDir } = await getActiveSitePaths();
   const conversation = await new ConversationStore(dataDir).get(id);
   if (!conversation) {
-    return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.common.conversationNotFound") }, { status: 404 });
   }
   return NextResponse.json({ conversation, textRetentionDays: CONVERSATION_TEXT_RETENTION_DAYS });
 }
@@ -37,6 +39,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
  * of them means the erasure request was honoured.
  */
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("conversations.delete");
   if (denied) return denied;
 
@@ -44,7 +47,7 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { dataDir } = await getActiveSitePaths();
   const removed = await new ConversationStore(dataDir).delete(id);
   if (!removed) {
-    return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.common.conversationNotFound") }, { status: 404 });
   }
   return NextResponse.json({ deleted: id });
 }

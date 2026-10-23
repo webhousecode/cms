@@ -9,6 +9,7 @@ import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { WpProbeResult } from "./probe";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface WpDocument {
   type: string;
@@ -47,7 +48,7 @@ export async function extractAllContent(
   mediaDownloaded: number;
 }> {
   if (!probe.restApiAvailable) {
-    throw new Error("REST API not available — cannot extract content");
+    throw new Error((await getServerTSafe())("deployText.wpMigration.noRestApi"));
   }
 
   const api = probe.restApiUrl;
@@ -57,11 +58,11 @@ export async function extractAllContent(
   let mediaDownloaded = 0;
 
   // Fetch category + tag names for mapping
-  const categoryMap = await fetchTaxonomyMap(`${api}/categories`);
-  const tagMap = await fetchTaxonomyMap(`${api}/tags`);
+  const categoryMap = await fetchTaxonomyMap(`${api}/categories`); // i18n-ignore: URL
+  const tagMap = await fetchTaxonomyMap(`${api}/tags`); // i18n-ignore: URL
 
   // ── Posts ──
-  const posts = await paginateWpApi(`${api}/posts`);
+  const posts = await paginateWpApi(`${api}/posts`); // i18n-ignore: URL
   onProgress?.({ phase: "posts", current: 0, total: posts.length });
   for (let i = 0; i < posts.length; i++) {
     const p = posts[i];
@@ -72,7 +73,7 @@ export async function extractAllContent(
   }
 
   // ── Pages ──
-  const pages = await paginateWpApi(`${api}/pages`);
+  const pages = await paginateWpApi(`${api}/pages`); // i18n-ignore: URL
   onProgress?.({ phase: "pages", current: 0, total: pages.length });
   for (let i = 0; i < pages.length; i++) {
     const p = pages[i];
@@ -99,7 +100,7 @@ export async function extractAllContent(
 
   // ── Media download ──
   mkdirSync(uploadDir, { recursive: true });
-  const mediaItems = await paginateWpApi(`${api}/media`);
+  const mediaItems = await paginateWpApi(`${api}/media`); // i18n-ignore: URL
   onProgress?.({ phase: "media", current: 0, total: mediaItems.length });
 
   for (let i = 0; i < mediaItems.length; i++) {
@@ -109,7 +110,7 @@ export async function extractAllContent(
 
     try {
       const ext = path.extname(new URL(sourceUrl).pathname) || ".jpg";
-      const localName = `${slugify(m.slug ?? `media-${i}`)}${ext}`;
+      const localName = `${slugify(m.slug ?? `media-${i}`)}${ext}`; // i18n-ignore: file name
       const localPath = path.join(uploadDir, localName);
 
       if (!existsSync(localPath)) {
@@ -148,7 +149,7 @@ async function paginateWpApi(endpoint: string, auth?: string): Promise<any[]> {
     try {
       const res = await fetch(`${endpoint}?per_page=100&page=${page}&_embed=1`, {
         headers: {
-          "User-Agent": "webhouse.app-cms/1.0 (WordPress Migration)",
+          "User-Agent": "webhouse.app-cms/1.0 (WordPress Migration)", // i18n-ignore: HTTP User-Agent header
           ...(auth ? { Authorization: `Basic ${btoa(auth)}` } : {}),
         },
       });
@@ -177,7 +178,7 @@ function wpItemToDocument(
   tagMap: Map<number, string>,
   siteUrl: string,
 ): WpDocument {
-  const title = decodeHtmlEntities(item.title?.rendered ?? item.title ?? "Untitled");
+  const title = decodeHtmlEntities(item.title?.rendered ?? item.title ?? "Untitled"); // i18n-ignore: fallback title stored in the imported content, not admin UI
   const slug = item.slug ?? slugify(title);
   const content = item.content?.rendered ?? "";
   const excerpt = item.excerpt?.rendered

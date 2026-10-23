@@ -72,7 +72,7 @@ export async function registerPageBuildHook(
       });
       if (!res.ok) {
         const body = await res.text().catch(() => "");
-        return { ok: false, error: `update failed (${res.status}): ${body.slice(0, 200)}` };
+        return { ok: false, error: `update failed (${res.status}): ${body.slice(0, 200)}` }; // i18n-ignore: only written to the server log by deploy-service (best-effort hook registration)
       }
       return { ok: true, hookId: existing.id, action: "updated" };
     } catch (err) {
@@ -89,7 +89,7 @@ export async function registerPageBuildHook(
     });
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      return { ok: false, error: `create failed (${res.status}): ${body.slice(0, 200)}` };
+      return { ok: false, error: `create failed (${res.status}): ${body.slice(0, 200)}` }; // i18n-ignore: only written to the server log by deploy-service (best-effort hook registration)
     }
     const created = await res.json() as { id: number };
     return { ok: true, hookId: created.id, action: "created" };

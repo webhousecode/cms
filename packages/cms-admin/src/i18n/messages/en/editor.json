@@ -28,7 +28,8 @@
     "copy": "Copy",
     "copied": "Copied",
     "insert": "Insert",
-    "inputPlaceholder": "Ask AI to help with content… (Enter to send)"
+    "inputPlaceholder": "Ask AI to help with content… (Enter to send)",
+    "aiError": "AI error"
   },
   "interactiveAiPanel": {
     "title": "AI Edit",
@@ -347,7 +348,8 @@
     },
     "block": {
       "removeConfirm": "Remove block?",
-      "remove": "Remove block"
+      "remove": "Remove block",
+      "doubleClickToChange": "Double-click to change block"
     },
     "video": {
       "label": "Video",
@@ -375,7 +377,8 @@
       "insertTitle": "Insert Interactive",
       "search": "Search interactives…",
       "noneMatching": "No interactives matching \"{query}\"",
-      "none": "No interactives found. Create one in the Interactives Manager first."
+      "none": "No interactives found. Create one in the Interactives Manager first.",
+      "preview": "Interactive preview"
     },
     "map": {
       "label": "Map",
@@ -399,7 +402,8 @@
       "info": "Info",
       "warning": "Warning",
       "warn": "Warn",
-      "tip": "Tip"
+      "tip": "Tip",
+      "notePlaceholder": "Type your note here…"
     },
     "svg": {
       "prefix": "SVG:",
@@ -426,7 +430,9 @@
       "loading": "Loading blocks…",
       "noneCreate": "No blocks found. Create one in {place} first.",
       "contentBlocks": "Content Blocks",
-      "noneMatch": "No blocks match your search."
+      "noneMatch": "No blocks match your search.",
+      "replaceTitle": "Replace Content Block",
+      "insertTitle": "Insert Content Block"
     },
     "mediaBrowser": {
       "selectImage": "Select Image",
@@ -443,7 +449,8 @@
       "rejectAll": "Reject all",
       "acceptAll": "Accept all",
       "reject": "✕ Reject",
-      "accept": "✓ Accept"
+      "accept": "✓ Accept",
+      "noErrors": "No errors found ({language})"
     },
     "ctx": {
       "floatLeft": "Float left",
@@ -553,5 +560,12 @@
     "moveLeft": "Move left",
     "moveRight": "Move right",
     "remove": "Remove"
+  },
+  "modeToggle": {
+    "switchToJson": "Switch to JSON",
+    "switchToUi": "Switch to UI"
+  },
+  "tagsInput": {
+    "placeholder": "Add tags…"
   }
 }

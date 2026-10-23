@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readBrandVoice, readBrandVoiceVersions, writeBrandVoice, readBrandVoiceForLocale, writeBrandVoiceForLocale } from "@/lib/brand-voice";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   try {
     const body = await request.json();
@@ -28,6 +30,6 @@ export async function POST(request: NextRequest) {
     const saved = await writeBrandVoice(body);
     return NextResponse.json(saved);
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to save" }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : t("errCms.shared.failedToSave") }, { status: 500 });
   }
 }

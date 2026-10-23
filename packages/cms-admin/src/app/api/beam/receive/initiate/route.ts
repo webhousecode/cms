@@ -11,15 +11,17 @@ import { validateAndConsumeBeamToken } from "@/lib/beam/tokens";
 import { createBeamSession, updateBeamSession } from "@/lib/beam/session";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { isSafeId } from "@/lib/active-site-cookie";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   try {
     const body = await request.json();
     const { token, beamId, siteName, siteId, orgId, totalFiles, totalBytes } = body;
 
     if (!token || !beamId || !siteName || !orgId) {
       return NextResponse.json(
-        { error: "Missing required fields: token, beamId, siteName, orgId" },
+        { error: t("errApi.beamReceive.missingInitFields") },
         { status: 400 },
       );
     }
@@ -27,7 +29,7 @@ export async function POST(request: NextRequest) {
     // Security W41 NY-K2 — siteId becomes beam-sites/<siteId>; ".." made every
     // later file land in the admin data dir (users.json, registry).
     if (!isSafeId(siteId ?? beamId) || !isSafeId(orgId) || !isSafeId(beamId)) {
-      return NextResponse.json({ error: "Invalid siteId, orgId or beamId" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.beamReceive.invalidIds") }, { status: 400 });
     }
 
     // Validate beam token. F138-C: tokens.validateAndConsumeBeamToken
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
     const validToken = await validateAndConsumeBeamToken(token, legacyDataDir);
     if (!validToken) {
       return NextResponse.json(
-        { error: "Invalid, expired, or already-used beam token" },
+        { error: t("errApi.beamReceive.invalidToken") },
         { status: 403 },
       );
     }
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
       ready: true,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Initiate failed";
+    const message = err instanceof Error ? err.message : t("errApi.beamReceive.initiateFailed");
     console.error("[beam/receive/initiate]", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

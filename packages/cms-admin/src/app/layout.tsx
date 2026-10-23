@@ -12,7 +12,7 @@ import { brandForRequest, brandCss, brandFont } from "@/lib/brand";
 import { BrandProvider } from "@/lib/brand-context";
 import { I18nProvider } from "@/lib/i18n-context";
 import { clientMessages, type UiLocale } from "@/i18n/locale";
-import { getRequestLocale } from "@/i18n/server";
+import { getRequestLocale, getServerTSafe } from "@/i18n/server";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const brand = await currentBrand();
   return {
     title: brand.name,
-    description: "AI-native content engine",
+    description: (await getServerTSafe())("shell.meta.description"),
     icons: {
       icon: brand.favicon,
       apple: "/icons/apple-touch-icon.png",

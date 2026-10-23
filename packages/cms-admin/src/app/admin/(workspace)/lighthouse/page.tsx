@@ -227,6 +227,7 @@ export default function LighthousePage() {
             {/* ── Meta ── */}
             {mobile && (
               <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "2rem" }}>
+                {/* i18n-ignore: brand name between data values */}
                 {mobile.url} · PageSpeed Insights · {mobile.timestamp ? new Date(mobile.timestamp).toLocaleString() : ""}
               </div>
             )}
@@ -277,17 +278,17 @@ function buildLighthouseReport(
   lines.push(`# Lighthouse report — ${url}`);
   lines.push("");
   lines.push(`- Generated: ${generatedAt}`);
-  lines.push(`- Engine: ${engine === "psi" ? "PageSpeed Insights" : "Lighthouse (local)"}`);
-  if (mobile?.timestamp) lines.push(`- Mobile scan: ${mobile.timestamp}`);
-  if (desktop?.timestamp) lines.push(`- Desktop scan: ${desktop.timestamp}`);
+  lines.push(`- Engine: ${engine === "psi" ? "PageSpeed Insights" : "Lighthouse (local)"}`); // i18n-ignore: markdown report meant to be pasted into an AI assistant
+  if (mobile?.timestamp) lines.push(`- Mobile scan: ${mobile.timestamp}`); // i18n-ignore: markdown report meant to be pasted into an AI assistant
+  if (desktop?.timestamp) lines.push(`- Desktop scan: ${desktop.timestamp}`); // i18n-ignore: markdown report meant to be pasted into an AI assistant
   lines.push("");
 
   // ── How to use this report (prompt for AI) ──
   lines.push("## How to use this report");
   lines.push("");
-  lines.push("Paste this file into Claude/ChatGPT/Cursor with a prompt like:");
+  lines.push("Paste this file into Claude/ChatGPT/Cursor with a prompt like:"); // i18n-ignore: markdown report meant to be pasted into an AI assistant
   lines.push("");
-  lines.push("> Below is the Lighthouse audit for my site. For each opportunity and diagnostic, propose a concrete code-level fix — file paths, exact changes, and the expected score impact. Prioritise items with the largest `savingsMs`/`savingsBytes` first. If you need code I haven't shown, ask.");
+  lines.push("> Below is the Lighthouse audit for my site. For each opportunity and diagnostic, propose a concrete code-level fix — file paths, exact changes, and the expected score impact. Prioritise items with the largest `savingsMs`/`savingsBytes` first. If you need code I haven't shown, ask."); // i18n-ignore: markdown report meant to be pasted into an AI assistant
   lines.push("");
 
   // ── Scores ──
@@ -298,10 +299,10 @@ function buildLighthouseReport(
   const fmt = (n?: number) => (n === undefined || n === null ? "—" : String(n));
   lines.push(`| Performance | ${fmt(mobile?.scores.performance)} | ${fmt(desktop?.scores.performance)} |`);
   lines.push(`| Accessibility | ${fmt(mobile?.scores.accessibility)} | ${fmt(desktop?.scores.accessibility)} |`);
-  lines.push(`| Best practices | ${fmt(mobile?.scores.bestPractices)} | ${fmt(desktop?.scores.bestPractices)} |`);
+  lines.push(`| Best practices | ${fmt(mobile?.scores.bestPractices)} | ${fmt(desktop?.scores.bestPractices)} |`); // i18n-ignore: markdown report meant to be pasted into an AI assistant
   lines.push(`| SEO | ${fmt(mobile?.scores.seo)} | ${fmt(desktop?.scores.seo)} |`);
   lines.push("");
-  lines.push("> Scoring (Google official): 90–100 green · 50–89 orange · 0–49 red.");
+  lines.push("> Scoring (Google official): 90–100 green · 50–89 orange · 0–49 red."); // i18n-ignore: markdown report meant to be pasted into an AI assistant
   lines.push("");
 
   // ── Core Web Vitals ──
@@ -321,7 +322,7 @@ function buildLighthouseReport(
     lines.push(cwvRow("FCP", mobile?.coreWebVitals?.fcp, desktop?.coreWebVitals?.fcp));
     lines.push(cwvRow("TTFB", mobile?.coreWebVitals?.ttfb, desktop?.coreWebVitals?.ttfb));
     lines.push("");
-    lines.push("> Targets — LCP: <2500 ms · CLS: <0.10 · INP: <200 ms · FCP: <1800 ms · TTFB: <800 ms.");
+    lines.push("> Targets — LCP: <2500 ms · CLS: <0.10 · INP: <200 ms · FCP: <1800 ms · TTFB: <800 ms."); // i18n-ignore: markdown report meant to be pasted into an AI assistant
     lines.push("");
   }
 
@@ -346,9 +347,9 @@ function buildLighthouseReport(
     lines.push("");
     for (const o of sorted) {
       const savings: string[] = [];
-      if (o.savingsMs) savings.push(`${o.savingsMs} ms`);
+      if (o.savingsMs) savings.push(`${o.savingsMs} ms`); // i18n-ignore: markdown report meant to be pasted into an AI assistant
       if (o.savingsBytes) savings.push(`${(o.savingsBytes / 1024).toFixed(0)} KB`);
-      const head = savings.length > 0 ? ` — saves ${savings.join(", ")}` : "";
+      const head = savings.length > 0 ? ` — saves ${savings.join(", ")}` : ""; // i18n-ignore: markdown report meant to be pasted into an AI assistant
       lines.push(`- **${o.title}** \`${o.id}\`${head}`);
       if (o.description) lines.push(`  ${o.description.replace(/\n+/g, " ").trim()}`);
     }
@@ -357,8 +358,8 @@ function buildLighthouseReport(
   if ((mobile?.opportunities?.length ?? 0) + (desktop?.opportunities?.length ?? 0) > 0) {
     lines.push("## Opportunities (impact-ordered)");
     lines.push("");
-    renderOppList("Mobile", mobile);
-    renderOppList("Desktop", desktop);
+    renderOppList("Mobile", mobile); // i18n-ignore: markdown report meant to be pasted into an AI assistant
+    renderOppList("Desktop", desktop); // i18n-ignore: markdown report meant to be pasted into an AI assistant
   }
 
   // ── Diagnostics ──
@@ -376,8 +377,8 @@ function buildLighthouseReport(
   if ((mobile?.diagnostics?.length ?? 0) + (desktop?.diagnostics?.length ?? 0) > 0) {
     lines.push("## Diagnostics");
     lines.push("");
-    renderDiagList("Mobile", mobile);
-    renderDiagList("Desktop", desktop);
+    renderDiagList("Mobile", mobile); // i18n-ignore: markdown report meant to be pasted into an AI assistant
+    renderDiagList("Desktop", desktop); // i18n-ignore: markdown report meant to be pasted into an AI assistant
   }
 
   // ── Trend ──
@@ -396,7 +397,7 @@ function buildLighthouseReport(
 
   lines.push("---");
   lines.push("");
-  lines.push("Report generated by the Lighthouse module.");
+  lines.push("Report generated by the Lighthouse module."); // i18n-ignore: markdown report meant to be pasted into an AI assistant
   lines.push("");
   return lines.join("\n");
 }
@@ -465,10 +466,10 @@ function StrategyCard({ label, icon, result, history, strategy }: {
       {/* CWV */}
       {result.coreWebVitals && (
         <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", fontSize: "0.72rem" }}>
-          <CwvMetric label="LCP" value={`${(result.coreWebVitals.lcp / 1000).toFixed(1)}s`} threshold={[2500, 4000]} raw={result.coreWebVitals.lcp} />
-          <CwvMetric label="CLS" value={result.coreWebVitals.cls.toFixed(3)} threshold={[0.1, 0.25]} raw={result.coreWebVitals.cls} />
-          <CwvMetric label="FCP" value={`${(result.coreWebVitals.fcp / 1000).toFixed(1)}s`} threshold={[1800, 3000]} raw={result.coreWebVitals.fcp} />
-          <CwvMetric label="TTFB" value={`${Math.round(result.coreWebVitals.ttfb)}ms`} threshold={[800, 1800]} raw={result.coreWebVitals.ttfb} />
+          <CwvMetric /* i18n-ignore: metric abbreviation */ label="LCP" value={`${(result.coreWebVitals.lcp / 1000).toFixed(1)}s`} threshold={[2500, 4000]} raw={result.coreWebVitals.lcp} />
+          <CwvMetric /* i18n-ignore: metric abbreviation */ label="CLS" value={result.coreWebVitals.cls.toFixed(3)} threshold={[0.1, 0.25]} raw={result.coreWebVitals.cls} />
+          <CwvMetric /* i18n-ignore: metric abbreviation */ label="FCP" value={`${(result.coreWebVitals.fcp / 1000).toFixed(1)}s`} threshold={[1800, 3000]} raw={result.coreWebVitals.fcp} />
+          <CwvMetric /* i18n-ignore: metric abbreviation */ label="TTFB" value={`${Math.round(result.coreWebVitals.ttfb)}ms`} threshold={[800, 1800]} raw={result.coreWebVitals.ttfb} />
         </div>
       )}
     </div>

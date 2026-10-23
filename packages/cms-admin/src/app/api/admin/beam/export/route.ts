@@ -9,11 +9,13 @@ import { createReadStream, rmSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createBeamArchive } from "@/lib/beam/export";
 import { getSiteRole } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST() {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (role === "viewer") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: t("errAdmin.common.forbidden") }, { status: 403 });
   }
 
   try {
@@ -32,7 +34,7 @@ export async function POST() {
       },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Export failed";
+    const message = err instanceof Error ? err.message : t("errAdmin.beam.exportFailed");
     console.error("[beam/export]", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

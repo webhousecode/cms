@@ -16,13 +16,15 @@ import {
   findPrimaryBodyField,
   computeReadingMinutes,
 } from "@/lib/ai/translation-helpers";
+import { getServerTSafe } from "@/i18n/server";
 
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
 export async function POST(req: NextRequest, { params }: Ctx) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
   if (!session || !session.siteRole || session.siteRole === "viewer") {
-    return NextResponse.json({ error: "No write access" }, { status: 403 });
+    return NextResponse.json({ error: t("errCms.shared.noWriteAccess") }, { status: 403 });
   }
 
   const { collection, slug } = await params;
@@ -33,7 +35,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   if (!targetLocale) {
     return NextResponse.json(
-      { error: "targetLocale is required" },
+      { error: t("errCms.translate.targetLocaleRequired") },
       { status: 400 },
     );
   }
@@ -52,14 +54,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   // Get source document
   const sourceDoc = await cms.content.findBySlug(collection, slug);
   if (!sourceDoc) {
-    return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errCms.shared.documentNotFound") }, { status: 404 });
   }
 
   // Get collection config for field definitions
   const colConfig = config.collections.find((c) => c.name === collection);
   if (!colConfig) {
     return NextResponse.json(
-      { error: "Collection not found" },
+      { error: t("errCms.shared.collectionNotFound") },
       { status: 404 },
     );
   }
@@ -104,7 +106,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   if (Object.keys(sourceData).length === 0) {
     return NextResponse.json(
-      { error: "No translatable content found" },
+      { error: t("errCms.translate.nothingToTranslate") },
       { status: 400 },
     );
   }
@@ -118,6 +120,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const seoLimits = getSeoLimits(targetLocale);
 
   const seoInstruction = hasSeoToTranslate
+    // i18n-ignore: model prompt
     ? `\nSEO fields (_seo_metaTitle, _seo_metaDescription, _seo_keywords):
 - metaTitle: ${seoLimits.titleMin}-${seoLimits.titleMax} characters for ${targetLang}
 - metaDescription: ${seoLimits.descMin}-${seoLimits.descMax} characters for ${targetLang}
@@ -125,6 +128,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     : "";
 
   const tagsInstruction = hasTagsToTranslate
+    // i18n-ignore: model prompt
     ? `\nTag/array fields (any field whose source value is a JSON array of strings) must remain a JSON array of strings. Translate each entry naturally for ${targetLang}, keep the count, and use lowercase unless the source uses proper nouns. Do not merge or split tags.`
     : "";
 
@@ -145,7 +149,7 @@ Include a "_slug" field with a URL-friendly translated slug (lowercase, hyphens,
 
 Return ONLY a JSON object with the translated fields. No explanation, no preamble.`;
 
-  const userMessage = `Translate these fields from ${sourceLang} to ${targetLang}:\n\n${JSON.stringify(sourceData, null, 2)}`;
+  const userMessage = `Translate these fields from ${sourceLang} to ${targetLang}:\n\n${JSON.stringify(sourceData, null, 2)}`; // i18n-ignore: model prompt
 
   try {
     // 4096 was not enough for a real article. Three of webhouse-site's longest
@@ -170,7 +174,7 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       translatedData = JSON.parse(jsonMatch?.[0] ?? aiText);
     } catch {
       return NextResponse.json(
-        { error: "Failed to parse AI translation response" },
+        { error: t("errCms.translate.parseFailed") },
         { status: 500 },
       );
     }
@@ -268,7 +272,7 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
             const localeAlt = (entry as any).aiAlts?.[targetLocale]
               ?? entry.aiAlt
               ?? _alt;
-            return `<img ${pre}alt="${localeAlt.replace(/"/g, "&quot;")}"${post}>`;
+            return `<img ${pre}alt="${localeAlt.replace(/"/g, "&quot;")}"${post}>`; // i18n-ignore: HTML markup
           },
         );
       }
@@ -397,7 +401,7 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
   } catch (err) {
     console.error("[translate] AI translation failed:", err);
     return NextResponse.json(
-      { error: "AI translation failed" },
+      { error: t("errCms.translate.failed") },
       { status: 500 },
     );
   }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isCodeUpload, CODE_UPLOAD_REFUSED } from "@/lib/code-path-policy";
+import { isCodeUpload, codeUploadRefused } from "@/lib/code-path-policy";
 import { getMediaAdapter } from "@/lib/media";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -8,6 +8,7 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { denyViewers } from "@/lib/require-role";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
+import { getServerTSafe } from "@/i18n/server";
 
 const UPLOAD_BASE = process.env.UPLOAD_BASE ?? "";
 
@@ -28,9 +29,10 @@ async function resolveSiteCtx(siteId: string | null): Promise<{ orgId: string; s
 }
 
 async function handleUpload(req: NextRequest): Promise<NextResponse> {
+  const t = await getServerTSafe();
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
-  if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
+  if (!file) return NextResponse.json({ error: t("errApi.common.noFile") }, { status: 400 });
 
   const folderParam = (formData.get("folder") as string | null) ?? req.nextUrl.searchParams.get("folder") ?? "";
   const folder = folderParam.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 60);
@@ -40,7 +42,7 @@ async function handleUpload(req: NextRequest): Promise<NextResponse> {
   // Preserve original filename, sanitized. Add short hash to avoid collisions.
   const hash = Math.random().toString(36).slice(2, 6);
   // Security W41 C5 — never store a file the server could load as code.
-  if (isCodeUpload(file.name)) return NextResponse.json({ error: CODE_UPLOAD_REFUSED }, { status: 415 });
+  if (isCodeUpload(file.name)) return NextResponse.json({ error: await codeUploadRefused() }, { status: 415 });
   const originalName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
   const dotIdx = originalName.lastIndexOf(".");
   const filename = dotIdx > 0
@@ -143,7 +145,7 @@ async function handleUpload(req: NextRequest): Promise<NextResponse> {
         const result = await pdfParse(buffer);
         const text = result.text?.trim();
         if (text && text.length >= 10) extractedText = text.slice(0, 50_000);
-        console.log(`[upload] PDF extraction: ${extractedText ? `${extractedText.length} chars` : "no text"}`);
+        console.log(`[upload] PDF extraction: ${extractedText ? `${extractedText.length} chars` : "no text"}`); // i18n-ignore: server log line
       } catch (e) {
         console.error(`[upload] PDF extraction failed:`, e instanceof Error ? e.message : e);
       }
@@ -153,7 +155,7 @@ async function handleUpload(req: NextRequest): Promise<NextResponse> {
         const result = await mammoth.extractRawText({ buffer });
         const text = result.value?.trim();
         if (text) extractedText = text.slice(0, 50_000);
-        console.log(`[upload] DOCX extraction: ${extractedText ? `${extractedText.length} chars` : "no text"}`);
+        console.log(`[upload] DOCX extraction: ${extractedText ? `${extractedText.length} chars` : "no text"}`); // i18n-ignore: server log line
       } catch (e) {
         console.error(`[upload] DOCX extraction failed:`, e instanceof Error ? e.message : e);
       }
@@ -167,10 +169,11 @@ async function handleUpload(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const overrideSite = req.nextUrl.searchParams.get("site");
   if (!overrideSite) return handleUpload(req);
   const ctx = await resolveSiteCtx(overrideSite);
-  if (!ctx) return NextResponse.json({ error: `site not found: ${overrideSite}` }, { status: 404 });
+  if (!ctx) return NextResponse.json({ error: t("errApi.common.siteNotFoundId", { site: String(overrideSite) }) }, { status: 404 });
   return withSiteContext(ctx, () => handleUpload(req));
 }

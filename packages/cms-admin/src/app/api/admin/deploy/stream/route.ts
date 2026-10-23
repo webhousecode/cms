@@ -7,10 +7,12 @@
 import { NextResponse } from "next/server";
 import { triggerDeploy } from "@/lib/deploy-service";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST() {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
 
   const encoder = new TextEncoder();
@@ -19,26 +21,26 @@ export async function POST() {
     async start(controller) {
       function send(data: { step: string; message: string; progress: number; status: "running" | "done" | "error"; url?: string; error?: string }) {
         try {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)); // i18n-ignore: SSE wire format
         } catch { /* client disconnected */ }
       }
 
-      send({ step: "init", message: "Starting deploy...", progress: 5, status: "running" });
+      send({ step: "init", message: t("errAdmin.deploy.starting"), progress: 5, status: "running" });
 
       try {
         // Step 1: Trigger deploy (this blocks until complete)
-        send({ step: "build", message: "Building site and optimizing assets...", progress: 20, status: "running" });
+        send({ step: "build", message: t("errAdmin.deploy.building"), progress: 20, status: "running" });
 
         const result = await triggerDeploy();
 
         if (result.status === "error") {
-          send({ step: "error", message: result.error ?? "Deploy failed", progress: 100, status: "error", error: result.error });
+          send({ step: "error", message: result.error ?? t("errAdmin.deploy.failed"), progress: 100, status: "error", error: result.error });
         } else {
-          send({ step: "push", message: "Pushing to provider...", progress: 80, status: "running" });
-          send({ step: "done", message: "Deploy complete!", progress: 100, status: "done", url: result.url });
+          send({ step: "push", message: t("errAdmin.deploy.pushing"), progress: 80, status: "running" });
+          send({ step: "done", message: t("errAdmin.deploy.complete"), progress: 100, status: "done", url: result.url });
         }
       } catch (err) {
-        send({ step: "error", message: err instanceof Error ? err.message : "Deploy failed", progress: 100, status: "error", error: String(err) });
+        send({ step: "error", message: err instanceof Error ? err.message : t("errAdmin.deploy.failed"), progress: 100, status: "error", error: String(err) });
       }
 
       controller.close();

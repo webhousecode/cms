@@ -24,6 +24,7 @@ import type { SiteEntry } from "../site-registry";
 import { buildSsrSite } from "./orchestrator";
 import { deployImageToFly } from "./deploy-image";
 import { fetchSource } from "./source-fetch";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface RunFlyEphemeralOptions {
   siteEntry: SiteEntry | null;
@@ -54,34 +55,32 @@ export async function runFlyEphemeralDeploy(
   opts: RunFlyEphemeralOptions,
 ): Promise<RunFlyEphemeralResult> {
   const start = Date.now();
+  const t = await getServerTSafe();
   if (!opts.siteEntry) {
-    return { ok: false, error: "no active site for fly-ephemeral deploy" };
+    return { ok: false, error: t("deployText.flyEphemeral.noSite") };
   }
   const flyToken = opts.configToken || process.env[FLY_TOKEN_ENV] || "";
   if (!flyToken) {
     return {
       ok: false,
-      error:
-        "fly-ephemeral requires a Fly API token (per-site config or FLY_API_TOKEN env on cms-admin).",
+      error: t("deployText.flyEphemeral.noToken"),
     };
   }
   const targetApp = opts.configAppName;
   if (!targetApp) {
-    return { ok: false, error: "fly-ephemeral requires deployAppName configured." };
+    return { ok: false, error: t("deployText.flyEphemeral.noAppName") };
   }
   if (!opts.callbackBaseUrl) {
     return {
       ok: false,
-      error:
-        "fly-ephemeral requires NEXTAUTH_URL (or equivalent) so the builder VM can call back.",
+      error: t("deployText.flyEphemeral.noCallbackUrl"),
     };
   }
   const registryToken = process.env.GHCR_PUSH_TOKEN || "";
   if (!registryToken) {
     return {
       ok: false,
-      error:
-        "fly-ephemeral requires GHCR_PUSH_TOKEN env on cms-admin so the builder VM can push images.",
+      error: t("deployText.flyEphemeral.noRegistryToken"),
     };
   }
 
@@ -94,13 +93,13 @@ export async function runFlyEphemeralDeploy(
   } catch (err) {
     return {
       ok: false,
-      error: `fly-ephemeral could not resolve the site's paths: ${err instanceof Error ? err.message : String(err)}`,
+      error: t("deployText.flyEphemeral.pathsFailed", { error: err instanceof Error ? err.message : String(err) }),
     };
   }
   // SHA = latest content-hash signal we have, fallback to timestamp. The
   // resulting image tag uniquely identifies this build attempt and feeds
   // the rollback lookup key.
-  const sha = `cms-${Date.now().toString(36)}`;
+  const sha = `cms-${Date.now().toString(36)}`; // i18n-ignore: build id
 
   // Issue a callback token bound to this (siteId, sha) — built lazily so
   // the secret env-var error happens here, not at import time.
@@ -109,7 +108,7 @@ export async function runFlyEphemeralDeploy(
     siteId: opts.siteEntry.id,
     sha,
   });
-  const callbackUrl = `${opts.callbackBaseUrl.replace(/\/$/, "")}/api/builder/callback`;
+  const callbackUrl = `${opts.callbackBaseUrl.replace(/\/$/, "")}/api/builder/callback`; // i18n-ignore: URL
 
   // F144 source resolution. If site config has deploySource set, fetch
   // from that URL (github clone or local pass-through). Otherwise fall
@@ -134,7 +133,7 @@ export async function runFlyEphemeralDeploy(
     } catch (err) {
       return {
         ok: false,
-        error: `source-fetch failed: ${err instanceof Error ? err.message : String(err)}`,
+        error: t("deployText.flyEphemeral.sourceFetchFailed", { error: err instanceof Error ? err.message : String(err) }),
         durationMs: Date.now() - start,
       };
     }
@@ -167,7 +166,7 @@ export async function runFlyEphemeralDeploy(
   if (!buildResult.success) {
     return {
       ok: false,
-      error: `builder VM exited with state=${buildResult.finalState} exit=${buildResult.exitCode}`,
+      error: t("deployText.flyEphemeral.builderExited", { state: String(buildResult.finalState), exit: String(buildResult.exitCode) }),
       durationMs: Date.now() - start,
     };
   }
@@ -181,7 +180,7 @@ export async function runFlyEphemeralDeploy(
   if (!deploy.success) {
     return {
       ok: false,
-      error: `image-deploy failed: ${deploy.error}`,
+      error: t("deployText.flyEphemeral.imageDeployFailed", { error: String(deploy.error) }),
       imageTag: buildResult.imageTag,
       durationMs: Date.now() - start,
     };

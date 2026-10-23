@@ -28,7 +28,8 @@
     "loading": "Loading build history…",
     "unavailable": "Build history unavailable: {error}",
     "empty": "No SSR builds yet. Click Deploy on a Next.js / Bun-Hono / custom-Dockerfile site to trigger one.",
-    "image": "Image:"
+    "image": "Image:",
+    "loadFailed": "failed to load builds"
   },
   "buildLog": {
     "startedProfile": "Build started ({profile})",
@@ -110,7 +111,9 @@
       "minutes": "{n}m ago",
       "hours": "{n}h ago",
       "days": "{n}d ago"
-    }
+    },
+    "loadFailed": "failed to load",
+    "dirFailed": "failed"
   },
   "deployWizard": {
     "steps": {
@@ -290,7 +293,9 @@
     "copied": "✓ copied"
   },
   "tourTooltip": {
-    "skipTour": "Skip tour"
+    "skipTour": "Skip tour",
+    "letsGo": "Let's go!",
+    "gotIt": "Got it"
   },
   "pushToggle": {
     "title": "Browser notifications",
@@ -300,6 +305,9 @@
     "on": "ON",
     "disable": "Disable",
     "enable": "Enable",
-    "description": "Get a native OS notification when your site finishes deploying — even when this tab is closed."
+    "description": "Get a native OS notification when your site finishes deploying — even when this tab is closed.",
+    "vapidNotConfigured": "VAPID key not configured",
+    "vapidKeyFailed": "vapid-public-key {status}",
+    "registerFailed": "register {status}: {body}"
   }
 }

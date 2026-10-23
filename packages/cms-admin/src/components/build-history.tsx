@@ -66,11 +66,11 @@ export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
       setBuilds(data.builds);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "failed to load builds");
+      setError(e instanceof Error ? e.message : t("misc.buildHistory.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [siteId]);
+  }, [siteId, t]);
 
   // Initial load + live polling whenever any build is non-terminal
   useEffect(() => {

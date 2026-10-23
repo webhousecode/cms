@@ -3,13 +3,15 @@ import { loadRegistry, saveRegistry, findSite } from "@/lib/site-registry";
 import { sendTestPing, readRevalidationLog } from "@/lib/revalidation";
 import { cookies } from "next/headers";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/cms/revalidation — get revalidation settings + recent log for active site
  */
 export async function GET() {
+  const t = await getServerTSafe();
   const site = await getActiveSite();
-  if (!site) return NextResponse.json({ error: "No active site" }, { status: 404 });
+  if (!site) return NextResponse.json({ error: t("errCms.revalidation.noActiveSite") }, { status: 404 });
 
   const log = await readRevalidationLog();
 
@@ -25,6 +27,7 @@ export async function GET() {
  * POST /api/cms/revalidation — update revalidation settings for active site
  */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const body = await request.json() as {
     action?: "test-ping" | "save";
@@ -33,13 +36,13 @@ export async function POST(request: NextRequest) {
   };
 
   const registry = await loadRegistry();
-  if (!registry) return NextResponse.json({ error: "No registry" }, { status: 400 });
+  if (!registry) return NextResponse.json({ error: t("errCms.shared.noRegistry") }, { status: 400 });
 
   const cookieStore = await cookies();
   const orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
   const siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
   const site = findSite(registry, orgId, siteId);
-  if (!site) return NextResponse.json({ error: "Site not found" }, { status: 404 });
+  if (!site) return NextResponse.json({ error: t("errCms.shared.siteNotFound") }, { status: 404 });
 
   if (body.action === "test-ping") {
     const result = await sendTestPing(site);

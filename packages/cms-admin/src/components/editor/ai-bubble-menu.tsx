@@ -16,12 +16,12 @@ type Action = {
 };
 
 const QUICK_ACTIONS: Action[] = [
-  { labelKey: "editor.aiBubbleMenu.shorter", instruction: "Rewrite this text to be more concise while keeping the meaning." },
-  { labelKey: "editor.aiBubbleMenu.longer", instruction: "Expand this text with more detail and context." },
-  { labelKey: "editor.aiBubbleMenu.formal", instruction: "Rewrite in a more formal, professional tone." },
-  { labelKey: "editor.aiBubbleMenu.casual", instruction: "Rewrite in a casual, conversational tone." },
-  { labelKey: "editor.aiBubbleMenu.toEnglish", instruction: "Translate this text to English." },
-  { labelKey: "editor.aiBubbleMenu.toDanish", instruction: "Translate this text to Danish." },
+  { labelKey: "editor.aiBubbleMenu.shorter", instruction: "Rewrite this text to be more concise while keeping the meaning." }, // i18n-ignore: model prompt
+  { labelKey: "editor.aiBubbleMenu.longer", instruction: "Expand this text with more detail and context." }, // i18n-ignore: model prompt
+  { labelKey: "editor.aiBubbleMenu.formal", instruction: "Rewrite in a more formal, professional tone." }, // i18n-ignore: model prompt
+  { labelKey: "editor.aiBubbleMenu.casual", instruction: "Rewrite in a casual, conversational tone." }, // i18n-ignore: model prompt
+  { labelKey: "editor.aiBubbleMenu.toEnglish", instruction: "Translate this text to English." }, // i18n-ignore: model prompt
+  { labelKey: "editor.aiBubbleMenu.toDanish", instruction: "Translate this text to Danish." }, // i18n-ignore: model prompt
 ];
 
 export function AIBubbleMenu({ editor }: Props) {

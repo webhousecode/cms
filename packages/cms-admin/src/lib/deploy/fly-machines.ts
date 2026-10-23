@@ -9,16 +9,16 @@
  * Fly.io region presets. Default: arn (Stockholm).
  */
 export const FLY_REGIONS = [
-  { value: "arn", label: "Stockholm, SE (arn)" },
-  { value: "fra", label: "Frankfurt, DE (fra)" },
-  { value: "lhr", label: "London, UK (lhr)" },
-  { value: "ams", label: "Amsterdam, NL (ams)" },
-  { value: "cdg", label: "Paris, FR (cdg)" },
-  { value: "iad", label: "Virginia, US (iad)" },
-  { value: "sjc", label: "San Jose, US (sjc)" },
-  { value: "nrt", label: "Tokyo, JP (nrt)" },
-  { value: "syd", label: "Sydney, AU (syd)" },
-  { value: "sin", label: "Singapore (sin)" },
+  { value: "arn", label: "Stockholm, SE (arn)" }, // i18n-ignore: place name + region code, same in Danish
+  { value: "fra", label: "Frankfurt, DE (fra)" }, // i18n-ignore: place name + region code, same in Danish
+  { value: "lhr", label: "London, UK (lhr)" }, // i18n-ignore: place name + region code, same in Danish
+  { value: "ams", label: "Amsterdam, NL (ams)" }, // i18n-ignore: place name + region code, same in Danish
+  { value: "cdg", label: "Paris, FR (cdg)" }, // i18n-ignore: place name + region code, same in Danish
+  { value: "iad", label: "Virginia, US (iad)" }, // i18n-ignore: place name + region code, same in Danish
+  { value: "sjc", label: "San Jose, US (sjc)" }, // i18n-ignore: place name + region code, same in Danish
+  { value: "nrt", label: "Tokyo, JP (nrt)" }, // i18n-ignore: place name + region code, same in Danish
+  { value: "syd", label: "Sydney, AU (syd)" }, // i18n-ignore: place name + region code, same in Danish
+  { value: "sin", label: "Singapore (sin)" }, // i18n-ignore: place name + region code, same in Danish
 ] as const;
 
 /**

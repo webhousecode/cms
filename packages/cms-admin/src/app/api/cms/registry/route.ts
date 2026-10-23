@@ -17,6 +17,7 @@ import {
   type Registry,
   type SiteEntry,
 } from "@/lib/site-registry";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/cms/registry — return registry filtered by user access.
@@ -26,6 +27,7 @@ import {
  * sites they can access.
  */
 export async function GET() {
+  const t = await getServerTSafe();
   const registry = await loadRegistry();
   if (!registry) {
     return NextResponse.json({ mode: "single-site", registry: null });
@@ -34,7 +36,7 @@ export async function GET() {
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: t("errCms.registry.unauthorized") }, { status: 401 });
   }
 
   // Admins see the full registry
@@ -43,7 +45,7 @@ export async function GET() {
   // F208 — a session outliving its user (deleted, still within the JWT's 7
   // days) used to fall through to "admin" and receive every org and site.
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: t("errCms.registry.unauthorized") }, { status: 401 });
   }
   const role = (user.role ?? "admin") as UserRole;
   if (role === "admin") {
@@ -85,6 +87,7 @@ export async function GET() {
  */
 /** POST /api/cms/registry — create/bootstrap registry or add org/site */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const body = await request.json() as {
     action: "bootstrap" | "add-org" | "add-site" | "update-org" | "update-site";
     orgName?: string;
@@ -97,26 +100,26 @@ export async function POST(request: NextRequest) {
   };
 
   if (body.action === "update-site" && !(await isInstanceAdmin())) {
-    if (!body.orgId || !body.siteId) return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    if (!body.orgId || !body.siteId) return NextResponse.json({ error: t("errCms.shared.orgIdSiteIdRequired") }, { status: 400 });
     const denied = await requirePermissionOnSite("settings.edit", body.orgId, body.siteId); if (denied) return denied;
     const reg = await loadRegistry();
     const current = reg?.orgs.find((o) => o.id === body.orgId)?.sites.find((s) => s.id === body.siteId);
-    if (!current) return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    if (!current) return NextResponse.json({ error: t("errCms.shared.siteNotFound") }, { status: 404 });
     if (!siteAdminUpdateAllowed(current, (body.updates ?? {}) as Record<string, unknown>)) {
-      return NextResponse.json({ error: "Only the CMS instance admin can change a site's paths" }, { status: 403 });
+      return NextResponse.json({ error: t("errCms.shared.instanceAdminPaths") }, { status: 403 });
     }
   } else if (body.action === "update-org" && !(await isInstanceAdmin())) {
-    if (!body.orgId) return NextResponse.json({ error: "orgId required" }, { status: 400 });
+    if (!body.orgId) return NextResponse.json({ error: t("errCms.shared.orgIdRequired") }, { status: 400 });
     const reg = await loadRegistry();
     const org = reg?.orgs.find((o) => o.id === body.orgId);
-    if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
+    if (!org) return NextResponse.json({ error: t("errCms.shared.orgNotFound") }, { status: 404 });
     let orgAdmin = false;
     for (const site of org.sites) {
       if (!(await requirePermissionOnSite("settings.edit", org.id, site.id))) { orgAdmin = true; break; }
     }
-    if (!orgAdmin) return NextResponse.json({ error: "No access to that organization" }, { status: 403 });
+    if (!orgAdmin) return NextResponse.json({ error: t("errCms.registry.noOrgAccess") }, { status: 403 });
     if (body.orgPlan !== undefined && body.orgPlan !== org.plan) {
-      return NextResponse.json({ error: "Only the CMS instance admin can change an organization's plan" }, { status: 403 });
+      return NextResponse.json({ error: t("errCms.registry.instanceAdminPlan") }, { status: 403 });
     }
   } else {
     const denied = await requireInstanceAdmin(); if (denied) return denied;
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
   if (body.action === "bootstrap") {
     const existing = await loadRegistry();
     if (existing) {
-      return NextResponse.json({ error: "Registry already exists" }, { status: 409 });
+      return NextResponse.json({ error: t("errCms.registry.exists") }, { status: 409 });
     }
     const registry = await bootstrapRegistryFromEnv();
     return NextResponse.json({ ok: true, registry });
@@ -133,7 +136,7 @@ export async function POST(request: NextRequest) {
 
   if (body.action === "add-org") {
     if (!body.orgName) {
-      return NextResponse.json({ error: "orgName required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.registry.orgNameRequired") }, { status: 400 });
     }
     const org = await addOrg(body.orgName, body.orgType as never, body.orgPlan as never);
     return NextResponse.json({ ok: true, org });
@@ -141,7 +144,7 @@ export async function POST(request: NextRequest) {
 
   if (body.action === "update-org") {
     if (!body.orgId) {
-      return NextResponse.json({ error: "orgId required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.shared.orgIdRequired") }, { status: 400 });
     }
     const { updateOrg } = await import("@/lib/site-registry");
     const org = await updateOrg(body.orgId, {
@@ -149,13 +152,13 @@ export async function POST(request: NextRequest) {
       type: body.orgType as never,
       plan: body.orgPlan as never,
     });
-    if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
+    if (!org) return NextResponse.json({ error: t("errCms.shared.orgNotFound") }, { status: 404 });
     return NextResponse.json({ ok: true, org });
   }
 
   if (body.action === "update-site") {
     if (!body.orgId || !body.siteId) {
-      return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.shared.orgIdSiteIdRequired") }, { status: 400 });
     }
     const { updateSite } = await import("@/lib/site-registry");
     const pathsChanged =
@@ -163,7 +166,7 @@ export async function POST(request: NextRequest) {
       body.updates?.contentDir !== undefined ||
       body.updates?.uploadDir !== undefined;
     const site = await updateSite(body.orgId, body.siteId, body.updates ?? {});
-    if (!site) return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    if (!site) return NextResponse.json({ error: t("errCms.shared.siteNotFound") }, { status: 404 });
     if (pathsChanged) {
       const { invalidate } = await import("@/lib/site-pool");
       invalidate(body.orgId, body.siteId);
@@ -173,14 +176,14 @@ export async function POST(request: NextRequest) {
 
   if (body.action === "add-site") {
     if (!body.orgId || !body.site) {
-      return NextResponse.json({ error: "orgId and site required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.registry.orgIdSiteRequired") }, { status: 400 });
     }
     // F208 — an existing id (in ANY org) is refused before anything is
     // written: below, this handler replaces the site's team.json with the
     // caller alone, which on an existing site would wipe its team.
     const current = await loadRegistry();
     if (current?.orgs.some((o) => o.sites.some((s) => s.id === body.site!.id))) {
-      return NextResponse.json({ error: `Site ID "${body.site.id}" already exists` }, { status: 409 });
+      return NextResponse.json({ error: t("errCms.registry.siteIdExists", { siteId: body.site.id }) }, { status: 409 });
     }
     await addSite(body.orgId, body.site);
 
@@ -241,11 +244,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  return NextResponse.json({ error: t("errCms.shared.unknownAction") }, { status: 400 });
 }
 
 /** DELETE /api/cms/registry — remove org or site (instance admin only — W41 NY-K3) */
 export async function DELETE(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requireInstanceAdmin(); if (denied) return denied;
 
   const { searchParams } = request.nextUrl;
@@ -253,7 +257,7 @@ export async function DELETE(request: NextRequest) {
   const siteId = searchParams.get("siteId");
 
   if (!orgId) {
-    return NextResponse.json({ error: "orgId required" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.shared.orgIdRequired") }, { status: 400 });
   }
 
   if (siteId) {

@@ -12,7 +12,7 @@ interface Props {
 
 export function SchemaDriftBanner({ collection, collectionName, fields }: Props) {
   const t = useT();
-  const storageKey = `drift-dismissed:${collection}`;
+  const storageKey = `drift-dismissed:${collection}`; // i18n-ignore: localStorage key
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === "undefined") return false;
     return sessionStorage.getItem(storageKey) === "1";
@@ -104,7 +104,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
       }}>
         <Check style={{ width: 16, height: 16, color: "#4ade80", flexShrink: 0 }} />
         {t(
-          `schema.schemaDriftBanner.removed${fields.length > 1 ? "Fields" : "Field"}${removeResult.fixed !== 1 ? "Docs" : "Doc"}`,
+          `schema.schemaDriftBanner.removed${fields.length > 1 ? "Fields" : "Field"}${removeResult.fixed !== 1 ? "Docs" : "Doc"}`, // i18n-ignore: i18n key fragments, not text
           { count: fields.length, docs: removeResult.fixed },
         )}
       </div>

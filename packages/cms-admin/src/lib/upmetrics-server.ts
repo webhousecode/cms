@@ -1,3 +1,5 @@
+import { getT } from "@/i18n/locale";
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
 import { init, setTag, captureException } from "@upmetrics/sdk";
 
 /**
@@ -85,7 +87,8 @@ export function serverError(
   err: unknown,
   ctx?: Record<string, unknown>,
   init?: ResponseInit,
+  t: Translate = getT("en"),
 ): Response {
   captureServerError(err, ctx);
-  return Response.json({ error: "Internal error" }, { status: 500, ...init });
+  return Response.json({ error: t("system.lib.internalError") }, { status: 500, ...init });
 }

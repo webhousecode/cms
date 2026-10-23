@@ -14,6 +14,7 @@ import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import { originAllowed, siteOrigins } from "@/lib/cors-origin";
 import { serverError } from "@/lib/upmetrics-server";
 import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Token-based callers pass `?site=<id>` because they have no admin
@@ -36,7 +37,7 @@ async function runScoped<T>(req: NextRequest, fn: () => Promise<T>): Promise<T |
   const overrideSite = req.nextUrl.searchParams.get("site");
   if (!overrideSite) return fn();
   const ctx = await resolveSiteCtx(overrideSite);
-  if (!ctx) return NextResponse.json({ error: `site not found: ${overrideSite}` }, { status: 404 });
+  if (!ctx) return NextResponse.json({ error: (await getServerTSafe())("errCms.shared.siteNotFoundId", { site: overrideSite }) }, { status: 404 });
   return withSiteContext(ctx, fn);
 }
 
@@ -133,7 +134,7 @@ async function dispatchAutoDeployOnSave(revalidationDispatched: boolean) {
 async function collectionMissing(collection: string, cors: HeadersInit): Promise<NextResponse | null> {
   const config = await getAdminConfig();
   if (config.collections.some((c) => c.name === collection)) return null;
-  return NextResponse.json({ error: "Collection not found" }, { status: 404, headers: cors });
+  return NextResponse.json({ error: (await getServerTSafe())("errCms.shared.collectionNotFound") }, { status: 404, headers: cors });
 }
 
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
@@ -147,20 +148,21 @@ export async function GET(req: NextRequest, { params }: Ctx) {
       if (missing) return missing;
       const cms = await getAdminCms();
       const doc = await cms.content.findBySlug(collection, slug);
-      if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404, headers: cors });
+      if (!doc) return NextResponse.json({ error: (await getServerTSafe())("errCms.shared.notFound") }, { status: 404, headers: cors });
       return NextResponse.json(doc, { headers: cors });
     } catch (err) {
       const { collection, slug } = await params;
-      return serverError(err, { route: "GET /api/cms/[collection]/[slug]", collection, slug }, { headers: cors });
+      return serverError(err, { route: "GET /api/cms/[collection]/[slug]", collection, slug }, { headers: cors }, await getServerTSafe());
     }
   });
   return result instanceof Response ? result : (result as Response);
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
+  const t = await getServerTSafe();
   const postSession = await getSessionWithSiteRole();
   if (!postSession || !postSession.siteRole || postSession.siteRole === "viewer") {
-    return NextResponse.json({ error: "No write access" }, { status: 403 });
+    return NextResponse.json({ error: t("errCms.shared.noWriteAccess") }, { status: 403 });
   }
   const result = await runScoped(req, async () => {
   try {
@@ -177,7 +179,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
     if (body.action === "restore") {
       const doc = await cms.content.findBySlug(collection, slug);
-      if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      if (!doc) return NextResponse.json({ error: t("errCms.shared.notFound") }, { status: 404 });
       const restoredData = { ...doc.data };
       delete restoredData._trashedAt;
       await cms.content.update(collection, doc.id, {
@@ -196,7 +198,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       }
 
       // F35 — fire content webhook
-      fireContentEvent("restored", collection, slug, updated ?? undefined, `user:${postSession.email}`).catch(() => {});
+      fireContentEvent("restored", collection, slug, updated ?? undefined, `user:${postSession.email}`).catch(() => {}); // i18n-ignore: webhook actor id
 
       await invalidateQuickCacheOnWrite(); // F158: doc restored → refresh overview/drafts
       return NextResponse.json(updated);
@@ -204,10 +206,10 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
     if (body.action === "clone") {
       const original = await cms.content.findBySlug(collection, slug);
-      if (!original) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      if (!original) return NextResponse.json({ error: t("errCms.shared.notFound") }, { status: 404 });
 
       // Find an unused slug: <slug>-copy, <slug>-copy-2, etc.
-      let newSlug = `${slug}-copy`;
+      let newSlug = `${slug}-copy`; // i18n-ignore: slug, not prose
       let existing = await cms.content.findBySlug(collection, newSlug);
       let n = 2;
       while (existing) {
@@ -224,26 +226,27 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       });
 
       // F35 — fire content webhook
-      fireContentEvent("cloned", collection, newSlug, cloned, `user:${postSession.email}`).catch(() => {});
+      fireContentEvent("cloned", collection, newSlug, cloned, `user:${postSession.email}`).catch(() => {}); // i18n-ignore: webhook actor id
 
       await invalidateQuickCacheOnWrite(); // F158: doc cloned → refresh overview/drafts
       return NextResponse.json(cloned);
     }
 
-    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.shared.unknownAction") }, { status: 400 });
   } catch (err) {
     console.error(err);
-    return serverError(err, { route: "POST /api/cms/[collection]/[slug]" });
+    return serverError(err, { route: "POST /api/cms/[collection]/[slug]" }, undefined, t);
   }
   });
   return result instanceof Response ? result : (result as Response);
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
+  const t = await getServerTSafe();
   const cors = corsHeaders(req.headers.get("origin"), await getAllowedOrigins());
   const session = await getSessionWithSiteRole();
   if (!session || !session.siteRole || session.siteRole === "viewer") {
-    return NextResponse.json({ error: "No write access" }, { status: 403, headers: cors });
+    return NextResponse.json({ error: t("errCms.shared.noWriteAccess") }, { status: 403, headers: cors });
   }
   const result = await runScoped(req, async () => {
   try {
@@ -259,12 +262,12 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     }
 
     const doc = await cms.content.findBySlug(collection, slug);
-    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404, headers: cors });
+    if (!doc) return NextResponse.json({ error: t("errCms.shared.notFound") }, { status: 404, headers: cors });
 
     // Validate new slug if provided
     if (body.slug !== undefined && body.slug !== slug) {
       const existing = await cms.content.findBySlug(collection, body.slug);
-      if (existing) return NextResponse.json({ error: "Slug already exists" }, { status: 409, headers: cors });
+      if (existing) return NextResponse.json({ error: t("errCms.document.slugExists") }, { status: 409, headers: cors });
     }
 
     // Save revision snapshot before overwriting
@@ -288,6 +291,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       mergedForCheck,
       (body.data ?? {}) as Record<string, unknown>,
       nextStatus,
+      t,
     );
     if (!schemaCheck.ok) {
       return NextResponse.json(
@@ -440,7 +444,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
                   }
                   // ?site= er den ENESTE måde et token-kald kan pege på en
                   // kunde — uden det opløser proxy'en til registrets default.
-                  const site = tenant?.siteId ? `?site=${encodeURIComponent(tenant.siteId)}` : "";
+                  const site = tenant?.siteId ? `?site=${encodeURIComponent(tenant.siteId)}` : ""; // i18n-ignore: URL query string
                   fetch(`${baseUrl}/api/cms/${collection}/${newSlug}/translate${site}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken || "" },
@@ -467,7 +471,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       if (nextStatus === "published" && previousStatus !== "published") action = "published";
       else if (nextStatus === "trashed") action = "trashed";
       else if (previousStatus === "published" && nextStatus === "draft") action = "unpublished";
-      fireContentEvent(action, collection, newSlug, updated ?? undefined, `user:${session.email}`).catch(() => {});
+      fireContentEvent(action, collection, newSlug, updated ?? undefined, `user:${session.email}`).catch(() => {}); // i18n-ignore: webhook actor id
     }
 
     await invalidateQuickCacheOnWrite(); // F158: content changed → refresh overview/drafts
@@ -481,16 +485,17 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     // anywhere an operator looks. Found 2026-08-26 while fixing F157.12, by a
     // test that asserted all four verbs report and found only three did.
     const { collection, slug } = await params;
-    return serverError(err, { route: "PATCH /api/cms/[collection]/[slug]", collection, slug }, { headers: cors });
+    return serverError(err, { route: "PATCH /api/cms/[collection]/[slug]", collection, slug }, { headers: cors }, t);
   }
   });
   return result instanceof Response ? result : (result as Response);
 }
 
 export async function DELETE(req: NextRequest, { params }: Ctx) {
+  const t = await getServerTSafe();
   const delSession = await getSessionWithSiteRole();
   if (!delSession || !delSession.siteRole || delSession.siteRole === "viewer") {
-    return NextResponse.json({ error: "No write access" }, { status: 403 });
+    return NextResponse.json({ error: t("errCms.shared.noWriteAccess") }, { status: 403 });
   }
   const result = await runScoped(req, async () => {
   try {
@@ -500,7 +505,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     const permanent = req.nextUrl.searchParams.get("permanent") === "true";
     const cms = await getAdminCms();
     const doc = await cms.content.findBySlug(collection, slug);
-    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!doc) return NextResponse.json({ error: t("errCms.shared.notFound") }, { status: 404 });
 
     if (permanent) {
       await cms.content.delete(collection, doc.id);
@@ -539,13 +544,13 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     // F35 — fire content webhook
     // Distinct events: "deleted" = hard-delete (no recovery), "trashed" = soft-trash.
     // Webhook consumers can subscribe to one without the other.
-    fireContentEvent(permanent ? "deleted" : "trashed", collection, slug, doc, `user:${delSession.email}`).catch(() => {});
+    fireContentEvent(permanent ? "deleted" : "trashed", collection, slug, doc, `user:${delSession.email}`).catch(() => {}); // i18n-ignore: webhook actor id
 
     await invalidateQuickCacheOnWrite(); // F158: content deleted/trashed → refresh overview/drafts
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);
-    return serverError(err, { route: "DELETE /api/cms/[collection]/[slug]" });
+    return serverError(err, { route: "DELETE /api/cms/[collection]/[slug]" }, undefined, t);
   }
   });
   return result instanceof Response ? result : (result as Response);

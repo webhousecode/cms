@@ -3,11 +3,13 @@ import { approveQueueItem, getQueueItem } from "@/lib/curation";
 import { getAgent, updateAgent } from "@/lib/agents";
 import { denyViewers } from "@/lib/require-role";
 import { recordCorrectionsFromDiff } from "@/lib/agent-feedback";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const { id } = await params;
   const body = await request.json().catch(() => ({})) as { asDraft?: boolean };
@@ -36,7 +38,7 @@ export async function POST(
 
     return NextResponse.json(item);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Failed to approve";
+    const msg = err instanceof Error ? err.message : t("errCms.curation.approveFailed");
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

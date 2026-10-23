@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execFileSync } from "child_process";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * DEV ONLY — PM2 server control for CMS-managed sites.
@@ -25,7 +26,8 @@ function pm2Bin(): string {
 }
 
 export async function GET() {
-  if (!isDev()) return NextResponse.json({ error: "Not available in production" }, { status: 404 });
+  const t = await getServerTSafe();
+  if (!isDev()) return NextResponse.json({ error: t("errAdmin.pm2.notInProduction") }, { status: 404 });
 
   try {
     const raw = execFileSync(pm2Bin(), ["jlist"], { encoding: "utf-8", timeout: 5000 });
@@ -46,25 +48,26 @@ export async function GET() {
     });
     return NextResponse.json({ processes });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "pm2 error" }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : t("errAdmin.pm2.error") }, { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
-  if (!isDev()) return NextResponse.json({ error: "Not available in production" }, { status: 404 });
+  const t = await getServerTSafe();
+  if (!isDev()) return NextResponse.json({ error: t("errAdmin.pm2.notInProduction") }, { status: 404 });
   const denied = await denyViewers(); if (denied) return denied;
 
   const body = (await req.json().catch(() => ({}))) as { name?: string; action?: "start" | "stop" | "restart" };
   if (!body.name || !body.action) {
-    return NextResponse.json({ error: "name and action required" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.pm2.nameActionRequired") }, { status: 400 });
   }
   if (!["start", "stop", "restart"].includes(body.action)) {
-    return NextResponse.json({ error: "action must be start, stop, or restart" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.pm2.invalidAction") }, { status: 400 });
   }
 
   // Safety: never touch cms-admin itself
   if (body.name === "cms-admin") {
-    return NextResponse.json({ error: "Cannot control cms-admin from the UI" }, { status: 403 });
+    return NextResponse.json({ error: t("errAdmin.pm2.cannotControlSelf") }, { status: 403 });
   }
 
   try {
@@ -75,6 +78,6 @@ export async function POST(req: NextRequest) {
     const proc = apps.find((a) => a.name === body.name);
     return NextResponse.json({ ok: true, status: proc?.pm2_env.status ?? "unknown" });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "pm2 error" }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : t("errAdmin.pm2.error") }, { status: 500 });
   }
 }

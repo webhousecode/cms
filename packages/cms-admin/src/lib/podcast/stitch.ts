@@ -29,6 +29,7 @@ import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { getServerTSafe } from "@/i18n/server";
 
 const kør = promisify(execFile);
 
@@ -68,7 +69,7 @@ export async function afkodRent(mp3: Uint8Array): Promise<{ ok: boolean; grund?:
     if (stderr.trim()) return { ok: false, grund: stderr.trim().split("\n")[0] };
     return { ok: true };
   } catch (err) {
-    return { ok: false, grund: err instanceof Error ? err.message : "afkodningen fejlede" };
+    return { ok: false, grund: err instanceof Error ? err.message : (await getServerTSafe())("libText.podcastStitch.decodeFailed") };
   } finally {
     await rm(mappe, { recursive: true, force: true });
   }
@@ -110,20 +111,18 @@ export type SyResultat =
  * Prisen er nogle sekunders CPU; gevinsten er at der kun findes én vej.
  */
 export async function sySammen(stykker: Uint8Array[]): Promise<SyResultat> {
-  if (!stykker.length) return { ok: false, grund: "der er ingen lydstykker at samle" };
+  const t = await getServerTSafe();
+  if (!stykker.length) return { ok: false, grund: t("libText.podcastStitch.noPieces") };
   if (stykker.length === 1) {
     const sek = await laengdeSek(stykker[0]!);
     return sek === null
-      ? { ok: false, grund: "kunne ikke måle længden af lydstykket" }
+      ? { ok: false, grund: t("libText.podcastStitch.pieceLengthUnknown") }
       : { ok: true, mp3: stykker[0]!, sekunder: sek };
   }
   if (!(await harFfmpeg())) {
     return {
       ok: false,
-      grund:
-        "ffmpeg mangler på serveren, og uden den kan lydstykkerne ikke samles. " +
-        "Tilføj den til imaget (apt-get install ffmpeg) — en ren sammenkædning giver en " +
-        "fil der ser hel ud og går i stå ved samlingen.",
+      grund: t("libText.podcastStitch.ffmpegMissing"),
     };
   }
 
@@ -142,7 +141,7 @@ export async function sySammen(stykker: Uint8Array[]): Promise<SyResultat> {
       [
         "-v", "error",
         ...args,
-        "-filter_complex", `concat=n=${stier.length}:v=0:a=1[a]`,
+        "-filter_complex", `concat=n=${stier.length}:v=0:a=1[a]`, // i18n-ignore: ffmpeg filter argument
         "-map", "[a]",
         "-ar", String(LYD_FORMAT.hz),
         "-ac", String(LYD_FORMAT.kanaler),
@@ -154,10 +153,10 @@ export async function sySammen(stykker: Uint8Array[]): Promise<SyResultat> {
     );
     const mp3 = new Uint8Array(await readFile(ud));
     const sek = await laengdeSek(mp3);
-    if (sek === null) return { ok: false, grund: "den samlede fil kunne ikke måles" };
+    if (sek === null) return { ok: false, grund: t("libText.podcastStitch.joinedLengthUnknown") };
     return { ok: true, mp3, sekunder: sek };
   } catch (err) {
-    return { ok: false, grund: err instanceof Error ? err.message : "sammenføjningen fejlede" };
+    return { ok: false, grund: err instanceof Error ? err.message : t("libText.podcastStitch.joinFailed") };
   } finally {
     await rm(mappe, { recursive: true, force: true });
   }

@@ -31,6 +31,8 @@
  * fields and 4 more inside block definitions.
  */
 
+import { getT } from "@/i18n/locale";
+
 export interface SelectOption { label: string; value: string }
 
 export interface SelectCheckField {
@@ -64,7 +66,7 @@ export function selectOptionValues(field: SelectCheckField): string[] | null {
 export function describeSelectOptions(field: SelectCheckField): string | null {
   const values = selectOptionValues(field);
   if (!values) return null;
-  return `MUST be one of ${values.map((v) => `"${v}"`).join(" | ")}`;
+  return `MUST be one of ${values.map((v) => `"${v}"`).join(" | ")}`; // i18n-ignore: model prompt constraint
 }
 
 /**
@@ -78,6 +80,7 @@ export function describeSelectOptions(field: SelectCheckField): string | null {
 export function invalidSelectValues(
   fields: SelectCheckField[],
   data: Record<string, unknown>,
+  t: (key: string, vars?: Record<string, string | number>) => string = getT("en"),
 ): string[] {
   const errors: string[] = [];
   for (const f of fields) {
@@ -90,7 +93,7 @@ export function invalidSelectValues(
     if (v === undefined || v === null || v === "") continue;
     if (typeof v !== "string" || !values.includes(v)) {
       errors.push(
-        `${f.label || f.name}: "${String(v)}" is not a valid value — must be one of ${values.join(", ")}`,
+        t("system.lib.selectInvalidValue", { field: f.label || f.name, value: String(v), allowed: values.join(", ") }),
       );
     }
   }

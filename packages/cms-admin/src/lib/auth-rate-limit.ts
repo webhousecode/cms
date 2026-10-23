@@ -5,6 +5,8 @@
  * and door. In-memory is enough: webhouse.app runs one machine, and a
  * restart only resets the window (it never opens a door).
  */
+import { getT } from "@/i18n/locale";
+
 const WINDOW_MS = 10 * 60 * 1000;
 export const AUTH_ATTEMPTS_PER_WINDOW = 10;
 
@@ -27,7 +29,14 @@ export function clientIp(headers: Headers): string | null {
   return headers.get("fly-client-ip") ?? headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
 }
 
-export const TOO_MANY_ATTEMPTS = { error: "Too many attempts — wait a few minutes and try again" } as const;
+/** English body, for callers outside a request. Inside one, use tooManyAttempts(). */
+export const TOO_MANY_ATTEMPTS = { error: getT("en")("system.auth.tooManyAttempts") } as const;
+
+/** The 429 body in the requesting user's language. */
+export async function tooManyAttempts(): Promise<{ error: string }> {
+  const t = await (await import("@/i18n/server")).getServerTSafe();
+  return { error: t("system.auth.tooManyAttempts") };
+}
 
 /** Test-only. */
 export function _resetAuthRateLimit(): void { hits.clear(); }

@@ -1,6 +1,7 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { NextRequest, NextResponse } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export type InternalLink = {
   title: string;
@@ -19,6 +20,7 @@ export type InternalLink = {
  * Filters by title/slug/url when ?q= is provided.
  */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (!role) return NextResponse.json([], { status: 401 });
   const q = req.nextUrl.searchParams.get("q")?.trim().toLowerCase() ?? "";
@@ -63,6 +65,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(results.slice(0, 50));
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

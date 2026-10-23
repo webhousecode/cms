@@ -1,3 +1,4 @@
+/* i18n-ignore-file: agent tool descriptions and tool results returned to the model, not shown to a person */
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import type { ToolDefinition, ToolHandler } from "./index";
 

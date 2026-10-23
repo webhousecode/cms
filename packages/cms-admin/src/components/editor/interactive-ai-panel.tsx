@@ -86,12 +86,12 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
           systemPrompt: systemPromptTemplate
             .replace("{title}", title)
             .replace("{interactiveId}", interactiveId),
-          context: `Current HTML content of the interactive:\n\`\`\`html\n${content}\n\`\`\``,
+          context: `Current HTML content of the interactive:\n\`\`\`html\n${content}\n\`\`\``, // i18n-ignore: context sent to the model
         }),
       });
 
       if (!res.ok || !res.body) {
-        const err = (await res.json().catch(() => ({ error: "AI error" }))) as { error?: string };
+        const err = (await res.json().catch(() => ({ error: t("editor.aiPanel.aiError") }))) as { error?: string };
         setMessages((prev) => {
           const next = [...prev];
           const last = next[next.length - 1];

@@ -14,17 +14,19 @@ import type { NextRequest } from "next/server";
 import { kraevTilladelse, preflight, svar, PODCAST_PERMISSIONS } from "@/lib/podcast/api";
 import { hentAfsnit, skrivAfsnit } from "@/lib/podcast/store";
 import { hentSponsor, maaBruges } from "@/lib/podcast/sponsors";
+import { getServerTSafe } from "@/i18n/server";
 
 export const OPTIONS = preflight;
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.edit);
   if (afvist) return afvist.svar;
 
   const { slug } = await params;
   const hentet = await hentAfsnit(slug);
   if (!hentet.ok) return svar(req, { error: hentet.grund }, 409);
-  if (!hentet.vaerdi) return svar(req, { error: `afsnittet «${slug}» findes ikke` }, 404);
+  if (!hentet.vaerdi) return svar(req, { error: t("errApi.podcast.episodeNotFound", { slug }) }, 404);
 
   const krop = (await req.json().catch(() => null)) as {
     sponsorSlug?: unknown;
@@ -42,20 +44,20 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug
 
   const fundet = await hentSponsor(raaSlug);
   if (!fundet.ok) return svar(req, { error: fundet.grund }, 409);
-  if (!fundet.vaerdi) return svar(req, { error: `indslaget «${raaSlug}» findes ikke` }, 404);
+  if (!fundet.vaerdi) return svar(req, { error: t("errApi.podcast.sponsorNotFound", { slug: String(raaSlug) }) }, 404);
 
   // SAMME spærre som ved indspilningen. Et indslag uden lyd ville give en
   // sammenføjning der mangler et stykke: værten siger «vi tager en kort pause»
   // og derefter kommer der ingenting. Fanget her, hvor redaktøren står — ikke
   // først når pengene er brugt.
-  const kanBruges = maaBruges(fundet.vaerdi.data);
-  if (!kanBruges.ok) return svar(req, { error: `indslaget kan ikke bruges: ${kanBruges.grund}` }, 409);
+  const kanBruges = maaBruges(fundet.vaerdi.data, t);
+  if (!kanBruges.ok) return svar(req, { error: t("errApi.podcast.sponsorUnusable", { reason: String(kanBruges.grund) }) }, 409);
 
   const antal = hentet.vaerdi.data.replikker.length;
   let efter: number | undefined;
   if (krop?.efterReplik !== undefined && krop.efterReplik !== null) {
     if (typeof krop.efterReplik !== "number" || !Number.isInteger(krop.efterReplik)) {
-      return svar(req, { error: "«efterReplik» skal være et helt tal" }, 400);
+      return svar(req, { error: t("errApi.podcast.efterReplikInteger") }, 400);
     }
     // Uden for manuskriptet AFVISES her, frem for at blive rykket i stilhed.
     // Indspilningen rykker den (et afsnit der ikke kan indspilles er værre end
@@ -64,7 +66,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ slug
     if (krop.efterReplik < 0 || krop.efterReplik >= antal) {
       return svar(
         req,
-        { error: `«efterReplik» skal være mellem 0 og ${antal - 1} — afsnittet har ${antal} replikker` },
+        { error: t("errApi.podcast.efterReplikRange", { max: antal - 1, count: antal }) },
         400,
       );
     }

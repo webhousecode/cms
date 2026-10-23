@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms } from "@/lib/cms";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const body = await req.json() as {
     docCollection: string;
@@ -16,7 +18,7 @@ export async function POST(req: NextRequest) {
   const cms = await getAdminCms();
   const doc = await cms.content.findBySlug(body.docCollection, body.docSlug);
   if (!doc) {
-    return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.checkLinks.docNotFound") }, { status: 404 });
   }
 
   const fieldValue = String(doc.data?.[body.field] ?? "");
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest) {
   const newLink = `[${body.linkText}](${body.newUrl})`;
 
   if (!fieldValue.includes(oldLink)) {
-    return NextResponse.json({ error: "Link not found in document field" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.checkLinks.linkNotInField") }, { status: 400 });
   }
 
   const updatedValue = fieldValue.replace(oldLink, newLink);

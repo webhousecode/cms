@@ -6,6 +6,7 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { requirePermission } from "@/lib/permissions";
 import fs from "fs/promises";
 import path from "path";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/admin/github-service-token
@@ -13,19 +14,20 @@ import path from "path";
  * This allows editors without GitHub accounts to access GitHub-backed sites.
  */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("tokens.manage"); if (denied) return denied;
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: t("errAdmin.common.unauthorized") }, { status: 401 });
 
   const member = await getTeamMember(session.sub);
   if (!member || member.role !== "admin") {
-    return NextResponse.json({ error: "Admin only" }, { status: 403 });
+    return NextResponse.json({ error: t("errAdmin.common.adminOnly") }, { status: 403 });
   }
 
   const githubToken = cookieStore.get("github-token")?.value;
   if (!githubToken) {
-    return NextResponse.json({ error: "No GitHub token — connect GitHub first" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.githubServiceToken.noToken") }, { status: 400 });
   }
 
   const { dataDir } = await getActiveSitePaths();

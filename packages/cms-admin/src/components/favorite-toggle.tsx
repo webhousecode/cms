@@ -3,6 +3,7 @@
 import { Heart } from "lucide-react";
 import { useFavorites } from "@/lib/hooks/use-favorites";
 import type { Favorite } from "@/lib/user-state";
+import { useT } from "@/lib/i18n-context";
 
 interface Props extends Omit<Favorite, "id" | "addedAt"> {
   size?: number;
@@ -15,14 +16,15 @@ interface Props extends Omit<Favorite, "id" | "addedAt"> {
 export function FavoriteToggle({ type, label, path, icon, collection, slug, size = 16 }: Props) {
   const { isFavorite, toggle } = useFavorites();
   const active = isFavorite(path);
+  const t = useT();
 
   return (
     <button
       data-testid={`favorite-toggle-${slug}`}
       type="button"
       onClick={() => toggle({ type, label, path, icon, collection, slug })}
-      title={active ? "Remove from favorites" : "Add to favorites"}
-      aria-label={active ? "Remove from favorites" : "Add to favorites"}
+      title={active ? t("shell.favoritesList.removeFromFavorites") : t("shell.favoritesList.addToFavorites")}
+      aria-label={active ? t("shell.favoritesList.removeFromFavorites") : t("shell.favoritesList.addToFavorites")}
       style={{
         background: "none",
         border: "none",

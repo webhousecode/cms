@@ -4,6 +4,8 @@ import { getSitePathsFor } from "@/lib/site-paths";
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getServerTSafe } from "@/i18n/server";
+import { getT } from "@/i18n/locale";
 
 /**
  * GET /api/cms/scheduled/calendar.ics?token=<hmac>&org=<orgId>&site=<siteId>
@@ -13,19 +15,20 @@ import path from "path";
  * Calendar page on each load. No CMS instance or GitHub API needed.
  */
 export async function GET(request: Request) {
+  const t = await getServerTSafe();
   const url = new URL(request.url);
   const token = url.searchParams.get("token");
   const orgId = url.searchParams.get("org") ?? "";
   const siteId = url.searchParams.get("site") ?? "";
 
   if (!token || !(await validateCalendarTokenForSite(token, orgId, siteId))) {
-    return NextResponse.json({ error: "Access denied" }, { status: 401 });
+    return NextResponse.json({ error: t("errCms.calendar.accessDenied") }, { status: 401 });
   }
 
   try {
     const sitePaths = await getSitePathsFor(orgId, siteId);
     if (!sitePaths) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errCms.shared.siteNotFound") }, { status: 404 });
     }
 
     const baseUrl = new URL(request.url).origin;
@@ -38,7 +41,7 @@ export async function GET(request: Request) {
         id: string; type: string; date: string; title: string; subtitle: string; href: string;
       }[];
 
-      const bygget = byggBegivenheder(items, baseUrl);
+      const bygget = byggBegivenheder(items, baseUrl, t);
       events.push(...bygget.linjer);
       udeladt = bygget.udeladt;
     }
@@ -49,13 +52,13 @@ export async function GET(request: Request) {
       "PRODID:-//webhouse//cms//EN",
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
-      "X-WR-CALNAME:CMS Content Schedule",
+      `X-WR-CALNAME:${t("errCms.calendar.calName")}`,
       "X-WR-TIMEZONE:Europe/Copenhagen",
       // Kun når der faktisk mangler noget. En linje der ALTID står der ville
       // læseren holde op med at se; en der kun står når tallet er over nul,
       // er den eneste der bliver bemærket.
       ...(udeladt.length
-        ? [`X-WR-CALDESC:${udeladt.length} ${udeladt.length === 1 ? "punkt kunne" : "punkter kunne"} ikke vises`]
+        ? [`X-WR-CALDESC:${udeladt.length === 1 ? t("errCms.calendar.omittedOne") : t("errCms.calendar.omittedMany", { count: udeladt.length })}`]
         : []),
       ...events,
       "END:VCALENDAR",
@@ -70,7 +73,7 @@ export async function GET(request: Request) {
     });
   } catch (err) {
     console.error("[calendar.ics]", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errCms.shared.internalError") }, { status: 500 });
   }
 }
 
@@ -102,6 +105,7 @@ function toIcsDate(iso: string, addMinutes = 0): string {
 export function byggBegivenheder(
   items: { id: string; type: string; date: string; title: string; subtitle: string; href: string }[],
   baseUrl: string,
+  t: (key: string, vars?: Record<string, string | number>) => string = getT("en"),
 ): { linjer: string[]; udeladt: { id: string; grund: string }[] } {
   const linjer: string[] = [];
   const udeladt: { id: string; grund: string }[] = [];
@@ -109,13 +113,13 @@ export function byggBegivenheder(
   for (const item of items) {
     try {
       const summaryMap: Record<string, string> = {
-        publish: `📗 Publish: ${item.title}`,
-        unpublish: `📕 Unpublish: ${item.title}`,
+        publish: `📗 ${t("errCms.calendar.publishTitle", { title: item.title })}`,
+        unpublish: `📕 ${t("errCms.calendar.unpublishTitle", { title: item.title })}`,
         backup: `💾 ${item.title}`,
         "link-check": `🔗 ${item.title}`,
       };
       linjer.push(formatEvent({
-        uid: `${item.id}@webhouse-cms`,
+        uid: `${item.id}@webhouse-cms`, // i18n-ignore: iCalendar UID
         summary: summaryMap[item.type] ?? item.title,
         description: `${item.subtitle} — ${item.href.split("/").pop()}`,
         dtstart: toIcsDate(item.date),

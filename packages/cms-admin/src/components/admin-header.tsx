@@ -104,7 +104,7 @@ function ThemeItems() {
 
 function UserNav({ user }: { user: SessionUser | null }) {
   const t = useT();
-  const displayName = user?.name ?? "Admin";
+  const displayName = user?.name ?? t("shell.adminHeader.fallbackName");
   const initials = user ? getInitials(user.name) : "";
   const router = useRouter();
   const can = usePermissions();
@@ -809,7 +809,7 @@ function PreviewButton() {
   const { siteConfig } = useHeaderData();
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [liveUrl, setLiveUrl] = useState<string>("");
-  const [siteName, setSiteName] = useState("Site");
+  const [siteName, setSiteName] = useState(() => t("shell.adminHeader.siteFallback"));
   const [previewDown, setPreviewDown] = useState(false);
   const [liveDown, setLiveDown] = useState(false);
   const { openTab } = useTabs();
@@ -951,7 +951,9 @@ function PreviewButton() {
         <DropdownMenuItem data-testid="preview-dropdown-preview" onClick={openPreview}>
           <ExternalLink className="mr-2 h-4 w-4" />
           {t("shell.adminHeader.preview")}
+          {/* i18n-ignore: name of the bundled preview server (sirv) */}
           {previewDown && <span className="ml-auto text-xs text-status-warning">sirv</span>}
+          {/* i18n-ignore: keyboard shortcut hint */}
           {!previewDown && <span className="ml-auto text-xs text-muted-foreground">p</span>}
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -966,6 +968,7 @@ function PreviewButton() {
           {t("shell.adminHeader.liveSite")}
           {liveDown
             ? <span className="ml-auto text-xs text-muted-foreground">{t("shell.adminHeader.down")}</span>
+            /* i18n-ignore: keyboard shortcut hint */
             : <span className="ml-auto text-xs text-muted-foreground">l</span>}
         </DropdownMenuItem>
       </DropdownMenuContent>

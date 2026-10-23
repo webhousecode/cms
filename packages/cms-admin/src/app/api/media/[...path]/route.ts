@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 type Ctx = { params: Promise<{ path: string[] }> };
 
@@ -22,9 +23,9 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     const code = (err as NodeJS.ErrnoException).code;
-    if (code === "ENOENT") return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (code === "EBADPATH") return NextResponse.json({ error: "Invalid media path" }, { status: 400 });
+    if (code === "ENOENT") return NextResponse.json({ error: (await getServerTSafe())("errApi.common.notFound") }, { status: 404 });
+    if (code === "EBADPATH") return NextResponse.json({ error: (await getServerTSafe())("errApi.common.invalidMediaPath") }, { status: 400 });
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: (await getServerTSafe())("errApi.common.internalError") }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/permissions";
 import { readSiteConfig } from "@/lib/site-config";
 import { flyLiveRebuildInfra, generateSyncSecret } from "@/lib/deploy/fly-live-provider";
 import { writeSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/admin/deploy/fly-live/rebuild
@@ -16,6 +17,7 @@ import { writeSiteConfig } from "@/lib/site-config";
  * - Sync secret needs rotation (query ?rotate=1)
  */
 export async function POST(request: Request) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("deploy.trigger");
   if (denied) return denied;
 
@@ -23,10 +25,10 @@ export async function POST(request: Request) {
     const config = await readSiteConfig();
     const token = config.deployApiToken;
     if (!token) {
-      return NextResponse.json({ error: "Fly.io API token is not configured." }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.deploy.flyTokenMissing") }, { status: 400 });
     }
     if (!config.deployAppName) {
-      return NextResponse.json({ error: "Fly app name is not configured." }, { status: 400 });
+      return NextResponse.json({ error: t("errAdmin.deploy.flyAppMissing") }, { status: 400 });
     }
 
     const url = new URL(request.url);
@@ -49,7 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, rotatedSecret: rotate });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Rebuild failed" },
+      { error: err instanceof Error ? err.message : t("errAdmin.deploy.rebuildFailed") },
       { status: 500 },
     );
   }

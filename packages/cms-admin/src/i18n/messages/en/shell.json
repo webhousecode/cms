@@ -111,7 +111,9 @@
     "newConversation": "New conversation",
     "new": "New",
     "conversationHistory": "Conversation history",
-    "history": "History"
+    "history": "History",
+    "fallbackName": "Admin",
+    "siteFallback": "Site"
   },
   "tabBar": {
     "closeTab": "Close tab (⌥W)",
@@ -119,7 +121,14 @@
     "closeAllTabs": "Close all tabs",
     "closeAll": "Close all",
     "confirmCloseAll": "Close all {count} tabs? All open documents will be closed and you'll return to Dashboard.",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "status": {
+      "published": "Published",
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "expired": "Expired",
+      "trashed": "Trashed"
+    }
   },
   "commandPalette": {
     "items": {
@@ -650,7 +659,9 @@
     "colType": "Type",
     "colAdded": "Added",
     "remove": "Remove from favorites",
-    "addedOn": "Added {date}"
+    "addedOn": "Added {date}",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites"
   },
   "tabTitles": {
     "dashboard": "Dashboard",
@@ -678,5 +689,8 @@
     "favorites": "Favorites",
     "deployDocker": "Docker Deploy",
     "settingsTab": "Settings: {tab}"
+  },
+  "meta": {
+    "description": "AI-native content engine"
   }
 }

@@ -12,6 +12,11 @@ import { cookies } from "next/headers";
 import { loadRegistry, findSite, findOrg, getDefaultSite } from "./site-registry";
 import { getOrCreateInstance } from "./site-pool";
 
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
+}
+
 /** Same chdir-free path absolutization as in site-pool. See site-pool.ts for rationale. */
 function absolutizeConfigPaths(config: CmsConfig, projectDir: string): void {
   const fs = (config.storage as { filesystem?: { contentDir?: string } } | undefined)?.filesystem;
@@ -33,8 +38,8 @@ async function getSingleSiteCms() {
   const configPath = process.env.CMS_CONFIG_PATH;
   if (!configPath) {
     throw new Error(
-      "CMS_CONFIG_PATH environment variable is not set. " +
-      "Point it to your cms.config.ts (or .js) file."
+      "CMS_CONFIG_PATH environment variable is not set. " + // i18n-ignore: operator boot error (env var)
+      "Point it to your cms.config.ts (or .js) file." // i18n-ignore: operator boot error (env var)
     );
   }
 
@@ -85,7 +90,7 @@ export async function getAdminCms() {
   // Check if active org has ANY sites first
   const activeOrg = findOrg(registry, activeOrgId);
   if (activeOrg && activeOrg.sites.length === 0) {
-    throw new EmptyOrgError("No sites in active organization");
+    throw new EmptyOrgError((await serverT())("system.lib.noSitesInOrg"));
   }
 
   let site = findSite(registry, activeOrgId, activeSiteId);
@@ -104,7 +109,7 @@ export async function getAdminCms() {
         return instance.cms;
       }
       const def = getDefaultSite(registry);
-      if (!def) throw new EmptyOrgError("No sites in active organization");
+      if (!def) throw new EmptyOrgError((await serverT())("system.lib.noSitesInOrg"));
       const instance = await getOrCreateInstance(def.org.id, def.site);
       return instance.cms;
     }
@@ -144,7 +149,7 @@ export async function getAdminConfig(): Promise<CmsConfig> {
   // Check if active org has ANY sites first
   const activeOrg = findOrg(registry, activeOrgId);
   if (activeOrg && activeOrg.sites.length === 0) {
-    throw new EmptyOrgError("No sites in active organization");
+    throw new EmptyOrgError((await serverT())("system.lib.noSitesInOrg"));
   }
 
   let site = findSite(registry, activeOrgId, activeSiteId);
@@ -171,7 +176,7 @@ export async function getAdminConfig(): Promise<CmsConfig> {
         site = firstInOrg;
       } else {
         const def = getDefaultSite(registry);
-        if (!def) throw new EmptyOrgError("No sites in active organization");
+        if (!def) throw new EmptyOrgError((await serverT())("system.lib.noSitesInOrg"));
         site = def.site;
         resolvedOrgId = def.org.id;
       }

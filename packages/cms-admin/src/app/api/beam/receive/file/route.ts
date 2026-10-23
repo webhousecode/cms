@@ -15,8 +15,10 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { getBeamSession, updateBeamSession } from "@/lib/beam/session";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   try {
     const formData = await request.formData();
     const beamId = formData.get("beamId") as string | null;
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     if (!beamId || !filePath || !file) {
       return NextResponse.json(
-        { error: "Missing required fields: beamId, path, file" },
+        { error: t("errApi.beamReceive.missingFileFields") },
         { status: 400 },
       );
     }
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
     const session = getBeamSession(beamId);
     if (!session || session.phase === "error" || session.phase === "done") {
       return NextResponse.json(
-        { error: "Invalid or expired beam session" },
+        { error: t("errApi.common.invalidBeamSession") },
         { status: 403 },
       );
     }
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
     // Security W41 NY-K2 — the traversal guard below compares against siteDir,
     // which the sender chose; siteDir itself must be a direct child of beam-sites.
     if (path.dirname(path.resolve(siteDir)) !== beamRoot) {
-      return NextResponse.json({ error: "Invalid site id" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.beamReceive.invalidSiteId") }, { status: 400 });
     }
 
     // Resolve target path based on prefix
@@ -86,7 +88,7 @@ export async function POST(request: NextRequest) {
     const resolved = path.resolve(targetPath);
     if (!resolved.startsWith(path.resolve(siteDir))) {
       return NextResponse.json(
-        { error: "Path traversal detected" },
+        { error: t("errApi.beamReceive.pathTraversal") },
         { status: 400 },
       );
     }
@@ -111,7 +113,7 @@ export async function POST(request: NextRequest) {
       checksumOk,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "File receive failed";
+    const message = err instanceof Error ? err.message : t("errApi.beamReceive.fileFailed");
     console.error("[beam/receive/file]", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

@@ -9,7 +9,7 @@ const DEFAULT_AGENTS: Omit<AgentConfig, "createdAt" | "updatedAt">[] = [
     name: "Content Writer",
     role: "copywriter",
     systemPrompt:
-      "You are a professional content writer. Write engaging, well-structured content that speaks to the target audience. Use clear headings, short paragraphs, and a natural tone.",
+      "You are a professional content writer. Write engaging, well-structured content that speaks to the target audience. Use clear headings, short paragraphs, and a natural tone.", // i18n-ignore: model system prompt
     behavior: { temperature: 65, formality: 50, verbosity: 60 },
     tools: { webSearch: false, internalDatabase: true },
     autonomy: "draft",
@@ -23,7 +23,7 @@ const DEFAULT_AGENTS: Omit<AgentConfig, "createdAt" | "updatedAt">[] = [
     name: "SEO Optimizer",
     role: "seo",
     systemPrompt:
-      "You are an SEO specialist. Optimize existing content for search engines without compromising readability. Focus on keywords, meta descriptions, heading structure, and internal linking.",
+      "You are an SEO specialist. Optimize existing content for search engines without compromising readability. Focus on keywords, meta descriptions, heading structure, and internal linking.", // i18n-ignore: model system prompt
     behavior: { temperature: 30, formality: 60, verbosity: 40 },
     tools: { webSearch: true, internalDatabase: true },
     autonomy: "draft",
@@ -37,7 +37,7 @@ const DEFAULT_AGENTS: Omit<AgentConfig, "createdAt" | "updatedAt">[] = [
     name: "Translator",
     role: "translator",
     systemPrompt:
-      "You are a professional translator. Translate content naturally and idiomatically into the target language. Preserve meaning, tone, and formatting. Adapt cultural references where relevant.",
+      "You are a professional translator. Translate content naturally and idiomatically into the target language. Preserve meaning, tone, and formatting. Adapt cultural references where relevant.", // i18n-ignore: model system prompt
     behavior: { temperature: 20, formality: 50, verbosity: 50 },
     tools: { webSearch: false, internalDatabase: true },
     autonomy: "draft",
@@ -51,7 +51,7 @@ const DEFAULT_AGENTS: Omit<AgentConfig, "createdAt" | "updatedAt">[] = [
     name: "Content Refresher",
     role: "refresher",
     systemPrompt:
-      "You are a specialist in updating and refreshing existing content. Find outdated information, update statistics and facts, improve phrasing, and add relevant new content. Preserve the original tone and structure.",
+      "You are a specialist in updating and refreshing existing content. Find outdated information, update statistics and facts, improve phrasing, and add relevant new content. Preserve the original tone and structure.", // i18n-ignore: model system prompt
     behavior: { temperature: 40, formality: 50, verbosity: 50 },
     tools: { webSearch: true, internalDatabase: true },
     autonomy: "draft",
@@ -198,7 +198,7 @@ export async function createAgent(
   const dir = await getAgentsDir();
   await fs.mkdir(dir, { recursive: true });
 
-  const id = `agent-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const id = `agent-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; // i18n-ignore: generated id
   const now = new Date().toISOString();
   const agent: AgentConfig = {
     ...data,
@@ -217,7 +217,7 @@ export async function updateAgent(
   data: Partial<AgentConfig>
 ): Promise<AgentConfig> {
   const existing = await getAgent(id);
-  if (!existing) throw new Error(`Agent ${id} not found`);
+  if (!existing) throw new Error((await (await import("@/i18n/server")).getServerTSafe())("system.agents.notFound", { id }));
 
   const updated: AgentConfig = {
     ...existing,

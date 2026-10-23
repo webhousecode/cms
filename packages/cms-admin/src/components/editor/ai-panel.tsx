@@ -93,7 +93,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
       });
 
       if (!res.ok || !res.body) {
-        const err = (await res.json().catch(() => ({ error: "AI error" }))) as { error?: string };
+        const err = (await res.json().catch(() => ({ error: t("editor.aiPanel.aiError") }))) as { error?: string };
         setMessages((prev) => {
           const next = [...prev];
           const last = next[next.length - 1];
@@ -252,7 +252,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
               data-testid="ai-panel-generate-version"
               type="button"
               onClick={() => {
-                const prompt = `Generate a completely new version of this document. Use the existing title and topic as a guide, but write fresh content with a new structure and angle. Return only the content for the "${insertTarget || richTextFields[0]?.name || "content"}" field.`;
+                const prompt = `Generate a completely new version of this document. Use the existing title and topic as a guide, but write fresh content with a new structure and angle. Return only the content for the "${insertTarget || richTextFields[0]?.name || "content"}" field.`; // i18n-ignore: model prompt
                 setInput(prompt);
                 setTimeout(() => {
                   setInput("");

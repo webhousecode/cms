@@ -13,13 +13,18 @@
 
 export const SERVER_BUILDS_ENV = "CMS_SERVER_BUILDS";
 
+// i18n-ignore: English fallback; translated via SERVER_BUILD_DISABLED_KEY (deployText.serverBuildPolicy.disabled)
 export const SERVER_BUILD_DISABLED_MESSAGE =
-  "This CMS server does not run a site's own build code (CMS_SERVER_BUILDS=off). " +
-  "Build the site in its own repo and set Site Settings → Deploy to «Webhook», " +
-  "so the CMS only sends the build signal.";
+  "This CMS server does not run a site's own build code (CMS_SERVER_BUILDS=off). " + // i18n-ignore: English fallback, see SERVER_BUILD_DISABLED_KEY
+  "Build the site in its own repo and set Site Settings → Deploy to «Webhook», " + // i18n-ignore: continuation of the fallback above
+  "so the CMS only sends the build signal."; // i18n-ignore: continuation of the fallback above
+
+/** Catalog key for SERVER_BUILD_DISABLED_MESSAGE — translate with it where the message is shown. */
+export const SERVER_BUILD_DISABLED_KEY = "deployText.serverBuildPolicy.disabled";
 
 export class ServerBuildDisabledError extends Error {
   readonly code = "SERVER_BUILD_DISABLED";
+  readonly i18nKey = SERVER_BUILD_DISABLED_KEY;
   constructor() {
     super(SERVER_BUILD_DISABLED_MESSAGE);
     this.name = "ServerBuildDisabledError";

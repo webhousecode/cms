@@ -200,14 +200,14 @@ export function brandVoiceToPromptContext(bv: BrandVoice): string {
     `Site: ${bv.name} (${bv.industry})`,
     `Description: ${bv.description}`,
     `Language: ${bv.language}`,
-    `Target audience: ${bv.targetAudience}`,
+    `Target audience: ${bv.targetAudience}`, // i18n-ignore: model prompt
     `Tone: ${bv.primaryTone}`,
     `Personality: ${bv.brandPersonality.join(", ")}`,
-    `Content goals: ${bv.contentGoals.join(", ")}`,
-    `Content pillars: ${bv.contentPillars.join(", ")}`,
+    `Content goals: ${bv.contentGoals.join(", ")}`, // i18n-ignore: model prompt
+    `Content pillars: ${bv.contentPillars.join(", ")}`, // i18n-ignore: model prompt
     bv.avoidTopics.length ? `Avoid: ${bv.avoidTopics.join(", ")}` : "",
-    bv.seoKeywords.length ? `SEO keywords: ${bv.seoKeywords.join(", ")}` : "",
-    bv.examplePhrases.length ? `Voice examples: "${bv.examplePhrases.join('", "')}"` : "",
+    bv.seoKeywords.length ? `SEO keywords: ${bv.seoKeywords.join(", ")}` : "", // i18n-ignore: model prompt
+    bv.examplePhrases.length ? `Voice examples: "${bv.examplePhrases.join('", "')}"` : "", // i18n-ignore: model prompt
   ]
     .filter(Boolean)
     .join("\n");

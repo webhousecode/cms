@@ -7,6 +7,7 @@
 import { runPsiAudit } from "./psi-engine";
 import { appendResult } from "./history";
 import type { LighthouseResult } from "./types";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Default PSI API key provided by webhouse.app.
@@ -27,7 +28,7 @@ export async function runAudit(
   const isLocalhost = url.includes("localhost") || url.includes("127.0.0.1");
 
   if (isLocalhost) {
-    throw new Error("Cannot audit localhost URLs — PSI API requires a public URL. Deploy your site first, then scan the production URL.");
+    throw new Error((await getServerTSafe())("libText.lighthouseRunner.localhost"));
   }
 
   const apiKey = options?.apiKey || DEFAULT_PSI_KEY;

@@ -28,7 +28,8 @@
     "loading": "Indlæser byggehistorik…",
     "unavailable": "Byggehistorik er ikke tilgængelig: {error}",
     "empty": "Ingen SSR-byg endnu. Klik Udgiv på et Next.js-, Bun-Hono- eller custom-Dockerfile-site for at starte et.",
-    "image": "Image:"
+    "image": "Image:",
+    "loadFailed": "kunne ikke indlæse byg"
   },
   "buildLog": {
     "startedProfile": "Byg startet ({profile})",
@@ -110,7 +111,9 @@
       "minutes": "for {n} min. siden",
       "hours": "for {n} t. siden",
       "days": "for {n} d. siden"
-    }
+    },
+    "loadFailed": "kunne ikke indlæses",
+    "dirFailed": "fejlede"
   },
   "deployWizard": {
     "steps": {
@@ -290,7 +293,9 @@
     "copied": "✓ kopieret"
   },
   "tourTooltip": {
-    "skipTour": "Spring rundvisningen over"
+    "skipTour": "Spring rundvisningen over",
+    "letsGo": "Lad os gå!",
+    "gotIt": "Forstået"
   },
   "pushToggle": {
     "title": "Browsernotifikationer",
@@ -300,6 +305,9 @@
     "on": "TIL",
     "disable": "Slå fra",
     "enable": "Slå til",
-    "description": "Få en notifikation fra styresystemet, når dit site er færdigt med at udgive — også når denne fane er lukket."
+    "description": "Få en notifikation fra styresystemet, når dit site er færdigt med at udgive — også når denne fane er lukket.",
+    "vapidNotConfigured": "VAPID-nøgle er ikke konfigureret",
+    "vapidKeyFailed": "vapid-public-key fejlede ({status})",
+    "registerFailed": "registrering fejlede ({status}): {body}"
   }
 }

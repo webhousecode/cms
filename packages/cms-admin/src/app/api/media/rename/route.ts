@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
-import { isCodeUpload, CODE_UPLOAD_REFUSED } from "@/lib/code-path-policy";
+import { isCodeUpload, codeUploadRefused } from "@/lib/code-path-policy";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/media/rename
@@ -11,6 +12,7 @@ import { isCodeUpload, CODE_UPLOAD_REFUSED } from "@/lib/code-path-policy";
  * Returns: { url: string } — the new browser-renderable URL
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   try {
     const { folder, oldName, newName, replace } = (await req.json()) as {
@@ -21,31 +23,31 @@ export async function POST(req: NextRequest) {
     };
 
     if (!oldName || !newName) {
-      return NextResponse.json({ error: "oldName and newName are required" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.media.renameNamesRequired") }, { status: 400 });
     }
 
     if (oldName === newName) {
-      return NextResponse.json({ error: "Names are identical" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.media.namesIdentical") }, { status: 400 });
     }
 
     // Sanitize new name: keep extension, sanitize base
     const sanitized = newName.replace(/[^a-zA-Z0-9._-]/g, "-");
     if (!sanitized || sanitized === "." || sanitized === "..") {
-      return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.media.invalidFilename") }, { status: 400 });
     }
 
     // Security W41 C5 — renaming photo.jpg to x.ts is an upload of code too.
-    if (isCodeUpload(sanitized)) return NextResponse.json({ error: CODE_UPLOAD_REFUSED }, { status: 415 });
+    if (isCodeUpload(sanitized)) return NextResponse.json({ error: await codeUploadRefused() }, { status: 415 });
 
     const adapter = await getMediaAdapter();
     const result = await adapter.renameFile(folder ?? "", oldName, sanitized, { replace: replace === true });
     return NextResponse.json(result);
   } catch (err: unknown) {
     const code = (err as NodeJS.ErrnoException).code;
-    if (code === "ENOENT") return NextResponse.json({ error: "File not found" }, { status: 404 });
-    if (code === "EBADPATH") return NextResponse.json({ error: "Invalid media path" }, { status: 400 });
-    if (code === "EEXIST") return NextResponse.json({ error: "A file with that name already exists" }, { status: 409 });
+    if (code === "ENOENT") return NextResponse.json({ error: t("errApi.common.fileNotFound") }, { status: 404 });
+    if (code === "EBADPATH") return NextResponse.json({ error: t("errApi.common.invalidMediaPath") }, { status: 400 });
+    if (code === "EEXIST") return NextResponse.json({ error: t("errApi.media.nameExists") }, { status: 409 });
     console.error("[media/rename] error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

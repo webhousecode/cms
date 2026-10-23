@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
+import { getServerTSafe } from "@/i18n/server";
 
 const MIME: Record<string, string> = {
   jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
@@ -36,7 +37,7 @@ async function serveFile(segments: string[]): Promise<NextResponse> {
   try {
     const adapter = await getMediaAdapter();
     const data = await adapter.readFile(segments);
-    if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!data) return NextResponse.json({ error: (await getServerTSafe())("errApi.common.notFound") }, { status: 404 });
     return new NextResponse(new Uint8Array(data), {
       headers: {
         "Content-Type": contentType,
@@ -50,13 +51,13 @@ async function serveFile(segments: string[]): Promise<NextResponse> {
         // media/htmldoc iframes add allow-same-origin). A sandbox CSP gives the
         // document an opaque origin: it still renders, its scripts can no
         // longer reach the admin.
-        ...(ACTIVE_CONTENT.has(ext) ? { "Content-Security-Policy": "sandbox allow-scripts allow-popups allow-forms" } : {}),
+        ...(ACTIVE_CONTENT.has(ext) ? { "Content-Security-Policy": "sandbox allow-scripts allow-popups allow-forms" } : {}), // i18n-ignore: Content-Security-Policy header value
       },
     });
   } catch (err: unknown) {
     if ((err as Error).message === "Path traversal detected")
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ error: (await getServerTSafe())("errApi.common.forbidden") }, { status: 403 });
+    return NextResponse.json({ error: (await getServerTSafe())("errApi.common.notFound") }, { status: 404 });
   }
 }
 
@@ -65,6 +66,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ path
   const overrideSite = req.nextUrl.searchParams.get("site");
   if (!overrideSite) return serveFile(segments);
   const ctx = await resolveSiteCtx(overrideSite);
-  if (!ctx) return NextResponse.json({ error: `site not found: ${overrideSite}` }, { status: 404 });
+  if (!ctx) return NextResponse.json({ error: (await getServerTSafe())("errApi.common.siteNotFoundId", { site: String(overrideSite) }) }, { status: 404 });
   return withSiteContext(ctx, () => serveFile(segments));
 }

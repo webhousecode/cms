@@ -149,7 +149,7 @@ export function AccessTokensPanel() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [permRows, setPermRows] = useState<PermissionRow[]>([
-    { scope: "Site", category: "Content", action: "Read" },
+    { scope: "Site", category: "Content", action: "Read" }, // i18n-ignore: permission tree keys; labels rendered via permLabel(t, …)
   ]);
   const [resourceFilters, setResourceFilters] = useState<ResourceFilter[]>([]);
   const [ipFilters, setIpFilters] = useState<IpFilter[]>([]);
@@ -181,7 +181,7 @@ export function AccessTokensPanel() {
 
   function resetForm() {
     setName(""); setDescription("");
-    setPermRows([{ scope: "Site", category: "Content", action: "Read" }]);
+    setPermRows([{ scope: "Site", category: "Content", action: "Read" }]); // i18n-ignore: permission tree keys; labels rendered via permLabel(t, …)
     setResourceFilters([]); setIpFilters([]);
     setNotBefore(""); setNotAfter("");
   }
@@ -190,22 +190,22 @@ export function AccessTokensPanel() {
     resetForm();
     if (preset === "admin") {
       setName(t("integrations.accessTokens.presetAdminName"));
-      setPermRows([{ scope: "Site", category: "Content", action: "Read" }]); // placeholder, we'll submit "*"
+      setPermRows([{ scope: "Site", category: "Content", action: "Read" }]); // placeholder, we'll submit "*" // i18n-ignore: permission tree keys; labels rendered via permLabel(t, …)
       setResourceFilters([]);
     } else if (preset === "deploy-bot") {
       setName(t("integrations.accessTokens.presetDeployBot"));
       setPermRows([
-        { scope: "Site", category: "Deploy", action: "Trigger" },
-        { scope: "Site", category: "Deploy", action: "Read" },
+        { scope: "Site", category: "Deploy", action: "Trigger" }, // i18n-ignore: permission tree keys; labels rendered via permLabel(t, …)
+        { scope: "Site", category: "Deploy", action: "Read" }, // i18n-ignore: permission tree keys; labels rendered via permLabel(t, …)
       ]);
       setResourceFilters([{ scope: "site", effect: "include", targets: [] }]);
     } else if (preset === "reader") {
       setName(t("integrations.accessTokens.presetReader"));
       setPermRows([
-        { scope: "Site", category: "Content", action: "Read" },
-        { scope: "Site", category: "Media", action: "Read" },
-        { scope: "Site", category: "Deploy", action: "Read" },
-        { scope: "Site", category: "Forms", action: "Read" },
+        { scope: "Site", category: "Content", action: "Read" }, // i18n-ignore: permission tree keys; labels rendered via permLabel(t, …)
+        { scope: "Site", category: "Media", action: "Read" }, // i18n-ignore: permission tree keys; labels rendered via permLabel(t, …)
+        { scope: "Site", category: "Deploy", action: "Read" }, // i18n-ignore: permission tree keys; labels rendered via permLabel(t, …)
+        { scope: "Site", category: "Forms", action: "Read" }, // i18n-ignore: permission tree keys; labels rendered via permLabel(t, …)
       ]);
     }
   }
@@ -384,7 +384,7 @@ export function AccessTokensPanel() {
                   style={smallIconBtn} disabled={permRows.length === 1}>×</button>
               </div>
             ))}
-            <button data-testid="token-perm-add-button" type="button" onClick={() => setPermRows([...permRows, { scope: "Site", category: "Content", action: "Read" }])}
+            <button data-testid="token-perm-add-button" type="button" onClick={() => setPermRows([...permRows, /* i18n-ignore: permission tree keys; labels rendered via permLabel(t, …) */ { scope: "Site", category: "Content", action: "Read" }])}
               style={addBtn}>+ {t("integrations.accessTokens.addPermission")}</button>
           </div>
 

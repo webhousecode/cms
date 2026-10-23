@@ -7,6 +7,7 @@ import { signMobileUploadUrl } from "@/app/api/mobile/uploads/route";
 import { existsSync } from "fs";
 import { join } from "path";
 import { readFile } from "fs/promises";
+import { getServerTSafe } from "@/i18n/server";
 
 function getLanBaseUrl(reqUrl: URL): string {
   let base = `${reqUrl.protocol}//${reqUrl.host}`;
@@ -30,15 +31,16 @@ function getLanBaseUrl(reqUrl: URL): string {
  * Optional search via ?q= parameter.
  */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   const orgId = req.nextUrl.searchParams.get("orgId");
   const siteId = req.nextUrl.searchParams.get("siteId");
   if (!orgId || !siteId) {
-    return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.orgSiteRequired") }, { status: 400 });
   }
 
   const query = req.nextUrl.searchParams.get("q")?.toLowerCase() ?? "";
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
   try {
     const paths = await getSitePathsFor(orgId, siteId);
     if (!paths) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errApi.common.siteNotFound") }, { status: 404 });
     }
 
     const adapter = new FilesystemMediaAdapter(paths.uploadDir, paths.dataDir);
@@ -84,7 +86,7 @@ export async function GET(req: NextRequest) {
       if (f.isImage && f.url.startsWith("/uploads/")) {
         const dotIdx = f.name.lastIndexOf(".");
         if (dotIdx > 0) {
-          const thumbName = `${f.name.slice(0, dotIdx)}-400w.webp`;
+          const thumbName = `${f.name.slice(0, dotIdx)}-400w.webp`; // i18n-ignore: file name
           const thumbPath = f.folder
             ? join(paths!.uploadDir, f.folder, thumbName)
             : join(paths!.uploadDir, thumbName);
@@ -120,6 +122,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ files: signed, total: signed.length });
   } catch (err) {
     console.error("[mobile/media] Error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

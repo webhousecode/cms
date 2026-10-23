@@ -15,6 +15,7 @@ import { getAdminConfig, getAdminCms } from "./cms";
 import { runSiteBuild } from "./build/run-site-build";
 import { dispatchRevalidation } from "./revalidation";
 import type { SiteEntry } from "./site-registry";
+import { getServerTSafe } from "@/i18n/server";
 
 export type DeployProvider =
   | "off"
@@ -133,6 +134,7 @@ async function resyncAllContent(site: SiteEntry): Promise<{ total: number; faile
 }
 
 export async function triggerDeploy(): Promise<DeployEntry> {
+  const t = await getServerTSafe();
   const config = await readSiteConfig();
   let provider = config.deployProvider;
   let token = config.deployApiToken;
@@ -196,11 +198,11 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         timestamp: now(),
         url: siteEntry.previewUrl ?? siteEntry.revalidateUrl,
         ...(result.failed > 0
-          ? { error: `${result.failed} of ${result.total} document re-syncs failed (see revalidation log)` }
+          ? { error: t("deployText.deployService.resyncFailed", { failed: result.failed, total: result.total }) }
           : {}),
       };
     }
-    return { id: uid(), provider, status: "error", timestamp: now(), error: "No deploy provider configured" };
+    return { id: uid(), provider, status: "error", timestamp: now(), error: t("deployText.deployService.noProvider") };
   }
 
   const entry: DeployEntry = {
@@ -225,7 +227,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         // The hook returns immediately; actual build runs in CI.
         // UI polls /api/admin/deploy/github-status and listens for the
         // /api/admin/deploy/notify SSE event.
-        if (!config.deployHookUrl) throw new Error("Deploy hook URL not configured");
+        if (!config.deployHookUrl) throw new Error(t("deployText.deployService.noHookUrl"));
         await postHook(config.deployHookUrl, config.deployApiToken || undefined);
         entry.status = "success";
         entry.async = true;
@@ -240,7 +242,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
       case "cloudflare":
       case "custom":
         // All use deploy hook URL — simple POST
-        if (!config.deployHookUrl) throw new Error("Deploy hook URL not configured");
+        if (!config.deployHookUrl) throw new Error(t("deployText.deployService.noHookUrl"));
         await postHook(config.deployHookUrl, config.deployApiToken || undefined);
         entry.status = "success";
         break;
@@ -250,8 +252,8 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         const cfToken = token || config.deployApiToken;
         const cfAccountId = config.deployCloudflareAccountId;
         let cfProjectName = config.deployCloudflareProjectName;
-        if (!cfToken) throw new Error("Cloudflare Pages requires an API token (Pages:Edit permission).");
-        if (!cfAccountId) throw new Error("Cloudflare Pages requires your Cloudflare Account ID.");
+        if (!cfToken) throw new Error(t("deployText.deployService.cfNoToken"));
+        if (!cfAccountId) throw new Error(t("deployText.deployService.cfNoAccount"));
         if (!cfProjectName) {
           const siteEntry = await getActiveSiteEntry();
           if (siteEntry) {
@@ -259,7 +261,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
             try { await writeSiteConfig({ deployCloudflareProjectName: cfProjectName }); } catch { /* non-fatal */ }
           }
         }
-        if (!cfProjectName) throw new Error("Cloudflare Pages requires a project name.");
+        if (!cfProjectName) throw new Error(t("deployText.deployService.cfNoProject"));
 
         // Build the site
         const cfSitePaths = await getActiveSitePaths();
@@ -268,7 +270,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         try { cfCmsConfig = await getAdminConfig(); } catch { cfCmsConfig = null; }
         const cfHasCustomBuild = !!cfCmsConfig?.build?.command;
         if (!existsSync(cfBuildFile) && !cfHasCustomBuild) {
-          throw new Error("Cloudflare Pages requires a build.ts or a build.command in cms.config.ts — it deploys static output.");
+          throw new Error(t("deployText.deployService.cfNoBuild"));
         }
         const cfDeployDir = path.join(cfSitePaths.projectDir, "deploy");
         if (existsSync(cfDeployDir)) rmSync(cfDeployDir, { recursive: true, force: true });
@@ -279,7 +281,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
           basePath: "",
         });
         if (!existsSync(cfDeployDir)) {
-          throw new Error("Build completed but no deploy/ directory was created.");
+          throw new Error(t("deployText.deployService.noDeployDir"));
         }
 
         const { cloudflarePagesDeploy } = await import("./deploy/cloudflare-pages-provider");
@@ -312,7 +314,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         // F133 — Fly.io Live (volume sync, no Docker rebuild per edit)
         let useToken = resolveFlyToken(token || config.deployApiToken);
         if (!useToken) {
-          throw new Error("Fly.io Live requires an API token. Set FLY_API_TOKEN as a Fly secret on the CMS host (recommended — works for all sites), or paste a per-site token in Site Settings → Deploy.");
+          throw new Error(t("deployText.deployService.flyLiveNoToken"));
         }
         let useAppName = appName || config.deployAppName;
         if (!useAppName) {
@@ -322,7 +324,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
             try { await writeSiteConfig({ deployAppName: useAppName }); } catch { /* non-fatal */ }
           }
         }
-        if (!useAppName) throw new Error("Fly.io Live requires an app name.");
+        if (!useAppName) throw new Error(t("deployText.deployService.flyLiveNoApp"));
 
         // Ensure we have a sync secret
         let syncSecret = config.deployFlyLiveSyncSecret;
@@ -339,7 +341,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         try { flyLiveCmsConfig = await getAdminConfig(); } catch { flyLiveCmsConfig = null; }
         const hasCustomBuild = !!flyLiveCmsConfig?.build?.command;
         if (!existsSync(flyLiveBuildFile) && !hasCustomBuild) {
-          throw new Error("Fly.io Live requires a build.ts or a build.command in cms.config.ts — it deploys static output. Use the regular 'Fly.io (rebuild)' provider for Next.js/SSR apps.");
+          throw new Error(t("deployText.deployService.flyLiveNoBuild"));
         }
         const flyLiveDeployDir = path.join(flyLiveSitePaths.projectDir, "deploy");
         if (existsSync(flyLiveDeployDir)) {
@@ -352,7 +354,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
           basePath: "",
         });
         if (!existsSync(flyLiveDeployDir)) {
-          throw new Error("Build completed but no deploy/ directory was created.");
+          throw new Error(t("deployText.deployService.noDeployDir"));
         }
 
         const { flyLiveDeploy } = await import("./deploy/fly-live-provider");
@@ -416,7 +418,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         } else {
           let useToken = resolveFlyToken(token || config.deployApiToken);
           if (!useToken) {
-            throw new Error("Fly.io requires an API token. Set FLY_API_TOKEN as a Fly secret on the CMS host (recommended — works for all sites), or paste a per-site token in Site Settings → Deploy.");
+            throw new Error(t("deployText.deployService.flyNoToken"));
           }
           let useAppName = appName || config.deployAppName;
           // Auto-create app name if not configured
@@ -427,7 +429,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
               try { await writeSiteConfig({ deployAppName: useAppName }); } catch { /* non-fatal */ }
             }
           }
-          if (!useAppName) throw new Error("Fly.io requires an app name.");
+          if (!useAppName) throw new Error(t("deployText.deployService.flyNoApp"));
           const flyUrl = await flyioBuildAndDeploy(useToken, useAppName, config.deployFlyOrg || undefined);
           if (flyUrl) {
             entry.url = flyUrl;
@@ -451,7 +453,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         const ghSitePaths = await getActiveSitePaths();
         const ghBuildFile = path.join(ghSitePaths.projectDir, "build.ts");
         if (!existsSync(ghBuildFile)) {
-          throw new Error("No build.ts found — this site doesn't support static builds. Configure a different deploy provider (Fly.io, Vercel) in Site Settings → Deploy.");
+          throw new Error(t("deployText.deployService.ghNoBuild"));
         }
         // Resolve token: explicit config → OAuth cookie → service token → scan all sites.
         // The literal string "oauth" is a sentinel meaning "use the OAuth cookie token" —
@@ -472,7 +474,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
           }
         }
         if (!useToken || !useRepo) {
-          throw new Error("GitHub Pages requires a GitHub token. Connect GitHub via OAuth or add a token in Settings → Automation.");
+          throw new Error(t("deployText.deployService.ghNoToken"));
         }
         const { url: pagesUrlRaw } = await githubPagesBuildAndDeploy(useToken, useRepo);
         // GH returns http:// until https_enforced is set; once Let's Encrypt
@@ -519,7 +521,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
               const result = await registerPageBuildHook({
                 repo: useRepo,
                 token: useToken,
-                callbackUrl: `${baseUrl.replace(/\/$/, "")}/api/admin/page-build-webhook`,
+                callbackUrl: `${baseUrl.replace(/\/$/, "")}/api/admin/page-build-webhook`, // i18n-ignore: URL
                 secret,
               });
               if (result.ok && result.hookId) {
@@ -568,7 +570,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
     if (entry.status === "success") {
       await serverLog("info", "deploy.succeeded", { provider, url: entry.url, duration: entry.duration });
     } else {
-      await serverLog("error", "deploy.failed", { provider, duration: entry.duration }, { message: entry.error ?? "Unknown error" });
+      await serverLog("error", "deploy.failed", { provider, duration: entry.duration }, { message: entry.error ?? "Unknown error" }); // i18n-ignore: server event-log field
     }
   } catch { /* non-fatal */ }
 
@@ -597,6 +599,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
  * Returns "owner/repo" string.
  */
 async function autoCreateGitHubRepo(token: string, siteName: string, siteId: string): Promise<string> {
+  const t = await getServerTSafe();
   const headers = {
     Authorization: `Bearer ${token}`,
     Accept: "application/vnd.github+json",
@@ -609,14 +612,14 @@ async function autoCreateGitHubRepo(token: string, siteName: string, siteId: str
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     || siteId;
-  const repoName = `${slug}-site`;
+  const repoName = `${slug}-site`; // i18n-ignore: repo name
 
   // Get authenticated user
   const userRes = await fetch("https://api.github.com/user", {
     headers,
     signal: AbortSignal.timeout(10000),
   });
-  if (!userRes.ok) throw new Error("Failed to get GitHub user — check your token.");
+  if (!userRes.ok) throw new Error(t("deployText.deployService.ghUserFailed"));
   const user = await userRes.json() as { login: string };
 
   const fullName = `${user.login}/${repoName}`;
@@ -638,7 +641,7 @@ async function autoCreateGitHubRepo(token: string, siteName: string, siteId: str
     headers,
     body: JSON.stringify({
       name: repoName,
-      description: `${siteName} — built with webhouse.app`,
+      description: `${siteName} — built with webhouse.app`, // i18n-ignore: GitHub repo description (external, not admin UI)
       private: false,
       auto_init: true,
     }),
@@ -646,7 +649,7 @@ async function autoCreateGitHubRepo(token: string, siteName: string, siteId: str
   });
   if (!createRes.ok) {
     const body = await createRes.text().catch(() => "");
-    throw new Error(`Failed to create repo: ${createRes.status} ${body.slice(0, 200)}`);
+    throw new Error(t("deployText.deployService.repoCreateFailed", { status: createRes.status, body: body.slice(0, 200) }));
   }
 
   console.log(`[deploy] Created repo ${fullName}`);
@@ -738,7 +741,7 @@ This site is powered by **[@webhouse/cms](https://github.com/webhousecode/cms)**
     method: "PUT",
     headers,
     body: JSON.stringify({
-      message: "docs: branded README — built with webhouse.app",
+      message: "docs: branded README — built with webhouse.app", // i18n-ignore: git commit message
       content: Buffer.from(readme).toString("base64"),
       ...(sha ? { sha } : {}),
     }),
@@ -750,17 +753,18 @@ This site is powered by **[@webhouse/cms](https://github.com/webhousecode/cms)**
 // ── Provider implementations ─────────────────────────────────
 
 async function postHook(url: string, token?: string): Promise<void> {
+  const t = await getServerTSafe();
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   // GitHub workflow_dispatch requires a ref + optional inputs body
   const isGitHubDispatch = url.includes("api.github.com") && url.includes("/dispatches");
-  const body = isGitHubDispatch ? JSON.stringify({ ref: "main", inputs: { reason: "CMS deploy" } }) : undefined;
+  const body = isGitHubDispatch ? JSON.stringify({ ref: "main", inputs: { reason: "CMS deploy" } }) : undefined; // i18n-ignore: workflow_dispatch input sent to GitHub
 
   const res = await fetch(url, { method: "POST", headers, body, signal: AbortSignal.timeout(15000) });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Hook returned ${res.status}: ${text.slice(0, 200)}`);
+    throw new Error(t("deployText.deployService.hookFailed", { status: res.status, body: text.slice(0, 200) }));
   }
 }
 
@@ -775,6 +779,7 @@ async function postHook(url: string, token?: string): Promise<void> {
  * 7. Return the app URL
  */
 async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: string): Promise<string | undefined> {
+  const t = await getServerTSafe();
   const sitePaths = await getActiveSitePaths();
   const buildFile = path.join(sitePaths.projectDir, "build.ts");
   const dockerFile = path.join(sitePaths.projectDir, "Dockerfile");
@@ -787,14 +792,14 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
   const hasCustomBuildCommand = !!cmsConfig?.build?.command;
 
   if (!hasBuildTs && !hasDockerfile && !hasCustomBuildCommand) {
-    throw new Error("No build.ts, Dockerfile, or build.command found — this site can't be deployed to Fly.io. Add a build.ts (static), Dockerfile (Next.js/SSR), or build.command in cms.config.ts.");
+    throw new Error(t("deployText.deployService.flyNoBuild"));
   }
 
   // Check flyctl is available
   try {
     execFileSync("flyctl", ["version"], { stdio: "pipe", timeout: 5000 });
   } catch {
-    throw new Error("flyctl CLI not found. Install it: curl -L https://fly.io/install.sh | sh");
+    throw new Error(t("deployText.deployService.flyctlMissing"));
   }
 
   const config = await readSiteConfig();
@@ -839,8 +844,8 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
       });
       console.log(`[deploy] Created Fly app ${appName}`);
     } catch (err) {
-      const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 200) || err.message : "Failed";
-      throw new Error(`Failed to create Fly app "${appName}" in org "${org}": ${msg}`);
+      const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 200) || err.message : t("deployText.deployService.failed");
+      throw new Error(t("deployText.deployService.flyAppCreateFailed", { app: appName, org: String(org), error: msg }));
     }
   }
 
@@ -868,7 +873,7 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
   console.log(`[deploy] Build completed in ${buildResult.duration}ms (custom: ${buildResult.usedCustomCommand})`);
 
   if (!existsSync(deployDir)) {
-    throw new Error("Build completed but no deploy/ directory was created.");
+    throw new Error(t("deployText.deployService.noDeployDir"));
   }
 
   // F89 enrichment
@@ -885,7 +890,7 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
     await enrichDist(deployDir, contentDir, {
       baseUrl: appUrl,
       basePath: "",
-      siteName: (siteGlobals.siteName as string) ?? siteEntry?.name ?? "Site",
+      siteName: (siteGlobals.siteName as string) ?? siteEntry?.name ?? "Site", // i18n-ignore: fallback site name written into the built site, not admin UI
       siteDescription: (siteGlobals.tagline as string) ?? (siteGlobals.siteDescription as string) ?? (siteGlobals.introText as string) ?? "",
       siteImage: (siteGlobals.heroImage as string) ?? (siteGlobals.ogImage as string),
       themeColor: (siteGlobals.themeColor as string) ?? "#000000",
@@ -927,12 +932,14 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
 `);
 
   // Dockerfile — minimal caddy image
+  // i18n-ignore: generated Dockerfile contents
   writeFileSync(path.join(tmpDir, "Dockerfile"), `FROM caddy:2-alpine
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY public/ /srv
 `);
 
   // fly.toml — region always arn (Stockholm)
+  // i18n-ignore: generated fly.toml contents
   writeFileSync(path.join(tmpDir, "fly.toml"), `app = "${appName}"
 primary_region = "arn"
 
@@ -960,10 +967,10 @@ primary_region = "arn"
       stdio: "pipe",
     });
   } catch (err) {
-    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) || err.message : "Deploy failed";
+    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) || err.message : t("deployText.deployService.deployFailed");
     // Clean up before throwing
     try { rmSync(tmpDir, { recursive: true, force: true }); } catch { /* */ }
-    throw new Error(`Fly.io deploy failed: ${msg}`);
+    throw new Error(t("deployText.deployService.flyDeployFailed", { error: msg }));
   }
 
   // Custom domain
@@ -1000,6 +1007,7 @@ async function flyioDockerfileDeploy(
   customDomain: string,
   projectDir: string,
 ): Promise<string> {
+  const t = await getServerTSafe();
   console.log(`[deploy] Dockerfile detected — deploying Next.js/SSR site from ${projectDir}`);
 
   // Detect build context from Dockerfile comment: "# Build context: /path/to/dir"
@@ -1016,6 +1024,7 @@ async function flyioDockerfileDeploy(
     // Build section references the Dockerfile relative to build context
     const relDockerfile = path.relative(buildContext, dockerfilePath);
     console.log(`[deploy] Generating fly.toml in ${buildContext} (dockerfile: ${relDockerfile}, region: arn)`);
+    // i18n-ignore: generated fly.toml contents
     writeFileSync(flyTomlPath, `app = "${appName}"
 primary_region = "arn"
 
@@ -1047,10 +1056,10 @@ primary_region = "arn"
       stdio: "pipe",
     });
   } catch (err) {
-    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 500) || err.message : "Deploy failed";
+    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 500) || err.message : t("deployText.deployService.deployFailed");
     // Clean up generated fly.toml on failure so it doesn't litter the context dir
     if (flyTomlCreated) try { rmSync(flyTomlPath); } catch { /* */ }
-    throw new Error(`Fly.io deploy failed: ${msg}`);
+    throw new Error(t("deployText.deployService.flyDeployFailed", { error: msg }));
   }
 
   // Clean up fly.toml from context dir if we generated it (keep project dir clean)
@@ -1086,7 +1095,7 @@ function flyAppName(siteName: string, siteId: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     || siteId;
-  return `${slug}-site`;
+  return `${slug}-site`; // i18n-ignore: app name
 }
 
 // F133 — Cloudflare Pages project slugs must be lowercase + hyphen, 1–58 chars.
@@ -1107,6 +1116,7 @@ function slugifyForCloudflare(name: string): string {
  * 4. Return the Pages URL
  */
 async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{ url: string | undefined }> {
+  const t = await getServerTSafe();
   const headers = {
     Authorization: `Bearer ${token}`,
     Accept: "application/vnd.github+json",
@@ -1124,7 +1134,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
   const ghHasCustomBuild = !!ghCmsConfig?.build?.command;
 
   if (!existsSync(buildFile) && !ghHasCustomBuild) {
-    throw new Error("No build.ts or build.command found — this site doesn't support static builds.");
+    throw new Error(t("deployText.deployService.noStaticBuild"));
   }
 
   // Custom domain → root path; otherwise /repo-name
@@ -1152,7 +1162,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
   // 2. Collect deploy/ files (separate from dist/ which stays preview-ready)
   const distDir = path.join(sitePaths.projectDir, "deploy");
   if (!existsSync(distDir)) {
-    throw new Error("Build completed but no deploy/ directory was created.");
+    throw new Error(t("deployText.deployService.noDeployDir"));
   }
 
   // Write CNAME file for custom domain
@@ -1180,7 +1190,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
     await enrichDist(distDir, contentDir, {
       baseUrl,
       basePath,
-      siteName: (siteGlobals.siteName as string) ?? siteEntry?.name ?? "Site",
+      siteName: (siteGlobals.siteName as string) ?? siteEntry?.name ?? "Site", // i18n-ignore: fallback site name written into the built site, not admin UI
       siteDescription: (siteGlobals.tagline as string) ?? (siteGlobals.siteDescription as string) ?? (siteGlobals.introText as string) ?? "",
       siteImage: (siteGlobals.heroImage as string) ?? (siteGlobals.ogImage as string),
       themeColor: (siteGlobals.themeColor as string) ?? "#000000",
@@ -1193,7 +1203,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
 
   const files = collectFiles(distDir, distDir);
   if (files.length === 0) {
-    throw new Error("Build completed but dist/ is empty.");
+    throw new Error(t("deployText.deployService.distEmpty"));
   }
   console.log(`[deploy] Collected ${files.length} files from dist/`);
 
@@ -1227,7 +1237,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
   // 3b. Compute git blob SHAs locally to find changed files
   const { createHash } = await import("node:crypto");
   function gitBlobSha(content: Buffer): string {
-    const header = `blob ${content.length}\0`;
+    const header = `blob ${content.length}\0`; // i18n-ignore: git object header
     return createHash("sha1").update(header).update(content).digest("hex");
   }
 
@@ -1275,11 +1285,11 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
       }
       lastStatus = blobRes.status;
       if (blobRes.status !== 403) {
-        throw new Error(`Failed to create blob for ${f.relativePath}: ${blobRes.status}`);
+        throw new Error(t("deployText.deployService.blobFailed", { path: f.relativePath, status: blobRes.status }));
       }
     }
     if (lastStatus === 403) {
-      throw new Error(`GitHub rate limit exceeded after 3 retries on ${f.relativePath}. Wait a few minutes and try again.`);
+      throw new Error(t("deployText.deployService.rateLimited", { path: f.relativePath }));
     }
   }
 
@@ -1312,7 +1322,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
       body: JSON.stringify({ base_tree: commitJson.tree.sha, tree: treeEntries }),
       signal: AbortSignal.timeout(30000),
     });
-    if (!treeRes.ok) throw new Error(`Failed to create tree: ${treeRes.status}`);
+    if (!treeRes.ok) throw new Error(t("deployText.deployService.treeFailed", { status: treeRes.status }));
     tree = await treeRes.json() as { sha: string };
   } else {
     // First deploy or no parent — full tree (chunk if needed)
@@ -1325,7 +1335,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
       }),
       signal: AbortSignal.timeout(30000),
     });
-    if (!treeRes.ok) throw new Error(`Failed to create tree: ${treeRes.status}`);
+    if (!treeRes.ok) throw new Error(t("deployText.deployService.treeFailed", { status: treeRes.status }));
     tree = await treeRes.json() as { sha: string };
   }
 
@@ -1333,7 +1343,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
 
   // Create commit
   const commitBody: Record<string, unknown> = {
-    message: `Deploy from webhouse.app — ${new Date().toLocaleString("da-DK")}`,
+    message: `Deploy from webhouse.app — ${new Date().toLocaleString("da-DK")}`, // i18n-ignore: git commit message
     tree: tree.sha,
   };
   if (parentSha) commitBody.parents = [parentSha];
@@ -1343,7 +1353,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
     body: JSON.stringify(commitBody),
     signal: AbortSignal.timeout(15000),
   });
-  if (!commitRes.ok) throw new Error(`Failed to create commit: ${commitRes.status}`);
+  if (!commitRes.ok) throw new Error(t("deployText.deployService.commitFailed", { status: commitRes.status }));
   const commit = await commitRes.json() as { sha: string };
 
   // Update or create gh-pages ref
@@ -1354,7 +1364,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
       body: JSON.stringify({ sha: commit.sha, force: true }),
       signal: AbortSignal.timeout(10000),
     });
-    if (!updateRes.ok) throw new Error(`Failed to update gh-pages ref: ${updateRes.status}`);
+    if (!updateRes.ok) throw new Error(t("deployText.deployService.refUpdateFailed", { status: updateRes.status }));
   } else {
     const createRes = await fetch(`https://api.github.com/repos/${repo}/git/refs`, {
       method: "POST",
@@ -1362,7 +1372,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
       body: JSON.stringify({ ref: "refs/heads/gh-pages", sha: commit.sha }),
       signal: AbortSignal.timeout(10000),
     });
-    if (!createRes.ok) throw new Error(`Failed to create gh-pages ref: ${createRes.status}`);
+    if (!createRes.ok) throw new Error(t("deployText.deployService.refCreateFailed", { status: createRes.status }));
   }
 
   console.log(`[deploy] Pushed ${files.length} files to gh-pages branch`);
@@ -1386,14 +1396,14 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<{
     if (!enableRes.ok) {
       const body = await enableRes.text().catch(() => "");
       if (enableRes.status === 422 && body.includes("plan does not support")) {
-        throw new Error("GitHub Pages is not available for private repos on the Free plan. Make the repo public or upgrade your plan.");
+        throw new Error(t("deployText.deployService.pagesPrivate"));
       }
       // GitHub API sometimes returns 500 when Pages is already enabled (race condition)
       // or 409/422 for other conflicts — treat as non-fatal, Pages may already be active
       if (enableRes.status === 500 || enableRes.status === 409) {
         console.log(`[deploy] Pages enable returned ${enableRes.status} — may already be active, continuing...`);
       } else if (enableRes.status !== 422) {
-        throw new Error(`Failed to enable GitHub Pages: ${enableRes.status}`);
+        throw new Error(t("deployText.deployService.pagesEnableFailed", { status: enableRes.status }));
       }
     } else {
       const data = await enableRes.json() as { html_url?: string };
@@ -1501,6 +1511,7 @@ export async function checkGitHubPagesStatus(token: string, repo: string): Promi
   status?: string;
   error?: string;
 }> {
+  const t = await getServerTSafe();
   try {
     const res = await fetch(`https://api.github.com/repos/${repo}/pages`, {
       headers: {
@@ -1510,7 +1521,7 @@ export async function checkGitHubPagesStatus(token: string, repo: string): Promi
       signal: AbortSignal.timeout(10000),
     });
     if (res.status === 404) return { enabled: false };
-    if (!res.ok) return { enabled: false, error: `API error: ${res.status}` };
+    if (!res.ok) return { enabled: false, error: t("deployText.deployService.apiError", { status: res.status }) };
     const data = await res.json() as { html_url?: string; status?: string };
     return { enabled: true, url: data.html_url, status: data.status };
   } catch (err) {
@@ -1520,5 +1531,5 @@ export async function checkGitHubPagesStatus(token: string, repo: string): Promi
 
 // ── Helpers ──────────────────────────────────────────────────
 
-function uid() { return `dpl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
+function uid() { return `dpl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; } // i18n-ignore: id
 function now() { return new Date().toISOString(); }

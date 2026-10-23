@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { importExportZip, previewImport } from "@/lib/chat/chat-export";
+import { getServerTSafe } from "@/i18n/server";
 
 /** POST /api/cms/chat/import — import or preview a chat export ZIP */
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
 
   const isPreview = request.nextUrl.searchParams.get("preview") === "true";
   const contentType = request.headers.get("content-type") ?? "";
@@ -15,7 +17,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.chatImport.noFile") }, { status: 400 });
     }
     zipBuffer = Buffer.from(await file.arrayBuffer());
   } else {
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (zipBuffer.length === 0) {
-    return NextResponse.json({ error: "Empty file" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.chatImport.emptyFile") }, { status: 400 });
   }
 
   try {
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json(
-      { error: `Import failed: ${err instanceof Error ? err.message : "invalid ZIP"}` },
+      { error: t("errCms.chatImport.importFailed", { error: err instanceof Error ? err.message : t("errCms.chatImport.invalidZip") }) },
       { status: 400 }
     );
   }

@@ -3,7 +3,8 @@ import { SignJWT } from "jose";
 import { COOKIE_NAME, createToken } from "@/lib/auth";
 import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
 import { confirmAuthentication, getRpFromRequest } from "@/lib/webauthn";
-import { legacyLoginAllowed, LEGACY_LOGIN_REFUSED } from "@/lib/bid";
+import { legacyLoginAllowed, legacyLoginRefused } from "@/lib/bid";
+import { getServerTSafe } from "@/i18n/server";
 
 const CHALLENGE_COOKIE = "cms-webauthn-challenge";
 const TOTP_PENDING_COOKIE = "cms-totp-pending";
@@ -18,10 +19,11 @@ async function createTotpPendingToken(userId: string): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const body = (await req.json()) as { response: unknown };
-  if (!body?.response) return NextResponse.json({ error: "Missing response" }, { status: 400 });
+  if (!body?.response) return NextResponse.json({ error: t("errApi.common.missingResponse") }, { status: 400 });
   const challenge = req.cookies.get(CHALLENGE_COOKIE)?.value;
-  if (!challenge) return NextResponse.json({ error: "No pending challenge" }, { status: 400 });
+  if (!challenge) return NextResponse.json({ error: t("errApi.authPasskey.noChallenge") }, { status: 400 });
 
   const rp = getRpFromRequest(req);
   try {
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
       challenge,
     );
     if (!legacyLoginAllowed(user)) {
-      return NextResponse.json({ error: LEGACY_LOGIN_REFUSED, bid: true }, { status: 403 });
+      return NextResponse.json({ error: await legacyLoginRefused(), bid: true }, { status: 403 });
     }
     if (user.totp) {
       const pending = await createTotpPendingToken(user.id);
@@ -66,6 +68,6 @@ export async function POST(req: NextRequest) {
     }
     return res;
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Authentication failed" }, { status: 401 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : t("errApi.authPasskey.authFailed") }, { status: 401 });
   }
 }

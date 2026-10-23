@@ -65,14 +65,14 @@ export async function requireToken(
   if (bearer) {
     const token = await verifyAccessToken(bearer);
     if (!token) {
-      return NextResponse.json({ error: "Invalid access token" }, { status: 401 });
+      return NextResponse.json({ error: (await serverT())("system.auth.invalidAccessToken") }, { status: 401 });
     }
 
     const ip = clientIpFrom(req);
     const result = evaluateToken(token, permission, resource, ip, new Date());
     if (!result.allow) {
       return NextResponse.json(
-        { error: "Forbidden", reason: result.reason ?? "token denied" },
+        { error: (await serverT())("system.auth.forbidden"), reason: result.reason ?? "token denied" }, // i18n-ignore: "token denied" is a machine reason field; the human text is in error
         { status: 403 },
       );
     }
@@ -83,7 +83,7 @@ export async function requireToken(
   // their existing role-based access via getSessionUser + team membership.
   const user = await getSessionUser(await cookies());
   if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: (await serverT())("system.auth.notAuthenticated") }, { status: 401 });
   }
   return { via: "session", userId: user.id };
 }
@@ -92,4 +92,9 @@ export async function requireToken(
  * or a session — mostly for audit logging. */
 export function isTokenAuth(a: AuthResult): a is StoredToken {
   return "hash" in a;
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

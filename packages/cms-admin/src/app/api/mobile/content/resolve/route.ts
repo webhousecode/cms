@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { getAdminCmsForSite, getAdminConfigForSite } from "@/lib/cms";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/mobile/content/resolve?orgId=...&siteId=...&path=/blog/my-post
@@ -10,16 +11,17 @@ import { getAdminCmsForSite, getAdminConfigForSite } from "@/lib/cms";
  * this endpoint figures out which document they're looking at.
  */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getMobileSession(req);
   if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.notAuthenticated") }, { status: 401 });
   }
 
   const orgId = req.nextUrl.searchParams.get("orgId");
   const siteId = req.nextUrl.searchParams.get("siteId");
   const urlPath = req.nextUrl.searchParams.get("path");
   if (!orgId || !siteId || !urlPath) {
-    return NextResponse.json({ error: "orgId, siteId, and path required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.mobile.resolveParams") }, { status: 400 });
   }
 
   try {
@@ -28,7 +30,7 @@ export async function GET(req: NextRequest) {
       getAdminConfigForSite(orgId, siteId),
     ]);
     if (!cms || !config) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return NextResponse.json({ error: t("errApi.common.siteNotFound") }, { status: 404 });
     }
 
     // Clean path: strip query, hash, trailing slash, locale prefix
@@ -104,9 +106,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ error: "No matching document found for this URL" }, { status: 404 });
+    return NextResponse.json({ error: t("errApi.mobile.noDocForUrl") }, { status: 404 });
   } catch (err) {
     console.error("[mobile/content/resolve] Error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

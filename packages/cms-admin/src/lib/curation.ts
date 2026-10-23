@@ -29,6 +29,11 @@ export interface QueueItem {
   rejectionFeedback?: string;
 }
 
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
+}
+
 async function getQueuePath(): Promise<string> {
   const { dataDir } = await getActiveSitePaths();
   return path.join(dataDir, "curation-queue.json");
@@ -84,7 +89,7 @@ export async function getQueueItem(id: string): Promise<QueueItem | null> {
 export async function approveQueueItem(id: string, asDraft = false): Promise<QueueItem> {
   const items = await readQueue();
   const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) throw new Error(`Queue item ${id} not found`);
+  if (idx === -1) throw new Error((await serverT())("system.lib.queueItemNotFound", { id }));
 
   const item = items[idx]!;
 
@@ -154,7 +159,7 @@ export async function rejectQueueItem(
 ): Promise<QueueItem> {
   const items = await readQueue();
   const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) throw new Error(`Queue item ${id} not found`);
+  if (idx === -1) throw new Error((await serverT())("system.lib.queueItemNotFound", { id }));
 
   items[idx].status = "rejected";
   items[idx].rejectionFeedback = feedback;
@@ -168,7 +173,7 @@ export async function updateQueueItemData(
 ): Promise<QueueItem> {
   const items = await readQueue();
   const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) throw new Error(`Queue item ${id} not found`);
+  if (idx === -1) throw new Error((await serverT())("system.lib.queueItemNotFound", { id }));
 
   const item = items[idx];
 
@@ -204,10 +209,10 @@ export async function updateQueueItemData(
 export async function pickAlternative(id: string, altIndex: number): Promise<QueueItem> {
   const items = await readQueue();
   const idx = items.findIndex((i) => i.id === id);
-  if (idx === -1) throw new Error(`Queue item ${id} not found`);
+  if (idx === -1) throw new Error((await serverT())("system.lib.queueItemNotFound", { id }));
   const item = items[idx];
   if (!item.alternatives || !item.alternatives[altIndex]) {
-    throw new Error(`Alternative ${altIndex} not found`);
+    throw new Error((await serverT())("system.lib.alternativeNotFound", { index: altIndex }));
   }
   const alt = item.alternatives[altIndex];
   // Swap: current becomes an alternative, picked becomes primary

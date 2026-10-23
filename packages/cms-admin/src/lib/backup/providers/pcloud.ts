@@ -7,6 +7,7 @@
  */
 
 import type { BackupProvider, CloudBackupFile } from "./types";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface PCloudWebDAVConfig {
   email: string;
@@ -34,12 +35,13 @@ export class PCloudBackupProvider implements BackupProvider {
   }
 
   async upload(filename: string, data: Buffer): Promise<{ url: string; size: number }> {
+    const t = await getServerTSafe();
     // Pre-flight: check quota before uploading
     const quota = await this.checkQuota();
     if (quota && quota.freeBytes < data.length * 2) {
       const freeMB = Math.round(quota.freeBytes / (1024 * 1024));
       const needMB = Math.round(data.length / (1024 * 1024));
-      throw new Error(`pCloud storage nearly full: ${freeMB} MB free, need ${needMB} MB. Free up space or upgrade your pCloud plan.`);
+      throw new Error(t("deployText.pcloud.nearlyFull", { freeMB, needMB }));
     }
 
     await this.ensureFolder();
@@ -51,14 +53,14 @@ export class PCloudBackupProvider implements BackupProvider {
     });
 
     if (res.status === 401) {
-      throw new Error("pCloud authentication failed — check email and password in Settings → Backup.");
+      throw new Error(t("deployText.pcloud.authFailed"));
     }
     if (res.status === 507 || res.status === 413) {
-      throw new Error("pCloud storage quota exceeded. Free up space or upgrade your pCloud plan.");
+      throw new Error(t("deployText.pcloud.quotaExceeded"));
     }
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      throw new Error(`pCloud upload failed: ${res.status} ${res.statusText}${body ? ` — ${body.slice(0, 200)}` : ""}`);
+      throw new Error(t("deployText.pcloud.uploadFailed", { status: `${res.status} ${res.statusText}${body ? ` — ${body.slice(0, 200)}` : ""}` }));
     }
 
     return { url: `${this.folder}/${filename}`, size: data.length };
@@ -70,6 +72,7 @@ export class PCloudBackupProvider implements BackupProvider {
       const res = await fetch(`${this.baseUrl}/`, {
         method: "PROPFIND",
         headers: { ...this.headers(), Depth: "0", "Content-Type": "application/xml" },
+        // i18n-ignore: WebDAV PROPFIND request body (XML protocol payload)
         body: `<?xml version="1.0" encoding="utf-8"?>
 <D:propfind xmlns:D="DAV:">
   <D:prop>
@@ -96,6 +99,7 @@ export class PCloudBackupProvider implements BackupProvider {
     const res = await fetch(`${this.baseUrl}${this.folder}/`, {
       method: "PROPFIND",
       headers: { ...this.headers(), Depth: "1", "Content-Type": "application/xml" },
+      // i18n-ignore: WebDAV PROPFIND request body (XML protocol payload)
       body: `<?xml version="1.0" encoding="utf-8"?>
 <D:propfind xmlns:D="DAV:">
   <D:prop>
@@ -119,7 +123,7 @@ export class PCloudBackupProvider implements BackupProvider {
       headers: this.headers(),
     });
 
-    if (!res.ok) throw new Error(`pCloud download failed: ${res.status}`);
+    if (!res.ok) throw new Error((await getServerTSafe())("deployText.pcloud.downloadFailed", { status: res.status }));
     const arrayBuffer = await res.arrayBuffer();
     return Buffer.from(arrayBuffer);
   }
@@ -131,16 +135,18 @@ export class PCloudBackupProvider implements BackupProvider {
     });
 
     if (!res.ok && res.status !== 404) {
-      throw new Error(`pCloud delete failed: ${res.status}`);
+      throw new Error((await getServerTSafe())("deployText.pcloud.deleteFailed", { status: res.status }));
     }
   }
 
   async test(): Promise<{ ok: boolean; message: string; freeSpace?: number }> {
+    const t = await getServerTSafe();
     try {
       // PROPFIND on root to verify credentials
       const res = await fetch(`${this.baseUrl}/`, {
         method: "PROPFIND",
         headers: { ...this.headers(), Depth: "0", "Content-Type": "application/xml" },
+        // i18n-ignore: WebDAV PROPFIND request body (XML protocol payload)
         body: `<?xml version="1.0" encoding="utf-8"?>
 <D:propfind xmlns:D="DAV:">
   <D:prop>
@@ -151,10 +157,10 @@ export class PCloudBackupProvider implements BackupProvider {
       });
 
       if (res.status === 401) {
-        return { ok: false, message: "Invalid email or password" };
+        return { ok: false, message: t("deployText.pcloud.invalidCredentials") };
       }
       if (!res.ok) {
-        return { ok: false, message: `Connection failed: ${res.status}` };
+        return { ok: false, message: t("deployText.pcloud.connectionFailedStatus", { status: res.status }) };
       }
 
       const xml = await res.text();
@@ -165,11 +171,11 @@ export class PCloudBackupProvider implements BackupProvider {
 
       return {
         ok: true,
-        message: `Connected — ${freeGB} GB free`,
+        message: t("deployText.pcloud.connected", { freeGB }),
         freeSpace: freeBytes,
       };
     } catch (err) {
-      return { ok: false, message: err instanceof Error ? err.message : "Connection failed" };
+      return { ok: false, message: err instanceof Error ? err.message : t("deployText.pcloud.connectionFailed") };
     }
   }
 
@@ -181,7 +187,7 @@ export class PCloudBackupProvider implements BackupProvider {
     });
     // 201 = created, 405 = already exists — both fine
     if (!res.ok && res.status !== 405) {
-      throw new Error(`pCloud MKCOL failed: ${res.status}`);
+      throw new Error((await getServerTSafe())("deployText.pcloud.folderFailed", { status: res.status }));
     }
   }
 

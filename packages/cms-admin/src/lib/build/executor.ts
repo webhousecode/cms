@@ -10,6 +10,8 @@ import { randomUUID } from "crypto";
 import { parseCommand } from "./allowlist";
 import { assertServerBuildAllowed } from "./server-build-policy";
 import type { DockerConfig } from "@webhouse/cms";
+import { getServerTSafe } from "@/i18n/server";
+import { localizeKeyedError } from "./validate-paths";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -80,7 +82,8 @@ const SIGKILL_GRACE_MS = 5000;
 export async function executeBuild(
   opts: ExecuteOptions,
 ): Promise<ExecuteResult> {
-  assertServerBuildAllowed();
+  try { assertServerBuildAllowed(); } catch (err) { throw await localizeKeyedError(err); }
+  const t = await getServerTSafe();
   const buildId = randomUUID();
   const start = Date.now();
 
@@ -88,9 +91,7 @@ export async function executeBuild(
   const safeEnv: Record<string, string> = {};
   for (const [key, value] of Object.entries(opts.env ?? {})) {
     if (BLOCKED_ENV_VARS.has(key)) {
-      throw new Error(
-        `Environment variable "${key}" is blocked for security reasons.`,
-      );
+      throw new Error(t("deployText.executor.envBlocked", { key }));
     }
     if (ALLOWED_ENV_VARS.has(key)) {
       safeEnv[key] = value;
@@ -101,7 +102,7 @@ export async function executeBuild(
   // Parse command into argv — no shell
   const argv = parseCommand(opts.command);
   if (argv.length === 0) {
-    throw new Error("Empty build command");
+    throw new Error(t("deployText.executor.emptyCommand"));
   }
   const [rawCmd, ...rawArgs] = argv;
 

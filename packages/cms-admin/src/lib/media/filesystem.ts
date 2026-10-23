@@ -167,7 +167,7 @@ export class FilesystemMediaAdapter implements MediaAdapter {
       || (await this.loadMediaMeta()).some((m) => m.key === targetKey);
     if (targetExists) {
       if (!opts?.replace) {
-        throw Object.assign(new Error(`${targetKey} already exists`), { code: "EEXIST" });
+        throw Object.assign(new Error(`${targetKey} already exists`), { code: "EEXIST" }); // i18n-ignore: internal error; the route maps code EEXIST to a translated message
       }
       await this.deleteFile(folder, newName);
     }
@@ -243,7 +243,7 @@ export class FilesystemMediaAdapter implements MediaAdapter {
     let counter = 1;
     while (meta.some((m) => m.id === id)) { id = `${baseId}-${counter++}`; }
 
-    const finalFilename = `${id}.html`;
+    const finalFilename = `${id}.html`; // i18n-ignore: file name
     await mkdir(this.interactivesDir, { recursive: true });
     await writeFile(path.join(this.interactivesDir, finalFilename), content);
 

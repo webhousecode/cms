@@ -12,6 +12,7 @@ import path from "node:path";
 import archiver from "archiver";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
 import { getAdminCms, getAdminConfig } from "./cms";
+import { getServerTSafe } from "@/i18n/server";
 
 export interface BackupSnapshot {
   id: string;
@@ -76,7 +77,7 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
     .replace(/[:.]/g, "");
   const siteName = (siteEntry?.name ?? "site").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
   const id = `${siteName}_${dateStr}-${timeStr}_${shortId}`;
-  const fileName = `${id}.zip`;
+  const fileName = `${id}.zip`; // i18n-ignore: file name
   const zipPath = path.join(dir, fileName);
 
   const snapshot: BackupSnapshot = {
@@ -217,7 +218,7 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
             timestamp: new Date().toISOString(),
             backup: { id: snapshot.id, fileName: snapshot.fileName },
             error: cloudErrMsg,
-            message: `Cloud backup failed: ${cloudErrMsg}`,
+            message: `Cloud backup failed: ${cloudErrMsg}`, // i18n-ignore: outgoing webhook payload (F210.4)
           };
           for (const wh of cfg.backupWebhooks) {
             fetch(wh.url, {
@@ -335,7 +336,8 @@ export async function deleteBackup(id: string): Promise<boolean> {
 
 export async function restoreBackup(id: string): Promise<{ restored: number; error?: string }> {
   const filePath = await getBackupFilePath(id);
-  if (!filePath) return { restored: 0, error: "Backup file not found" };
+  const t = await getServerTSafe();
+  if (!filePath) return { restored: 0, error: t("deployText.backupService.fileNotFound") };
 
   const sitePaths = await getActiveSitePaths();
   const { configPath, dataDir } = sitePaths;
@@ -402,7 +404,7 @@ async function restoreContentToGitHub(
   siteEntry: NonNullable<Awaited<ReturnType<typeof getActiveSiteEntry>>>,
 ): Promise<number> {
   const gh = siteEntry.github;
-  if (!gh) throw new Error("GitHub config missing on site entry");
+  if (!gh) throw new Error((await getServerTSafe())("deployText.backupService.githubConfigMissing"));
 
   const { resolveToken } = await import("./site-pool");
   const token = await resolveToken(gh.token);
@@ -445,7 +447,7 @@ async function restoreContentToGitHub(
       } catch { /* file doesn't exist yet */ }
 
       const body: Record<string, unknown> = {
-        message: `cms: restore ${collection}/${file.replace(".json", "")}`,
+        message: `cms: restore ${collection}/${file.replace(".json", "")}`, // i18n-ignore: git commit message
         content: Buffer.from(content, "utf-8").toString("base64"),
         branch,
       };

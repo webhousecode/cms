@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readMediaMeta, appendMediaMeta } from "@/lib/media/media-meta";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 /** GET /api/media/tags — Returns all unique user tags with counts */
 export async function GET() {
@@ -26,17 +27,18 @@ export async function GET() {
 /** PATCH /api/media/tags — Set tags for a specific file
  *  Body: { key: string, tags: string[] } */
 export async function PATCH(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   try {
     const { key, tags } = (await req.json()) as { key: string; tags: string[] };
     if (!key || !Array.isArray(tags)) {
-      return NextResponse.json({ error: "key and tags[] required" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.media.tagsParams") }, { status: 400 });
     }
     // Normalize: trim, lowercase, dedupe, remove empty
     const normalized = [...new Set(tags.map((t) => t.trim().toLowerCase()).filter(Boolean))].sort();
     await appendMediaMeta(key, { tags: normalized });
     return NextResponse.json({ key, tags: normalized });
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed" }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : t("errApi.common.failed") }, { status: 500 });
   }
 }

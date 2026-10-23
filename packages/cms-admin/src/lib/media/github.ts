@@ -91,7 +91,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
     await this.client.putFile(
       GitHubMediaAdapter.MEDIA_META_PATH,
       JSON.stringify(meta, null, 2),
-      "cms: update media metadata",
+      "cms: update media metadata", // i18n-ignore: git commit message
       sha,
     );
   }
@@ -106,7 +106,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
     assertSafeMediaPath(folder ?? "", filename);
     const repoDir = folder ? `public/uploads/${folder}` : "public/uploads";
     const repoPath = `${repoDir}/${filename}`;
-    await this.client.putFile(repoPath, content, `cms: upload ${filename}`);
+    await this.client.putFile(repoPath, content, `cms: upload ${filename}`); // i18n-ignore: git commit message
     const relPath = repoPath.replace(/^public\//, "");
     return { url: `/api/uploads/${relPath}` };
   }
@@ -121,11 +121,11 @@ export class GitHubMediaAdapter implements MediaAdapter {
       const altPath = folder ? `public/${folder}/${name}` : `public/${name}`;
       const altFile = await this.client.getFile(altPath);
       if (altFile) {
-        await this.client.deleteFile(altPath, altFile.sha, `cms: delete ${name}`);
+        await this.client.deleteFile(altPath, altFile.sha, `cms: delete ${name}`); // i18n-ignore: git commit message
       }
       return;
     }
-    await this.client.deleteFile(repoPath, file.sha, `cms: delete ${name}`);
+    await this.client.deleteFile(repoPath, file.sha, `cms: delete ${name}`); // i18n-ignore: git commit message
     // Remove from meta
     const { meta, sha: metaSha } = await this.loadMediaMeta();
     const key = this.mediaKey(folder, name);
@@ -180,7 +180,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
       return rel === oldKey;
     });
 
-    if (!match) throw new Error(`File not found: ${oldKey}`);
+    if (!match) throw new Error(`File not found: ${oldKey}`); // i18n-ignore: internal error; the route answers with a translated generic/code-based message
 
     // F206.7: never land on an existing name (file or meta entry) unless asked to replace it.
     const newKey = folder ? `${folder}/${newName}` : newName;
@@ -189,23 +189,23 @@ export class GitHubMediaAdapter implements MediaAdapter {
       || (await this.loadMediaMeta()).meta.some((m) => m.key === targetMetaKey);
     if (targetExists) {
       if (!opts?.replace) {
-        throw Object.assign(new Error(`${targetMetaKey} already exists`), { code: "EEXIST" });
+        throw Object.assign(new Error(`${targetMetaKey} already exists`), { code: "EEXIST" }); // i18n-ignore: internal error; the route answers with a translated generic/code-based message
       }
       await this.deleteFile(folder, newName);
     }
 
     // Read raw content
     const raw = await this.client.getFileRaw(match.path);
-    if (!raw) throw new Error(`Could not read file: ${match.path}`);
+    if (!raw) throw new Error(`Could not read file: ${match.path}`); // i18n-ignore: internal error; the route answers with a translated generic/code-based message
 
     // Compute new repo path
     const newRepoPath = match.path.replace(/\/[^/]+$/, `/${newName}`);
 
     // Upload with new name
-    await this.client.putFile(newRepoPath, raw.buffer, `cms: rename ${oldName} → ${newName}`);
+    await this.client.putFile(newRepoPath, raw.buffer, `cms: rename ${oldName} → ${newName}`); // i18n-ignore: git commit message
 
     // Delete old file
-    await this.client.deleteFile(match.path, raw.sha, `cms: rename ${oldName} → ${newName} (remove old)`);
+    await this.client.deleteFile(match.path, raw.sha, `cms: rename ${oldName} → ${newName} (remove old)`); // i18n-ignore: git commit message
 
     // Update media-meta if entry exists
     const { meta, sha: metaSha } = await this.loadMediaMeta();
@@ -303,7 +303,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
     await this.client.putFile(
       GH_META_PATH,
       JSON.stringify(meta, null, 2),
-      "cms: update interactives metadata",
+      "cms: update interactives metadata", // i18n-ignore: git commit message
       sha,
     );
   }
@@ -330,11 +330,11 @@ export class GitHubMediaAdapter implements MediaAdapter {
     let counter = 1;
     while (meta.some((m) => m.id === id)) { id = `${baseId}-${counter++}`; }
 
-    const finalFilename = `${id}.html`;
+    const finalFilename = `${id}.html`; // i18n-ignore: file name
     await this.client.putFile(
       `${GH_INTERACTIVES_DIR}/${finalFilename}`,
       content,
-      `cms: add interactive ${finalFilename}`,
+      `cms: add interactive ${finalFilename}`, // i18n-ignore: git commit message
     );
 
     const now = new Date().toISOString();
@@ -363,7 +363,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
       await this.client.putFile(
         repoPath,
         updates.content,
-        `cms: update interactive ${meta[idx].filename}`,
+        `cms: update interactive ${meta[idx].filename}`, // i18n-ignore: git commit message
         existing?.sha,
       );
       meta[idx].size = Buffer.from(updates.content, "utf-8").length;
@@ -385,7 +385,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
     const repoPath = `${GH_INTERACTIVES_DIR}/${meta[idx].filename}`;
     const file = await this.client.getFile(repoPath);
     if (file) {
-      await this.client.deleteFile(repoPath, file.sha, `cms: delete interactive ${meta[idx].filename}`);
+      await this.client.deleteFile(repoPath, file.sha, `cms: delete interactive ${meta[idx].filename}`); // i18n-ignore: git commit message
     }
 
     meta.splice(idx, 1);

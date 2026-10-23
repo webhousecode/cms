@@ -1,0 +1,190 @@
+{
+  "shared": {
+    "notFound": "Ikke fundet",
+    "internalError": "Intern fejl",
+    "noAccess": "Ingen adgang",
+    "noWriteAccess": "Ingen skriveadgang",
+    "noAccessToSite": "Ingen adgang til dette site",
+    "unknownCollection": "Ukendt samling",
+    "collectionNotFound": "Samlingen blev ikke fundet",
+    "documentNotFound": "Dokumentet blev ikke fundet",
+    "siteNotFound": "Sitet blev ikke fundet",
+    "siteNotFoundId": "site ikke fundet: {site}",
+    "aiKeyMissing": "Anthropic API-nøglen er ikke sat op — tilføj den under Indstillinger → AI",
+    "aiKeyMissingGt": "Anthropic API-nøglen er ikke sat op — tilføj den under Indstillinger > AI",
+    "aiKeyMissingShort": "Anthropic API-nøglen er ikke sat op",
+    "aiError": "AI-fejl",
+    "noActiveOrg": "Ingen aktiv organisation",
+    "failedToDelete": "Kunne ikke slette",
+    "failedToSave": "Kunne ikke gemme",
+    "unknownAction": "Ukendt handling",
+    "orgIdSiteIdRequired": "orgId og siteId er påkrævet",
+    "orgIdRequired": "orgId er påkrævet",
+    "configPathRequired": "configPath er påkrævet",
+    "activeConfigOnly": "Kun det aktive sites egen config kan indlæses",
+    "instanceAdminPaths": "Kun CMS-instansens administrator kan ændre et sites stier",
+    "noRegistry": "Intet register",
+    "orgNotFound": "Organisationen blev ikke fundet",
+    "promptIsRequired": "prompt er påkrævet",
+    "unknownError": "Ukendt fejl",
+    "invalidConfig": "Ugyldig config",
+    "githubExportUnsupported": "Skemaeksport fra GitHub-configs understøttes ikke endnu",
+    "schemaExportFailed": "Skemaeksport mislykkedes: {error}",
+    "memoryNotFound": "Hukommelsen blev ikke fundet",
+    "versionNotFound": "Versionen blev ikke fundet",
+    "idRequired": "id er påkrævet",
+    "collectionFieldsRequired": "collection og fields[] er påkrævet",
+    "collectionNamedNotFound": "Samlingen \"{collection}\" blev ikke fundet",
+    "invalidCollectionPath": "Ugyldig sti til samlingen",
+    "stepMissingAgent": "Trin {index} mangler agentId"
+  },
+  "revisions": {
+    "revisionNotFound": "Revisionen blev ikke fundet"
+  },
+  "document": {
+    "slugExists": "Slug findes allerede"
+  },
+  "translate": {
+    "targetLocaleRequired": "targetLocale er påkrævet",
+    "nothingToTranslate": "Intet indhold at oversætte",
+    "parseFailed": "Kunne ikke læse AI-oversættelsens svar",
+    "failed": "AI-oversættelsen mislykkedes"
+  },
+  "collection": {
+    "editorsOnly": "Kun for redaktører"
+  },
+  "agentTemplates": {
+    "bodyRequired": "Indhold mangler i forespørgslen",
+    "updateFailed": "Kunne ikke opdatere skabelonen",
+    "namePayloadRequired": "name og payload er påkrævet",
+    "saveFailed": "Kunne ikke gemme skabelonen"
+  },
+  "agents": {
+    "notFound": "Agenten blev ikke fundet",
+    "updateFailed": "Kunne ikke opdatere agenten",
+    "deleteFailed": "Kunne ikke slette agenten",
+    "runFailed": "Kunne ikke køre agenten",
+    "descriptionRequired": "description er påkrævet",
+    "roleRequired": "role er påkrævet",
+    "createFailed": "Kunne ikke oprette agenten",
+    "copyOf": "Kopi af {name}"
+  },
+  "agentFeedback": {
+    "typeRequired": "type er påkrævet (correction|rejection|edit)",
+    "invalidType": "ugyldig type",
+    "recordFailed": "Kunne ikke gemme feedbacken"
+  },
+  "ai": {
+    "messageRequired": "message er påkrævet",
+    "promptRequired": "prompt er påkrævet",
+    "generatedContent": "Genereret indhold",
+    "instructionRequired": "instruction er påkrævet",
+    "htmlRequired": "html er påkrævet",
+    "textRequired": "text er påkrævet",
+    "proofreadUnreadable": "Korrekturlæseren gav et svar der ikke kunne læses — prøv igen.",
+    "proofreadFailed": "Korrekturlæsningen mislykkedes",
+    "textInstructionRequired": "text og instruction er påkrævet"
+  },
+  "brandVoice": {
+    "somethingWrong": "Noget gik galt — prøv igen.",
+    "parseFailed": "Kunne ikke læse den oversatte JSON"
+  },
+  "build": {
+    "loadSiteFailed": "Kunne ikke indlæse sitet",
+    "noCommand": "Der er ingen build-kommando i cms.config.ts. Brug i stedet den indbyggede pipeline via Udgiv-knappen.",
+    "commandNotAllowed": "Kommandoen \"{command}\" er ikke tilladt af organisationens indstillinger.",
+    "pathValidationFailed": "Stivalideringen mislykkedes",
+    "executionFailed": "Bygningen mislykkedes"
+  },
+  "chat": {
+    "newConversation": "Ny samtale",
+    "readOnly": "Kun læseadgang",
+    "messagesRequired": "messages er påkrævet",
+    "initFailed": "Chatten kunne ikke starte: {error}",
+    "error": "Chatfejl",
+    "eventRequired": "event er påkrævet",
+    "unknownError": "ukendt"
+  },
+  "chatImport": {
+    "noFile": "Ingen fil valgt",
+    "emptyFile": "Tom fil",
+    "importFailed": "Import mislykkedes: {error}",
+    "invalidZip": "ugyldig ZIP"
+  },
+  "chatMemory": {
+    "conversationIdRequired": "conversationId er påkrævet",
+    "conversationNotFound": "Samtalen blev ikke fundet",
+    "noData": "Ingen data at importere",
+    "factRequired": "fact er påkrævet"
+  },
+  "translations": {
+    "failed": "Mislykkedes"
+  },
+  "curation": {
+    "approveFailed": "Kunne ikke godkende",
+    "feedbackRequired": "feedback er påkrævet",
+    "rejectFailed": "Kunne ikke afvise",
+    "alternativeIndexRequired": "alternativeIndex er påkrævet",
+    "invalidAction": "Ugyldig handling"
+  },
+  "folderPicker": {
+    "macOnly": "Mappevælgeren findes kun på macOS",
+    "prompt": "Vælg site-mappen med cms.config.ts",
+    "failed": "Mappevælgeren fejlede"
+  },
+  "exportSchema": {
+    "invalidFilename": "Ugyldigt filnavn",
+    "pathEscapes": "Output-stien peger uden for projektmappen"
+  },
+  "registryImport": {
+    "folderPathRequired": "folderPath er påkrævet",
+    "notDirectory": "Stien er ikke en mappe",
+    "dirNotFound": "Mappen blev ikke fundet: {path}",
+    "noConfig": "Ingen cms.config.ts fundet i {path}"
+  },
+  "registry": {
+    "adminOnly": "Kun for administratorer",
+    "moveSiteRequired": "siteId, fromOrgId og toOrgId er påkrævet",
+    "orgNamedNotFound": "Organisationen \"{orgId}\" blev ikke fundet",
+    "siteNamedNotFound": "Sitet \"{siteId}\" blev ikke fundet",
+    "unauthorized": "Ikke logget ind",
+    "noOrgAccess": "Ingen adgang til den organisation",
+    "instanceAdminPlan": "Kun CMS-instansens administrator kan ændre en organisations plan",
+    "exists": "Registret findes allerede",
+    "orgNameRequired": "orgName er påkrævet",
+    "orgIdSiteRequired": "orgId og site er påkrævet",
+    "siteIdExists": "Site-id \"{siteId}\" findes allerede"
+  },
+  "registryValidate": {
+    "cannotLoad": "Config-filen kan ikke indlæses: {error}",
+    "suggestion": "Tjek at filen findes og eksporterer en gyldig config med defineConfig().",
+    "failed": "Valideringen mislykkedes"
+  },
+  "revalidation": {
+    "noActiveSite": "Intet aktivt site"
+  },
+  "calendar": {
+    "accessDenied": "Adgang nægtet",
+    "publishTitle": "Udgiv: {title}",
+    "unpublishTitle": "Afpublicér: {title}",
+    "calName": "CMS-udgivelsesplan",
+    "omittedOne": "1 punkt kunne ikke vises",
+    "omittedMany": "{count} punkter kunne ikke vises"
+  },
+  "schemaDrift": {
+    "alreadyExist": "Alle de angivne felter findes allerede i skemaet",
+    "filesystemOnly": "Tilføj til skema findes kun for filsystem-sites",
+    "addFailed": "Kunne ikke tilføje til skemaet",
+    "nothingToRemove": "Alle de angivne felter findes i skemaet — intet at fjerne",
+    "contentDirNotFound": "Indholdsmappen blev ikke fundet: {collection}",
+    "fixFailed": "Rettelsen mislykkedes",
+    "checkFailed": "Tjekket for skemaafvigelser mislykkedes"
+  },
+  "workflows": {
+    "updateFailed": "Kunne ikke opdatere workflowet",
+    "runFailed": "Kunne ikke køre workflowet",
+    "listFailed": "Kunne ikke hente workflows",
+    "nameStepsRequired": "name og steps er påkrævet",
+    "createFailed": "Kunne ikke oprette workflowet"
+  }
+}

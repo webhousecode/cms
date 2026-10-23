@@ -14,11 +14,12 @@ import { z } from "zod";
 import { readAiConfig } from "@/lib/ai-config";
 import { getAI, parseJsonLoose } from "@/lib/ai/client";
 import type { TierSpec } from "@broberg/ai-sdk";
+import { getServerTSafe } from "@/i18n/server";
 
 export const imageAnalysisSchema = z.object({
-  caption: z.string().describe("A descriptive sentence about the image content"),
-  alt: z.string().max(125).describe("Accessible alt-text, max 125 characters"),
-  tags: z.array(z.string()).min(1).max(10).describe("Relevant keywords/tags"),
+  caption: z.string().describe("A descriptive sentence about the image content"), // i18n-ignore: model prompt / schema description sent to the vision model
+  alt: z.string().max(125).describe("Accessible alt-text, max 125 characters"), // i18n-ignore: model prompt / schema description sent to the vision model
+  tags: z.array(z.string()).min(1).max(10).describe("Relevant keywords/tags"), // i18n-ignore: model prompt / schema description sent to the vision model
 });
 
 export type ImageAnalysis = z.infer<typeof imageAnalysisSchema>;
@@ -32,7 +33,7 @@ export interface MultiLocaleImageAnalysis {
 }
 
 const JSON_OUTPUT_RULE =
-  '\n\nReturn ONLY a single JSON object — no prose, no markdown fences, no preamble.';
+  '\n\nReturn ONLY a single JSON object — no prose, no markdown fences, no preamble.'; // i18n-ignore: model prompt / schema description sent to the vision model
 
 /** Append a JSON-shape instruction so vision/chat replies parse deterministically. */
 function withJsonShape(prompt: string, shape: string): string {
@@ -41,13 +42,13 @@ function withJsonShape(prompt: string, shape: string): string {
 
 function getAnalysisPrompt(language: string = "da"): string {
   const langMap: Record<string, string> = {
-    da: "Svar på dansk.",
-    en: "Respond in English.",
-    de: "Antworte auf Deutsch.",
-    sv: "Svara på svenska.",
-    no: "Svar på norsk.",
+    da: "Svar på dansk.", // i18n-ignore: model prompt / schema description sent to the vision model
+    en: "Respond in English.", // i18n-ignore: model prompt / schema description sent to the vision model
+    de: "Antworte auf Deutsch.", // i18n-ignore: model prompt / schema description sent to the vision model
+    sv: "Svara på svenska.", // i18n-ignore: model prompt / schema description sent to the vision model
+    no: "Svar på norsk.", // i18n-ignore: model prompt / schema description sent to the vision model
   };
-  return `You are an image analyst for a CMS media library.
+  return /* i18n-ignore: model prompt / schema description sent to the vision model */ `You are an image analyst for a CMS media library.
 Analyze the image and return structured data.
 
 Rules:
@@ -81,7 +82,8 @@ async function getVisionSpec(): Promise<{ override: TierSpec; provider: string }
     };
   }
 
-  throw new Error("No vision API key configured. Add a Mistral or Gemini key in Cockpit → Settings.");
+  const t = await getServerTSafe();
+  throw new Error(t("libText.imageAnalysis.noVisionKey"));
 }
 
 export async function analyzeImage(
@@ -134,10 +136,10 @@ export async function analyzeImageMultiLocale(
   const { override, provider } = await getVisionSpec();
 
   const langMap: Record<string, string> = {
-    da: "Dansk", en: "English", de: "Deutsch", sv: "Svenska",
-    no: "Norsk", fr: "Français", es: "Español", nl: "Nederlands",
-    fi: "Suomi", it: "Italiano", pt: "Português", pl: "Polski",
-    ja: "日本語", zh: "中文", ko: "한국어",
+    da: "Dansk", en: "English", de: "Deutsch", sv: "Svenska", // i18n-ignore: language endonyms inserted into the model prompt
+    no: "Norsk", fr: "Français", es: "Español", nl: "Nederlands", // i18n-ignore: language endonyms inserted into the model prompt
+    fi: "Suomi", it: "Italiano", pt: "Português", pl: "Polski", // i18n-ignore: language endonyms inserted into the model prompt
+    ja: "日本語", zh: "中文", ko: "한국어", // i18n-ignore: language endonyms inserted into the model prompt
   };
 
   const localeList = locales.map((l) => `${l} (${langMap[l] ?? l})`).join(", ");
@@ -146,17 +148,17 @@ export async function analyzeImageMultiLocale(
   const captionsShape: Record<string, z.ZodString> = {};
   const altsShape: Record<string, z.ZodString> = {};
   for (const l of locales) {
-    captionsShape[l] = z.string().describe(`Caption in ${langMap[l] ?? l}`);
-    altsShape[l] = z.string().describe(`Alt-text in ${langMap[l] ?? l}, max 125 chars`);
+    captionsShape[l] = z.string().describe(`Caption in ${langMap[l] ?? l}`); // i18n-ignore: model prompt / schema description sent to the vision model
+    altsShape[l] = z.string().describe(`Alt-text in ${langMap[l] ?? l}, max 125 chars`); // i18n-ignore: model prompt / schema description sent to the vision model
   }
 
   const multiSchema = z.object({
-    captions: z.object(captionsShape).describe("Image caption per locale"),
-    alts: z.object(altsShape).describe("Accessible alt-text per locale (max 125 chars each)"),
-    tags: z.array(z.string()).min(1).max(10).describe("Universal keywords/tags (language-neutral or English)"),
+    captions: z.object(captionsShape).describe("Image caption per locale"), // i18n-ignore: model prompt / schema description sent to the vision model
+    alts: z.object(altsShape).describe("Accessible alt-text per locale (max 125 chars each)"), // i18n-ignore: model prompt / schema description sent to the vision model
+    tags: z.array(z.string()).min(1).max(10).describe("Universal keywords/tags (language-neutral or English)"), // i18n-ignore: model prompt / schema description sent to the vision model
   });
 
-  const prompt = `You are an image analyst for a CMS media library.
+  const prompt = /* i18n-ignore: model prompt / schema description sent to the vision model */ `You are an image analyst for a CMS media library.
 Analyze the image and return structured data in multiple languages: ${localeList}.
 
 Rules:
@@ -199,7 +201,7 @@ export async function analyzeSvgText(
 ): Promise<ImageAnalysis & { provider: string }> {
   const ai = await getAI();
   const { override, provider } = await getVisionSpec();
-  const src = svgText.length > 50000 ? svgText.slice(0, 50000) + "\n<!-- truncated -->" : svgText;
+  const src = svgText.length > 50000 ? svgText.slice(0, 50000) + "\n<!-- truncated -->" : svgText; // i18n-ignore: model prompt / schema description sent to the vision model
 
   const { text } = await ai.chat({
     tier: "smart",
@@ -208,14 +210,14 @@ export async function analyzeSvgText(
     messages: [{
       role: "user",
       content: withJsonShape(
-        `You are an image analyst for a CMS media library. This is an SVG file — its XML source is below. Analyze the structure (shapes, paths, text elements, viewBox, IDs, classes) to infer what the SVG depicts.
+        /* i18n-ignore: model prompt / schema description sent to the vision model */ `You are an image analyst for a CMS media library. This is an SVG file — its XML source is below. Analyze the structure (shapes, paths, text elements, viewBox, IDs, classes) to infer what the SVG depicts.
 
 Rules:
 - caption: One natural sentence describing what the SVG depicts. Be specific.
 - alt: Short accessible description for screen readers. Max 125 characters.
 - tags: 3-8 keywords. Include: subject, style (icon/illustration/diagram/logo/chart), dominant colors, mood.
 - Do not use generic tags like "image" or "svg".
-${language === "da" ? "Svar på dansk." : language === "de" ? "Antworte auf Deutsch." : language === "sv" ? "Svara på svenska." : language === "no" ? "Svar på norsk." : "Respond in English."}
+${/* i18n-ignore: model prompt language instruction */ language === "da" ? "Svar på dansk." : language === "de" ? "Antworte auf Deutsch." : language === "sv" ? "Svara på svenska." : language === "no" ? "Svar på norsk." : "Respond in English."}
 
 SVG source:
 \`\`\`xml
@@ -250,21 +252,21 @@ export async function analyzeSvgTextMultiLocale(
 
   const ai = await getAI();
   const { override, provider } = await getVisionSpec();
-  const src = svgText.length > 50000 ? svgText.slice(0, 50000) + "\n<!-- truncated -->" : svgText;
+  const src = svgText.length > 50000 ? svgText.slice(0, 50000) + "\n<!-- truncated -->" : svgText; // i18n-ignore: model prompt / schema description sent to the vision model
 
   const langMap: Record<string, string> = {
-    da: "Dansk", en: "English", de: "Deutsch", sv: "Svenska",
-    no: "Norsk", fr: "Français", es: "Español", nl: "Nederlands",
-    fi: "Suomi", it: "Italiano", pt: "Português", pl: "Polski",
-    ja: "日本語", zh: "中文", ko: "한국어",
+    da: "Dansk", en: "English", de: "Deutsch", sv: "Svenska", // i18n-ignore: language endonyms inserted into the model prompt
+    no: "Norsk", fr: "Français", es: "Español", nl: "Nederlands", // i18n-ignore: language endonyms inserted into the model prompt
+    fi: "Suomi", it: "Italiano", pt: "Português", pl: "Polski", // i18n-ignore: language endonyms inserted into the model prompt
+    ja: "日本語", zh: "中文", ko: "한국어", // i18n-ignore: language endonyms inserted into the model prompt
   };
   const localeList = locales.map((l) => `${l} (${langMap[l] ?? l})`).join(", ");
 
   const captionsShape: Record<string, z.ZodString> = {};
   const altsShape: Record<string, z.ZodString> = {};
   for (const l of locales) {
-    captionsShape[l] = z.string().describe(`Caption in ${langMap[l] ?? l}`);
-    altsShape[l] = z.string().describe(`Alt-text in ${langMap[l] ?? l}, max 125 chars`);
+    captionsShape[l] = z.string().describe(`Caption in ${langMap[l] ?? l}`); // i18n-ignore: model prompt / schema description sent to the vision model
+    altsShape[l] = z.string().describe(`Alt-text in ${langMap[l] ?? l}, max 125 chars`); // i18n-ignore: model prompt / schema description sent to the vision model
   }
   const multiSchema = z.object({
     captions: z.object(captionsShape),

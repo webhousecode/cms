@@ -13,6 +13,11 @@
  * ceiling was reached. Both are turned into something a human reads.
  */
 import type { ChatFrame } from "@broberg/chat";
+import { getT } from "@/i18n/locale";
+
+/** The translator for the reader's admin language. The route passes the
+ *  request's; without one (tests, background callers) it is English. */
+type T = ReturnType<typeof getT>;
 
 export interface SseEvent {
   event: string;
@@ -23,7 +28,7 @@ export interface SseEvent {
 const INLINE_FORM = "__INLINE_FORM__";
 const ARTIFACT = "__ARTIFACT__";
 
-export function frameToEvents(frame: ChatFrame): SseEvent[] {
+export function frameToEvents(frame: ChatFrame, t: T = getT("en")): SseEvent[] {
   switch (frame.type) {
     case "text":
       // An empty delta is not an event. Sending it makes the client render a
@@ -78,7 +83,7 @@ export function frameToEvents(frame: ChatFrame): SseEvent[] {
       //
       // Covers BOTH a handler returning nothing AND one genuinely returning an
       // empty string: to the model those are the same, and both invite this.
-      let result = raw ? raw : "(intet svar)";
+      let result = raw ? raw : "(intet svar)"; // i18n-ignore: tool-result placeholder for the model, wording measured against fabrication (see above)
       if (result.startsWith(INLINE_FORM)) {
         out.push({ event: "form", data: safeJson(result.slice(INLINE_FORM.length)) });
         result = "Showing edit form for the user.";
@@ -95,20 +100,20 @@ export function frameToEvents(frame: ChatFrame): SseEvent[] {
       // their conversation is 80% full mid-answer is noise. "reduced" and
       // "failed" changed what the model saw, so the user is told.
       //
-      // IN DANISH, AND NOT THE PACKAGE'S NOTE. `frame.note` is English —
+      // IN THE READER'S LANGUAGE (F211.2), AND NOT THE PACKAGE'S NOTE. `frame.note` is English —
       // measured live in the production container, the user would have been
       // shown "This turn is too large on its own and cannot be shortened by
       // removing older ones." in the middle of a Danish conversation. The note
       // is written for a developer reading a log, not for the person whose
       // conversation just got shorter. It still goes to the log; the sentence
       // the user reads is ours.
-      return frame.action === "warned" ? [] : [{ event: "text", data: { text: historyNote(frame) } }];
+      return frame.action === "warned" ? [] : [{ event: "text", data: { text: historyNote(frame, t) } }];
 
     case "limit":
       // Reaching a ceiling is an ANSWER. Sent as text so the user reads a
       // sentence rather than watching the stream stop for no stated reason.
-      // Danish for the same reason as above.
-      return [{ event: "text", data: { text: "\n\nJeg måtte stoppe her: samtalen har nået sin grænse for denne omgang. Start en ny samtale, så kan vi fortsætte." } }];
+      // In the reader's language for the same reason as above.
+      return [{ event: "text", data: { text: `\n\n${t("chat.frames.limitReached")}` } }];
 
     case "error":
       return [{ event: "error", data: { message: frame.message, scope: frame.scope } }];
@@ -129,7 +134,7 @@ function safeJson(raw: string): unknown {
   try {
     return JSON.parse(raw);
   } catch {
-    return { error: "malformed payload" };
+    return { error: "malformed payload" }; // i18n-ignore: internal marker in a broken form/artifact payload, not rendered as text
   }
 }
 
@@ -154,26 +159,27 @@ function historyNote(frame: {
   dropped?: number;
   reason?: string;
   strategy?: string;
-}): string {
+}, t: T): string {
+  const note = (text: string) => `\n\n_${text}_\n\n`;
   if (frame.action === "reduced") {
     const n = frame.dropped;
     // `strategy` distinguishes "I summarised it" from "I dropped it" — and they
     // are not the same promise to make. Measured live: with `window` the model
     // forgot the whole conversation and said so politely, with zero errors.
     return frame.strategy === "window"
-      ? `\n\n_Samtalen er blevet lang, så de ældste beskeder${n ? ` (${n})` : ""} er ikke længere med. Det nyeste er uændret._\n\n`
-      : `\n\n_Samtalen er blevet lang, så jeg har sammenfattet det ældste${n ? ` (${n} beskeder)` : ""}. Det nyeste er uændret._\n\n`;
+      ? note(n ? t("chat.frames.windowDropped", { count: n }) : t("chat.frames.window"))
+      : note(n ? t("chat.frames.compactDropped", { count: n }) : t("chat.frames.compact"));
   }
   switch (frame.reason) {
     case "cannot_reduce":
-      return `\n\n_Din seneste besked er for lang til at jeg kan behandle den. Prøv at dele den op i mindre dele._\n\n`;
+      return note(t("chat.frames.cannotReduce"));
     case "compaction_failed":
-      return `\n\n_Jeg kunne ikke sammenfatte den tidligere del af samtalen. Prøv igen, eller start en ny samtale hvis det bliver ved._\n\n`;
+      return note(t("chat.frames.compactionFailed"));
     case "overhead_exceeds_limit":
       // Not the user's doing at all — nothing she writes can fix it, so she is
       // not asked to try. This is ours to notice in the log.
-      return `\n\n_Der er ikke plads til denne samtale i den nuværende opsætning. Det er ikke noget du kan gøre ved — vi kigger på det._\n\n`;
+      return note(t("chat.frames.overheadExceeds"));
     default:
-      return `\n\n_Samtalen kunne ikke forkortes. Prøv at starte en ny samtale._\n\n`;
+      return note(t("chat.frames.notShortened"));
   }
 }

@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
 import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
 import { subscribe, type DeployEvent } from "@/lib/deploy/deploy-events";
+import { getServerTSafe } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -30,16 +31,17 @@ async function resolveOrgForSite(siteId: string): Promise<{ orgId: string; siteI
 }
 
 export async function GET(req: NextRequest): Promise<Response> {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
-  if (!role) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!role) return NextResponse.json({ error: t("errAdmin.common.unauthorizedLower") }, { status: 401 });
 
   const siteId = req.nextUrl.searchParams.get("site");
   if (!siteId) {
-    return NextResponse.json({ error: "site query param required" }, { status: 400 });
+    return NextResponse.json({ error: t("errAdmin.deploy.siteParamRequired") }, { status: 400 });
   }
   const ctx = await resolveOrgForSite(siteId);
   if (!ctx) {
-    return NextResponse.json({ error: `site not found: ${siteId}` }, { status: 404 });
+    return NextResponse.json({ error: t("errAdmin.deploy.siteNotFoundLower", { site: siteId }) }, { status: 404 });
   }
 
   const encoder = new TextEncoder();
@@ -47,7 +49,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       function send(event: DeployEvent): void {
-        const data = `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`;
+        const data = `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`; // i18n-ignore: SSE wire format
         try { controller.enqueue(encoder.encode(data)); }
         catch { /* connection closed — unsubscribe handles cleanup */ }
       }

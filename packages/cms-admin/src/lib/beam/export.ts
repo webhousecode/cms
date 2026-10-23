@@ -31,7 +31,7 @@ export async function createBeamArchive(): Promise<BeamExportResult> {
 
   const siteName = (siteEntry?.name ?? "site").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
   const beamId = randomUUID();
-  const fileName = `${siteName}.beam`;
+  const fileName = `${siteName}.beam`; // i18n-ignore: file name
 
   // Output to temp dir inside _data (not inside backups/)
   const beamDir = path.join(dataDir, "beam-tmp");
@@ -84,7 +84,7 @@ export async function createBeamArchive(): Promise<BeamExportResult> {
         const d = doc as { slug?: string; id?: string };
         const slug = d.slug ?? d.id ?? "unknown";
         const jsonStr = JSON.stringify(doc, null, 2);
-        const archivePath = `content/${colName}/${slug}.json`;
+        const archivePath = `content/${colName}/${slug}.json`; // i18n-ignore: archive path
         checksums[archivePath] = sha256(jsonStr);
         archive.append(jsonStr, { name: archivePath });
       }
@@ -107,7 +107,7 @@ export async function createBeamArchive(): Promise<BeamExportResult> {
     // ── Media (uploads/) ──
     if (existsSync(uploadDir)) {
       walkDir(uploadDir, (absPath, relPath) => {
-        const archivePath = `uploads/${relPath}`;
+        const archivePath = `uploads/${relPath}`; // i18n-ignore: archive path
         checksums[archivePath] = sha256(readFileSync(absPath));
         archive.file(absPath, { name: archivePath });
         stats.mediaFiles++;
@@ -201,7 +201,7 @@ export async function createBeamArchive(): Promise<BeamExportResult> {
             // public/uploads/ is handled by the dedicated uploads/ section
             // above — skip it here to avoid duplication + checksum drift.
             if (relPath.startsWith("uploads/") || relPath === "uploads") return;
-            const archivePath = `source/public/${relPath}`;
+            const archivePath = `source/public/${relPath}`; // i18n-ignore: archive path
             const buf = readFileSync(absPath);
             checksums[archivePath] = sha256(buf);
             archive.file(absPath, { name: archivePath });
@@ -209,7 +209,7 @@ export async function createBeamArchive(): Promise<BeamExportResult> {
           });
         } else if (SOURCE_ROOT_FILES.has(entry)) {
           // Top-level whitelisted files: build.ts, package.json, lockfiles, tsconfig
-          const archivePath = `source/${entry}`;
+          const archivePath = `source/${entry}`; // i18n-ignore: archive path
           const buf = readFileSync(abs);
           checksums[archivePath] = sha256(buf);
           archive.file(abs, { name: archivePath });

@@ -11,6 +11,34 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
+/**
+ * F211.2 — translator for a refusal the proxy answers itself. Same chain as
+ * i18n/server.ts (the user's choice → the brand's default → the browser →
+ * English), resolved from the request directly: next/headers is not used in
+ * the proxy. Called on refusal paths (and per /api/mobile/* request, whose
+ * Bearer callers carry no session cookie, so no user lookup happens there).
+ */
+async function proxyT(request: NextRequest) {
+  const { getT, resolveUiLocale } = await import("./i18n/locale");
+  const { brandForRequest } = await import("./lib/brand");
+  let user: string | null = null;
+  const session = request.cookies.get(COOKIE_NAME)?.value;
+  if (session) {
+    try {
+      const { payload } = await jwtVerify(session, getJwtSecret());
+      if (typeof payload.sub === "string") {
+        const { getUserById } = await import("./lib/auth");
+        user = (await getUserById(payload.sub))?.uiLocale ?? null;
+      }
+    } catch { /* unreadable session → the brand and browser decide */ }
+  }
+  return getT(resolveUiLocale({
+    user,
+    brand: brandForRequest(request.headers).defaultLocale,
+    acceptLanguage: request.headers.get("accept-language"),
+  }));
+}
+
 const PUBLIC_PATHS = [
   "/admin/login",
   "/admin/signup",
@@ -313,7 +341,7 @@ export async function proxy(request: NextRequest) {
       // refusal without knowing it exists.
       if (!fundet) {
         return NextResponse.json(
-          { error: `site not found: ${overrideSite}` },
+          { error: (await proxyT(request))("system.proxy.siteNotFound", { site: overrideSite }) },
           { status: 404 },
         );
       }
@@ -351,8 +379,8 @@ export async function proxy(request: NextRequest) {
       const extras = [`${COOKIE_NAME}=${jwt}`];
       const activeOrg = request.headers.get("x-cms-active-org");
       const activeSite = request.headers.get("x-cms-active-site");
-      if (activeOrg) extras.push(`cms-active-org=${activeOrg}`);
-      if (activeSite) extras.push(`cms-active-site=${activeSite}`);
+      if (activeOrg) extras.push(`cms-active-org=${activeOrg}`); // i18n-ignore: cookie header value
+      if (activeSite) extras.push(`cms-active-site=${activeSite}`); // i18n-ignore: cookie header value
       requestHeaders.set("cookie", `${existingCookies}; ${extras.join("; ")}`);
       return forwardOk();
     }
@@ -372,6 +400,7 @@ export async function proxy(request: NextRequest) {
       orgId: request.nextUrl.searchParams.get("orgId"),
       siteId: request.nextUrl.searchParams.get("siteId"),
       bearer: auth && /^Bearer\s+/i.test(auth) ? auth.replace(/^Bearer\s+/i, "").trim() : null,
+      t: await proxyT(request),
     });
     if (decision) return NextResponse.json({ error: decision.error }, { status: decision.status });
   }
@@ -438,7 +467,7 @@ export async function proxy(request: NextRequest) {
             const enforce = hard || process.env.TOKEN_SCOPE_ENFORCE === "all";
             console.warn(`[token-scope] ${enforce ? "DENY" : "would-deny"} token=${tokenEntry.id} (${tokenEntry.name}) ${request.method} ${pathname} site=${request.nextUrl.searchParams.get("site") ?? "-"} kind=${decision.kind}: ${decision.reason}`);
             if (enforce) {
-              return NextResponse.json({ error: `Access token not allowed: ${decision.reason}` }, { status: 403 });
+              return NextResponse.json({ error: (await proxyT(request))("system.proxy.tokenNotAllowed", { reason: decision.reason }) }, { status: 403 });
             }
           }
           // Security W41 C7 — the token acts only where its OWNER could act.
@@ -454,13 +483,13 @@ export async function proxy(request: NextRequest) {
               const team = orgId && siteId ? await getTeamMembersForSite(orgId, siteId) : null;
               if (!tokenOwnerMayAct(tokenEntry.userId, await getUsers(), team)) {
                 console.warn(`[token-scope] DENY token=${tokenEntry.id} (${tokenEntry.name}) ${request.method} ${pathname} site=${siteId ?? "-"} kind=owner-not-member`);
-                return NextResponse.json({ error: "Access token not allowed: its owner has no access to that site" }, { status: 403 });
+                return NextResponse.json({ error: (await proxyT(request))("system.proxy.tokenOwnerNoAccess") }, { status: 403 });
               }
             }
           }
           const jwt = await new SignJWT({
             sub: tokenEntry.userId,
-            email: `token:${tokenEntry.name}`,
+            email: `token:${tokenEntry.name}`, // i18n-ignore: token principal identifier
             name: tokenEntry.name,
             role: "admin",
             scopes: tokenEntry.scopes,
@@ -492,7 +521,7 @@ export async function proxy(request: NextRequest) {
         const requestSite = request.nextUrl.searchParams.get("site") ?? "";
         if (!isAllowedForEditSession(pathname, request.method, requestSite, tokenSite)) {
           return NextResponse.json(
-            { error: "Inline-edit session is scoped to GET/PATCH on its own site" },
+            { error: (await proxyT(request))("system.proxy.editSessionScope") },
             { status: 403 },
           );
         }
@@ -530,7 +559,7 @@ export async function proxy(request: NextRequest) {
 
   if (!token) {
     if (isApi) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: (await proxyT(request))("system.auth.unauthorized") }, { status: 401 });
     }
     // RSC prefetch requests (from sidebar links etc.) should not redirect
     // to login — that causes a redirect loop on the login page itself.
@@ -566,12 +595,12 @@ export async function proxy(request: NextRequest) {
       const tokenSite = typeof payload.site === "string" ? payload.site : "";
       const requestSite = request.nextUrl.searchParams.get("site") ?? "";
       if (!isApi || !isAllowedForEditSession(pathname, request.method, requestSite, tokenSite)) {
-        return NextResponse.json({ error: "Inline-edit session is scoped to GET/PATCH on its own site" }, { status: 403 });
+        return NextResponse.json({ error: (await proxyT(request))("system.proxy.editSessionScope") }, { status: 403 });
       }
     }
     const lensReadOnly = payload.lens === true && payload.lensWrite !== true;
     if (lensReadOnly && ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
-      return NextResponse.json({ error: "Lens session is read-only" }, { status: 403 });
+      return NextResponse.json({ error: (await proxyT(request))("system.proxy.lensReadOnly") }, { status: 403 });
     }
     return forwardOk();
   } catch (err) {
@@ -581,7 +610,7 @@ export async function proxy(request: NextRequest) {
       return new NextResponse(null, { status: 204 });
     }
     const response = isApi
-      ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      ? NextResponse.json({ error: (await proxyT(request))("system.auth.unauthorized") }, { status: 401 })
       : bidOn
         ? toBid(pathname + request.nextUrl.search)
         : NextResponse.redirect(new URL("/admin/login", request.url));

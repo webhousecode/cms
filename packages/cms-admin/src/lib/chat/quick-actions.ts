@@ -17,7 +17,7 @@ export interface QuickAction {
   contentDependent: boolean;
 }
 
-const LANG_HINT = " Answer in the site's primary content language.";
+const LANG_HINT = " Answer in the site's primary content language."; // i18n-ignore: model prompt
 
 export const QUICK_ACTIONS: QuickAction[] = [
   { key: "overview", contentDependent: true, prompt: "Give me an overview of my site — how many collections, documents and drafts do I have?" + LANG_HINT },

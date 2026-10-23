@@ -5,6 +5,7 @@ import { readSiteConfigForSite } from "@/lib/site-config";
 import { saveRevision } from "@/lib/revisions";
 import { signMobileUploadUrl } from "@/app/api/mobile/uploads/route";
 import os from "os";
+import { getServerTSafe } from "@/i18n/server";
 
 function getLanBaseUrl(reqUrl: URL): string {
   let base = `${reqUrl.protocol}//${reqUrl.host}`;
@@ -97,9 +98,10 @@ async function resolveContext(req: NextRequest) {
 
 /** GET — list or single document */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const ctx = await resolveContext(req);
   if (!ctx) {
-    return NextResponse.json({ error: "Invalid request or not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.invalidRequestOrNotAuthenticated") }, { status: 401 });
   }
 
   const slug = req.nextUrl.searchParams.get("slug");
@@ -110,7 +112,7 @@ export async function GET(req: NextRequest) {
     if (slug) {
       // Single document — sign upload URLs in data
       const doc = await ctx.cms.content.findBySlug(ctx.collection, slug);
-      if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      if (!doc) return NextResponse.json({ error: t("errApi.common.notFound") }, { status: 404 });
       return NextResponse.json({
         ...doc,
         data: signDocumentUrls(doc.data, baseUrl, ctx.orgId, ctx.siteId),
@@ -133,15 +135,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ documents: filtered });
   } catch (err) {
     console.error("[mobile/content/docs] GET error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }
 
 /** POST — create document */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const ctx = await resolveContext(req);
   if (!ctx) {
-    return NextResponse.json({ error: "Invalid request or not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.invalidRequestOrNotAuthenticated") }, { status: 401 });
   }
 
   try {
@@ -152,13 +155,13 @@ export async function POST(req: NextRequest) {
     };
 
     if (!body.slug?.trim()) {
-      return NextResponse.json({ error: "slug is required" }, { status: 400 });
+      return NextResponse.json({ error: t("errApi.mobile.slugRequired") }, { status: 400 });
     }
 
     // Check slug availability
     const existing = await ctx.cms.content.findBySlug(ctx.collection, body.slug);
     if (existing) {
-      return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+      return NextResponse.json({ error: t("errApi.mobile.slugExists") }, { status: 409 });
     }
 
     const doc = await ctx.cms.content.create(ctx.collection, {
@@ -180,20 +183,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(doc, { status: 201 });
   } catch (err) {
     console.error("[mobile/content/docs] POST error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }
 
 /** PATCH — update document */
 export async function PATCH(req: NextRequest) {
+  const t = await getServerTSafe();
   const ctx = await resolveContext(req);
   if (!ctx) {
-    return NextResponse.json({ error: "Invalid request or not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.invalidRequestOrNotAuthenticated") }, { status: 401 });
   }
 
   const slug = req.nextUrl.searchParams.get("slug");
   if (!slug) {
-    return NextResponse.json({ error: "slug query param required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.slugParamRequired") }, { status: 400 });
   }
 
   try {
@@ -203,7 +207,7 @@ export async function PATCH(req: NextRequest) {
     };
 
     const doc = await ctx.cms.content.findBySlug(ctx.collection, slug);
-    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!doc) return NextResponse.json({ error: t("errApi.common.notFound") }, { status: 404 });
 
     // Save revision before overwriting
     await saveRevision(ctx.collection, doc).catch(() => {});
@@ -240,25 +244,26 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json(updated);
   } catch (err) {
     console.error("[mobile/content/docs] PATCH error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }
 
 /** DELETE — trash document */
 export async function DELETE(req: NextRequest) {
+  const t = await getServerTSafe();
   const ctx = await resolveContext(req);
   if (!ctx) {
-    return NextResponse.json({ error: "Invalid request or not authenticated" }, { status: 401 });
+    return NextResponse.json({ error: t("errApi.common.invalidRequestOrNotAuthenticated") }, { status: 401 });
   }
 
   const slug = req.nextUrl.searchParams.get("slug");
   if (!slug) {
-    return NextResponse.json({ error: "slug query param required" }, { status: 400 });
+    return NextResponse.json({ error: t("errApi.common.slugParamRequired") }, { status: 400 });
   }
 
   try {
     const doc = await ctx.cms.content.findBySlug(ctx.collection, slug);
-    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!doc) return NextResponse.json({ error: t("errApi.common.notFound") }, { status: 404 });
 
     // Soft delete (trash)
     await ctx.cms.content.update(ctx.collection, doc.id, {
@@ -269,6 +274,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[mobile/content/docs] DELETE error:", err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

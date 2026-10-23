@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminCms } from "@/lib/cms";
 import { listRevisions, saveRevision } from "@/lib/revisions";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 type Ctx = { params: Promise<{ collection: string; slug: string; index: string }> };
 
@@ -10,17 +11,18 @@ type Ctx = { params: Promise<{ collection: string; slug: string; index: string }
  * Restores the document to the revision at position {index}.
  */
 export async function POST(_req: Request, { params }: Ctx) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   try {
     const { collection, slug, index } = await params;
     const idx = parseInt(index, 10);
     const revisions = await listRevisions(collection, slug);
     const revision = revisions[idx];
-    if (!revision) return NextResponse.json({ error: "Revision not found" }, { status: 404 });
+    if (!revision) return NextResponse.json({ error: t("errCms.revisions.revisionNotFound") }, { status: 404 });
 
     const cms = await getAdminCms();
     const doc = await cms.content.findBySlug(collection, slug);
-    if (!doc) return NextResponse.json({ error: "Document not found" }, { status: 404 });
+    if (!doc) return NextResponse.json({ error: t("errCms.shared.documentNotFound") }, { status: 404 });
 
     // Save current state as a revision before restoring
     await saveRevision(collection, doc).catch(() => { /* non-fatal */ });
@@ -34,6 +36,6 @@ export async function POST(_req: Request, { params }: Ctx) {
     return NextResponse.json(updated);
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errCms.shared.internalError") }, { status: 500 });
   }
 }

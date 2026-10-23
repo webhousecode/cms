@@ -8,6 +8,7 @@
  */
 import type { AgentConfig } from "./agents";
 import { getAgentSpendInPeriod } from "./analytics";
+import { getT } from "@/i18n/locale";
 
 export interface BudgetCheckResult {
   exceeded: boolean;
@@ -48,8 +49,9 @@ export async function checkAgentBudget(agent: AgentConfig): Promise<BudgetCheckR
 export function budgetExceededMessage(
   agent: AgentConfig,
   result: BudgetCheckResult,
+  t: (key: string, vars?: Record<string, string | number>) => string = getT("en"),
 ): string {
   if (!result.exceeded || !result.period) return "";
-  const periodLabel = result.period === "day" ? "daily" : result.period === "week" ? "weekly" : "monthly";
-  return `Agent "${agent.name}" has reached its ${periodLabel} budget ($${(result.spent ?? 0).toFixed(4)} of $${(result.cap ?? 0).toFixed(2)} cap). Increase the cap on the agent's settings page or wait for the period to reset.`;
+  const key = result.period === "day" ? "budgetDay" : result.period === "week" ? "budgetWeek" : "budgetMonth";
+  return t(`system.agents.${key}`, { name: agent.name, spent: (result.spent ?? 0).toFixed(4), cap: (result.cap ?? 0).toFixed(2) });
 }

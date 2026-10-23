@@ -3,14 +3,16 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { calculateSeoScore, calculateGeoScore, type SeoFields } from "@/lib/seo/score";
 import { readKeywordStore, analyzeKeywords } from "@/lib/seo/keywords";
 import { getMediaAdapter } from "@/lib/media";
+import { getServerTSafe } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const t = await getServerTSafe();
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
     if (!cms || !config) {
-      return NextResponse.json({ error: "No site" }, { status: 404 });
+      return NextResponse.json({ error: t("errAdmin.dashboardStats.noSite") }, { status: 404 });
     }
 
     // Load all docs in parallel
@@ -133,7 +135,7 @@ export async function GET() {
     });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to load stats" },
+      { error: err instanceof Error ? err.message : t("errAdmin.dashboardStats.loadFailed") },
       { status: 500 },
     );
   }

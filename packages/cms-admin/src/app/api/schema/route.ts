@@ -2,13 +2,15 @@ import { getAdminConfig } from "@/lib/cms";
 import { NextResponse } from "next/server";
 import { readSiteConfig } from "@/lib/site-config";
 import { getSiteRole } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function GET() {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (role !== "admin") {
     const { schemaEditEnabled } = await readSiteConfig();
     if (!schemaEditEnabled) {
-      return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+      return NextResponse.json({ error: t("errApi.common.schemaEditingDisabled") }, { status: 403 });
     }
   }
   const config = await getAdminConfig();

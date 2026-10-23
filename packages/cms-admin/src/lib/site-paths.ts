@@ -29,6 +29,11 @@ function getCmsAdminCacheDir(): string {
   return path.join(process.env.HOME ?? "/tmp", ".webhouse", ".cache");
 }
 
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
+}
+
 export interface SitePaths {
   configPath: string;    // absolute path to cms.config.ts
   projectDir: string;    // dirname of configPath
@@ -79,7 +84,7 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
   if (!registry) {
     // Single-site mode
     const configPath = process.env.CMS_CONFIG_PATH;
-    if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
+    if (!configPath) throw new Error("CMS_CONFIG_PATH not set"); // i18n-ignore: operator boot error (env var)
     const abs = path.resolve(configPath);
     const projectDir = path.dirname(abs);
     return {
@@ -99,7 +104,7 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
   // Guard: if active org has no sites, don't fall through to another org's site
   const activeOrg = findOrg(registry, orgId);
   if (activeOrg && activeOrg.sites.length === 0) {
-    throw new EmptyOrgError("No sites in active organization");
+    throw new EmptyOrgError((await serverT())("system.lib.noSitesInOrg"));
   }
 
   const site = findSite(registry, orgId, siteId);
@@ -109,7 +114,7 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
     if (firstInOrg) return siteToPaths(firstInOrg);
     // Only fall back to default if no active org found (shouldn't happen)
     const def = getDefaultSite(registry);
-    if (!def) throw new EmptyOrgError("No sites in registry");
+    if (!def) throw new EmptyOrgError((await serverT())("system.lib.noSitesInRegistry"));
     return siteToPaths(def.site);
   }
 

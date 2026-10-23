@@ -9,6 +9,7 @@ import type { SeoFields } from "@/lib/seo/score";
 import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
 import { getDocLocale } from "@/lib/locale";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/admin/seo/optimize-bulk
@@ -18,11 +19,12 @@ import { getDocLocale } from "@/lib/locale";
  * Returns NDJSON stream with progress events.
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("seo"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
-    return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
+    return NextResponse.json({ error: t("errAdmin.common.anthropicKeyMissing") }, { status: 503 });
   }
 
   const [cms, config, seoModel, siteConfig, ai] = await Promise.all([getAdminCms(), getAdminConfig(), getModel("content"), readSiteConfig(), getAI()]);
@@ -142,7 +144,7 @@ Return JSON:
             type: "error",
             collection: doc.collection,
             slug: doc.slug,
-            error: err instanceof Error ? err.message : "Failed",
+            error: err instanceof Error ? err.message : t("errAdmin.common.failed"),
             done,
           }) + "\n"));
         }

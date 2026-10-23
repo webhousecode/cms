@@ -11,8 +11,10 @@ import path from "node:path";
 import { getBeamSession, completeBeamSession } from "@/lib/beam/session";
 import { addSite, loadRegistry, saveRegistry, findOrg, type Registry } from "@/lib/site-registry";
 import type { BeamManifest } from "@/lib/beam/types";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   try {
     const body = await request.json();
     const { beamId, manifest } = body as { beamId: string; manifest: BeamManifest };
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
     const session = getBeamSession(beamId);
     if (!session) {
       return NextResponse.json(
-        { error: "Invalid or expired beam session" },
+        { error: t("errApi.common.invalidBeamSession") },
         { status: 403 },
       );
     }
@@ -43,7 +45,7 @@ export async function POST(request: NextRequest) {
     const targetOrgId = session.targetOrgId ?? "default";
     if (!registry) {
       const orgName = targetOrgId === "default"
-        ? "Default"
+        ? t("errApi.beamReceive.defaultOrg")
         : targetOrgId.charAt(0).toUpperCase() + targetOrgId.slice(1);
       const seeded: Registry = {
         orgs: [{ id: targetOrgId, name: orgName, sites: [] }],
@@ -87,7 +89,7 @@ export async function POST(request: NextRequest) {
       checksumErrors: session.checksumErrors,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Finalize failed";
+    const message = err instanceof Error ? err.message : t("errApi.beamReceive.finalizeFailed");
     console.error("[beam/receive/finalize]", message);
     return NextResponse.json({ error: message }, { status: 500 });
   }

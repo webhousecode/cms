@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * GET /api/auth/github — Redirect to GitHub OAuth authorize page.
@@ -10,9 +11,10 @@ import crypto from "node:crypto";
  *   (default)   — connect GitHub for repo access only
  */
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   const clientId = process.env.GITHUB_OAUTH_CLIENT_ID;
   if (!clientId) {
-    return NextResponse.json({ error: "GITHUB_OAUTH_CLIENT_ID not configured" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.authGithub.notConfigured") }, { status: 500 });
   }
 
   const isLogin = request.nextUrl.searchParams.get("login") === "true";
@@ -22,10 +24,10 @@ export async function GET(request: NextRequest) {
   const stateStr = Buffer.from(JSON.stringify(stateData)).toString("base64url");
 
   // Determine callback URL from request (works for both localhost and prod)
-  const callbackUrl = `${process.env.NEXTAUTH_URL ?? "http://localhost:3010"}/api/auth/github/callback`;
+  const callbackUrl = `${process.env.NEXTAUTH_URL ?? "http://localhost:3010"}/api/auth/github/callback`; // i18n-ignore: OAuth callback URL
 
   // Both flows need repo scope — login users will also deploy sites
-  const scope = "read:org repo user:email read:user";
+  const scope = "read:org repo user:email read:user"; // i18n-ignore: OAuth scope list
 
   const params = new URLSearchParams({
     client_id: clientId,

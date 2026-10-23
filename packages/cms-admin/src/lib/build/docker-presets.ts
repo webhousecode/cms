@@ -6,6 +6,7 @@
  *   // expands to { image: 'php:8.3-cli', workdir: '/workspace' }
  */
 import type { DockerConfig } from "@webhouse/cms";
+import { BuildConfigError } from "./validate-paths";
 
 export const DOCKER_PRESETS: Record<string, DockerConfig> = {
   php: { image: "php:8.3-cli", workdir: "/workspace" },
@@ -30,8 +31,12 @@ export function resolveDockerConfig(
   if (typeof docker === "string") {
     const preset = DOCKER_PRESETS[docker];
     if (!preset) {
-      throw new Error(
-        `Unknown Docker preset "${docker}". Available: ${Object.keys(DOCKER_PRESETS).join(", ")}`,
+      const available = Object.keys(DOCKER_PRESETS).join(", ");
+      throw new BuildConfigError(
+        // i18n-ignore: English fallback; translated via its key by localizeBuildError()
+        `Unknown Docker preset "${docker}". Available: ${available}`,
+        "deployText.dockerPresets.unknown",
+        { preset: docker, available },
       );
     }
     return { ...preset };

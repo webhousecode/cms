@@ -48,7 +48,7 @@ export async function createInvitation(email: string, role: UserRole, createdBy:
     (inv) => inv.email.toLowerCase() === email.toLowerCase() && !inv.acceptedAt && new Date(inv.expiresAt) > new Date(),
   );
   if (existing) {
-    throw new Error("An active invitation already exists for this email");
+    throw new Error((await serverT())("system.lib.invitationExists"));
   }
 
   const { dataDir } = await getActiveSitePaths();
@@ -90,7 +90,7 @@ export async function revokeInvitation(id: string): Promise<void> {
   const filePath = await getInvitationsFilePath();
   const invitations = await readInvitations(filePath);
   const idx = invitations.findIndex((inv) => inv.id === id);
-  if (idx === -1) throw new Error("Invitation not found");
+  if (idx === -1) throw new Error((await serverT())("system.lib.invitationNotFound"));
   invitations.splice(idx, 1);
   await writeInvitations(invitations, filePath);
 }
@@ -150,7 +150,7 @@ export async function markAccepted(token: string, siteDataDir?: string): Promise
       return invitations[idx]!;
     }
   }
-  throw new Error("Invitation not found");
+  throw new Error((await serverT())("system.lib.invitationNotFound"));
 }
 
 /** Get _data dirs for all registered sites via the registry. */
@@ -181,4 +181,9 @@ async function getAllSiteDataDirs(): Promise<string[]> {
 
   // Dedupe
   return [...new Set(dirs)];
+}
+
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
 }

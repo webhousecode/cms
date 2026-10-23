@@ -16,6 +16,7 @@ import { resolvePermissions, hasPermission } from "@/lib/permissions-shared";
 import type { UserRole } from "@/lib/auth";
 import { getModel } from "@/lib/ai/model-resolver";
 import { resolveChatModel } from "@/lib/chat/resolve-chat-model";
+import { getServerTSafe } from "@/i18n/server";
 
 export const maxDuration = 300;
 
@@ -25,19 +26,20 @@ interface ChatRequestMessage {
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
-  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
   // F176 — `chat.use` exists as a permission and was never asked for. Being
   // logged in was the whole gate, so a viewer could open the chat and then be
   // handed every tool that declared no permission of its own.
   if (!hasPermission(resolvePermissions(session.siteRole as UserRole), "chat.use")) {
-    return NextResponse.json({ error: "No access" }, { status: 403 });
+    return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
   }
 
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Anthropic API key not configured — add it in Settings → AI" },
+      { error: t("errCms.shared.aiKeyMissing") },
       { status: 503 }
     );
   }
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
   };
 
   if (!messages || messages.length === 0) {
-    return NextResponse.json({ error: "messages required" }, { status: 400 });
+    return NextResponse.json({ error: t("errCms.chat.messagesRequired") }, { status: 400 });
   }
 
   // Build system prompt with full site context + memory injection
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
   } catch (initErr) {
     console.error("[chat] Init error:", initErr instanceof Error ? initErr.stack : initErr);
     return NextResponse.json(
-      { error: `Chat init failed: ${initErr instanceof Error ? initErr.message : "unknown"}` },
+      { error: t("errCms.chat.initFailed", { error: initErr instanceof Error ? initErr.message : t("errCms.chat.unknownError") }) },
       { status: 500 }
     );
   }
@@ -147,7 +149,7 @@ export async function POST(request: NextRequest) {
     async start(controller) {
       function sendEvent(event: string, data: unknown) {
         controller.enqueue(
-          encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+          encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`) // i18n-ignore: SSE wire frame
         );
       }
 
@@ -166,7 +168,7 @@ export async function POST(request: NextRequest) {
           // The translation is a pure function in chat/frames.ts so every frame
           // the package can emit has an assertion — inside this loop it could
           // only be exercised by running a real conversation against a model.
-          for (const ev of frameToEvents(frame)) sendEvent(ev.event, ev.data);
+          for (const ev of frameToEvents(frame, t)) sendEvent(ev.event, ev.data);
           if (frame.type === "done") break;
         }
 
@@ -184,7 +186,7 @@ export async function POST(request: NextRequest) {
         }
       } catch (err) {
         sendEvent("error", {
-          message: err instanceof Error ? err.message : "Chat error",
+          message: err instanceof Error ? err.message : t("errCms.chat.error"),
         });
       }
 

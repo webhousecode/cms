@@ -55,7 +55,7 @@ function buildSchemaInstructions(fields: FieldDef[]): string {
       // The legal values come from the shared rule, not a local copy — the chat
       // prompt renders the same constraint and the two must not drift.
       const constraint = describeSelectOptions(f);
-      const hint = constraint ? `<select: ${constraint}>` : `<${f.type}>`;
+      const hint = constraint ? `<select: ${constraint}>` : `<${f.type}>`; // i18n-ignore: model prompt (field type hint)
       const req = f.required ? " (required)" : "";
       const lbl = f.label ? ` — ${f.label}` : "";
       return `  "${f.name}": ${hint}${req}${lbl}`;
@@ -90,16 +90,16 @@ function buildSystemPrompt(
   }
 
   parts.push(`\n## Writing parameters
-- Creativity: ${temperature}/100 (${temperature < 40 ? "factual and precise" : temperature > 70 ? "creative and expressive" : "balanced"})
-- Formality: ${formality}/100 (${formality < 40 ? "casual and conversational" : formality > 70 ? "formal and academic" : "professional"})
-- Verbosity: ${verbosity}/100 (${verbosity < 40 ? "concise — avoid padding" : verbosity > 70 ? "detailed and thorough" : "moderate length"})`);
+- Creativity: ${temperature}/100 (${/* i18n-ignore: model prompt */ temperature < 40 ? "factual and precise" : temperature > 70 ? "creative and expressive" : "balanced"})
+- Formality: ${formality}/100 (${/* i18n-ignore: model prompt */ formality < 40 ? "casual and conversational" : formality > 70 ? "formal and academic" : "professional"})
+- Verbosity: ${verbosity}/100 (${/* i18n-ignore: model prompt */ verbosity < 40 ? "concise — avoid padding" : verbosity > 70 ? "detailed and thorough" : "moderate length"})`);
 
   if (seoWeight > 50) {
-    parts.push(`- SEO weight: ${seoWeight}/100 — optimise headings, use keywords naturally, structured content`);
+    parts.push(`- SEO weight: ${seoWeight}/100 — optimise headings, use keywords naturally, structured content`); // i18n-ignore: model prompt
   }
 
   if (promptDepth === "deep") {
-    parts.push(`\nSelf-review your output before returning it. Check for accuracy, clarity, and brand alignment.`);
+    parts.push(`\nSelf-review your output before returning it. Check for accuracy, clarity, and brand alignment.`); // i18n-ignore: model prompt
   }
 
   if (feedbackExamples.length > 0) {
@@ -114,7 +114,7 @@ function buildSystemPrompt(
     rejectionNotes.forEach((note, i) => {
       parts.push(`${i + 1}. ${note}`);
     });
-    parts.push(`Read these carefully — outputs that ignore them will be rejected again.`);
+    parts.push(`Read these carefully — outputs that ignore them will be rejected again.`); // i18n-ignore: model prompt
   }
 
   parts.push(`\n${buildSchemaInstructions(schemaFields)}`);
@@ -198,22 +198,23 @@ async function callModelWithTools(params: {
   }
 
   // Hit max iterations — extract whatever text we have
-  return { rawText: "[Agent reached maximum tool iterations]", totalInputTokens, totalOutputTokens };
+  return { rawText: "[Agent reached maximum tool iterations]", totalInputTokens, totalOutputTokens }; // i18n-ignore: sentinel stored as the agent's raw model output
 }
 
 /** Runs a single agent with a given prompt. Adds result to curation queue. */
 export async function runAgent(agentId: string, userPrompt: string, overrideCollection?: string): Promise<AgentRunResult> {
   const runStartTime = Date.now();
   const agent = await getAgent(agentId);
-  if (!agent) throw new Error(`Agent ${agentId} not found`);
-  if (!agent.active) throw new Error(`Agent ${agentId} is not active`);
+  const t = await (await import("@/i18n/server")).getServerTSafe();
+  if (!agent) throw new Error(t("system.agents.notFound", { id: agentId }));
+  if (!agent.active) throw new Error(t("system.agents.notActive", { id: agentId }));
 
   // Phase 4 — per-agent budget pre-flight. Throws a clear error if the
   // agent has hit its daily/weekly/monthly cap so manual + scheduled
   // runs both bail before spending more on the LLM.
   const budgetResult = await checkAgentBudget(agent);
   if (budgetResult.exceeded) {
-    throw new Error(budgetExceededMessage(agent, budgetResult));
+    throw new Error(budgetExceededMessage(agent, budgetResult, t));
   }
 
   // F35 — fire agent.started webhook
@@ -223,7 +224,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   }
 
   const apiKey = await getApiKey("mistral");
-  if (!apiKey) throw new Error("Anthropic API key not configured");
+  if (!apiKey) throw new Error(t("system.agents.apiKeyMissing"));
 
   const targetCollection = overrideCollection ?? agent.targetCollections[0] ?? "posts";
 
@@ -476,7 +477,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
           path: adminPath,
           orgId,
           siteId: siteEntry?.id ?? null,
-          label: `agent.completed → ${title}`,
+          label: `agent.completed → ${title}`, // i18n-ignore: internal goto-link label, never rendered
         });
       } catch {
         previewLink = `${adminBase.replace(/\/$/, "")}${adminPath}`;
@@ -545,16 +546,17 @@ export async function executeAgentRaw(
   opts: { overrideCollection?: string } = {},
 ): Promise<{ result: AgentRawResult; cleanup: () => Promise<void> }> {
   const agent = await getAgent(agentId);
-  if (!agent) throw new Error(`Agent ${agentId} not found`);
-  if (!agent.active) throw new Error(`Agent ${agentId} is not active`);
+  const t = await (await import("@/i18n/server")).getServerTSafe();
+  if (!agent) throw new Error(t("system.agents.notFound", { id: agentId }));
+  if (!agent.active) throw new Error(t("system.agents.notActive", { id: agentId }));
 
   const budgetResult = await checkAgentBudget(agent);
   if (budgetResult.exceeded) {
-    throw new Error(budgetExceededMessage(agent, budgetResult));
+    throw new Error(budgetExceededMessage(agent, budgetResult, t));
   }
 
   const apiKey = await getApiKey("mistral");
-  if (!apiKey) throw new Error("Anthropic API key not configured");
+  if (!apiKey) throw new Error(t("system.agents.apiKeyMissing"));
 
   const targetCollection = opts.overrideCollection ?? agent.targetCollections[0] ?? "posts";
   const cmsConfig = await getAdminConfig();

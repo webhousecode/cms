@@ -11,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { PODCAST_PERMISSIONS } from "../podcast/api";
 import { PERMISSIONS, ROLE_PERMISSIONS } from "../permissions-shared";
+import { getT } from "@/i18n/locale";
 
 const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 const RUTE_ROD = path.join(PKG_ROOT, "src/app/api/podcast");
@@ -53,7 +54,9 @@ describe("tilladelserne findes og har den rigtige vægt", () => {
   });
 
   it("tilladelsen der koster penge SIGER det i sin egen beskrivelse", () => {
-    expect(PERMISSIONS["podcast.record"]).toMatch(/MONEY|penge/i);
+    // F211.2 — PERMISSIONS holds the catalog key; the label is read through it.
+    expect(getT("en")(PERMISSIONS["podcast.record"])).toMatch(/MONEY/);
+    expect(getT("da")(PERMISSIONS["podcast.record"])).toMatch(/PENGE/);
   });
 });
 

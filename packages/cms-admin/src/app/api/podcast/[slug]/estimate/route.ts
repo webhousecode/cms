@@ -14,17 +14,19 @@ import { hentAfsnit } from "@/lib/podcast/store";
 import { estimat, foerFlyvning, type Udtale } from "@/lib/podcast/preflight";
 import { hentLevendeStemmer } from "@/lib/podcast/voices";
 import { readAiConfig } from "@/lib/ai-config";
+import { getServerTSafe } from "@/i18n/server";
 
 export const OPTIONS = preflight;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.read);
   if (afvist) return afvist.svar;
 
   const { slug } = await params;
   const hentet = await hentAfsnit(slug);
   if (!hentet.ok) return svar(req, { error: hentet.grund }, 409);
-  if (!hentet.vaerdi) return svar(req, { error: `afsnittet «${slug}» findes ikke` }, 404);
+  if (!hentet.vaerdi) return svar(req, { error: t("errApi.podcast.episodeNotFound", { slug }) }, 404);
 
   const a = hentet.vaerdi.data;
 
@@ -36,12 +38,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   if (raa) {
     try {
       const p = JSON.parse(raa);
-      if (!Array.isArray(p)) throw new Error("ikke en liste");
+      if (!Array.isArray(p)) throw new Error(t("errApi.podcast.notAList"));
       udtaler = p as Udtale[];
     } catch (err) {
       return svar(
         req,
-        { error: `«udtaler» kunne ikke læses: ${err instanceof Error ? err.message : "ukendt"}` },
+        { error: t("errApi.podcast.udtalerUnreadable", { error: err instanceof Error ? err.message : t("errApi.podcast.unknown") }) },
         400,
       );
     }
@@ -65,6 +67,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
       stemmer,
       ...(opslag.ok ? { levendeStemmer: opslag.navne } : {}),
       godkendt: a.tilstand === "godkendt",
-    }),
+    }, t),
   });
 }

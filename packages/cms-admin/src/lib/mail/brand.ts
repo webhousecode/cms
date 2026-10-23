@@ -42,8 +42,8 @@ export interface MailBrand {
 }
 
 /** Faldback-STAK, ikke ét navn: Apple Mail viser den første, Outlook falder ned. */
-const FONT_SERIF = "'Cormorant Garamond',Georgia,'Times New Roman',Times,serif";
-const FONT_SANS = "'DM Sans',Arial,Helvetica,sans-serif";
+const FONT_SERIF = "'Cormorant Garamond',Georgia,'Times New Roman',Times,serif"; // i18n-ignore: CSS font stack
+const FONT_SANS = "'DM Sans',Arial,Helvetica,sans-serif"; // i18n-ignore: CSS font stack
 
 /**
  * Sidste udvej, brugt når site-config intet siger. IKKE et brand vi foretrækker

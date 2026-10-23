@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "node:path";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { denyViewers } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 interface DeliveryLogEntry {
   timestamp: string;
@@ -27,6 +28,7 @@ interface DeliveryLogEntry {
 }
 
 export async function GET(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers();
   if (denied) return denied;
 
@@ -69,7 +71,7 @@ export async function GET(request: NextRequest) {
       total: deliveries.length,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to read deliveries";
+    const message = err instanceof Error ? err.message : t("errAdmin.webhooks.readFailed");
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

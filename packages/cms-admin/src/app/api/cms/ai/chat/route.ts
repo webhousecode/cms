@@ -8,6 +8,7 @@ import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getDocLocale } from "@/lib/locale";
+import { getServerTSafe } from "@/i18n/server";
 
 // Allow long-running streaming responses (Sonnet + large context can take 2+ minutes)
 export const maxDuration = 300;
@@ -21,11 +22,12 @@ const ALLOWED_MODELS = [
 ] as const;
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("chat"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
-    return NextResponse.json({ error: "Anthropic API key not configured — add it in Settings → AI" }, { status: 503 });
+    return NextResponse.json({ error: t("errCms.shared.aiKeyMissing") }, { status: 503 });
   }
   const ai = await getAI();
 
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
       targetField?: { name: string; type: string; label?: string };
     };
     if (!message) {
-      return NextResponse.json({ error: "message required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.ai.messageRequired") }, { status: 400 });
     }
 
     // Read site config defaults
@@ -102,7 +104,7 @@ ${contentContext}`;
     const contextMessage = context
       ? `${context}\n\n---\n\n${message}`
       : docData
-        ? `Current document content:\n${JSON.stringify(docData, null, 2)}\n\n---\n\n${message}`
+        ? `Current document content:\n${JSON.stringify(docData, null, 2)}\n\n---\n\n${message}` // i18n-ignore: model prompt
         : message;
 
     // Resolve model: caller override → site config default → hardcoded fallback
@@ -139,7 +141,7 @@ ${contentContext}`;
       },
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "AI error";
+    const msg = err instanceof Error ? err.message : t("errCms.shared.aiError");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

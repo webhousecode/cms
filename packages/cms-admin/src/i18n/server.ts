@@ -24,3 +24,16 @@ export async function getRequestLocale(brandDefault?: string): Promise<UiLocale>
 export async function getServerT() {
   return getT(await getRequestLocale());
 }
+
+/**
+ * For server code that may run OUTSIDE a request — schedulers, agents, background
+ * builds — where next/headers throws. Inside a request it is getServerT(); outside
+ * one it falls back to the given locale (default English). Never throws.
+ */
+export async function getServerTSafe(fallback: UiLocale = "en") {
+  try {
+    return await getServerT();
+  } catch {
+    return getT(fallback);
+  }
+}

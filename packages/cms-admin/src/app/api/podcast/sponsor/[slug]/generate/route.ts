@@ -16,31 +16,32 @@ import { laengdeSek } from "@/lib/podcast/stitch";
 import { getAI } from "@/lib/ai/client";
 import { getMediaAdapter } from "@/lib/media";
 import { sitetsUdtaler, SPONSOR_MODEL } from "@/lib/podcast/udtale";
+import { getServerTSafe } from "@/i18n/server";
 
 export const OPTIONS = preflight;
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const t = await getServerTSafe();
   const afvist = await kraevTilladelse(req, PODCAST_PERMISSIONS.record);
   if (afvist) return afvist.svar;
 
   const { slug } = await params;
   const hentet = await hentSponsor(slug);
   if (!hentet.ok) return svar(req, { error: hentet.grund }, 409);
-  if (!hentet.vaerdi) return svar(req, { error: `indslaget «${slug}» findes ikke` }, 404);
+  if (!hentet.vaerdi) return svar(req, { error: t("errApi.podcast.sponsorNotFound", { slug }) }, 404);
 
   const krop = (await req.json().catch(() => ({}))) as { manuskript?: unknown; stemme?: unknown };
   const manuskript =
     (typeof krop.manuskript === "string" ? krop.manuskript : hentet.vaerdi.data.manuskript) ?? "";
   const stemme = (typeof krop.stemme === "string" ? krop.stemme : hentet.vaerdi.data.stemme) ?? "";
 
-  if (!manuskript.trim()) return svar(req, { error: "der er intet manuskript at indtale" }, 400);
+  if (!manuskript.trim()) return svar(req, { error: t("errApi.podcast.noScript") }, 400);
   if (!stemme.trim()) {
     return svar(
       req,
       {
         error:
-          "der er ingen stemme valgt. En reklame læst af en af værterne lyder " +
-          "som at værten sælger noget — vælg en anden.",
+          t("errApi.podcast.noVoice"),
       },
       400,
     );
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   } catch (err) {
     return svar(
       req,
-      { error: `indtalingen fejlede: ${err instanceof Error ? err.message : "ukendt fejl"}` },
+      { error: t("errApi.podcast.recordingFailed", { error: err instanceof Error ? err.message : t("errApi.podcast.unknownError") }) },
       502,
     );
   }
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
   let lydUrl: string;
   try {
     const adapter = await getMediaAdapter();
-    const r = await adapter.uploadFile(`sponsor-${slug}.mp3`, Buffer.from(lyd), "sponsor");
+    const r = await adapter.uploadFile(`sponsor-${slug}.mp3`, Buffer.from(lyd), "sponsor"); // i18n-ignore: file name
     // Adapterens URL bruges UÆNDRET — den returnerer allerede «/uploads/…».
     // Sætter man et præfiks på her, bliver den «/uploads/uploads/…» og svarer
     // 404. Målt på afsnittenes egen lyd 7/9, hvor alt andet så grønt ud.
@@ -86,8 +87,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
       req,
       {
         error:
-          `lyden blev lavet (og betalt) men kunne ikke gemmes: ` +
-          `${err instanceof Error ? err.message : "ukendt fejl"}`,
+          t("errApi.podcast.audioNotSaved", { error: err instanceof Error ? err.message : t("errApi.podcast.unknownError") }),
       },
       500,
     );

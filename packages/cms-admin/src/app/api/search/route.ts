@@ -1,6 +1,7 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { NextRequest, NextResponse } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
+import { getServerTSafe } from "@/i18n/server";
 
 export type SearchResult = {
   collection: string;
@@ -21,6 +22,7 @@ export type SearchResult = {
  * Returns top 20 results ordered by relevance (exact → prefix → contains).
  */
 export async function GET(req: NextRequest) {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (!role) return NextResponse.json([], { status: 401 });
   const raw = req.nextUrl.searchParams.get("q")?.trim().toLowerCase() ?? "";
@@ -127,7 +129,7 @@ export async function GET(req: NextRequest) {
           const url = m.folder ? `/uploads/${m.folder}/${m.name}` : `/uploads/${m.name}`;
           mediaHits.push({
             collection: "media",
-            collectionLabel: "Media",
+            collectionLabel: t("errApi.search.mediaLabel"),
             slug: m.key,
             title: m.aiCaption ?? m.aiAlt ?? m.name,
             status: "media",
@@ -145,6 +147,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(top20);
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: t("errApi.common.internalError") }, { status: 500 });
   }
 }

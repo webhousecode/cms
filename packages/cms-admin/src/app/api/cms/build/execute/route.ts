@@ -11,13 +11,14 @@ import { denyViewers } from "@/lib/require-role";
 import { getAdminConfig } from "@/lib/cms";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { executeBuild } from "@/lib/build/executor";
-import { resolveWorkingDir, resolveOutDir } from "@/lib/build/validate-paths";
+import { resolveWorkingDir, resolveOutDir, localizeKeyedError } from "@/lib/build/validate-paths";
 import { logBuildExecution } from "@/lib/build/audit";
 import { resolveProfile } from "@/lib/build/resolve-profile";
 import {
   isCommandAllowed,
   type OrgBuildSettings,
 } from "@/lib/build/allowlist";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * Self-hosted default: allow all custom commands.
@@ -32,6 +33,7 @@ function getOrgBuildSettings(): OrgBuildSettings {
 }
 
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers();
   if (denied) return denied;
 
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
     return new Response(
       JSON.stringify({
         type: "error",
-        message: err instanceof Error ? err.message : "Failed to load site",
+        message: err instanceof Error ? err.message : t("errCms.build.loadSiteFailed"),
       }) + "\n",
       { status: 500, headers: { "Content-Type": "application/x-ndjson" } },
     );
@@ -74,7 +76,7 @@ export async function POST(req: NextRequest) {
       JSON.stringify({
         type: "error",
         message:
-          "No build command configured in cms.config.ts. Use the native pipeline via the Deploy button instead.",
+          t("errCms.build.noCommand"),
       }) + "\n",
       { status: 400, headers: { "Content-Type": "application/x-ndjson" } },
     );
@@ -86,7 +88,7 @@ export async function POST(req: NextRequest) {
     return new Response(
       JSON.stringify({
         type: "error",
-        message: `Command "${profile.command}" is not allowed by organization settings.`,
+        message: t("errCms.build.commandNotAllowed", { command: profile.command }),
       }) + "\n",
       { status: 403, headers: { "Content-Type": "application/x-ndjson" } },
     );
@@ -105,10 +107,11 @@ export async function POST(req: NextRequest) {
       profile.outDir,
     );
   } catch (err) {
+    await localizeKeyedError(err);
     return new Response(
       JSON.stringify({
         type: "error",
-        message: err instanceof Error ? err.message : "Path validation failed",
+        message: err instanceof Error ? err.message : t("errCms.build.pathValidationFailed"),
       }) + "\n",
       { status: 400, headers: { "Content-Type": "application/x-ndjson" } },
     );
@@ -182,7 +185,7 @@ export async function POST(req: NextRequest) {
       } catch (err) {
         emit({
           type: "error",
-          message: err instanceof Error ? err.message : "Build execution failed",
+          message: err instanceof Error ? err.message : t("errCms.build.executionFailed"),
         });
       }
 

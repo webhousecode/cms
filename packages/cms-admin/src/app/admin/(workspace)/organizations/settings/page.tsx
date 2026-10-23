@@ -328,9 +328,11 @@ export default function OrgSettingsPage() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.flyToken")}</label>{configuredBadge(creds.deployApiToken)}</span>
               <a data-testid="deploy-flyio-docs-link" href="https://fly.io/dashboard" target="_blank" rel="noopener noreferrer"
+                /* i18n-ignore: domain name link text */
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>fly.io/dashboard <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="deploy-flyio-api-token" type="password" value={creds.deployApiToken} onChange={(e) => setCreds((c) => ({ ...c, deployApiToken: e.target.value }))}
+              /* i18n-ignore: credential format example placeholder */
               placeholder="FlyV1 ..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -345,6 +347,7 @@ export default function OrgSettingsPage() {
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.createToken")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="deploy-github-token" type="password" value={creds.deployGitHubToken} onChange={(e) => setCreds((c) => ({ ...c, deployGitHubToken: e.target.value }))}
+              /* i18n-ignore: credential format example placeholder */
               placeholder="ghp_..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -354,6 +357,7 @@ export default function OrgSettingsPage() {
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.docs")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="deploy-vercel-hook-url" type="url" value={creds.deployVercelHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployVercelHookUrl: e.target.value }))}
+              /* i18n-ignore: example URL placeholder */
               placeholder="https://api.vercel.com/v1/integrations/deploy/..." style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -363,6 +367,7 @@ export default function OrgSettingsPage() {
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.docs")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="deploy-netlify-hook-url" type="url" value={creds.deployNetlifyHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployNetlifyHookUrl: e.target.value }))}
+              /* i18n-ignore: example URL placeholder */
               placeholder="https://api.netlify.com/build_hooks/..." style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -372,6 +377,7 @@ export default function OrgSettingsPage() {
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.docs")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="deploy-cloudflare-hook-url" type="url" value={creds.deployCloudflareHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployCloudflareHookUrl: e.target.value }))}
+              /* i18n-ignore: example URL placeholder */
               placeholder="https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/..." style={credInputStyle} />
           </div>
         </div>
@@ -390,6 +396,7 @@ export default function OrgSettingsPage() {
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-anthropic-api-key" type="password" value={creds.aiAnthropicApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiAnthropicApiKey: e.target.value }))}
+                /* i18n-ignore: credential format example placeholder */
                 placeholder="sk-ant-..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -399,6 +406,7 @@ export default function OrgSettingsPage() {
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-openai-api-key" type="password" value={creds.aiOpenaiApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiOpenaiApiKey: e.target.value }))}
+                /* i18n-ignore: credential format example placeholder */
                 placeholder="sk-..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -408,6 +416,7 @@ export default function OrgSettingsPage() {
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-gemini-api-key" type="password" value={creds.aiGeminiApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiGeminiApiKey: e.target.value }))}
+                /* i18n-ignore: credential format example placeholder */
                 placeholder="AI..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
           </div>
@@ -422,6 +431,7 @@ export default function OrgSettingsPage() {
                     border: creds.aiWebSearchProvider === p ? "1px solid var(--primary)" : "1px solid var(--border)",
                     background: creds.aiWebSearchProvider === p ? "color-mix(in srgb, var(--primary) 10%, transparent)" : "transparent",
                     color: creds.aiWebSearchProvider === p ? "var(--primary)" : "var(--muted-foreground)",
+                  /* i18n-ignore: provider brand names */
                   }}>{p === "brave" ? "Brave Search" : "Tavily"}</button>
               ))}
             </div>
@@ -432,6 +442,7 @@ export default function OrgSettingsPage() {
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-brave-api-key" type="password" value={creds.aiBraveApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiBraveApiKey: e.target.value }))}
+                /* i18n-ignore: credential format example placeholder */
                 placeholder="BSA..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -441,6 +452,7 @@ export default function OrgSettingsPage() {
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>{t("pages.orgSettings.getKey")} <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <input data-testid="ai-tavily-api-key" type="password" value={creds.aiTavilyApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiTavilyApiKey: e.target.value }))}
+                /* i18n-ignore: credential format example placeholder */
                 placeholder="tvly-..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
           </div>
@@ -519,14 +531,17 @@ export default function OrgSettingsPage() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.resendKey")}</label>{configuredBadge(creds.resendApiKey)}</span>
               <a data-testid="email-resend-link" href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer"
+                /* i18n-ignore: domain name link text */
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>resend.com <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
             <input data-testid="email-resend-api-key" type="password" value={creds.resendApiKey} onChange={(e) => setCreds((c) => ({ ...c, resendApiKey: e.target.value }))}
+              /* i18n-ignore: credential format example placeholder */
               placeholder="re_..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.senderEmail")}</label>
             <input data-testid="email-from-address" type="email" value={creds.emailFrom} onChange={(e) => setCreds((c) => ({ ...c, emailFrom: e.target.value }))}
+              /* i18n-ignore: example e-mail address placeholder */
               placeholder="noreply@example.com" style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -538,11 +553,13 @@ export default function OrgSettingsPage() {
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.accent1")}</label>
               <input data-testid="email-accent-color" type="text" value={creds.emailAccentColor} onChange={(e) => setCreds((c) => ({ ...c, emailAccentColor: e.target.value }))}
+                /* i18n-ignore: hex colour placeholder */
                 placeholder="#F7BB2E" style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{t("pages.orgSettings.accent2")}</label>
               <input data-testid="email-accent-color-2" type="text" value={creds.emailAccentColor2} onChange={(e) => setCreds((c) => ({ ...c, emailAccentColor2: e.target.value }))}
+                /* i18n-ignore: hex colour placeholder */
                 placeholder="#f59e0b" style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
           </div>

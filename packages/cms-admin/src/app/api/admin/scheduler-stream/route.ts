@@ -1,13 +1,15 @@
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { onSchedulerEvent } from "@/lib/scheduler-bus";
+import { getServerTSafe } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const t = await getServerTSafe();
   const session = await getSessionUser(await cookies());
   if (!session) {
-    return new Response("Unauthorized", { status: 401 });
+    return new Response(t("errAdmin.common.unauthorized"), { status: 401 });
   }
 
   const encoder = new TextEncoder();
@@ -17,7 +19,7 @@ export async function GET() {
   const stream = new ReadableStream({
     start(controller) {
       keepalive = setInterval(() => {
-        try { controller.enqueue(encoder.encode(": keepalive\n\n")); } catch { /* closed */ }
+        try { controller.enqueue(encoder.encode(": keepalive\n\n")); /* i18n-ignore: SSE comment line */ } catch { /* closed */ }
       }, 30_000);
 
       unsub = onSchedulerEvent((evt) => {

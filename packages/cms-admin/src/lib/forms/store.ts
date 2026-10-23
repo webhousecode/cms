@@ -13,6 +13,7 @@ import fs from "fs/promises";
 import path from "path";
 import type { FormConfig } from "@webhouse/cms";
 import { getActiveSitePaths } from "../site-paths";
+import { getServerTSafe } from "@/i18n/server";
 import { getAdminConfig } from "../cms";
 
 function formsFilePath(dataDir: string): string {
@@ -63,7 +64,7 @@ export async function upsertAdminForm(form: FormConfig): Promise<void> {
   const config = await getAdminConfig();
   const configNames = new Set((config.forms ?? []).map((f) => f.name));
   if (configNames.has(form.name)) {
-    throw new Error(`Form "${form.name}" is defined in cms.config.ts and cannot be modified from the admin UI`);
+    throw new Error((await getServerTSafe())("libText.formsStore.configFormNotEditable", { name: form.name }));
   }
   const forms = await getAdminForms();
   const idx = forms.findIndex((f) => f.name === form.name);
@@ -80,10 +81,10 @@ export async function deleteAdminForm(name: string): Promise<void> {
   const config = await getAdminConfig();
   const configNames = new Set((config.forms ?? []).map((f) => f.name));
   if (configNames.has(name)) {
-    throw new Error(`Form "${name}" is defined in cms.config.ts and cannot be deleted from the admin UI`);
+    throw new Error((await getServerTSafe())("libText.formsStore.configFormNotDeletable", { name }));
   }
   const forms = await getAdminForms();
   const filtered = forms.filter((f) => f.name !== name);
-  if (filtered.length === forms.length) throw new Error("Form not found");
+  if (filtered.length === forms.length) throw new Error((await getServerTSafe())("libText.formsStore.formNotFound"));
   await saveAdminForms(filtered);
 }

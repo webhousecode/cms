@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSitePathsFor } from "@/lib/site-paths";
 import { signPreviewToken, verifyPreviewToken } from "@/lib/preview-token";
 import { FilesystemMediaAdapter } from "@/lib/media/filesystem";
+import { getServerTSafe } from "@/i18n/server";
 
 export { signMobileUploadUrl };
 
@@ -19,10 +20,10 @@ function signMobileUploadUrl(
   filePath: string,
 ): string {
   const cleanPath = filePath.replace(/^\/uploads\//, "");
-  const payload = `mobile-upload:${orgId}/${siteId}/${cleanPath}`;
+  const payload = `mobile-upload:${orgId}/${siteId}/${cleanPath}`; // i18n-ignore: HMAC payload
   const tok = signPreviewToken(payload);
   const params = new URLSearchParams({ orgId, siteId, path: cleanPath, tok });
-  return `${baseUrl}/api/mobile/uploads?${params.toString()}`;
+  return `${baseUrl}/api/mobile/uploads?${params.toString()}`; // i18n-ignore: URL
 }
 
 /**
@@ -38,38 +39,38 @@ export async function GET(req: NextRequest) {
   const tok = req.nextUrl.searchParams.get("tok");
 
   if (!orgId || !siteId || !filePath) {
-    return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
+    return NextResponse.json({ error: (await getServerTSafe())("errApi.common.missingParams") }, { status: 400 });
   }
 
   // Auth: accept signed token OR Bearer JWT (so ImageField can fetch directly)
   if (tok) {
-    const payload = `mobile-upload:${orgId}/${siteId}/${filePath}`;
+    const payload = `mobile-upload:${orgId}/${siteId}/${filePath}`; // i18n-ignore: HMAC payload
     if (!verifyPreviewToken(tok, payload)) {
-      return NextResponse.json({ error: "Invalid or expired token" }, { status: 403 });
+      return NextResponse.json({ error: (await getServerTSafe())("errApi.mobile.invalidToken") }, { status: 403 });
     }
   } else {
     const { getMobileSession } = await import("@/lib/mobile-auth");
     const session = await getMobileSession(req);
     if (!session) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ error: (await getServerTSafe())("errApi.common.notAuthenticated") }, { status: 401 });
     }
   }
 
   // Security: no path traversal
   if (filePath.includes("..")) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: (await getServerTSafe())("errApi.common.forbidden") }, { status: 403 });
   }
 
   try {
     const paths = await getSitePathsFor(orgId, siteId);
     if (!paths) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+      return NextResponse.json({ error: (await getServerTSafe())("errApi.common.siteNotFound") }, { status: 404 });
     }
 
     const adapter = new FilesystemMediaAdapter(paths.uploadDir, paths.dataDir);
     const segments = filePath.split("/");
     const data = await adapter.readFile(segments);
-    if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!data) return NextResponse.json({ error: (await getServerTSafe())("errApi.common.notFound") }, { status: 404 });
 
     const ext = segments[segments.length - 1].split(".").pop()?.toLowerCase() ?? "";
     const contentType = MIME[ext] ?? "application/octet-stream";
@@ -81,6 +82,6 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: (await getServerTSafe())("errApi.common.notFound") }, { status: 404 });
   }
 }

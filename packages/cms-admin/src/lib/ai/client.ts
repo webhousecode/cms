@@ -124,7 +124,7 @@ export function mistralModel(model: string): ModelOpts {
   if (!isMistralModel(safe)) {
     console.warn(
       `[ai] "${model}" is not a Mistral model but the call is pinned to Mistral; ` +
-        `using "${DEFAULTS.code}". Fix the model in Site Settings → AI defaults.`,
+        `using "${DEFAULTS.code}". Fix the model in Site Settings → AI defaults.`, // i18n-ignore: console warning, never shown
     );
     safe = DEFAULTS.code;
   }

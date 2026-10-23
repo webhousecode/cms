@@ -11,6 +11,7 @@ import {
   insertFieldsIntoCollection,
   assertConfigStructureIntact,
 } from "@/lib/schema-field-infer";
+import { getServerTSafe } from "@/i18n/server";
 
 /**
  * POST /api/cms/schema-drift/add-to-schema
@@ -32,39 +33,40 @@ import {
  * Body: { collection: string, fields: string[] }
  */
 export async function POST(req: NextRequest) {
+  const t = await getServerTSafe();
   const role = await getSiteRole();
   if (!role || role === "viewer") {
-    return NextResponse.json({ error: "No write access" }, { status: 403 });
+    return NextResponse.json({ error: t("errCms.shared.noWriteAccess") }, { status: 403 });
   }
 
   try {
     const { collection, fields } = (await req.json()) as { collection?: string; fields?: string[] };
     if (!collection || !fields?.length) {
-      return NextResponse.json({ error: "collection and fields[] required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.shared.collectionFieldsRequired") }, { status: 400 });
     }
 
     const config = await getAdminConfig();
     const colConfig = config.collections.find((c) => c.name === collection);
     if (!colConfig) {
-      return NextResponse.json({ error: `Collection "${collection}" not found` }, { status: 404 });
+      return NextResponse.json({ error: t("errCms.shared.collectionNamedNotFound", { collection }) }, { status: 404 });
     }
 
     // Only add fields that are truly NOT in the schema.
     const schemaKeys = new Set(colConfig.fields.map((f) => f.name));
     const newFields = fields.filter((f) => !schemaKeys.has(f));
     if (newFields.length === 0) {
-      return NextResponse.json({ error: "All specified fields already exist in schema" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.schemaDrift.alreadyExist") }, { status: 400 });
     }
 
     const { contentDir, configPath } = await getActiveSitePaths();
     if (configPath.startsWith("github://")) {
-      return NextResponse.json({ error: "Add-to-schema is only available for filesystem sites" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.schemaDrift.filesystemOnly") }, { status: 400 });
     }
 
     // Path-traversal guard on the collection directory.
     const collectionDir = join(contentDir, collection);
     if (collectionDir !== contentDir && !collectionDir.startsWith(contentDir + "/")) {
-      return NextResponse.json({ error: "Invalid collection path" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.shared.invalidCollectionPath") }, { status: 400 });
     }
 
     // Sample content to infer types (read a generous slice of docs).
@@ -99,7 +101,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, addedFields: newFields });
   } catch (err) {
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Add to schema failed" },
+      { error: err instanceof Error ? err.message : t("errCms.schemaDrift.addFailed") },
       { status: 500 },
     );
   }

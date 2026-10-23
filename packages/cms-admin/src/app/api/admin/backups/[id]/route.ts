@@ -3,18 +3,20 @@ import { deleteBackup, getBackupFilePath, restoreBackup } from "@/lib/backup-ser
 import { createReadStream, statSync } from "node:fs";
 import { requirePermission } from "@/lib/permissions";
 import { requireCapability } from "@/lib/capabilities";
+import { getServerTSafe } from "@/i18n/server";
 
 type Ctx = { params: Promise<{ id: string }> };
 
 /** GET /api/admin/backups/[id] — download backup zip */
 export async function GET(_req: NextRequest, ctx: Ctx) {
+  const t = await getServerTSafe();
   // Security W41 NY-K1 — the zip holds the site's whole _data/ (keys, team,
   // form submissions); download was open to any session for any ?site=.
   const denied = await requirePermission("backup.manage"); if (denied) return denied;
   const { id } = await ctx.params;
   const filePath = await getBackupFilePath(id);
   if (!filePath) {
-    return NextResponse.json({ error: "Backup not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errAdmin.backups.notFound") }, { status: 404 });
   }
 
   const stat = statSync(filePath);
@@ -44,12 +46,13 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
 
 /** DELETE /api/admin/backups/[id] — delete this backup */
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
+  const t = await getServerTSafe();
   const denied = await requirePermission("backup.manage"); if (denied) return denied;
   const capDenied = await requireCapability("backup"); if (capDenied) return capDenied;
   const { id } = await ctx.params;
   const deleted = await deleteBackup(id);
   if (!deleted) {
-    return NextResponse.json({ error: "Backup not found" }, { status: 404 });
+    return NextResponse.json({ error: t("errAdmin.backups.notFound") }, { status: 404 });
   }
   return NextResponse.json({ deleted: true });
 }

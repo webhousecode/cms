@@ -69,7 +69,7 @@ export async function smokeTestImage(opts: SmokeTestOptions): Promise<SmokeTestR
       lastStatus = res.status;
       if (res.status >= 200 && res.status < 300) {
         okStreak++;
-        log(`[smoke ${attempts}] ok ${res.status} (streak=${okStreak}/${requiredOk})`);
+        log(`[smoke ${attempts}] ok ${res.status} (streak=${okStreak}/${requiredOk})`); // i18n-ignore: log line
         if (okStreak >= requiredOk) {
           return {
             healthy: true,
@@ -81,12 +81,12 @@ export async function smokeTestImage(opts: SmokeTestOptions): Promise<SmokeTestR
         }
       } else {
         okStreak = 0;
-        log(`[smoke ${attempts}] non-2xx ${res.status} (streak reset)`);
+        log(`[smoke ${attempts}] non-2xx ${res.status} (streak reset)`); // i18n-ignore: log line
       }
     } catch (err) {
       okStreak = 0;
       lastError = err instanceof Error ? err.message : String(err);
-      log(`[smoke ${attempts}] error: ${lastError} (streak reset)`);
+      log(`[smoke ${attempts}] error: ${lastError} (streak reset)`); // i18n-ignore: log line
     }
     await new Promise((r) => setTimeout(r, pollMs));
   }

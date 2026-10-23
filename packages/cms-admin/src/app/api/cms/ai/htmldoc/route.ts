@@ -6,14 +6,16 @@ import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
+import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerTSafe();
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("ai"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Anthropic API key not configured — add it in Settings > AI" },
+      { error: t("errCms.shared.aiKeyMissingGt") },
       { status: 503 },
     );
   }
@@ -26,15 +28,16 @@ export async function POST(request: NextRequest) {
       locale?: string;
     };
     if (!instruction) {
-      return NextResponse.json({ error: "instruction required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.ai.instructionRequired") }, { status: 400 });
     }
     if (!html) {
-      return NextResponse.json({ error: "html required" }, { status: 400 });
+      return NextResponse.json({ error: t("errCms.ai.htmlRequired") }, { status: 400 });
     }
 
     const siteConfigData = await readSiteConfig();
     const locale = bodyLocale || siteConfigData.defaultLocale || "en";
 
+    // i18n-ignore: model prompt
     const systemPrompt = `${buildLocaleInstruction(locale)}
 You are an expert HTML editor. The user will give you a complete HTML document and an instruction to modify it. You MUST return ONLY the complete, modified HTML document — nothing else. No explanation, no markdown fences, no preamble. Start with <!DOCTYPE html> or <html> and end with </html>.
 
@@ -53,7 +56,7 @@ Rules:
       messages: [
         {
           role: "user",
-          content: `Here is the HTML document:\n\n${html}\n\n---\n\nInstruction: ${instruction}`,
+          content: `Here is the HTML document:\n\n${html}\n\n---\n\nInstruction: ${instruction}`, // i18n-ignore: model prompt
         },
       ],
       purpose: "content.htmldoc",
@@ -79,7 +82,7 @@ Rules:
       },
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "AI error";
+    const msg = err instanceof Error ? err.message : t("errCms.shared.aiError");
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

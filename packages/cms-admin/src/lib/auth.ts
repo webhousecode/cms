@@ -117,16 +117,16 @@ async function getUsersStrict(): Promise<User[]> {
     const e = err as NodeJS.ErrnoException;
     if (e.code === "ENOENT") return []; // legitimately empty (fresh install)
     throw new Error(
-      `Refusing to mutate users.json — current state is unreadable (${e.code ?? "unknown error"}). ` +
-      `Investigate before retrying; a blind write here would silently overwrite existing users.`,
+      `Refusing to mutate users.json — current state is unreadable (${e.code ?? "unknown error"}). ` + // i18n-ignore: operator integrity guard for users.json (log/500 only)
+      `Investigate before retrying; a blind write here would silently overwrite existing users.`, // i18n-ignore: operator integrity guard for users.json (log/500 only)
     );
   }
   try {
     return JSON.parse(content) as User[];
   } catch {
     throw new Error(
-      "Refusing to mutate users.json — current contents are not valid JSON. " +
-      "Restore from a known-good backup before retrying.",
+      "Refusing to mutate users.json — current contents are not valid JSON. " + // i18n-ignore: operator integrity guard for users.json (log/500 only)
+      "Restore from a known-good backup before retrying.", // i18n-ignore: operator integrity guard for users.json (log/500 only)
     );
   }
 }
@@ -139,7 +139,7 @@ export async function createUser(
 ): Promise<User> {
   const users = await getUsersStrict();
   if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) {
-    throw new Error("User already exists");
+    throw new Error((await serverT())("system.auth.userExists"));
   }
   const passwordHash = password ? await bcrypt.hash(password, 12) : undefined;
   // First user is always admin; invited users get the specified role
@@ -191,7 +191,7 @@ export async function updateUser(
   if (idx === -1 && fallbackEmail) {
     idx = users.findIndex((u) => u.email.toLowerCase() === fallbackEmail.toLowerCase());
   }
-  if (idx === -1) throw new Error("User not found");
+  if (idx === -1) throw new Error((await serverT())("system.auth.userNotFound"));
 
   const user = { ...users[idx]! };
   if (patch.name) user.name = patch.name.trim();
@@ -213,6 +213,11 @@ export async function updateUser(
   return user;
 }
 
+/** F211.2 — server-side translator for this request (English outside a request). */
+async function serverT() {
+  return (await import("@/i18n/server")).getServerTSafe();
+}
+
 export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
@@ -225,11 +230,11 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
 export async function deleteUser(id: string): Promise<void> {
   const users = await getUsersStrict();
   const idx = users.findIndex((u) => u.id === id);
-  if (idx === -1) throw new Error("User not found");
+  if (idx === -1) throw new Error((await serverT())("system.auth.userNotFound"));
   // Prevent deleting the last admin
   const remainingAdmins = users.filter((u, i) => i !== idx && (u.role ?? "admin") === "admin");
   if ((users[idx]!.role ?? "admin") === "admin" && remainingAdmins.length === 0) {
-    throw new Error("Cannot delete the last admin");
+    throw new Error((await serverT())("system.auth.lastAdminDelete"));
   }
   users.splice(idx, 1);
   const filePath = await getUsersFilePath();
@@ -240,7 +245,7 @@ export async function deleteUser(id: string): Promise<void> {
 export async function saveUser(updated: User): Promise<void> {
   const users = await getUsersStrict();
   const idx = users.findIndex((u) => u.id === updated.id);
-  if (idx === -1) throw new Error("User not found");
+  if (idx === -1) throw new Error((await serverT())("system.auth.userNotFound"));
   users[idx] = updated;
   const filePath = await getUsersFilePath();
   await fs.writeFile(filePath, JSON.stringify(users, null, 2));

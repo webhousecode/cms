@@ -315,6 +315,7 @@ export default function NewAgentPage() {
                 : <><Send style={{ width: "13px", height: "13px" }} /> {t("pages.agentNew.generateAgent")}</>
               }
             </button>
+            {/* i18n-ignore: keyboard shortcut */}
             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>⌘ Enter</span>
             {formFilled && !aiLoading && (
               <span style={{ fontSize: "0.72rem", color: "hsl(142 71% 45%)", marginLeft: "auto" }}>

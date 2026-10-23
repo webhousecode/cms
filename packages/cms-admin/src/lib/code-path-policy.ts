@@ -10,6 +10,7 @@
  */
 import path from "node:path";
 import { serverBuildsAllowed } from "./build/server-build-policy";
+import { getT } from "@/i18n/locale";
 
 /** Extensions a runtime would load as code (Node/jiti, shells, PHP, …). */
 const CODE_EXT = new Set([
@@ -22,7 +23,13 @@ export function isCodeUpload(filename: string): boolean {
   return CODE_EXT.has(path.extname(filename).toLowerCase());
 }
 
-export const CODE_UPLOAD_REFUSED = "This file type cannot be uploaded (it would be code on the server).";
+/** English text, for callers outside a request. Inside one, use codeUploadRefused(). */
+export const CODE_UPLOAD_REFUSED = getT("en")("system.lib.codeUploadRefused");
+
+/** The refusal in the requesting user's language. */
+export async function codeUploadRefused(): Promise<string> {
+  return (await (await import("@/i18n/server")).getServerTSafe())("system.lib.codeUploadRefused");
+}
 
 /**
  * May a caller have the server load `requested` as a config?

@@ -8,6 +8,9 @@
  * than silence: the one real dead link (a legal reference in the terms page)
  * was sitting in the same list.
  */
+import { getT } from "@/i18n/locale";
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
+
 
 /**
  * An address there is nothing to fetch.
@@ -92,8 +95,9 @@ export type ShapeVerdict = { status: "skipped" | "schemeless" | "dangerous"; err
 export function classifyByShape(
   kind: "link" | "image",
   url: string,
-  deps: { isSchemeless: (u: string) => boolean; isDangerousUrl: (u: string) => boolean },
+  deps: { isSchemeless: (u: string) => boolean; isDangerousUrl: (u: string) => boolean; t?: Translate },
 ): ShapeVerdict | null {
+  const t = deps.t ?? getT("en");
   const v = (url || "").trim();
 
   // Nothing to fetch. `fetch("mailto:…")` throws, and that surfaced as
@@ -121,7 +125,7 @@ export function classifyByShape(
   if (deps.isDangerousUrl(v)) {
     return {
       status: "dangerous",
-      error: "Adressen kan køre kode i browseren. Den bør fjernes — den er ikke et link, den er et script.",
+      error: t("system.linkCheck.dangerous"),
     };
   }
 
@@ -132,7 +136,7 @@ export function classifyByShape(
   if (kind === "link" && deps.isSchemeless(v)) {
     return {
       status: "schemeless",
-      error: "Adressen mangler https:// — en browser læser den som en side på dette site, ikke som en adresse ude på nettet.",
+      error: t("system.linkCheck.schemeless"),
     };
   }
 
