@@ -47,7 +47,7 @@ const STATUS_DOT: Record<string, { color: string; title: string }> = {
   expired:   { color: "rgb(239 68 68)",   title: "Expired" },
   trashed:   { color: "rgb(248 113 113)", title: "Trashed" },
 };
-import { useTabs } from "@/lib/tabs-context";
+import { useTabs, displayTabTitle } from "@/lib/tabs-context";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n-context";
 
@@ -191,9 +191,9 @@ export function TabBar() {
                 whiteSpace: "nowrap",
                 fontWeight: isActive ? 500 : 400,
               }}
-              title={tab.title}
+              title={displayTabTitle(tab, t)}
             >
-              {tab.title}
+              {displayTabTitle(tab, t)}
             </span>
 
             {/* Close button */}

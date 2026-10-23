@@ -60,51 +60,62 @@ type TabsCtx = {
 /* ─── Helpers ────────────────────────────────────────────────── */
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
-const PATH_TITLES: Record<string, string> = {
-  "/admin": "Dashboard",
-  "/admin/": "Dashboard",
-  "/admin/media": "Media",
-  "/admin/link-checker": "Link Checker",
-  "/admin/curation": "Curation Queue",
-  "/admin/agents": "AI Agents",
-  "/admin/agents/new": "New Agent",
-  "/admin/command": "Cockpit",
-  "/admin/performance": "Performance",
-  "/admin/settings": "Settings",
-  "/admin/sites": "Sites",
-  "/admin/scheduled": "Calendar",
-  "/admin/interactives": "Interactives",
-  "/admin/account": "Account",
-  "/admin/trash": "Trash",
-  "/admin/backup": "Backup",
-  "/admin/forms": "Forms",
-  "/admin/forms/builder": "Form Builder",
-  "/admin/seo": "SEO",
-  "/admin/lighthouse": "Lighthouse",
-  "/admin/log": "Event Log",
-  "/admin/visibility": "Visibility",
-  "/admin/ai-analytics": "AI Analytics",
-  "/admin/favorites": "Favorites",
-  "/admin/deploy/docker": "Docker Deploy",
+/* Built-in routes → catalog key (shell.tabTitles.<key>). The text lives in the
+ * catalog, and displayTabTitle() renders them in the reader's language — a
+ * stored title would stay in whatever language the tab was opened in. */
+const PATH_TITLE_KEYS: Record<string, string> = {
+  "/admin": "dashboard",
+  "/admin/": "dashboard",
+  "/admin/media": "media",
+  "/admin/link-checker": "linkChecker",
+  "/admin/curation": "curation",
+  "/admin/agents": "agents",
+  "/admin/agents/new": "agentsNew",
+  "/admin/command": "command",
+  "/admin/performance": "performance",
+  "/admin/settings": "settings",
+  "/admin/sites": "sites",
+  "/admin/scheduled": "scheduled",
+  "/admin/interactives": "interactives",
+  "/admin/account": "account",
+  "/admin/trash": "trash",
+  "/admin/backup": "backup",
+  "/admin/forms": "forms",
+  "/admin/forms/builder": "formsBuilder",
+  "/admin/seo": "seo",
+  "/admin/lighthouse": "lighthouse",
+  "/admin/log": "log",
+  "/admin/visibility": "visibility",
+  "/admin/ai-analytics": "aiAnalytics",
+  "/admin/favorites": "favorites",
+  "/admin/deploy/docker": "deployDocker",
 };
 
-const SETTINGS_TAB_LABELS: Record<string, string> = {
-  general: "General", team: "Team", email: "Email", ai: "AI",
-  "brand-voice": "Brand Voice", deploy: "Deploy", backup: "Backup",
-  tools: "Automation", geo: "GEO", mcp: "MCP", beam: "Beam",
-  globals: "Globals", schema: "Schema", prompts: "AI Prompts",
+/** Settings ?tab= id → its key under pages.settings.tabs. */
+const SETTINGS_TAB_KEYS: Record<string, string> = {
+  general: "general", capabilities: "features", team: "team", email: "email", ai: "ai",
+  "brand-voice": "brandVoice", deploy: "deploy", build: "build", backup: "backup",
+  tools: "automation", geo: "geo", mcp: "mcp", beam: "beam",
+  globals: "globals", schema: "schema", prompts: "aiPrompts",
 };
 
-function pathTitle(path: string): string {
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
+
+function titleFor(path: string, t: Translate): string | null {
   const [bare, query] = path.split("?");
-  if (PATH_TITLES[bare]) {
-    // For settings sub-tabs, append the tab label
-    if (bare === "/admin/settings" && query) {
-      const tab = new URLSearchParams(query).get("tab");
-      if (tab && SETTINGS_TAB_LABELS[tab]) return `Settings: ${SETTINGS_TAB_LABELS[tab]}`;
-    }
-    return PATH_TITLES[bare];
+  const key = PATH_TITLE_KEYS[bare];
+  if (!key) return null;
+  if (bare === "/admin/settings" && query) {
+    const tab = SETTINGS_TAB_KEYS[new URLSearchParams(query).get("tab") ?? ""];
+    if (tab) return t("shell.tabTitles.settingsTab", { tab: t(`pages.settings.tabs.${tab}`) });
   }
+  return t(`shell.tabTitles.${key}`);
+}
+
+/** The title a tab is STORED with. For a built-in route it is never shown —
+ *  displayTabTitle() renders those from the catalog in the reader's language. */
+function pathTitle(path: string): string {
+  const bare = path.split("?")[0];
   const parts = bare.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
   if (parts.length === 0) return "Dashboard";
   // Tab titles are ALWAYS capitalized (first letter uppercase) — never raw URL slugs.
@@ -194,10 +205,9 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       }
 
       if (saved && saved.tabs.length > 0) {
-        const migrated = saved.tabs.map((t) => ({
-          ...t,
-          title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
-        }));
+        // Built-in routes are titled at render time (displayTabTitle), so a
+        // stored title in an old language needs no migration here.
+        const migrated = saved.tabs;
         const match = migrated.find((t) => t.path === fullPath) || migrated.find((t) => t.path.split("?")[0] === pathname);
         if (match) {
           // Current URL matches a saved tab — activate it
@@ -245,10 +255,9 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       // 3. Load new site's tabs from localStorage (synchronous, no race condition)
       const saved = load(userIdRef.current, newSiteId);
       if (saved && saved.tabs.length > 0) {
-        const migrated = saved.tabs.map((t) => ({
-          ...t,
-          title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
-        }));
+        // Built-in routes are titled at render time (displayTabTitle), so a
+        // stored title in an old language needs no migration here.
+        const migrated = saved.tabs;
         // Restore exact saved state: tabs + the active tab as it was
         const restoredActiveId = saved.activeId && migrated.some((t) => t.id === saved.activeId)
           ? saved.activeId
@@ -496,4 +505,10 @@ export function TabTitle({ value }: { value: string }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
   return null;
+}
+
+/** What to SHOW for a tab: a built-in route in the reader's language, anything
+ *  else (a document's name, a title a page set itself) exactly as stored. */
+export function displayTabTitle(tab: Tab, t: Translate): string {
+  return titleFor(tab.path, t) ?? tab.title;
 }

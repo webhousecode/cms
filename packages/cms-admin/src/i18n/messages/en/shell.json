@@ -651,5 +651,32 @@
     "colAdded": "Added",
     "remove": "Remove from favorites",
     "addedOn": "Added {date}"
+  },
+  "tabTitles": {
+    "dashboard": "Dashboard",
+    "media": "Media",
+    "linkChecker": "Link Checker",
+    "curation": "Curation Queue",
+    "agents": "AI Agents",
+    "agentsNew": "New Agent",
+    "command": "Cockpit",
+    "performance": "Performance",
+    "settings": "Settings",
+    "sites": "Sites",
+    "scheduled": "Calendar",
+    "interactives": "Interactives",
+    "account": "Account",
+    "trash": "Trash",
+    "backup": "Backup",
+    "forms": "Forms",
+    "formsBuilder": "Form Builder",
+    "seo": "SEO",
+    "lighthouse": "Lighthouse",
+    "log": "Event Log",
+    "visibility": "Visibility",
+    "aiAnalytics": "AI Analytics",
+    "favorites": "Favorites",
+    "deployDocker": "Docker Deploy",
+    "settingsTab": "Settings: {tab}"
   }
 }

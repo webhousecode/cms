@@ -651,5 +651,32 @@
     "colAdded": "Tilføjet",
     "remove": "Fjern fra favoritter",
     "addedOn": "Tilføjet {date}"
+  },
+  "tabTitles": {
+    "dashboard": "Oversigt",
+    "media": "Medier",
+    "linkChecker": "Linktjek",
+    "curation": "Kurateringskø",
+    "agents": "AI-agenter",
+    "agentsNew": "Ny agent",
+    "command": "Cockpit",
+    "performance": "Performance",
+    "settings": "Indstillinger",
+    "sites": "Sites",
+    "scheduled": "Kalender",
+    "interactives": "Interaktive elementer",
+    "account": "Konto",
+    "trash": "Papirkurv",
+    "backup": "Backup",
+    "forms": "Formularer",
+    "formsBuilder": "Formularbygger",
+    "seo": "SEO",
+    "lighthouse": "Lighthouse",
+    "log": "Hændelseslog",
+    "visibility": "Synlighed",
+    "aiAnalytics": "AI-analyse",
+    "favorites": "Favoritter",
+    "deployDocker": "Docker-udgivelse",
+    "settingsTab": "Indstillinger: {tab}"
   }
 }

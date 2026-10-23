@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useTabs } from "@/lib/tabs-context";
+import { useTabs, displayTabTitle } from "@/lib/tabs-context";
 import { OrgSwitcher, SiteSwitcher } from "@/components/site-switcher";
 import { useHeaderData, HeaderDataProvider } from "@/lib/header-data-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1051,7 +1051,7 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
   const t = useT();
   const { tabs, activeId } = useTabs();
   const activeTab = tabs.find((tab) => tab.id === activeId);
-  const title = activeTab?.title;
+  const title = activeTab ? displayTabTitle(activeTab, t) : undefined;
   const { user: headerUser } = useHeaderData();
   // F153: hide the Chat-mode toggle when the tenant has `chat` turned off.
   const canUse = useCapabilities();
