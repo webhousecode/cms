@@ -101,7 +101,7 @@ export function upgradeImages(
 
       if (srcsetParts.length === 0) return match;
 
-      const srcset = srcsetParts.map((v) => `${v.path} ${v.w}w`).join(", ");
+      const srcset = srcsetParts.map((v) => `${v.path} ${v.w}w`).join(", "); // i18n-ignore: HTML srcset width descriptor
       return `<picture>` +
         `<source srcset="${srcset}" type="image/webp" sizes="(max-width: 800px) 100vw, 800px">` +
         `<img ${pre}src="${src}"${post}>` + // i18n-ignore: HTML markup

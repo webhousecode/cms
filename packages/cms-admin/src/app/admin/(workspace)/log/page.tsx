@@ -7,6 +7,8 @@ import { TabTitle } from "@/lib/tabs-context";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomDateInput } from "@/components/ui/custom-date-input";
 import { useT } from "@/lib/i18n-context";
+import { formatDateTime, formatTime as fmtTime, useFormat } from "@/lib/format-locale";
+import type { UiLocale } from "@/i18n/locale";
 
 type LogLayer = "audit" | "server" | "client";
 type LogLevel = "info" | "warn" | "error";
@@ -52,16 +54,16 @@ const LEVEL_ICONS: Record<LogLevel, typeof Info> = {
   error: AlertCircle,
 };
 
-function formatTime(iso: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
+function formatTime(iso: string, t: (key: string, vars?: Record<string, string | number>) => string, locale: UiLocale): string {
   const d = new Date(iso);
   const today = new Date();
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const isToday = d.toDateString() === today.toDateString();
   const isYesterday = d.toDateString() === yesterday.toDateString();
-  const time = d.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const time = fmtTime(d, locale, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   if (isToday) return t("tools.log.today", { time });
   if (isYesterday) return t("tools.log.yesterday", { time });
-  return d.toLocaleString("da-DK", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return formatDateTime(d, locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function FilterChip({ label, testLabel, onRemove }: { label: string; testLabel: string; onRemove: () => void }) {
@@ -107,6 +109,7 @@ function StatCard({
   sublabel?: string;
   tone?: "default" | "error";
 }) {
+  const fmt = useFormat();
   const accent = tone === "error" && value > 0 ? "rgb(239 68 68)" : "var(--muted-foreground)";
   return (
     <div style={{
@@ -125,7 +128,7 @@ function StatCard({
         color: tone === "error" && value > 0 ? "rgb(239 68 68)" : "var(--foreground)",
         fontFamily: "monospace",
       }}>
-        {value.toLocaleString("da-DK")}
+        {fmt.number(value)}
       </div>
       {sublabel && (
         <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>{sublabel}</div>
@@ -153,6 +156,7 @@ interface LogStats {
 
 export default function EventLogPage() {
   const t = useT();
+  const fmt = useFormat();
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<LogStats | null>(null);
@@ -436,7 +440,7 @@ export default function EventLogPage() {
                   alignItems: "center",
                 }}
               >
-                <span style={{ color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatTime(e.timestamp, t)}</span>
+                <span style={{ color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatTime(e.timestamp, t, fmt.locale)}</span>
                 <LevelIcon style={{ width: 13, height: 13, color: LEVEL_COLORS[e.level] }} />
                 <LayerIcon style={{ width: 13, height: 13, color: "var(--muted-foreground)" }} />
                 <span style={{ color: "var(--muted-foreground)", fontSize: "0.62rem", textTransform: "uppercase" }}>{t(`tools.log.layer.${e.layer}`)}</span>

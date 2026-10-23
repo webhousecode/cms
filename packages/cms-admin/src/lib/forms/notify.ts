@@ -98,6 +98,7 @@ function humanTime(iso: string, locale: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   try {
+    // i18n-ignore: mail to the site owner — follows the SITE's language, not the admin's
     return new Intl.DateTimeFormat(locale === "da" ? "da-DK" : "en-GB", {
       dateStyle: "long",
       timeStyle: "short",

@@ -692,5 +692,9 @@
   },
   "meta": {
     "description": "AI-native content engine"
+  },
+  "schedulerEvents": {
+    "published": "Published · {collection} · {time}",
+    "expired": "Expired · {collection} · {time}"
   }
 }

@@ -276,12 +276,12 @@ async function sendRevalidationAlert(plan: RetryPlan): Promise<void> {
   const siteLabel = plan.site.name ?? plan.site.id ?? "unknown";
   const message =
     `:rotating_light: **ICD revalidation failed** — ${siteLabel}\n` + // i18n-ignore: Discord webhook payload (F210.4)
-    `Collection: \`${plan.payload.collection}\`  ` +
-    `Slug: \`${plan.payload.slug}\`  ` +
-    `Action: \`${plan.payload.action}\`\n` +
+    `Collection: \`${plan.payload.collection}\`  ` + // i18n-ignore: Discord webhook payload (F210.4)
+    `Slug: \`${plan.payload.slug}\`  ` + // i18n-ignore: Discord webhook payload (F210.4)
+    `Action: \`${plan.payload.action}\`\n` + // i18n-ignore: Discord webhook payload (F210.4)
     `Webhook URL: \`${plan.url}\`\n` +
     `Attempts: ${totalAttempts} (sync + ${plan.retryDelaysMs.length} retries)\n` + // i18n-ignore: Discord webhook payload (F210.4)
-    `Time: ${new Date().toISOString()}\n` +
+    `Time: ${new Date().toISOString()}\n` + // i18n-ignore: Discord webhook payload (F210.4)
     `Live site is now stale for the affected paths until the next successful revalidate. ` + // i18n-ignore: Discord webhook payload (F210.4)
     `Check Site Settings → Revalidation log for the latest attempt error.`; // i18n-ignore: Discord webhook payload (F210.4)
 

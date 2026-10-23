@@ -58,9 +58,9 @@ function renderPreviousAsPrompt(prevContent: Record<string, unknown>): string {
     "",
     "## Current draft",
   ];
-  if (title) parts.push(`Title: ${title}`);
-  if (excerpt) parts.push(`Excerpt: ${excerpt}`);
-  if (tags) parts.push(`Tags: ${tags}`);
+  if (title) parts.push(`Title: ${title}`); // i18n-ignore: model prompt
+  if (excerpt) parts.push(`Excerpt: ${excerpt}`); // i18n-ignore: model prompt
+  if (tags) parts.push(`Tags: ${tags}`); // i18n-ignore: model prompt
   if (body) {
     parts.push("");
     parts.push("Body:");
@@ -81,11 +81,12 @@ export async function runWorkflow(
   if (workflow.steps.length === 0) {
     throw new Error(t("system.agents.workflowNoSteps"));
   }
+  const workflowLabel = t("system.agents.workflowLabel", { name: workflow.name });
 
   // Fire workflow.started webhook
   try {
     const { fireAgentEvent } = await import("./webhook-events");
-    fireAgentEvent("started", `Workflow: ${workflow.name}`).catch(() => {});
+    fireAgentEvent("started", workflowLabel).catch(() => {});
   } catch { /* ignore */ }
 
   let currentPrompt = initialPrompt;
@@ -149,7 +150,7 @@ export async function runWorkflow(
   // Build queue-item metadata from the final content
   const title = typeof lastContent.title === "string"
     ? lastContent.title
-    : `${workflow.name} — ${new Date().toLocaleDateString()}`;
+    : `${workflow.name} — ${new Date().toLocaleDateString()}`; // i18n-ignore: stored document title (site content), background job outside any request
   const slug = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -186,7 +187,7 @@ export async function runWorkflow(
   const { addQueueItem } = await import("./curation");
   const queueItem = await addQueueItem({
     agentId: workflow.id,
-    agentName: `Workflow: ${workflow.name}`,
+    agentName: workflowLabel,
     collection: lastTargetCollection,
     slug,
     title,
@@ -214,7 +215,7 @@ export async function runWorkflow(
   // ONE webhook for the whole pipeline
   try {
     const { fireAgentEvent } = await import("./webhook-events");
-    fireAgentEvent("completed", `Workflow: ${workflow.name}`, {
+    fireAgentEvent("completed", workflowLabel, {
       targetCollection: lastTargetCollection,
       documentsCreated: 1,
       costUsd: totalCost,

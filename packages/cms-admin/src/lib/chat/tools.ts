@@ -14,6 +14,9 @@ import { buildWebSearchTool } from "@/lib/tools/web-search";
 import { hasPermission } from "@/lib/permissions-shared";
 import { resolveJwtSecret } from "../dev-jwt-secret";
 import { toChatTools, createCmsChat } from "./engine";
+import { getRequestLocaleSafe } from "@/i18n/server";
+import type { UiLocale } from "@/i18n/locale";
+import { formatDateTime, formatDate, formatNumber } from "@/lib/format-locale";
 
 /**
  * WHICH ENGINE ACTUALLY BUILT THE TOOL LIST.
@@ -142,7 +145,9 @@ export async function buildAllToolPairs(): Promise<ToolPair[]> {
   const cookieStore = await cookies();
   const activeOrg = cookieStore.get("cms-active-org")?.value;
   const activeSite = cookieStore.get("cms-active-site")?.value;
-  const allTools = await _buildAllTools(activeOrg, activeSite);
+  // F211.2 — dates and numbers in tool output follow the admin language.
+  const uiLocale = await getRequestLocaleSafe();
+  const allTools = await _buildAllTools(activeOrg, activeSite, uiLocale);
 
   // Add web_search if configured (Brave or Tavily API key set in Settings → AI).
   // Same tool shape as agents use — chat gets current events, facts, statistics.
@@ -226,7 +231,7 @@ function siteHeaders(activeOrg?: string, activeSite?: string): Record<string, st
   return h;
 }
 
-async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<ToolPair[]> {
+async function _buildAllTools(activeOrg?: string, activeSite?: string, uiLocale: UiLocale = "en"): Promise<ToolPair[]> {
   return [
     // ── site_summary ──────────────────────────────────────────
     /**
@@ -333,7 +338,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
         }
 
         lines.push(``, `Content stats:`);
-        lines.push(`  ${totalDocs} documents (${totalPublished} published, ${totalDrafts} drafts), ${totalWords.toLocaleString()} words`);
+        lines.push(`  ${totalDocs} documents (${totalPublished} published, ${totalDrafts} drafts), ${formatNumber(totalWords, uiLocale)} words`);
         try {
           const { getContentRatio } = await import("@/lib/analytics");
           const ratio = await getContentRatio();
@@ -2057,9 +2062,9 @@ DESIGN GUIDELINES:
         try {
           const { getContentRatio } = await import("@/lib/analytics");
           const ratio = await getContentRatio();
-          return `**Content stats:**\n- ${totalDocs} documents (${published} published, ${drafts} drafts)\n- ${totalWords.toLocaleString()} total words\n- AI content ratio: ${Math.round((ratio.aiEdits / Math.max(ratio.totalEdits, 1)) * 100)}% (${ratio.aiEdits} AI / ${ratio.humanEdits} human edits)`;
+          return `**Content stats:**\n- ${totalDocs} documents (${published} published, ${drafts} drafts)\n- ${formatNumber(totalWords, uiLocale)} total words\n- AI content ratio: ${Math.round((ratio.aiEdits / Math.max(ratio.totalEdits, 1)) * 100)}% (${ratio.aiEdits} AI / ${ratio.humanEdits} human edits)`;
         } catch {
-          return `**Content stats:**\n- ${totalDocs} documents (${published} published, ${drafts} drafts)\n- ${totalWords.toLocaleString()} total words`;
+          return `**Content stats:**\n- ${totalDocs} documents (${published} published, ${drafts} drafts)\n- ${formatNumber(totalWords, uiLocale)} total words`;
         }
       },
     },
@@ -2359,7 +2364,7 @@ DESIGN GUIDELINES:
 
         // Group by date for cleaner output
         for (const entry of recent) {
-          const date = new Date(entry.timestamp).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+          const date = formatDateTime(entry.timestamp, uiLocale, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
           const s = entry.scores;
           lines.push(`- **${date}** (${entry.strategy}) — Perf: ${s.performance} | A11y: ${s.accessibility} | SEO: ${s.seo} | BP: ${s.bestPractices}`);
         }
@@ -2405,7 +2410,7 @@ DESIGN GUIDELINES:
           if (!result) continue;
           const s = result.scores;
           lines.push(
-            `**${result.strategy === "mobile" ? "Mobile" : "Desktop"}** (${new Date(result.timestamp).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })})`,
+            `**${result.strategy === "mobile" ? "Mobile" : "Desktop"}** (${formatDateTime(result.timestamp, uiLocale, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })})`,
             `URL: ${result.url}`,
             ``,
             `| Category | Score |`,
@@ -2554,7 +2559,7 @@ DESIGN GUIDELINES:
           return header + "\n\n" + limited.map((s) => {
             const name = String(s.data.name ?? s.data.email ?? "Anonymous");
             const subject = s.data.subject ? ` — ${s.data.subject}` : "";
-            const date = new Date(s.createdAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+            const date = formatDateTime(s.createdAt, uiLocale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
             const badge = s.status === "new" ? " **NEW**" : s.status === "archived" ? " (archived)" : "";
             const msg = String(s.data.message ?? s.data.body ?? "").slice(0, 80);
             const preview = msg ? `\n  > ${msg}${msg.length >= 80 ? "…" : ""}` : "";
@@ -2634,7 +2639,7 @@ DESIGN GUIDELINES:
           const lines = [
             `**Form:** ${sub.form}`,
             `**Status:** ${sub.status}`,
-            `**Submitted:** ${new Date(sub.createdAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+            `**Submitted:** ${formatDateTime(sub.createdAt, uiLocale, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
             ``,
           ];
           for (const [key, value] of Object.entries(sub.data)) {
@@ -3100,7 +3105,7 @@ DESIGN GUIDELINES:
         const recent = all.slice(-limit).reverse();
         if (recent.length === 0) return "No feedback recorded for this agent yet.";
         return recent.map((e) => {
-          if (e.type === "rejection") return `- **rejection** _(${new Date(e.createdAt).toLocaleDateString()})_: ${e.notes ?? "(no notes)"}`;
+          if (e.type === "rejection") return `- **rejection** _(${formatDate(e.createdAt, uiLocale)})_: ${e.notes ?? "(no notes)"}`;
           return `- **${e.type}** on \`${e.field ?? "?"}\`: \"${(e.original ?? "").slice(0, 60)}\" → \"${(e.corrected ?? "").slice(0, 60)}\"`;
         }).join("\n");
       },

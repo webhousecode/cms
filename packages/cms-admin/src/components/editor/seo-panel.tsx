@@ -8,6 +8,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
 import { HelpCard } from "@/components/ui/help-card";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 interface Props {
   collection: string;
@@ -22,6 +23,7 @@ interface Props {
 
 export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) {
   const t = useT();
+  const fmt = useFormat();
   const seo: SeoFields = (doc.data._seo as SeoFields) ?? {};
   const [metaTitle, setMetaTitle] = useState(seo.metaTitle ?? "");
   const [metaDesc, setMetaDesc] = useState(seo.metaDescription ?? "");
@@ -103,6 +105,7 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          // i18n-ignore: model prompt input
           text: `Title: ${title}\n\nContent: ${content.slice(0, 2000)}`,
           instruction: `Generate SEO metadata for this content. Return ONLY a JSON object with these fields:
 {
@@ -313,7 +316,7 @@ Rules:
         {lastOptimized && !confirmReoptimize ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
             <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-              {t("editor.seoPanel.optimizedOn", { date: new Date(lastOptimized).toLocaleDateString() })}
+              {t("editor.seoPanel.optimizedOn", { date: fmt.date(lastOptimized) })}
             </p>
             <button data-testid="seo-reoptimize-trigger" type="button" onClick={() => setConfirmReoptimize(true)}
               style={{

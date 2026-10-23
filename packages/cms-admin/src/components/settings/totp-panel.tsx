@@ -15,6 +15,7 @@
 
 import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 interface Status {
   enabled: boolean;
@@ -25,6 +26,7 @@ interface Status {
 
 export function TotpPanel() {
   const t = useT();
+  const fmt = useFormat();
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState("");
 
@@ -228,8 +230,8 @@ export function TotpPanel() {
           {status.enabled ? (
             <div className="space-y-2">
               <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                {t("settings.totp.added", { date: status.createdAt ? new Date(status.createdAt).toLocaleDateString() : "" })}
-                {status.lastUsedAt && ` · ${t("settings.totp.lastUsed", { date: new Date(status.lastUsedAt).toLocaleDateString() })}`}
+                {t("settings.totp.added", { date: status.createdAt ? fmt.date(status.createdAt) : "" })}
+                {status.lastUsedAt && ` · ${t("settings.totp.lastUsed", { date: fmt.date(status.lastUsedAt) })}`}
                 {" · "}{t("settings.totp.backupCodesLeft", { count: status.backupCodesRemaining ?? 0 })}
               </p>
               {confirmDisable ? (

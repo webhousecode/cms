@@ -89,7 +89,8 @@
     "pushFailed": "❌ AI-agent fejlede",
     "pushDone": "✅ AI-agent færdig",
     "pushBuildFailed": "❌ Bygning fejlede",
-    "pushBuildSucceeded": "✅ Bygning lykkedes"
+    "pushBuildSucceeded": "✅ Bygning lykkedes",
+    "workflowLabel": "Workflow: {name}"
   },
   "lib": {
     "capabilityOff": "Denne funktion er ikke slået til for dette site",

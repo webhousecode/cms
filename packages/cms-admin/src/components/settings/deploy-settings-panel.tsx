@@ -8,6 +8,8 @@ import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy, Globe, Search
 import { DeployModal } from "@/components/deploy-modal";
 import { PushSubscriptionToggle } from "@/components/push-subscription-toggle";
 import { useT } from "@/lib/i18n-context";
+import { formatDateTime, useFormat } from "@/lib/format-locale";
+import type { UiLocale } from "@/i18n/locale";
 
 /** Renders a translated sentence whose {placeholders} are React nodes (e.g. <strong>). */
 function fillNodes(template: string, nodes: Record<string, React.ReactNode>): React.ReactNode[] {
@@ -129,6 +131,7 @@ interface FlyLiveStatus {
 
 export function DeploySettingsPanel() {
   const t = useT();
+  const fmt = useFormat();
   const [config, setConfig] = useState<DeployConfig>(CONFIG_DEFAULTS);
   const [canAutoDeploy, setCanAutoDeploy] = useState(false);
   const [hasGitHubToken, setHasGitHubToken] = useState(false);
@@ -1341,7 +1344,7 @@ export function DeploySettingsPanel() {
                   {d.status === "triggered" && <Loader2 className="animate-spin" style={{ width: "0.8rem", height: "0.8rem" }} />}
                 </span>
                 <span style={{ color: "var(--muted-foreground)", fontFamily: "monospace", fontSize: "0.7rem" }}>
-                  {formatTime(d.timestamp)}
+                  {formatTime(d.timestamp, fmt.locale)}
                 </span>
                 <span style={{ color: "var(--muted-foreground)", fontFamily: "monospace", fontSize: "0.7rem" }}>
                   {d.duration ? `${(d.duration / 1000).toFixed(1)}s` : "—"}
@@ -1420,9 +1423,9 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-function formatTime(iso: string): string {
+function formatTime(iso: string, locale: UiLocale): string {
   try {
-    return new Date(iso).toLocaleString("da-DK", {
+    return formatDateTime(iso, locale, {
       day: "2-digit", month: "2-digit", year: "numeric",
       hour: "2-digit", minute: "2-digit",
     });

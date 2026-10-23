@@ -58,7 +58,7 @@ function buildSchemaInstructions(fields: FieldDef[]): string {
       const hint = constraint ? `<select: ${constraint}>` : `<${f.type}>`; // i18n-ignore: model prompt (field type hint)
       const req = f.required ? " (required)" : "";
       const lbl = f.label ? ` — ${f.label}` : "";
-      return `  "${f.name}": ${hint}${req}${lbl}`;
+      return `  "${f.name}": ${hint}${req}${lbl}`; // i18n-ignore: model prompt (JSON field shape)
     })
     .join(",\n");
   return `## Output format
@@ -312,7 +312,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
 
   const title = typeof contentData["title"] === "string"
     ? contentData["title"]
-    : `${agent.name} — ${new Date().toLocaleDateString()}`;
+    : `${agent.name} — ${new Date().toLocaleDateString()}`; // i18n-ignore: stored document title (site content), background job outside any request
 
   const slug = title
     .toLowerCase()

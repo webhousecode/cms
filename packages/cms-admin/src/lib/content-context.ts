@@ -60,6 +60,7 @@ export async function buildContentContext(): Promise<string> {
       const tagStr = tags ? ` [tags: ${tags}]` : ""; // i18n-ignore: model prompt context
       const excerptStr = excerpt ? ` — ${excerpt}` : "";
 
+      // i18n-ignore: model prompt context
       lines.push(`- "${title}" ${url} [${col.label ?? col.name}]${tagStr}${excerptStr}`);
     }
   }

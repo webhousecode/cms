@@ -21,7 +21,7 @@
  *  Den står her som en NØDBREMSE, ikke som sandheden — modsat før, hvor den
  *  VAR sandheden. Bliver den forældet, siger svaret det. */
 export const RESERVE_KURS = 6.43;
-export const RESERVE_MAALT = "8. september 2026"; // i18n-ignore: measurement date stamp of the fallback exchange rate (data value, Danish-dated)
+export const RESERVE_MAALT = "2026-09-08";
 
 const KILDE = "https://open.er-api.com/v6/latest/USD";
 /** Seks timer. Kort nok til at følge en kurs, langt nok til at et opslag ikke
@@ -32,7 +32,9 @@ export type Kurs = {
   kurs: number;
   /** Hvor tallet kom fra. En kurs uden herkomst kan ikke kontrolleres. */
   kilde: "opslag" | "reserve";
-  /** Hvornår kursen blev fastsat — tjenestens eget tidsstempel, ikke vores gæt. */
+  /** Hvornår kursen blev fastsat — tjenestens eget tidsstempel, ikke vores gæt.
+   *  En ren datostempel (YYYY-MM-DD, dansk kalenderdag); skærmen formaterer den
+   *  i admin-sproget. */
   maalt: string;
 };
 
@@ -43,15 +45,20 @@ export function nulstilKurs(): void {
   cache = null;
 }
 
-/** Dansk dato, dansk tid — containeren kører UTC, og en dato uden zone læses i
- *  læserens egen. Se husets tidsregel. */
+/** Kalenderdagen i dansk tid som YYYY-MM-DD — containeren kører UTC, og en
+ *  dato uden zone læses i læserens egen. Se husets tidsregel. Værdien caches på
+ *  modulet og deles af alle forespørgsler, så den er et sprogneutralt stempel;
+ *  skærmen formaterer den i admin-sproget. */
 function danskDato(d: Date): string {
-  return d.toLocaleDateString("da-DK", {
-    day: "numeric",
-    month: "long",
+  // i18n-ignore: machine date stamp (YYYY-MM-DD), formatted for the reader on the page
+  const dele = new Intl.DateTimeFormat("en-CA", {
     year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
     timeZone: "Europe/Copenhagen",
-  });
+  }).formatToParts(d);
+  const del = (type: string) => dele.find((x) => x.type === type)?.value ?? "";
+  return `${del("year")}-${del("month")}-${del("day")}`;
 }
 
 /**

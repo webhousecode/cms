@@ -224,7 +224,7 @@ function DeployButton() {
           const elapsed = pollStartRef.current ? Math.round((Date.now() - pollStartRef.current) / 1000) : undefined;
           if (d.status === "success") {
             const desc = d.url
-              ? `${d.url}${elapsed ? ` · ${elapsed}s` : ""}`
+              ? `${d.url}${elapsed ? ` · ${elapsed}s` : ""}` // i18n-ignore: URL plus duration in seconds, same in da and en
               : elapsed ? t("shell.adminHeader.liveInSeconds", { seconds: elapsed }) : t("shell.adminHeader.liveNow");
             toast.success(t("shell.adminHeader.publishedRocket"), {
               description: desc,
@@ -262,6 +262,7 @@ function DeployButton() {
           const elapsed = Math.round((Date.now() - pollStartRef.current) / 1000);
           if (d.conclusion === "success") {
             toast.success(t("shell.adminHeader.publishedRocket"), {
+              // i18n-ignore: URL plus duration in seconds, same in da and en
               description: liveUrl ? `${liveUrl} · ${elapsed}s` : t("shell.adminHeader.doneInSeconds", { seconds: elapsed }),
               duration: 12000,
               action: liveUrl ? { label: t("shell.adminHeader.open"), onClick: () => window.open(liveUrl, "_blank") } : undefined,

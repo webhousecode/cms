@@ -13,6 +13,7 @@ import type { AgentConfig } from "@/lib/agents";
 import { TabTitle } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 const ROLES = [
   { value: "copywriter", labelKey: "pages.agentEdit.roles.copywriter" },
@@ -45,6 +46,7 @@ const inputStyle: React.CSSProperties = {
 
 export default function AgentDetailPage() {
   const t = useT();
+  const fmt = useFormat();
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
   const siteRole = useSiteRole();
@@ -463,7 +465,7 @@ export default function AgentDetailPage() {
                     }}>{f.type}</span>
                     {f.field && <span className="text-muted-foreground">{t("pages.agentEdit.fieldLabel")} <code>{f.field}</code></span>}
                     <span className="text-muted-foreground ml-auto">
-                      {new Date(f.createdAt).toLocaleString()}
+                      {fmt.dateTime(f.createdAt)}
                     </span>
                   </div>
                   {f.type === "rejection" && f.notes && (

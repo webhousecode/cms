@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
           controller.enqueue(encoder.encode(text.slice(i, i + CHUNK)));
         }
       } catch (err) {
-        controller.enqueue(encoder.encode(`Error: ${(err as Error).message}`));
+        controller.enqueue(encoder.encode(t("errCms.brandVoice.streamError", { message: (err as Error).message })));
       } finally {
         controller.close();
       }

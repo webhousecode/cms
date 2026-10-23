@@ -17,6 +17,7 @@ import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useHeaderData } from "@/lib/header-data-context";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 /** Renders a translated sentence whose {placeholders} are React nodes. */
 function withParts(text: string, parts: Record<string, ReactNode>): ReactNode[] {
@@ -70,6 +71,7 @@ const knap = (primaer: boolean, slukket = false): React.CSSProperties => ({
 
 export default function PodcastAfsnitPage() {
   const t = useT();
+  const fmt = useFormat();
   const slug = String(useParams().slug ?? "");
   const { user } = useHeaderData();
   const maaSkrive = !!user?.permissions?.includes("podcast.edit");
@@ -192,7 +194,7 @@ export default function PodcastAfsnitPage() {
 
           <h2 style={{ fontSize: ".95rem", margin: "0 0 .25rem" }}>{t("tools.podcast.script")}</h2>
           <p style={{ color: "var(--muted-foreground)", fontSize: ".8rem", margin: "0 0 1rem" }}>
-            {t("tools.podcast.lineStats", { lines: replikker.length, chars: replikker.reduce((n, r) => n + r.text.length, 0).toLocaleString("da-DK") })}
+            {t("tools.podcast.lineStats", { lines: replikker.length, chars: fmt.number(replikker.reduce((n, r) => n + r.text.length, 0)) })}
           </p>
 
           {replikker.length === 0 ? (
@@ -291,7 +293,7 @@ export default function PodcastAfsnitPage() {
               <h3 style={{ fontSize: ".8rem", margin: "0 0 .6rem" }}>{t("tools.podcast.whatItCosts")}</h3>
               <dl data-testid="podcast-pris" style={{ margin: 0, fontSize: ".78rem", display: "grid", gap: ".3rem" }}>
                 {[
-                  [t("tools.podcast.charsInScript"), estimat.tegn.toLocaleString("da-DK")],
+                  [t("tools.podcast.charsInScript"), fmt.number(estimat.tegn)],
                   [t("tools.podcast.thisRecording"), estimat.prisDkk],
                   [t("tools.podcast.estimatedLength"), t("tools.podcast.minutes", { n: estimat.minutter })],
                 ].map(([k, v]) => (
@@ -309,7 +311,7 @@ export default function PodcastAfsnitPage() {
                 data-testid="podcast-pris-kurs"
                 style={{ margin: ".5rem 0 0", fontSize: ".68rem", color: "var(--muted-foreground)" }}
               >
-                {t(estimat.kursKilde === "reserve" ? "tools.podcast.billedNoteReserve" : "tools.podcast.billedNote", { usd: estimat.prisUsd.toFixed(2), date: estimat.kursMaalt })}
+                {t(estimat.kursKilde === "reserve" ? "tools.podcast.billedNoteReserve" : "tools.podcast.billedNote", { usd: estimat.prisUsd.toFixed(2), date: fmt.date(estimat.kursMaalt, { day: "numeric", month: "long", year: "numeric" }) })}
               </p>
             </section>
           )}

@@ -37,7 +37,7 @@ const JSON_OUTPUT_RULE =
 
 /** Append a JSON-shape instruction so vision/chat replies parse deterministically. */
 function withJsonShape(prompt: string, shape: string): string {
-  return `${prompt}${JSON_OUTPUT_RULE}\nShape: ${shape}`;
+  return `${prompt}${JSON_OUTPUT_RULE}\nShape: ${shape}`; // i18n-ignore: model prompt
 }
 
 function getAnalysisPrompt(language: string = "da"): string {

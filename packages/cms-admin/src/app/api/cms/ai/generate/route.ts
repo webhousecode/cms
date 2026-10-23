@@ -27,7 +27,7 @@ function buildSchemaInstructions(fields: FieldDef[]): string {
       }
       const req = f.required ? " (required)" : "";
       const lbl = f.label ? ` — ${f.label}` : "";
-      return `  "${f.name}": ${hint}${req}${lbl}`;
+      return `  "${f.name}": ${hint}${req}${lbl}`; // i18n-ignore: model prompt (JSON field shape)
     })
     .join(",\n");
   return `Respond with ONLY a valid JSON object. No markdown fences, no explanation, no preamble.

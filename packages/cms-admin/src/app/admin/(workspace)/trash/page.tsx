@@ -6,6 +6,7 @@ import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 const RETENTION_DAYS = parseInt(process.env.NEXT_PUBLIC_TRASH_RETENTION_DAYS ?? "30");
 
@@ -53,6 +54,7 @@ function ConfirmDialog({ message, confirmLabel, onConfirm, onCancel }: {
 
 export default function TrashPage() {
   const t = useT();
+  const fmt = useFormat();
   const [items, setItems] = useState<TrashedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -231,7 +233,7 @@ export default function TrashPage() {
                   </div>
                   {trashedAt && (
                     <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", whiteSpace: "nowrap", flexShrink: 0 }}>
-                      {trashedAt.toLocaleDateString()}
+                      {fmt.date(trashedAt)}
                     </span>
                   )}
                   {!readOnly && (

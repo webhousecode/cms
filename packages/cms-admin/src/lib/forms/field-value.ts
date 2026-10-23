@@ -49,6 +49,7 @@ export function formatFieldValue(value: unknown, type: string | undefined, lang:
     const d = new Date(raw);
     if (raw && !Number.isNaN(d.getTime()) && /^\d{4}-\d{2}-\d{2}/.test(raw)) {
       try {
+        // i18n-ignore: form-submission mail — follows the SITE's language, not the admin's
         return new Intl.DateTimeFormat(lang === "da" ? "da-DK" : "en-GB", {
           dateStyle: "long",
           timeZone: "Europe/Copenhagen",

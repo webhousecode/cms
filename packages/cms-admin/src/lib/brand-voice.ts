@@ -197,15 +197,15 @@ export async function getBrandVoiceForLocale(locale: string): Promise<BrandVoice
 /** Returns a condensed system-prompt injection for agents */
 export function brandVoiceToPromptContext(bv: BrandVoice): string {
   return [
-    `Site: ${bv.name} (${bv.industry})`,
-    `Description: ${bv.description}`,
-    `Language: ${bv.language}`,
+    `Site: ${bv.name} (${bv.industry})`, // i18n-ignore: model prompt
+    `Description: ${bv.description}`, // i18n-ignore: model prompt
+    `Language: ${bv.language}`, // i18n-ignore: model prompt
     `Target audience: ${bv.targetAudience}`, // i18n-ignore: model prompt
-    `Tone: ${bv.primaryTone}`,
-    `Personality: ${bv.brandPersonality.join(", ")}`,
+    `Tone: ${bv.primaryTone}`, // i18n-ignore: model prompt
+    `Personality: ${bv.brandPersonality.join(", ")}`, // i18n-ignore: model prompt
     `Content goals: ${bv.contentGoals.join(", ")}`, // i18n-ignore: model prompt
     `Content pillars: ${bv.contentPillars.join(", ")}`, // i18n-ignore: model prompt
-    bv.avoidTopics.length ? `Avoid: ${bv.avoidTopics.join(", ")}` : "",
+    bv.avoidTopics.length ? `Avoid: ${bv.avoidTopics.join(", ")}` : "", // i18n-ignore: model prompt
     bv.seoKeywords.length ? `SEO keywords: ${bv.seoKeywords.join(", ")}` : "", // i18n-ignore: model prompt
     bv.examplePhrases.length ? `Voice examples: "${bv.examplePhrases.join('", "')}"` : "", // i18n-ignore: model prompt
   ]

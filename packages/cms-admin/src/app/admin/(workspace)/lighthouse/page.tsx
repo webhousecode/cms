@@ -5,10 +5,12 @@ import { Gauge, RefreshCw, Monitor, Smartphone, ChevronDown, ChevronRight, Trend
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { TabTitle } from "@/lib/tabs-context";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 import { scoreColor, SCORE_COLOR_MAP, type LighthouseResult, type ScoreHistoryEntry } from "@/lib/lighthouse/types";
 
 export default function LighthousePage() {
   const t = useT();
+  const fmt = useFormat();
   const [mobile, setMobile] = useState<LighthouseResult | null>(null);
   const [desktop, setDesktop] = useState<LighthouseResult | null>(null);
   const [history, setHistory] = useState<ScoreHistoryEntry[]>([]);
@@ -228,7 +230,7 @@ export default function LighthousePage() {
             {mobile && (
               <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "2rem" }}>
                 {/* i18n-ignore: brand name between data values */}
-                {mobile.url} · PageSpeed Insights · {mobile.timestamp ? new Date(mobile.timestamp).toLocaleString() : ""}
+                {mobile.url} · PageSpeed Insights · {mobile.timestamp ? fmt.dateTime(mobile.timestamp) : ""}
               </div>
             )}
 
@@ -580,6 +582,7 @@ function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | 
 
 function HistoryTable({ history }: { history: ScoreHistoryEntry[] }) {
   const t = useT();
+  const fmt = useFormat();
   return (
     <div>
       <div style={{ fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>
@@ -600,7 +603,7 @@ function HistoryTable({ history }: { history: ScoreHistoryEntry[] }) {
           <tbody>
             {[...history].reverse().slice(0, 30).map((entry, i) => (
               <tr key={i} style={{ borderTop: "1px solid var(--border)" }}>
-                <td style={tdStyle}>{new Date(entry.timestamp).toLocaleDateString()}</td>
+                <td style={tdStyle}>{fmt.date(entry.timestamp)}</td>
                 <td style={tdStyle}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: "0.2rem" }}>
                     {entry.strategy === "mobile" ? <Smartphone style={{ width: 10, height: 10 }} /> : <Monitor style={{ width: 10, height: 10 }} />}

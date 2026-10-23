@@ -47,7 +47,8 @@ function tilOejeblik(naar: Date | string): Date {
 /** Felterne i dansk tid for et øjeblik. `sv-SE` fordi det ISO-formaterer. */
 function dkDele(naar: Date | string): { dag: string; time: string; minut: string; sekund: string } {
   const d = tilOejeblik(naar);
-  const dag = new Intl.DateTimeFormat("sv-SE", { timeZone: DK_ZONE }).format(d); // YYYY-MM-DD
+  const dag = new Intl.DateTimeFormat("sv-SE", { timeZone: DK_ZONE }).format(d); // YYYY-MM-DD — i18n-ignore: machine format (sv-SE = ISO digits)
+  // i18n-ignore: machine format (sv-SE = ISO digits), parsed into numbers
   const [time, minut, sekund] = new Intl.DateTimeFormat("sv-SE", {
     timeZone: DK_ZONE,
     hour: "2-digit",

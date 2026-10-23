@@ -77,6 +77,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const model = await getModel("content");
   const ai = await getAI();
 
+  // i18n-ignore: model prompt
   const systemPrompt = `You are a professional translator. Translate the text content in this HTML document from ${sourceLang} to ${actualTargetLang}.
 ${buildLocaleInstruction(actualTarget)}
 

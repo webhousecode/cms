@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface InteractiveMeta {
@@ -47,17 +48,10 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 /* ─── Page ───────────────────────────────────────────────────── */
 export default function InteractivesPage() {
   const t = useT();
+  const fmt = useFormat();
   const router = useRouter();
   const siteRole = useSiteRole();
   const readOnly = siteRole === null || siteRole === "viewer";
@@ -452,7 +446,7 @@ export default function InteractivesPage() {
                   <p className="text-xs font-semibold text-foreground truncate mb-1" title={item.name}>{item.name}</p>
                   <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}>
                     {/* i18n-ignore: HTML entity separator */}
-                    {formatSize(item.size)} &middot; {formatDate(item.updatedAt)}
+                    {formatSize(item.size)} &middot; {fmt.date(item.updatedAt)}
                     <StatusBadge status={item.status} />
                     {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "color-mix(in srgb, var(--brand) 12%, transparent)", color: "var(--brand)" }}>{item.locale.toUpperCase()}</span>}
                   </p>
@@ -516,7 +510,7 @@ export default function InteractivesPage() {
                     {formatSize(item.size)}
                   </td>
                   <td style={{ padding: "0.625rem 0.75rem", fontSize: "0.8rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-                    {formatDate(item.updatedAt)}
+                    {fmt.date(item.updatedAt)}
                   </td>
                   <td data-testid={`interactives-list-menu-${item.id}`} style={{ padding: "0.625rem 0.5rem", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
                     <ItemDropdown item={item} onEdit={() => router.push(`/admin/interactives/${item.id}`)} onTogglePublish={() => togglePublish(item)} onClone={() => cloneItem(item)} onTrash={() => setConfirmTrash(item)} />

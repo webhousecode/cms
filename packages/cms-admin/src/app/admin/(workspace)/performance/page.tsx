@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -66,7 +67,7 @@ function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`; // i18n-ignore: unit suffix
   const s = ms / 1000;
   if (s < 60) return `${s.toFixed(1)}s`;
-  return `${Math.floor(s / 60)}m ${Math.floor(s % 60)}s`;
+  return `${Math.floor(s / 60)}m ${Math.floor(s % 60)}s`; // i18n-ignore: duration unit abbreviations, same in da and en
 }
 
 function formatCost(usd: number): string {
@@ -96,6 +97,7 @@ function getCurrentMonthRange(): { dateFrom: string; dateTo: string } {
 
 export default function PerformancePage() {
   const t = useT();
+  const fmt = useFormat();
   const [runs, setRuns] = useState<RunEntry[]>([]);
   const [agents, setAgents] = useState<AgentStats[]>([]);
   const [costs, setCosts] = useState<CostSummary | null>(null);
@@ -460,9 +462,9 @@ export default function PerformancePage() {
                           {run.model}
                         </td>
                         <td className="py-2 text-right font-mono text-muted-foreground">
-                          {(
-                            run.tokensUsed.input + run.tokensUsed.output
-                          ).toLocaleString()}
+                          {fmt.number(
+                            run.tokensUsed.input + run.tokensUsed.output,
+                          )}
                         </td>
                         <td className="py-2 text-right font-mono text-muted-foreground">
                           {formatCost(run.costUsd)}

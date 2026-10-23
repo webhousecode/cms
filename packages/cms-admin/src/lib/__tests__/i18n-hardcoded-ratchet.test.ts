@@ -65,4 +65,9 @@ describe("hardcoded UI text ratchet", () => {
     expect(scanLiterals("x.ts", src).map((f) => f.text)).toEqual(["Shown to people", "Bare marker"]);
     expect(scanLiterals("y.ts", `/* i18n-ignore-file: prompts for the model */\nconst a = "Hello there";`)).toEqual([]);
   });
+
+  it("a template is judged as written: a key stays a key, a sentence with a value stays a sentence", () => {
+    const src = "const a = `editor.blocks.${name}.label`;\nconst b = `${base}.fields.${f}`;\nconst c = `Published · ${what} · ${when}`;\nconst d = `Saved ${n} documents`;";
+    expect(scanLiterals("x.ts", src).map((f) => f.text)).toEqual(["Published · {…} · {…}", "Saved {…} documents"]);
+  });
 });

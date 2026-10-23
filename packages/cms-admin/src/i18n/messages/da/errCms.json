@@ -87,7 +87,8 @@
   },
   "brandVoice": {
     "somethingWrong": "Noget gik galt — prøv igen.",
-    "parseFailed": "Kunne ikke læse den oversatte JSON"
+    "parseFailed": "Kunne ikke læse den oversatte JSON",
+    "streamError": "Fejl: {message}"
   },
   "build": {
     "loadSiteFailed": "Kunne ikke indlæse sitet",

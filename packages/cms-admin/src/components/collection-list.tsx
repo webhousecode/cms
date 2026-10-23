@@ -11,7 +11,8 @@ import { LOCALE_FLAGS } from "@/lib/locale";
 import { PreviewThumb, NoPreviewPlaceholder } from "@/components/preview-thumb";
 import { useHeaderData } from "@/lib/header-data-context";
 import { docPath, type LocaleStrategy } from "@/lib/doc-url";
-import { useT } from "@/lib/i18n-context";
+import { useLocale, useT } from "@/lib/i18n-context";
+import type { UiLocale } from "@/i18n/locale";
 
 export type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "published" | "draft" | "scheduled" | "expired" | "trashed";
@@ -65,7 +66,7 @@ function buildColumns(fields: FieldConfig[], titleField: string) {
   return extra;
 }
 
-function renderCellValue(field: FieldConfig, value: unknown, t: ReturnType<typeof useT>): React.ReactNode {
+function renderCellValue(field: FieldConfig, value: unknown, t: ReturnType<typeof useT>, locale: UiLocale): React.ReactNode {
   if (value === undefined || value === null || value === "") {
     return <span style={{ opacity: 0.3, fontSize: "0.8rem" }}>—</span>;
   }
@@ -86,7 +87,7 @@ function renderCellValue(field: FieldConfig, value: unknown, t: ReturnType<typeo
     case "boolean":
       return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{value ? t("common.yes") : t("common.no")}</span>;
     case "date":
-      return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatDate(String(value))}</span>;
+      return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatDate(String(value), locale)}</span>;
     case "relation":
       if (Array.isArray(value)) return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{t("misc.collectionList.itemCount", { count: value.length })}</span>;
       return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{String(value)}</span>;
@@ -261,6 +262,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
 
 export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix, urlPattern, localeStrategy = "prefix-other", defaultLocale, siteLocales }: Props) {
   const t = useT();
+  const locale = useLocale();
   const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilterRaw] = useState<StatusFilter>(() => {
@@ -673,13 +675,13 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                     {/* Dynamic columns */}
                     {extraColumns.map((col) => (
                       <td key={col.name} style={{ padding: "0.625rem 0.75rem" }}>
-                        {renderCellValue(col, doc.data[col.name], t)}
+                        {renderCellValue(col, doc.data[col.name], t, locale)}
                       </td>
                     ))}
 
                     {/* Updated */}
                     <td style={{ padding: "0.625rem 0.75rem", fontSize: "0.75rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-                      {formatDate(doc.updatedAt)}
+                      {formatDate(doc.updatedAt, locale)}
                     </td>
 
                     {/* Actions */}

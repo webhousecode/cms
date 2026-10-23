@@ -22,6 +22,7 @@ import type { AgentConfig } from "@/lib/agents";
 import type { AgentTemplate } from "@/lib/agent-templates";
 import type { AgentWorkflow } from "@/lib/agent-workflows";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 type TabId = "agents" | "templates" | "workflows";
 
@@ -99,6 +100,7 @@ interface EditDraft {
 
 function TemplatesTab({ readOnly }: { readOnly: boolean }) {
   const t = useT();
+  const fmt = useFormat();
   const [local, setLocal] = useState<AgentTemplate[]>([]);
   const [marketplace, setMarketplace] = useState<AgentTemplate[]>([]);
   const [marketplaceError, setMarketplaceError] = useState<string | undefined>(undefined);
@@ -401,7 +403,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   {tpl.description || <em>{t("agents.agentsTabs.noDescription")}</em>}
                 </p>
                 <p className="text-[0.65rem] font-mono text-muted-foreground/70 mt-auto">
-                  {t("agents.agentsTabs.savedOn", { date: new Date(tpl.createdAt).toLocaleDateString() })}
+                  {t("agents.agentsTabs.savedOn", { date: fmt.date(tpl.createdAt) })}
                 </p>
               </div>
               )
@@ -461,6 +463,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
 
 function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: boolean }) {
   const t = useT();
+  const fmt = useFormat();
   const [workflows, setWorkflows] = useState<AgentWorkflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -934,7 +937,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                   <div className="flex items-center gap-3 mt-2 text-[0.65rem] font-mono text-muted-foreground">
                     <span>{t("agents.agentsTabs.runs", { count: wf.stats.totalRuns })}</span>
                     <span>{t("agents.agentsTabs.totalCost", { cost: wf.stats.totalCostUsd.toFixed(4) })}</span>
-                    {wf.stats.lastRunAt && <span>{t("agents.agentsTabs.lastRun", { date: new Date(wf.stats.lastRunAt).toLocaleString() })}</span>}
+                    {wf.stats.lastRunAt && <span>{t("agents.agentsTabs.lastRun", { date: fmt.dateTime(wf.stats.lastRunAt) })}</span>}
                   </div>
                 </div>
                 {!readOnly && (

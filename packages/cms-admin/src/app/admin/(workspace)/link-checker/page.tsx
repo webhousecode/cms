@@ -9,6 +9,7 @@ import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 type RunState = "idle" | "running" | "done" | "error";
 type FixState = { loading: boolean; suggestion?: string | null; reason?: string; confidence?: string; applied?: boolean; error?: string };
@@ -171,6 +172,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
 
 export default function LinkCheckerPage() {
   const t = useT();
+  const fmt = useFormat();
   const siteRole = useSiteRole();
   const readOnly = siteRole === null || siteRole === "viewer";
   const [state, setState] = useState<RunState>("idle");
@@ -363,7 +365,7 @@ export default function LinkCheckerPage() {
         {/* Last-run notice */}
         {checkedAt && state !== "running" && (
           <p className="text-xs text-muted-foreground mb-4 font-mono">
-            {t("tools.linkChecker.lastChecked", { date: new Date(checkedAt).toLocaleString(), ago: timeAgo(checkedAt, t) })}
+            {t("tools.linkChecker.lastChecked", { date: fmt.dateTime(checkedAt), ago: timeAgo(checkedAt, t) })}
           </p>
         )}
 
@@ -529,7 +531,7 @@ export default function LinkCheckerPage() {
           <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
             <CheckCircle style={{ width: "2rem", height: "2rem", color: "#4ade80" }} />
             <p className="text-sm font-medium text-foreground">{t("tools.linkChecker.allHealthy")}</p>
-            <p className="text-xs">{t("tools.linkChecker.checkedItems", { n: results.length, date: new Date(checkedAt!).toLocaleString() })}</p>
+            <p className="text-xs">{t("tools.linkChecker.checkedItems", { n: results.length, date: fmt.dateTime(checkedAt!) })}</p>
           </div>
         )}
       </div>

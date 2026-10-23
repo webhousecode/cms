@@ -49,7 +49,7 @@ export async function notifySchedulerEvents(events: SchedulerEvent[], siteConfig
 
       await dispatchWebhooks(webhooks, {
         event: isPublish ? "content.published" : "content.unpublished",
-        title: isPublish ? `Published: ${title}` : `Unpublished: ${title}`,
+        title: isPublish ? `Published: ${title}` : `Unpublished: ${title}`, // i18n-ignore: webhook payload (F210.4)
         message: `**${title}** in \`${evt.collection}\``, // i18n-ignore: webhook payload (F210.4)
         color: isPublish ? 0x4ade80 : 0xef4444,
         fields: [

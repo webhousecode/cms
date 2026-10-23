@@ -50,6 +50,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
 function inferDeviceLabel(req: NextRequest, t: (key: string) => string): string {
   const ua = req.headers.get("user-agent") ?? "";
+  // i18n-ignore: OS and browser product names shown as-is
   if (/Mac/.test(ua)) return /Chrome/.test(ua) ? "Mac · Chrome" : /Safari/.test(ua) ? "Mac · Safari" : t("errAdmin.push.macBrowser");
   if (/Windows/.test(ua)) return t("errAdmin.push.windowsBrowser");
   if (/Linux/.test(ua)) return t("errAdmin.push.linuxBrowser");

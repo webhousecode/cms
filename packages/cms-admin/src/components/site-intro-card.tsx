@@ -38,7 +38,7 @@ export function SiteIntroCard() {
   function handleClick(e: React.MouseEvent) {
     e.preventDefault();
     if (thumbnailUrl) {
-      openTab(previewPath(thumbnailUrl), `Preview: ${siteName}`);
+      openTab(previewPath(thumbnailUrl), t("dashboard.siteIntroCard.previewTab", { name: siteName }));
     }
   }
 

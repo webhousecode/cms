@@ -18,6 +18,8 @@ import {
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useCapabilities } from "@/hooks/use-capabilities";
 import { useT } from "@/lib/i18n-context";
+import { formatDateTime, useFormat } from "@/lib/format-locale";
+import type { UiLocale } from "@/i18n/locale";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react").then(m => m.default), { ssr: false });
 
@@ -299,8 +301,8 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
+function formatDate(iso: string, locale: UiLocale): string {
+  return formatDateTime(iso, locale, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -312,6 +314,7 @@ function formatDate(iso: string): string {
 /* ─── Page ───────────────────────────────────────────────────── */
 export default function InteractiveDetailPage() {
   const t = useT();
+  const fmt = useFormat();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -946,11 +949,11 @@ export default function InteractiveDetailPage() {
             <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <div>
                 <p style={labelStyle}>{t("pages.interactiveEdit.created")}</p>
-                <p style={valueStyle}>{new Date(detail.createdAt).toLocaleString()}</p>
+                <p style={valueStyle}>{fmt.dateTime(detail.createdAt)}</p>
               </div>
               <div>
                 <p style={labelStyle}>{t("pages.interactiveEdit.lastUpdated")}</p>
-                <p style={valueStyle}>{new Date(detail.updatedAt).toLocaleString()}</p>
+                <p style={valueStyle}>{fmt.dateTime(detail.updatedAt)}</p>
               </div>
             </div>
           </div>

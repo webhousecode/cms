@@ -28,6 +28,7 @@
   },
   "siteIntroCard": {
     "loadingPreview": "Indlæser forhåndsvisning...",
-    "siteFallback": "Site"
+    "siteFallback": "Site",
+    "previewTab": "Forhåndsvisning: {name}"
   }
 }

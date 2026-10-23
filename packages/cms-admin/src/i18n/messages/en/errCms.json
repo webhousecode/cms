@@ -87,7 +87,8 @@
   },
   "brandVoice": {
     "somethingWrong": "Something went wrong — please try again.",
-    "parseFailed": "Failed to parse translated JSON"
+    "parseFailed": "Failed to parse translated JSON",
+    "streamError": "Error: {message}"
   },
   "build": {
     "loadSiteFailed": "Failed to load site",

@@ -17,6 +17,7 @@
 import { useEffect, useState } from "react";
 import { Key, Copy, Check, RefreshCw } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 interface BeamToken {
   token: string;
@@ -28,6 +29,7 @@ interface BeamToken {
 
 export function BeamTokensPanel() {
   const t = useT();
+  const fmt = useFormat();
   const [tokens, setTokens] = useState<BeamToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -124,7 +126,7 @@ export function BeamTokensPanel() {
             </button>
           </div>
           <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-            {t("misc.beamTokens.expiresAt", { date: new Date(newToken.expiresAt).toLocaleString() })}
+            {t("misc.beamTokens.expiresAt", { date: fmt.dateTime(newToken.expiresAt) })}
           </div>
         </div>
       )}
@@ -193,7 +195,7 @@ export function BeamTokensPanel() {
               }}>
                 <code>{tok.token}</code>
                 <span style={{ color: "var(--muted-foreground)", fontFamily: "system-ui, sans-serif" }}>
-                  {t("misc.beamTokens.expiresLower", { date: new Date(tok.expiresAt).toLocaleString() })}
+                  {t("misc.beamTokens.expiresLower", { date: fmt.dateTime(tok.expiresAt) })}
                 </span>
               </div>
             ))}

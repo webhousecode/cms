@@ -8,6 +8,7 @@ import { WelcomeScreen } from "./welcome-screen";
 import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy, Brain, Plus, Search, Download, Upload, Package } from "lucide-react";
 import { useHeaderData } from "@/lib/header-data-context";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 import { peekQuickAction } from "@broberg/cms-chat-client";
 
 interface ChatInterfaceProps {
@@ -38,6 +39,7 @@ type DrawerTab = "conversations" | "memory";
 
 export function ChatInterface({ collections, activeSiteId, visible }: ChatInterfaceProps) {
   const t = useT();
+  const fmt = useFormat();
   // Unique ID for this browser tab — used to skip self-broadcast reloads from SSE sync.
   const tabId = useRef(safeUUID());
   const [messages, setMessages] = useState<ChatMessageUI[]>([]);
@@ -334,7 +336,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantId
-              ? { ...m, content: m.content + `\n\nError: ${data.message}`, isStreaming: false }
+              ? { ...m, content: m.content + `\n\n${t("chat.chatInterface.errorPrefix", { error: data.message })}`, isStreaming: false }
               : m
           )
         );
@@ -846,7 +848,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                   </div>
                   <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginBottom: "8px" }}>
                     {importPreview.manifest?.exportedAt
-                      ? t("chat.chatInterface.exportedAt", { date: new Date(importPreview.manifest.exportedAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) })
+                      ? t("chat.chatInterface.exportedAt", { date: fmt.dateTime(importPreview.manifest.exportedAt, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) })
                       : ""}
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "3px", fontSize: "0.7rem", marginBottom: "8px" }}>
@@ -983,6 +985,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
   onLoad: () => void; onRename: (t: string) => void; onDelete: () => void; onStar: () => void;
 }) {
   const t = useT();
+  const fmt = useFormat();
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(title);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -1075,7 +1078,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
           {title}
         </div>
         <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
-          {new Date(updatedAt).toLocaleString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+          {fmt.dateTime(updatedAt, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
         </div>
       </button>
 

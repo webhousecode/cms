@@ -89,7 +89,8 @@
     "pushFailed": "❌ AI agent failed",
     "pushDone": "✅ AI agent done",
     "pushBuildFailed": "❌ Build failed",
-    "pushBuildSucceeded": "✅ Build succeeded"
+    "pushBuildSucceeded": "✅ Build succeeded",
+    "workflowLabel": "Workflow: {name}"
   },
   "lib": {
     "capabilityOff": "This feature is not enabled for this site",

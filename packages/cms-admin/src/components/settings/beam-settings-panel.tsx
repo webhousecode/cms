@@ -5,6 +5,7 @@ import { Download, Upload, Zap, FileArchive, CheckCircle, AlertTriangle, Key, Se
 import { BeamProgressModal } from "./beam-progress-modal";
 import { BeamImportModal } from "./beam-import-modal";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 /** Renders a translated sentence whose {placeholders} are React nodes (e.g. <code>). */
 function fillNodes(template: string, nodes: Record<string, React.ReactNode>): React.ReactNode[] {
@@ -47,6 +48,7 @@ interface BeamProgress {
 
 export function BeamSettingsPanel({ orgId }: { orgId: string }) {
   const t = useT();
+  const fmt = useFormat();
   // ── Export state ──
   const [exporting, setExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
@@ -527,7 +529,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               </button>
             </div>
             <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: 0 }}>
-              {t("integrations.beamSettings.expires", { time: new Date(beamToken.expiresAt).toLocaleTimeString() })}
+              {t("integrations.beamSettings.expires", { time: fmt.time(beamToken.expiresAt, { timeStyle: "medium" }) })}
             </p>
           </div>
         )}

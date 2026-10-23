@@ -5,6 +5,7 @@ import { Loader2, Send, RefreshCw, Pencil, History, ChevronDown, Languages, Chec
 import type { BrandVoice, BrandVoiceVersion } from "@/lib/brand-voice";
 import { useHeaderData } from "@/lib/header-data-context";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 const TRANSLATE_LANGUAGES = ["English", "Danish", "German", "French", "Spanish", "Norwegian", "Swedish"]; // i18n-ignore: language identifiers sent to the translate API; labels rendered via t(pages.brandVoice.languages.*)
 
@@ -68,6 +69,7 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
   onClose: () => void;
 }) {
   const t = useT();
+  const fmt = useFormat();
   const [restoring, setRestoring] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -107,7 +109,7 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
               <div style={{ padding: "0.75rem 1rem", display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--foreground)", margin: 0 }}>
-                    {new Date(v.completedAt).toLocaleString()}
+                    {fmt.dateTime(v.completedAt)}
                     {v.active && <span style={{ marginLeft: "0.5rem", fontSize: "0.65rem", color: "var(--primary)", fontWeight: 600 }}>{t("pages.brandVoice.history.active")}</span>}
                   </p>
                   <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
@@ -168,7 +170,7 @@ function timeAgo(iso: string): string {
   if (secs < 60) return `${secs}s ago`; // i18n-ignore: dead code, timeAgo() is never called
   if (secs < 3600) return `${Math.floor(secs / 60)}m ago`; // i18n-ignore: dead code, timeAgo() is never called
   if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`; // i18n-ignore: dead code, timeAgo() is never called
-  return new Date(iso).toLocaleDateString();
+  return new Date(iso).toLocaleDateString(); // i18n-ignore: dead code, timeAgo() is never called
 }
 
 /* ─── Edit form ─────────────────────────────────────────────────── */

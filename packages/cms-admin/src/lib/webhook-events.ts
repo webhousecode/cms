@@ -203,6 +203,7 @@ export async function fireAgentEvent(
   if (action === "completed" || action === "failed") {
     broadcastPush({
       title: (await serverT())(action === "failed" ? "system.agents.pushFailed" : "system.agents.pushDone"),
+      // i18n-ignore: agent, document and site names only, no words to translate
       body: `${agentName}${details?.documentTitle ? ` — ${details.documentTitle}` : ""} (${src.siteName})`,
       topic: "agent_completed",
       url: details?.linkUrl,

@@ -5,6 +5,7 @@ import { HardDrive, Download, Trash2, RotateCcw, Plus, Clock, FileArchive, Cloud
 import { TabTitle } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 interface Snapshot {
   id: string;
@@ -26,12 +27,6 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric" }) +
-    " " + d.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
-}
-
 function timeAgo(iso: string, t: (key: string, vars?: Record<string, string | number>) => string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -45,6 +40,7 @@ function timeAgo(iso: string, t: (key: string, vars?: Record<string, string | nu
 
 export default function BackupPage() {
   const t = useT();
+  const fmt = useFormat();
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -157,7 +153,7 @@ export default function BackupPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
                     <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                      {formatDate(snap.timestamp)}
+                      {fmt.date(snap.timestamp)} {fmt.time(snap.timestamp)}
                     </span>
                     <span style={{
                       fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "4px",

@@ -614,5 +614,5 @@ function formatDuration(ms: number): string {
   if (s < 60) return `${s}s`;
   const m = Math.floor(s / 60);
   const rem = s % 60;
-  return `${m}m ${rem}s`;
+  return `${m}m ${rem}s`; // i18n-ignore: duration unit abbreviations, same in da and en
 }

@@ -105,6 +105,7 @@ function looksLikeProse(v: string): boolean {
   if (/^[A-Z][a-z]{2,}(\.\.\.|…)?$/.test(s)) return true;          // "Saving…", "Dashboard"
   if (/\s/.test(s) && /\b[a-z]{2,}\b/.test(s)) return true;          // a sentence or a phrase
   if (/^[A-Z][a-z]+( [A-Z][a-z]+)+[.!?…]*$/.test(s)) return true;       // Title Case: "Scheduled Backup"
+  if (/^[A-Z][a-z]{2,}[ ]*[·:–—,] /.test(s)) return true;               // "Published · x", "Error: x"
   return false;
 }
 
@@ -158,8 +159,12 @@ export function scanLiterals(file: string, source: string): HardcodedText[] {
     if ((ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) && looksLikeProse(node.text) && !isCodeContext(node)) {
       out.push({ file, line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1, text: node.text.replace(/\s+/g, " ").trim() });
     } else if (ts.isTemplateExpression(node) && !isCodeContext(node)) {
-      const text = [node.head.text, ...node.templateSpans.map((s) => s.literal.text)].join(" {…} ");
-      if (looksLikeProse(text.replace(/\{…\}/g, "x"))) out.push({ file, line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1, text: text.replace(/\s+/g, " ").trim() });
+      // Judge the template as written — a placeholder stands for one word with no
+      // spaces added, so `editor.blocks.${name}.label` stays a key and
+      // `Published · ${what}` stays a sentence.
+      const parts = [node.head.text, ...node.templateSpans.map((s) => s.literal.text)];
+      const asWritten = parts.join("x");
+      if (looksLikeProse(asWritten)) out.push({ file, line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1, text: parts.join(" {…} ").replace(/\s+/g, " ").trim() });
     }
     ts.forEachChild(node, visit);
   };

@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useTabs } from "@/lib/tabs-context";
 import { playPublishSound, playExpireSound } from "@/lib/notification-sound";
+import { formatTime } from "@/lib/format-locale";
+import { useLocale, useT } from "@/lib/i18n-context";
 
 interface SchedulerEvent {
   id: string;
@@ -18,6 +20,12 @@ export function useSchedulerEvents() {
   const { updateTabStatusByPath } = useTabs();
   const updateRef = useRef(updateTabStatusByPath);
   updateRef.current = updateTabStatusByPath;
+  const locale = useLocale();
+  const localeRef = useRef(locale);
+  localeRef.current = locale;
+  const t = useT();
+  const tRef = useRef(t);
+  tRef.current = t;
 
   useEffect(() => {
     let es: EventSource | null = null;
@@ -42,16 +50,16 @@ export function useSchedulerEvents() {
           }
 
           // Show toast
-          const time = new Date(evt.timestamp).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
+          const time = formatTime(evt.timestamp, localeRef.current);
 
           if (evt.action === "published") {
             toast.success(`${evt.title}`, {
-              description: `Published · ${evt.collection} · ${time}`,
+              description: tRef.current("shell.schedulerEvents.published", { collection: evt.collection, time }),
               duration: 8000,
             });
           } else {
             toast.error(`${evt.title}`, {
-              description: `Expired · ${evt.collection} · ${time}`,
+              description: tRef.current("shell.schedulerEvents.expired", { collection: evt.collection, time }),
               duration: 8000,
             });
           }

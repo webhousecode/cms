@@ -9,6 +9,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useT } from "@/lib/i18n-context";
+import { formatTime, useFormat } from "@/lib/format-locale";
+import type { UiLocale } from "@/i18n/locale";
 import { Loader2, Check, AlertCircle, ChevronRight, ChevronDown } from "lucide-react";
 
 interface BuildSummary {
@@ -52,6 +54,7 @@ const PHASE_LABEL: Record<BuildSummary["phase"], string> = {
 
 export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
   const t = useT();
+  const fmt = useFormat();
   const [builds, setBuilds] = useState<BuildSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -155,14 +158,14 @@ export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
               <span style={{ color: "var(--muted-foreground)" }}>{t(PHASE_LABEL[b.phase])}</span>
               {isLive && <Loader2 size={12} className="spin" style={{ color: "var(--primary)" }} />}
               <span style={{ marginLeft: "auto", color: "var(--muted-foreground)", fontSize: "0.75rem" }}>
-                {fmtTime(b.startedAt)} · {fmtDuration(b)}
+                {fmtTime(b.startedAt, fmt.locale)} · {fmtDuration(b)}
               </span>
             </button>
             {isExpanded && detail && (
               <div style={{ padding: "0.5rem 0.75rem 0.75rem 1.75rem", borderTop: "1px solid var(--border)", background: "var(--muted)/0.3" }}>
                 {detail.events.map((e, i) => (
                   <div key={i} style={{ fontSize: "0.75rem", display: "flex", gap: "0.5rem", padding: "0.15rem 0" }}>
-                    <span style={{ color: "var(--muted-foreground)", minWidth: "5rem" }}>{fmtTime(e.ts)}</span>
+                    <span style={{ color: "var(--muted-foreground)", minWidth: "5rem" }}>{fmtTime(e.ts, fmt.locale)}</span>
                     <span style={{ minWidth: "8rem" }}>{t(PHASE_LABEL[e.phase])}</span>
                     {e.message && <span style={{ color: "var(--muted-foreground)" }}>{e.message}</span>}
                   </div>
@@ -187,19 +190,19 @@ function PhaseIcon({ phase }: { phase: BuildSummary["phase"] }){
   return <Loader2 size={14} className="spin" style={{ color: "var(--primary)" }} />;
 }
 
-function fmtTime(iso: string): string {
+function fmtTime(iso: string, locale: UiLocale): string {
   try {
-    return new Date(iso).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    return formatTime(iso, locale, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   } catch { return iso; }
 }
 
 function fmtDuration(b: BuildSummary): string {
   if (b.durationMs !== undefined) {
     const s = Math.round(b.durationMs / 1000);
-    return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+    return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`; // i18n-ignore: duration unit abbreviations, same in da and en
   }
   // In-flight: show wall clock since started
   const elapsed = Date.now() - new Date(b.startedAt).getTime();
   const s = Math.floor(elapsed / 1000);
-  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+  return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`; // i18n-ignore: duration unit abbreviations, same in da and en
 }

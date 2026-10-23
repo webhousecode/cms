@@ -28,6 +28,7 @@
   },
   "siteIntroCard": {
     "loadingPreview": "Loading preview...",
-    "siteFallback": "Site"
+    "siteFallback": "Site",
+    "previewTab": "Preview: {name}"
   }
 }

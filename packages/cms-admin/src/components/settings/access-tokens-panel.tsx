@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomDateTimeInput } from "@/components/ui/custom-datetime-input";
 import { useT } from "@/lib/i18n-context";
+import { formatDate, useFormat } from "@/lib/format-locale";
+import type { UiLocale } from "@/i18n/locale";
 
 // ─── Types (mirror lib/access-tokens.ts) ────────────────────────────
 
@@ -138,6 +140,7 @@ const helpTextStyle: React.CSSProperties = {
 
 export function AccessTokensPanel() {
   const t = useT();
+  const fmt = useFormat();
   const [tokens, setTokens] = useState<TokenEntry[]>([]);
   const [availableSites, setAvailableSites] = useState<Array<{ id: string; name: string; orgId: string }>>([]);
   const [newToken, setNewToken] = useState<string | null>(null);
@@ -262,7 +265,7 @@ export function AccessTokensPanel() {
     await loadTokens();
   }
 
-  const preview = buildPreview(t, name, compilePermissions(null), resourceFilters, ipFilters, notBefore, notAfter, availableSites);
+  const preview = buildPreview(t, name, compilePermissions(null), resourceFilters, ipFilters, notBefore, notAfter, availableSites, fmt.locale);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxWidth: "48rem" }}>
@@ -568,7 +571,7 @@ export function AccessTokensPanel() {
               </div>
               <span style={{ fontSize: "0.68rem", color: "var(--muted-foreground)" }}>{scopeLabel}</span>
               <span style={{ fontSize: "0.68rem", color: "var(--muted-foreground)" }}>
-                {tok.lastUsed ? new Date(tok.lastUsed).toLocaleDateString() : t("integrations.accessTokens.never")}
+                {tok.lastUsed ? fmt.date(tok.lastUsed) : t("integrations.accessTokens.never")}
               </span>
               <div>
                 {confirmDelete === tok.id ? (
@@ -676,6 +679,7 @@ function buildPreview(
   notBefore: string,
   notAfter: string,
   sites: Array<{ id: string; name: string; orgId: string }>,
+  locale: UiLocale,
 ): string[] {
   if (!name.trim()) return [t("integrations.accessTokens.previewNeedName")];
   if (permissions.length === 0) return [t("integrations.accessTokens.previewNeedPermission")];
@@ -713,7 +717,7 @@ function buildPreview(
     if (bits.length) lines.push("…" + bits.join(" "));
   }
   if (notBefore || notAfter) {
-    const range = [notBefore && t("integrations.accessTokens.fromDate", { date: new Date(notBefore).toLocaleDateString() }), notAfter && t("integrations.accessTokens.untilDate", { date: new Date(notAfter).toLocaleDateString() })].filter(Boolean).join(" ");
+    const range = [notBefore && t("integrations.accessTokens.fromDate", { date: formatDate(notBefore, locale) }), notAfter && t("integrations.accessTokens.untilDate", { date: formatDate(notAfter, locale) })].filter(Boolean).join(" ");
     if (range) lines.push(`…${range}`);
   }
 

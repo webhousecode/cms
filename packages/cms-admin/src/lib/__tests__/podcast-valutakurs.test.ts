@@ -30,8 +30,8 @@ describe("et godt opslag bruges", () => {
 
   it("datoen kommer fra tjenestens eget tidsstempel", async () => {
     const k = await hentKurs(svar({ rates: { DKK: 6.5 }, time_last_update_utc: "Tue, 08 Sep 2026 00:02:31 +0000" }));
-    expect(k.maalt).toContain("2026");
-    expect(k.maalt).toContain("september");
+    // Et sprogneutralt datostempel — skærmen formaterer det i admin-sproget.
+    expect(k.maalt).toBe("2026-09-08");
   });
 
   it("afrundes til to decimaler — seks foregiver en præcision der ikke er der", async () => {

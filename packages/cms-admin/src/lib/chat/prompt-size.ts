@@ -85,13 +85,14 @@ export function measurePromptSize(
  */
 export function promptSizeComplaint(r: PromptSizeReport): string | null {
   if (!r.overCeiling) return null;
+  const n = (v: number) => v.toLocaleString("da-DK"); // i18n-ignore: log line (console.warn in the chat route), Danish text — not UI
   const worst = r.biggest
-    .map((c) => `${c.name} (${c.chars.toLocaleString("da-DK")} tegn)`)
+    .map((c) => `${c.name} (${n(c.chars)} tegn)`)
     .join(", ");
   return (
-    `Chattens systeminstruktion fylder ${r.chars.toLocaleString("da-DK")} tegn ` +
-    `(~${r.approxTokens.toLocaleString("da-DK")} tokens) og sendes ved HVER besked. ` +
-    `Loftet er ${r.ceilingChars.toLocaleString("da-DK")}. ` +
+    `Chattens systeminstruktion fylder ${n(r.chars)} tegn ` +
+    `(~${n(r.approxTokens)} tokens) og sendes ved HVER besked. ` +
+    `Loftet er ${n(r.ceilingChars)}. ` +
     `Tungest: ${worst}. ` +
     `Instruktionen vokser med sitets skema — ikke med samtalen.`
   );

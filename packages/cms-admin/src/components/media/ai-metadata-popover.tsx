@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Sparkles, Copy, Check, Loader2, RefreshCw, ArrowDownToLine } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 interface AIMetadata {
   caption: string | null;
@@ -64,6 +65,7 @@ function CopyBtn({ text, kind }: { text: string; kind: string }) {
 
 export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, onApplyAlt, currentAlt, docLocale }: Props) {
   const t = useT();
+  const fmt = useFormat();
   const [open, setOpen] = useState(false);
   const [meta, setMeta] = useState<AIMetadata | null>(null);
   const [loading, setLoading] = useState(false);
@@ -370,7 +372,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                 {/* Timestamp */}
                 {meta.analyzedAt && (
                   <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", margin: 0, fontFamily: "monospace" }}>
-                    {t("media.aiMetadataPopover.analyzedAt", { date: new Date(meta.analyzedAt).toLocaleString(), provider: meta.provider ?? "" })}
+                    {t("media.aiMetadataPopover.analyzedAt", { date: fmt.dateTime(meta.analyzedAt), provider: meta.provider ?? "" })}
                   </p>
                 )}
               </div>

@@ -24,6 +24,7 @@ import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
 import { useCapabilities } from "@/hooks/use-capabilities";
 import { LOCALE_LABELS } from "@/lib/locale";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 // Fallback to env vars for backwards compatibility — overridden by props from server
 const PREVIEW_SITE_URL_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "";
@@ -500,6 +501,7 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
   onClose: () => void;
 }) {
   const t = useT();
+  const fmt = useFormat();
   const [revisions, setRevisions] = useState<Revision[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState<number | null>(null);
@@ -557,7 +559,7 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
               <div style={{ padding: "0.75rem 1rem", display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--foreground)" }}>
-                    {new Date(rev.savedAt).toLocaleString()}
+                    {fmt.dateTime(rev.savedAt)}
                   </p>
                   <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.15rem" }}>
                     {t(changedFields.length === 1 ? "editor.documentEditor.changedFieldsOne" : "editor.documentEditor.changedFieldsOther", { status: rev.status, count: changedFields.length })}
@@ -788,6 +790,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
   onSaved: (updated: DocSnapshot) => void;
 }) {
   const t = useT();
+  const fmt = useFormat();
   const router = useRouter();
   const [slug, setSlug] = useState(doc.slug);
   const [saving, setSaving] = useState(false);
@@ -1031,11 +1034,11 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
         <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           <div>
             <p style={labelStyle}>{t("editor.documentEditor.created")}</p>
-            <p style={valueStyle}>{new Date(doc.createdAt).toLocaleString()}</p>
+            <p style={valueStyle}>{fmt.dateTime(doc.createdAt)}</p>
           </div>
           <div>
             <p style={labelStyle}>{t("editor.documentEditor.lastUpdated")}</p>
-            <p style={valueStyle}>{new Date(doc.updatedAt).toLocaleString()}</p>
+            <p style={valueStyle}>{fmt.dateTime(doc.updatedAt)}</p>
           </div>
         </div>
       </div>
@@ -1098,6 +1101,7 @@ function cacheSet(key: string, value: DocSnapshot) {
 
 export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations: initialTranslations = [], siblingData: initialSiblingData, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false, siteId, inlineEditEnabled = false, canEditContent = false }: Props) {
   const t = useT();
+  const fmt = useFormat();
   const PREVIEW_SITE_URL = (previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT).replace(/\/$/, "");
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
 
@@ -1529,7 +1533,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <div className="flex items-center gap-2">
           {savedAt && !dirty && (
             <span className="text-xs text-muted-foreground">
-              {t("editor.documentEditor.savedAt", { time: savedAt.toLocaleTimeString() })}
+              {t("editor.documentEditor.savedAt", { time: fmt.time(savedAt, { timeStyle: "medium" }) })}
             </span>
           )}
           <span
@@ -2013,8 +2017,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         <div style={sideBySide && sourceDoc ? { flex: "0 0 50%", maxWidth: "50%" } : undefined}>
         <div className="doc-editor-body space-y-10">
           <div className="flex gap-6 text-xs text-muted-foreground font-mono pb-8 border-b border-border flex-wrap">
-            <span>{t("editor.documentEditor.createdAt", { date: formatDate(doc.createdAt) })}</span>
-            <span>{t("editor.documentEditor.updatedAt", { date: formatDate(doc.updatedAt) })}</span>
+            <span>{t("editor.documentEditor.createdAt", { date: formatDate(doc.createdAt, fmt.locale) })}</span>
+            <span>{t("editor.documentEditor.updatedAt", { date: formatDate(doc.updatedAt, fmt.locale) })}</span>
             <span
               data-testid="document-id-copy"
               title={t("editor.documentEditor.clickToCopyId")}

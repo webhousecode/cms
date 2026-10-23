@@ -170,7 +170,7 @@ export function insertFieldsIntoCollection(
 
   const newInner = isEmpty
     ? `\n${newLines}\n      `
-    : `${trimmed}${needsComma ? "," : ""}\n${newLines}\n      `;
+    : `${trimmed}${needsComma ? "," : ""}\n${newLines}\n      `; // i18n-ignore: generated cms.config.ts source code
 
   return source.slice(0, openIdx + 1) + newInner + source.slice(closeIdx);
 }

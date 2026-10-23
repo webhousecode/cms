@@ -10,6 +10,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { useSiteRole } from "@/hooks/use-site-role";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 type MediaType = "image" | "audio" | "video" | "document" | "interactive" | "other";
@@ -36,10 +37,6 @@ function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 /* ─── Upload progress ────────────────────────────────────────── */
@@ -1192,6 +1189,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
 
 function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGeneratedSet, aiMetaMap, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect }: ViewProps) {
   const t = useT();
+  const fmt = useFormat();
   return (
     <div style={{ overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
@@ -1264,7 +1262,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                   {file.folder || <span style={{ opacity: 0.4 }}>—</span>}
                 </td>
                 <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatSize(file.size)}</td>
-                <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatDate(file.createdAt)}</td>
+                <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{fmt.date(file.createdAt)}</td>
                 <td style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>
                   {isAiAnalyzed && (file.isImage || file.mediaType === "video") ? (
                     <span title={t("pages.media.aiAnalyzed")}><Sparkles style={{ width: "0.75rem", height: "0.75rem", color: "var(--brand)" }} /></span>
@@ -1323,6 +1321,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
   onTagsChanged?: () => void;
 }) {
   const t = useT();
+  const fmt = useFormat();
   const file = files[index];
   const hasPrev = index > 0;
   const hasNext = index < files.length - 1;
@@ -1521,7 +1520,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         onClick={(e) => e.stopPropagation()}
       >
         <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace" }}>{formatSize(file.size)}</span>
-        <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace" }}>{formatDate(file.createdAt)}</span>
+        <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace" }}>{fmt.date(file.createdAt)}</span>
         {file.folder && <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace" }}>/{file.folder}</span>}
       </div>
     </div>
@@ -1543,6 +1542,7 @@ const aiMetaCache = new Map<string, LightboxAIMeta>();
 
 function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
   const t = useT();
+  const fmt = useFormat();
   const [meta, setMeta] = useState<LightboxAIMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -1718,7 +1718,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
           {/* Timestamp */}
           {meta.analyzedAt && (
             <p style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.25)", margin: 0, fontFamily: "monospace" }}>
-              {new Date(meta.analyzedAt).toLocaleString()} · {meta.provider}
+              {fmt.dateTime(meta.analyzedAt)} · {meta.provider}
             </p>
           )}
         </div>
@@ -1841,6 +1841,7 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
 /* ─── Lightbox EXIF Panel ────────────────────────────────────── */
 function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
   const t = useT();
+  const fmt = useFormat();
   const [exif, setExif] = useState<{
     make?: string; model?: string; date?: string;
     gpsLat?: number; gpsLon?: number; gpsAlt?: number;
@@ -1894,7 +1895,7 @@ function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
           <div style={row}><span style={lbl}>{t("pages.media.exif.camera")}</span><span style={val}>{exif.make} {exif.model}</span></div>
         )}
         {exif.date && (
-          <div style={row}><span style={lbl}>{t("pages.media.exif.date")}</span><span style={val}>{new Date(exif.date).toLocaleDateString("da-DK", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
+          <div style={row}><span style={lbl}>{t("pages.media.exif.date")}</span><span style={val}>{fmt.dateTime(exif.date, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
         )}
         {exif.width && exif.height && (
           <div style={row}><span style={lbl}>{t("pages.media.exif.size")}</span><span style={val}>{exif.width} × {exif.height}</span></div>

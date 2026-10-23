@@ -20,6 +20,19 @@ export async function getRequestLocale(brandDefault?: string): Promise<UiLocale>
   return resolveUiLocale({ user, brand: brandLocale, acceptLanguage: h.get("accept-language") });
 }
 
+/**
+ * getRequestLocale() for code that may run OUTSIDE a request (next/headers
+ * throws there) — e.g. to format dates/numbers in the admin language (F211.2).
+ * Never throws; falls back to the given locale (default English).
+ */
+export async function getRequestLocaleSafe(fallback: UiLocale = "en"): Promise<UiLocale> {
+  try {
+    return await getRequestLocale();
+  } catch {
+    return fallback;
+  }
+}
+
 /** const t = await getServerT(); t("pages.trash.title") */
 export async function getServerT() {
   return getT(await getRequestLocale());

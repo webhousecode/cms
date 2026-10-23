@@ -692,5 +692,9 @@
   },
   "meta": {
     "description": "AI-native indholdsmotor"
+  },
+  "schedulerEvents": {
+    "published": "Udgivet · {collection} · {time}",
+    "expired": "Udløbet · {collection} · {time}"
   }
 }

@@ -71,8 +71,10 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
 
   const now = new Date();
   const shortId = Math.random().toString(36).slice(2, 8);
+  // i18n-ignore: file name (backup id)
   const dateStr = now.toLocaleDateString("da-DK", { day: "2-digit", month: "2-digit", year: "numeric" })
     .replace(/\//g, "-").replace(/\./g, "-");
+  // i18n-ignore: file name (backup id)
   const timeStr = now.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" })
     .replace(/[:.]/g, "");
   const siteName = (siteEntry?.name ?? "site").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");

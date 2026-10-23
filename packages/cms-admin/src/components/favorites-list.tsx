@@ -8,6 +8,7 @@ import type { Favorite } from "@/lib/user-state";
 import { PreviewThumb } from "@/components/preview-thumb";
 import { useHeaderData } from "@/lib/header-data-context";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 type ViewMode = "list" | "grid";
 type SortKey = "label" | "type" | "addedAt";
@@ -31,6 +32,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function FavoritesList() {
   const t = useT();
+  const fmt = useFormat();
   const { favorites, remove } = useFavorites();
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("addedAt");
@@ -245,7 +247,7 @@ export function FavoritesList() {
                       </span>
                     </td>
                     <td style={{ padding: "0.625rem 0.75rem", whiteSpace: "nowrap", fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
-                      {new Date(fav.addedAt).toLocaleDateString("da-DK", { day: "2-digit", month: "short", year: "numeric" })}
+                      {fmt.date(fav.addedAt, { day: "2-digit", month: "short", year: "numeric" })}
                     </td>
                     <td style={{ padding: "0.625rem 0.5rem", whiteSpace: "nowrap", textAlign: "right" }}>
                       <button
@@ -341,7 +343,7 @@ export function FavoritesList() {
                       {fav.path}
                     </p>
                     <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: "0.5rem 0 0" }}>
-                      {t("shell.favoritesList.addedOn", { date: new Date(fav.addedAt).toLocaleDateString("da-DK", { day: "2-digit", month: "short" }) })}
+                      {t("shell.favoritesList.addedOn", { date: fmt.date(fav.addedAt, { day: "2-digit", month: "short" }) })}
                     </p>
                   </div>
                 </Link>

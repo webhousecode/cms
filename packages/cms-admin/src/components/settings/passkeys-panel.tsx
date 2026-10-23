@@ -11,6 +11,8 @@
 import { useEffect, useState } from "react";
 import { startRegistration } from "@simplewebauthn/browser";
 import { useT } from "@/lib/i18n-context";
+import { formatDate as formatDateIn, useFormat } from "@/lib/format-locale";
+import type { UiLocale } from "@/i18n/locale";
 
 interface Passkey {
   id: string;
@@ -21,14 +23,14 @@ interface Passkey {
   backedUp: boolean;
 }
 
-function formatDate(iso: string | undefined, never: string): string {
+function formatDate(iso: string | undefined, never: string, locale: UiLocale): string {
   if (!iso) return never;
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return formatDateIn(iso, locale, { year: "numeric", month: "short", day: "numeric" });
 }
 
 export function PasskeysPanel() {
   const t = useT();
+  const fmt = useFormat();
   const [passkeys, setPasskeys] = useState<Passkey[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -149,7 +151,7 @@ export function PasskeysPanel() {
                 <div>
                   <div style={{ fontWeight: 500 }}>{p.name}</div>
                   <div style={{ color: "var(--muted-foreground)", fontSize: "0.68rem" }}>
-                    {t("settings.passkeys.addedLastUsed", { added: formatDate(p.createdAt, t("settings.passkeys.never")), lastUsed: formatDate(p.lastUsedAt, t("settings.passkeys.never")) })}
+                    {t("settings.passkeys.addedLastUsed", { added: formatDate(p.createdAt, t("settings.passkeys.never"), fmt.locale), lastUsed: formatDate(p.lastUsedAt, t("settings.passkeys.never"), fmt.locale) })}
                   </div>
                 </div>
               </div>

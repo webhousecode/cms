@@ -4,6 +4,7 @@ import { use, useState, useEffect, useCallback } from "react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { Download, Inbox } from "lucide-react";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 interface Submission {
   id: string;
@@ -61,8 +62,9 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
 
   const selectedSub = subs.find((s) => s.id === selected);
 
+  const fmt = useFormat();
   function formatDate(iso: string) {
-    return new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    return fmt.dateTime(iso, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
   // Preview: pick first 2-3 string fields as summary

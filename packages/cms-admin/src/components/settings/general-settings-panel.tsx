@@ -11,6 +11,7 @@ import { AdminLanguageSection } from "./admin-language-section";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
@@ -1046,6 +1047,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 /* ─── Revalidation section ─────────────────────────────────────── */
 function RevalidationSection() {
 	const t = useT();
+	const fmt = useFormat();
 	const brand = useBrand();
 	const [adapter, setAdapter] = useState<string | null>(null); // null = loading
 	const [url, setUrl] = useState("");
@@ -1382,7 +1384,7 @@ function RevalidationSection() {
 										{t("settings.general.durationMs", { ms: entry.durationMs })}
 									</span>
 									<span style={{ color: "var(--muted-foreground)", fontSize: "0.65rem", flexShrink: 0 }}>
-										{new Date(entry.timestamp).toLocaleTimeString()}
+										{fmt.time(entry.timestamp, { timeStyle: "medium" })}
 									</span>
 								</div>
 							))}

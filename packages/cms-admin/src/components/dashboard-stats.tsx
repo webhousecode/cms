@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Clock, Calendar, Image, Zap, Search, Eye } from "lucide-react";
 import { SiteIntroCard } from "@/components/site-intro-card";
 import { useT } from "@/lib/i18n-context";
+import { useFormat } from "@/lib/format-locale";
 
 interface CollectionStat {
   name: string;
@@ -56,6 +57,7 @@ function SkeletonCard() {
 
 export function DashboardStats() {
   const t = useT();
+  const fmt = useFormat();
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState(false);
 
@@ -158,7 +160,7 @@ export function DashboardStats() {
                     <Clock className="w-3 h-3 shrink-0" style={{ color: isExpiry ? "rgb(239 68 68)" : "rgb(234 179 8)" }} />
                     <span className="truncate">{item.title}</span>
                     <span className="ml-auto shrink-0 font-mono" style={{ color: isExpiry ? "rgb(239 68 68)" : "rgb(234 179 8)" }}>
-                      {new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                      {fmt.date(date, { month: "short", day: "numeric" })}
                     </span>
                   </div>
                 );
