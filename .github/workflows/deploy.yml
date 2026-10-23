@@ -72,10 +72,29 @@ jobs:
       cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
+      # A late run must never roll prod back. The concurrency group above only
+      # cancels a deploy running at the same moment; on 23 Oct 2026 the OLDEST
+      # of three runs finished its gate last and replaced newer live code.
+      # Fly labels each image with the sha it was built from (GH_SHA).
+      - name: Skip if newer code is already live
+        id: stale
+        run: |
+          LIVE=$(flyctl image show --app webhouse-app --json | jq -r '.[0].Labels // "{}" | fromjson | .GH_SHA // empty')
+          echo "live=$LIVE candidate=$GITHUB_SHA"
+          if bash scripts/deploy-is-stale.sh "$GITHUB_SHA" "$LIVE"; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipped: $LIVE is newer than $GITHUB_SHA and already live."
+          fi
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
       - name: Deploy to Fly.io
+        if: steps.stale.outputs.skip != 'true'
         run: flyctl deploy --remote-only --build-arg NEXT_PUBLIC_UPMETRICS_DSN="${{ vars.NEXT_PUBLIC_UPMETRICS_DSN }}" --build-arg GIT_SHA="${{ github.sha }}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
