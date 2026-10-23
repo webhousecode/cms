@@ -611,6 +611,11 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
 
 /* ─── Properties panel ─────────────────────────────────────── */
 /** Check if a slug looks auto-generated (numeric ID, UUID, filename hash, etc.) */
+const STATUS_KEYS = new Set(["published", "draft", "expired", "trashed", "archived"]);
+function statusLabel(status: string, t: ReturnType<typeof useT>): string {
+  return STATUS_KEYS.has(status) ? t(`misc.collectionList.status.${status}`) : status;
+}
+
 function isAutoSlug(s: string): boolean {
   // Pure numbers or numbers with hyphens (e.g. "10828042-10205557498204127-...")
   if (/^\d[\d-]*$/.test(s)) return true;
@@ -959,7 +964,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
         {/* Status */}
         <div>
           <p style={labelStyle}>{t("editor.documentEditor.status")}</p>
-          <p style={valueStyle}>{doc.status}</p>
+          <p style={valueStyle}>{statusLabel(doc.status, t)}</p>
         </div>
 
         {/* Collection */}
@@ -1547,7 +1552,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             )}
           >
             {isPublished ? <Globe className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
-            {doc.status}
+            {statusLabel(doc.status, t)}
           </span>
 
           {/* Locale selector */}

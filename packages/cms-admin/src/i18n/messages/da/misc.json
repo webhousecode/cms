@@ -248,7 +248,8 @@
       "published": "udgivet",
       "draft": "kladde",
       "expired": "udløbet",
-      "trashed": "i papirkurven"
+      "trashed": "i papirkurven",
+      "archived": "arkiveret"
     },
     "expires": "Udløber: {date}",
     "noMatches": "Ingen elementer matcher dine filtre."

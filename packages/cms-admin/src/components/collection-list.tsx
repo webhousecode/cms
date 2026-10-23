@@ -279,7 +279,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
 
   const extraColumns = buildColumns(fields, titleField);
   const statusLabel = (s: string) =>
-    s === "published" || s === "draft" || s === "expired" || s === "trashed" ? t(`misc.collectionList.status.${s}`) : s;
+    s === "published" || s === "draft" || s === "expired" || s === "trashed" || s === "archived" ? t(`misc.collectionList.status.${s}`) : s;
 
   // Resolve preview base URL for grid view thumbnails — uses shared context
   const { siteConfig } = useHeaderData();

@@ -248,7 +248,8 @@
       "published": "published",
       "draft": "draft",
       "expired": "expired",
-      "trashed": "trashed"
+      "trashed": "trashed",
+      "archived": "archived"
     },
     "expires": "Expires: {date}",
     "noMatches": "No items match your filters."
