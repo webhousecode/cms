@@ -16,7 +16,7 @@ export const DOCKER_PRESETS: Record<string, DockerConfig> = {
   rails: { image: "ruby:3.3", workdir: "/workspace" },
   go: { image: "golang:1.22", workdir: "/workspace" },
   hugo: { image: "klakegg/hugo:0.111.3-ext-alpine", workdir: "/workspace" },
-  node: { image: "node:22-alpine", workdir: "/workspace" },
+  node: { image: "node:24-alpine", workdir: "/workspace" },
   dotnet: { image: "mcr.microsoft.com/dotnet/sdk:8.0", workdir: "/workspace" },
 };
 

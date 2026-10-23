@@ -138,7 +138,7 @@ describe("buildSsrSite", () => {
     const dockerfileEntry = files.find((f) => f.guest_path === "/build/Dockerfile");
     expect(dockerfileEntry).toBeDefined();
     const dockerfileContents = Buffer.from(dockerfileEntry!.raw_value, "base64").toString("utf-8");
-    expect(dockerfileContents).toContain("FROM node:22-alpine AS deps");
+    expect(dockerfileContents).toContain("FROM node:24-alpine AS deps");
     expect(dockerfileContents).toContain(".next/standalone");
   });
 

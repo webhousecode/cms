@@ -18,7 +18,7 @@
 #     packages/cms-admin/builder/
 #   docker push ghcr.io/webhousecode/cms-builder:latest
 
-FROM node:22-alpine
+FROM node:24-alpine
 
 # Tools the entrypoint needs:
 #   - bash      — for the entrypoint script + curl/jq usage

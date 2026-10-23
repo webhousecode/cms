@@ -74,12 +74,12 @@ primary_region = "arn"
 
 **Self-hosted / Docker:**
 ```dockerfile
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 COPY . .
 RUN npm ci && npm run build
 
-FROM node:22-alpine
+FROM node:24-alpine
 WORKDIR /app
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public

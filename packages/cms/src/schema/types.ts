@@ -227,7 +227,7 @@ export interface BuildConfig {
 }
 
 export interface DockerConfig {
-  /** Docker image (e.g. "php:8.3-cli", "node:22-alpine"). */
+  /** Docker image (e.g. "php:8.3-cli", "node:24-alpine"). */
   image: string;
   /** Working directory inside the container. Default: "/workspace". */
   workdir?: string;

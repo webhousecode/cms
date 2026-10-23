@@ -3,7 +3,7 @@
 # Deployed to Fly.io as app "webhouse-app"
 
 # ── Stage 1: deps ─────────────────────────────────────────────
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
@@ -65,7 +65,7 @@ RUN --mount=type=cache,id=cms-tsup-cms,target=/app/packages/cms/.tsup-cache \
  && pnpm --filter @webhouse/cms-admin build
 
 # ── Stage 3: runner ───────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 
 # ffmpeg (F191.3) — podcast-lyd sys sammen af flere stykker: afsnit, Aidans
 # overgang og sponsorens reklame. Uden den kan de ikke samles, og den NAIVE

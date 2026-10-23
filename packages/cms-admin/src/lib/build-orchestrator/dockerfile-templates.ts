@@ -41,7 +41,7 @@ export interface DockerfileGenContext {
  * Throws if framework === 'static' (use F143 build path instead).
  */
 export function generateDockerfile(ctx: DockerfileGenContext): string {
-  const nodeImage = ctx.nodeImage ?? "node:22-alpine";
+  const nodeImage = ctx.nodeImage ?? "node:24-alpine";
   const port = ctx.runtimePort ?? 3000;
 
   switch (ctx.framework) {

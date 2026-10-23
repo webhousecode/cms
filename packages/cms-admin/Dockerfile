@@ -1,5 +1,5 @@
 # ── Stage 1: deps ───────────────────────────────────────────────
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 
 # Native addon build tools (for better-sqlite3)
 RUN apk add --no-cache python3 make g++ libc6-compat
@@ -33,7 +33,7 @@ RUN pnpm --filter @webhouse/cms build
 RUN pnpm --filter @webhouse/cms-admin build
 
 # ── Stage 3: runtime ────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:24-alpine AS runner
 
 RUN apk add --no-cache libc6-compat
 

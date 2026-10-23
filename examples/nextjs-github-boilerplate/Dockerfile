@@ -1,7 +1,7 @@
 # Next.js standalone Dockerfile for Fly.io deploy
 # Build context: . (project root)
 
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 # --- Dependencies ---
 FROM base AS deps
