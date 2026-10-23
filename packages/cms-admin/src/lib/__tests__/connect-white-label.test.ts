@@ -43,4 +43,11 @@ describe("inline-edit connect page", () => {
     expect(html).not.toContain("</script><x>");
     expect(html).toContain("\\u003c/script>");
   });
+
+  it("a brand colour that is not a plain hex value never reaches the <style> block", () => {
+    const bad = { ...fysio, colorDark: "red;}</style><script>alert(1)</script>" };
+    const html = renderConnectWelcome(data, bad, "da");
+    expect(html).not.toContain("alert(1)");
+    expect(html).toContain("--gold:#f7bb2e");
+  });
 });

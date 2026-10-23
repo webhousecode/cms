@@ -12,6 +12,11 @@ function jsSafe(value: unknown): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
 
+/** A plain #rrggbb or the fallback — never raw CSS. */
+function hexOr(value: string, fallback: string): string {
+  return /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
+}
+
 /** Escape text for an HTML text/attribute context. */
 function esc(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -25,8 +30,9 @@ export function renderConnectWelcome(
   const t = getT(locale);
   const own = isDefaultBrand(brand);
   // The card is dark, so a customer brand uses its dark-theme colour.
-  const accent = own ? "#f7bb2e" : (brand.colorDark ?? brand.color);
-  const accentFg = own ? "#0d0d0d" : (brand.colorDarkForeground ?? readableOn(accent));
+  // Both land inside <style>: only a plain #rrggbb may get there, same rule as brandCss.
+  const accent = own ? "#f7bb2e" : hexOr(brand.colorDark ?? brand.color, "#f7bb2e");
+  const accentFg = own ? "#0d0d0d" : hexOr(brand.colorDarkForeground ?? readableOn(accent), "#0d0d0d");
   const font = brandFont(brand);
   const fontLink = font
     ? `<link href="${esc(font.stylesheet)}" rel="stylesheet" />`
