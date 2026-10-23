@@ -3,9 +3,15 @@
 # Deployed to Fly.io as app "webhouse-app"
 
 # ── Stage 1: deps ─────────────────────────────────────────────
-FROM node:24-alpine AS deps
+# F401.7 (owner, 23 Oct 2026): Fly runtimes are node:24-slim. The build stages
+# use the same Debian base so native modules (better-sqlite3, sharp) are built
+# against the glibc they run on — an Alpine build stage would hand the slim
+# runner musl binaries.
+FROM node:24-slim AS deps
 
-RUN apk add --no-cache libc6-compat python3 make g++
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3 make g++ \
+ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 
@@ -65,7 +71,7 @@ RUN --mount=type=cache,id=cms-tsup-cms,target=/app/packages/cms/.tsup-cache \
  && pnpm --filter @webhouse/cms-admin build
 
 # ── Stage 3: runner ───────────────────────────────────────────
-FROM node:24-alpine AS runner
+FROM node:24-slim AS runner
 
 # ffmpeg (F191.3) — podcast-lyd sys sammen af flere stykker: afsnit, Aidans
 # overgang og sponsorens reklame. Uden den kan de ikke samles, og den NAIVE
@@ -75,7 +81,9 @@ FROM node:24-alpine AS runner
 #
 # Den skal også bruges til at normalisere lyd KUNDEN uploader: en reklame fra
 # et bureau er typisk stereo/48 kHz/m4a, ikke vores mono/44,1 kHz/mp3.
-RUN apk add --no-cache libc6-compat ffmpeg
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ffmpeg \
+ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
@@ -103,8 +111,8 @@ COPY deploy/webhouse-app/cms.config.ts  /seed/cms.config.ts
 # Start script
 COPY deploy/webhouse-app/start.sh /start.sh
 
-RUN addgroup --system --gid 1001 nodejs \
- && adduser  --system --uid 1001 nextjs \
+RUN groupadd --system --gid 1001 nodejs \
+ && useradd  --system --uid 1001 --gid nodejs --no-create-home nextjs \
  && chown -R nextjs:nodejs /app \
  && chown -R nextjs:nodejs /seed \
  && chown nextjs:nodejs /start.sh \

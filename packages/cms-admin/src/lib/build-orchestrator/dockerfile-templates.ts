@@ -21,7 +21,8 @@ export type FrameworkKind = "nextjs" | "bun-hono" | "custom" | "static";
 export interface DockerfileGenContext {
   /** Detected framework kind. */
   framework: FrameworkKind;
-  /** Optional override for the runtime Node version. Default: 22-alpine. */
+  /** Optional override for the Node image. Default: node:24-slim (Debian —
+   *  the generated stages use groupadd/useradd, so keep a Debian-based image). */
   nodeImage?: string;
   /** Port the runtime listens on. Default: 3000. */
   runtimePort?: number;
@@ -41,7 +42,7 @@ export interface DockerfileGenContext {
  * Throws if framework === 'static' (use F143 build path instead).
  */
 export function generateDockerfile(ctx: DockerfileGenContext): string {
-  const nodeImage = ctx.nodeImage ?? "node:24-alpine";
+  const nodeImage = ctx.nodeImage ?? "node:24-slim";
   const port = ctx.runtimePort ?? 3000;
 
   switch (ctx.framework) {
@@ -73,7 +74,6 @@ function nextjsDockerfile(nodeImage: string, port: number, buildCmd?: string, st
 # Uses Next.js standalone output for minimal runtime image.
 
 FROM ${nodeImage} AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN npm install -g pnpm@10.30.3
 COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
@@ -93,13 +93,12 @@ RUN ${build}
 
 FROM ${nodeImage} AS runner
 WORKDIR /app
-RUN apk add --no-cache curl
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=${port}
 ENV HOSTNAME=0.0.0.0
-RUN addgroup --system --gid 1001 nodejs && \\
-    adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs && \\
+    useradd --system --uid 1001 --gid nodejs --no-create-home nextjs
 # Next.js standalone copies what's needed; static + public follow.
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
@@ -107,7 +106,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 USER nextjs
 EXPOSE ${port}
 HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=3 \\
-  CMD curl -fsS http://localhost:${port}/api/health || exit 1
+  CMD node -e "fetch('http://localhost:${port}/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
 CMD ["${start}"]
 `;
 }
@@ -120,7 +119,7 @@ function bunHonoDockerfile(port: number, buildCmd?: string, startCmd?: string): 
   return `# F144-generated Bun + Hono Dockerfile
 # Single-stage — Bun is the runtime, no separate runner stage.
 
-FROM oven/bun:1-alpine AS builder
+FROM oven/bun:1-slim AS builder
 WORKDIR /app
 COPY package.json bun.lockb* ./
 RUN bun install --frozen-lockfile
@@ -128,7 +127,7 @@ COPY . .
 ENV NODE_ENV=production
 RUN ${build}
 
-FROM oven/bun:1-alpine AS runner
+FROM oven/bun:1-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=${port}
@@ -138,7 +137,7 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 EXPOSE ${port}
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \\
-  CMD wget -q --spider http://localhost:${port}/api/health || exit 1
+  CMD bun -e "fetch('http://localhost:${port}/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
 CMD ["sh", "-c", "${start}"]
 `;
 }

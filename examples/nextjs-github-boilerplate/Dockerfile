@@ -1,11 +1,10 @@
 # Next.js standalone Dockerfile for Fly.io deploy
 # Build context: . (project root)
 
-FROM node:24-alpine AS base
+FROM node:24-slim AS base
 
 # --- Dependencies ---
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 RUN \
@@ -32,7 +31,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs && useradd --system --uid 1001 --gid nodejs --no-create-home nextjs
 
 # Copy standalone output
 COPY --from=builder /app/.next/standalone ./

@@ -18,9 +18,9 @@ import {
 describe("generateDockerfile — Next.js", () => {
   it("emits multi-stage build with deps + builder + runner", () => {
     const out = generateDockerfile({ framework: "nextjs" });
-    expect(out).toContain("FROM node:24-alpine AS deps");
-    expect(out).toContain("FROM node:24-alpine AS builder");
-    expect(out).toContain("FROM node:24-alpine AS runner");
+    expect(out).toContain("FROM node:24-slim AS deps");
+    expect(out).toContain("FROM node:24-slim AS builder");
+    expect(out).toContain("FROM node:24-slim AS runner");
     expect(out).toContain("/app/.next/standalone");
     expect(out).toContain("EXPOSE 3000");
     expect(out).toContain("HEALTHCHECK");
@@ -29,7 +29,7 @@ describe("generateDockerfile — Next.js", () => {
   it("respects nodeImage override", () => {
     const out = generateDockerfile({ framework: "nextjs", nodeImage: "node:20-bullseye" });
     expect(out).toContain("FROM node:20-bullseye AS deps");
-    expect(out).not.toContain("node:24-alpine");
+    expect(out).not.toContain("node:24-slim");
   });
 
   it("respects runtimePort override", () => {
@@ -60,8 +60,8 @@ describe("generateDockerfile — Next.js", () => {
 describe("generateDockerfile — Bun + Hono", () => {
   it("emits single-stage Bun image with builder + runner", () => {
     const out = generateDockerfile({ framework: "bun-hono" });
-    expect(out).toContain("FROM oven/bun:1-alpine AS builder");
-    expect(out).toContain("FROM oven/bun:1-alpine AS runner");
+    expect(out).toContain("FROM oven/bun:1-slim AS builder");
+    expect(out).toContain("FROM oven/bun:1-slim AS runner");
     expect(out).toContain("EXPOSE 3000");
     expect(out).toContain("bun install --frozen-lockfile");
   });

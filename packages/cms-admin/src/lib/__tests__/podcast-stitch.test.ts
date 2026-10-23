@@ -72,7 +72,7 @@ describe("uden ffmpeg siger den HVAD der mangler", () => {
     // Læst af koden frem for fremtvunget: teksten er det eneste en driftsperson
     // får at se, og «sammenføjningen fejlede» ville ikke fortælle noget.
     const kilde = await readFile(new URL("../podcast/stitch.ts", import.meta.url), "utf8");
-    expect(kilde).toContain("apk add ffmpeg");
+    expect(kilde).toContain("apt-get install ffmpeg");
     expect(kilde).toContain("går i stå ved samlingen");
   });
 });

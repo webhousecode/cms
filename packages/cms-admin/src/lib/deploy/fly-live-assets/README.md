@@ -8,7 +8,7 @@ lifecycle — re-deploy infrastructure whenever the sync-endpoint is updated.
 
 - **`server.ts`** — Bun runtime. Serves static files from `/srv/current` AND
   handles HMAC-signed `/_icd/*` endpoints. Atomic deploys via symlink swap.
-- **`Dockerfile`** — oven/bun:1.1-alpine, copies `server.ts`, exposes :8080.
+- **`Dockerfile`** — oven/bun:1-slim, copies `server.ts`, exposes :8080.
 - **`fly.toml.template`** — Fly app config. `{{APP_NAME}}`, `{{REGION}}`,
   `{{VOLUME_NAME}}` replaced at deploy time.
 - **`.dockerignore`** — excludes this README and the fly.toml template from

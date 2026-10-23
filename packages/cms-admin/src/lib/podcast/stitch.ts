@@ -122,7 +122,7 @@ export async function sySammen(stykker: Uint8Array[]): Promise<SyResultat> {
       ok: false,
       grund:
         "ffmpeg mangler på serveren, og uden den kan lydstykkerne ikke samles. " +
-        "Tilføj den til imaget (apk add ffmpeg) — en ren sammenkædning giver en " +
+        "Tilføj den til imaget (apt-get install ffmpeg) — en ren sammenkædning giver en " +
         "fil der ser hel ud og går i stå ved samlingen.",
     };
   }
