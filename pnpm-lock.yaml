@@ -272,8 +272,8 @@ importers:
         specifier: 0.16.0
         version: 0.16.0
       '@broberg/mail-core':
-        specifier: '>=0.9.0 <1'
-        version: 0.9.0
+        specifier: 0.9.2
+        version: 0.9.2
       '@broberg/sso':
         specifier: 0.9.0
         version: 0.9.0(hono@4.13.13)
@@ -1074,8 +1074,8 @@ packages:
   '@broberg/lens-engine@0.11.0':
     resolution: {integrity: sha512-8rLh7wx+QtbQDW8sEPBULsY/zBZ2n6lkxBNzkLSb2FUM9OjFytvnyvXjpkdXJIks8RSxGwXKErYOQD4fuLSDHg==}
 
-  '@broberg/mail-core@0.9.0':
-    resolution: {integrity: sha512-bkUmQOMSHfFd5AYqXUqzvlTO/XTdKz7GUvpgS9bgekS6fYiOfwxLVfpbR9hfWx3/N0iScARG0fqeiL8vsG+l3A==}
+  '@broberg/mail-core@0.9.2':
+    resolution: {integrity: sha512-EMST0epwq72czvLjGjXRcG9Iyer8RWiE4P9E50rz0ucEDPwJ2oh/EtbuDyOZmyLGAqaTMxrVJpChZiT15GW0Mg==}
 
   '@broberg/mail@0.16.0':
     resolution: {integrity: sha512-LBfcwEL8IQOEdTgXWvW6ZobR1jsBjiMB99VjBVz1klljshOdBB7nZ59d3RtOlpse0FDAAjt5OWHmSCYoUzsc8g==}
@@ -5908,15 +5908,15 @@ packages:
   tldts-core@6.1.86:
     resolution: {integrity: sha512-Je6p7pkk+KMzMv2XXKmAE3McmolOQFdxkKw0R8EYNr7sELW46JqnNeTX8ybPiQgvg1ymCoF8LXs5fzFaZvJPTA==}
 
-  tldts-core@7.4.18:
-    resolution: {integrity: sha512-KI2PKvCmvQI/xD6ypPqkU0i7oxNXR/O58RLRaHR4svsgVUQ2JE/XC8BtMbG6PSehD27I8sZJRcC1ASnCy6lp3g==}
+  tldts-core@7.4.19:
+    resolution: {integrity: sha512-goNXV6Ho9TIOfpJZanTd6CKG5DyYgYAL+k+22T0SLh8l6+KHIfBUPFuePuSZv05UttIaaLmI9tb7TmGIdK5AkQ==}
 
   tldts@6.1.86:
     resolution: {integrity: sha512-WMi/OQ2axVTf/ykqCQgXiIct+mSQDFdH2fkwhPwgEwvJ1kSzZRiinb0zF2Xb8u4+OqPChmyI6MEu4EezNJz+FQ==}
     hasBin: true
 
-  tldts@7.4.18:
-    resolution: {integrity: sha512-somxA8xKAUzlAxl0TX/jMSYIbRNFIVGnI96pVGJPeMc5BsHmfVXn6mOJT6U++ELnl04eGfzpfcEuZe8WiASkXg==}
+  tldts@7.4.19:
+    resolution: {integrity: sha512-48dH6aSpQnpbzDUc4vIQZ1VjB8tkK+e8c1yx05/SZK+rkssgjEOlxDd/yU8/a4vGYQ9vRgJr9dwMq9TJ0b3X2Q==}
     hasBin: true
 
   to-regex-range@5.0.1:
@@ -6869,7 +6869,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@broberg/mail-core@0.9.0': {}
+  '@broberg/mail-core@0.9.2': {}
 
   '@broberg/mail@0.16.0': {}
 
@@ -11775,16 +11775,16 @@ snapshots:
 
   tldts-core@6.1.86: {}
 
-  tldts-core@7.4.18:
+  tldts-core@7.4.19:
     optional: true
 
   tldts@6.1.86:
     dependencies:
       tldts-core: 6.1.86
 
-  tldts@7.4.18:
+  tldts@7.4.19:
     dependencies:
-      tldts-core: 7.4.18
+      tldts-core: 7.4.19
     optional: true
 
   to-regex-range@5.0.1:
@@ -11801,7 +11801,7 @@ snapshots:
 
   tough-cookie@6.0.2:
     dependencies:
-      tldts: 7.4.18
+      tldts: 7.4.19
     optional: true
 
   tr46@0.0.3:
