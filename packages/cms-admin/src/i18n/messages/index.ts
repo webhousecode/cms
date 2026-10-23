@@ -20,6 +20,7 @@ import en_schema from "./en/schema.json";
 import en_misc from "./en/misc.json";
 import en_integrations from "./en/integrations.json";
 import en_tools from "./en/tools.json";
+import en_help from "./en/help.json";
 import da_account from "./da/account.json";
 import da_common from "./da/common.json";
 import da_shell from "./da/shell.json";
@@ -35,6 +36,7 @@ import da_schema from "./da/schema.json";
 import da_misc from "./da/misc.json";
 import da_integrations from "./da/integrations.json";
 import da_tools from "./da/tools.json";
+import da_help from "./da/help.json";
 
 export const en: Dict = {
   account: en_account,
@@ -52,6 +54,7 @@ export const en: Dict = {
   misc: en_misc,
   integrations: en_integrations,
   tools: en_tools,
+  help: en_help,
 };
 export const da: Dict = {
   account: da_account,
@@ -69,4 +72,5 @@ export const da: Dict = {
   misc: da_misc,
   integrations: da_integrations,
   tools: da_tools,
+  help: da_help,
 };

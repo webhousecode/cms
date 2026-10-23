@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useT } from "@/lib/i18n-context";
 import { Lightbulb, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
-import { getHelpArticle, type HelpArticle } from "@/lib/help/articles";
+import { getHelpArticle, localizeHelpArticle, type HelpArticle } from "@/lib/help/articles";
 
 interface HelpCardProps {
   /** Article ID from the help registry */
@@ -74,7 +74,8 @@ function renderInline(text: string): React.ReactNode {
 
 export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
   const t = useT();
-  const article = getHelpArticle(articleId);
+  const def = getHelpArticle(articleId);
+  const article = def ? localizeHelpArticle(def, t) : undefined;
   const [expanded, setExpanded] = useState(variant === "inline");
 
   if (!article) return null;

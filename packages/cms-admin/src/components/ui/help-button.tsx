@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, lazy, Suspense, type ComponentType } from 
 import { createPortal } from "react-dom";
 import { useT } from "@/lib/i18n-context";
 import { Lightbulb, ExternalLink, X, Settings2, Loader2 } from "lucide-react";
-import { getHelpArticle } from "@/lib/help/articles";
+import { getHelpArticle, localizeHelpArticle } from "@/lib/help/articles";
 
 /** Registry of ISU (Inline Settings Update) components */
 const ISU_COMPONENTS: Record<string, ComponentType> = {};
@@ -73,7 +73,8 @@ function renderInline(text: string): React.ReactNode {
 
 export function HelpButton({ articleId }: HelpButtonProps) {
   const t = useT();
-  const article = getHelpArticle(articleId);
+  const def = getHelpArticle(articleId);
+  const article = def ? localizeHelpArticle(def, t) : undefined;
   const [open, setOpen] = useState(false);
   const [activeISU, setActiveISU] = useState<string | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);

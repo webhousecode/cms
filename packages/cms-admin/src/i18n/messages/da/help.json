@@ -1,0 +1,200 @@
+{
+  "visibility-intro": {
+    "title": "Hvad er Synlighed?",
+    "body": "Synlighed måler, hvor let det er for både mennesker OG AI at finde dit indhold. Den samler to scorer:\n\n**SEO-score** — hvor godt søgemaskiner (Google, Bing) kan finde og rangere dine sider.\n\n**GEO-score** — hvor sandsynligt det er, at AI-platforme (ChatGPT, Claude, Perplexity) henviser til dit indhold, når nogen stiller et spørgsmål.\n\nEn høj Synlighed-score betyder, at dit indhold når ud til flere mennesker gennem flere kanaler.",
+    "actions": {
+      "a0": "Åbn et dokument, og klik på SEO-panelet for at komme i gang",
+      "a1": "Kør Optimér alle fra SEO-oversigten for et hurtigt løft"
+    }
+  },
+  "geo-score-explained": {
+    "title": "Sådan forbedrer du din GEO-score",
+    "body": "AI-platforme foretrækker indhold, der er bygget op, så det er let at citere. De 8 GEO-regler tjekker:\n\n1. **Svaret først** — start med svaret, ikke baggrunden\n2. **Overskrifter som spørgsmål** — brug H2'er, der matcher det folk søger på (\"Hvordan virker X?\")\n3. **Tal og fakta** — tag tal, procenter og datapunkter med\n4. **Kilder** — henvis til troværdige eksterne kilder\n5. **Aktualitet** — indholdet er opdateret inden for 90 dage\n6. **Strukturerede data** — JSON-LD-skema er sat op\n7. **Forfatter** — en navngiven forfatter, så indholdet virker troværdigt (E-E-A-T)\n8. **Dybde** — 800+ ord, så emnet er grundigt dækket",
+    "actions": {
+      "a0": "Brug GEO Optimizer-agenten til at omstrukturere indholdet automatisk"
+    }
+  },
+  "seo-meta-fields": {
+    "title": "Derfor er metatitel og -beskrivelse vigtige",
+    "body": "Metatitel og -beskrivelse bestemmer, hvordan din side ser ud i Googles søgeresultater OG når AI henviser til den. Uden dem gætter Google — og gætter som regel forkert.\n\n**Metatitel** — 30-60 tegn. Tag dit vigtigste søgeord med. Det er det blå link i søgeresultaterne.\n\n**Metabeskrivelse** — 120-160 tegn. Et fængende resumé, der får folk til at klikke.\n\n**OG-billede** — billedet, der vises, når nogen deler din side på sociale medier eller i beskedapps.",
+    "actions": {
+      "a0": "Klik på AI-optimér i SEO-panelet for at udfylde felterne automatisk"
+    }
+  },
+  "visibility-fix-issues": {
+    "title": "Udfyld manglende metafelter",
+    "body": "Tallet for problemer viser dokumenter, der mangler vigtige SEO/GEO-oplysninger. Sådan retter du dem hurtigt:\n\n1. Gå til fanen **Dokumenter** nedenfor\n2. Klik på et dokument med manglende felter (❌)\n3. Åbn **SEO-panelet** i editorens sidepanel\n4. Klik på **AI-optimér** for automatisk at lave titel, beskrivelse og søgeord\n5. Læs det igennem, og gem\n\nDu kan også bruge **Optimér alle** på SEO-oversigten for at rette det hele på én gang.",
+    "actions": {
+      "a0": "Åbn SEO-oversigten for at optimere alt på én gang"
+    }
+  },
+  "build-output-files": {
+    "title": "Det laver bygningen til søgemaskiner og AI",
+    "body": "Hver gang du bygger, laver CMS'et automatisk disse filer, så dit site kan findes:\n\n**robots.txt** — fortæller robotter, hvad de må tilgå (vælg strategi under Indstillinger → GEO)\n\n**sitemap.xml** — viser alle sider til Google, med hreflang for flersprogede sites\n\n**llms.txt** — en AI-venlig oversigt over dit indhold og dit MCP-endpoint\n\n**llms-full.txt** — hele indholdet som markdown, så AI kan læse det\n\n**feed.xml** — RSS-feed til deling og nyhedslæsere\n\n**ai-plugin.json** — MCP-pluginbeskrivelse, så AI-platforme kan finde dit site\n\n**.md-filer for hver side** — en markdown-udgave af hver side på samme URL + .md"
+  },
+  "robots-strategy": {
+    "title": "Vælg en robots.txt-strategi",
+    "body": "robots.txt-strategien bestemmer, hvilke AI-robotter der må besøge dit site:\n\n**Maksimal** (standard) — alle robotter er tilladt, også dem der træner AI-modeller. Bedst for maksimal synlighed.\n\n**Balanceret** — søgerobotter (ChatGPT-User, Claude-SearchBot, PerplexityBot) er tilladt. Træningsrobotter (GPTBot, ClaudeBot) er blokeret. Dit indhold bruges i AI-svar, men ikke til at træne modeller.\n\n**Restriktiv** — alle AI-robotter er blokeret. Kun almindelige søgemaskiner er tilladt. Anbefales ikke, medmindre loven kræver det.\n\n**Tilpasset** — skriv dine egne regler linje for linje."
+  },
+  "backup-schedule": {
+    "title": "Automatisk backup",
+    "body": "Sæt en tidsplan for backup, så alt dit indhold, dine indstillinger og din site-opsætning gemmes automatisk. En backup indeholder alt, hvad der skal til for at sætte dit site tilbage til en tidligere tilstand.\n\nAnbefalet: **Dagligt** og gem i 30 dage. En backup fylder lidt (typisk under 1 MB) og gemmes lokalt. Du kan også hente dem som zip-filer.",
+    "actions": {
+      "a0": "Sæt tidsplan for backup"
+    }
+  },
+  "deploy-intro": {
+    "title": "Udgiv dit site",
+    "body": "Udgivelse bygger dit site som statisk HTML og sender det til en hostingudbyder. Bygningen laver automatisk alle sider, SEO-filer, RSS-feed og filer, så AI kan finde dit site.\n\nUnderstøttede udbydere: **GitHub Pages** (gratis), **Vercel** (gratis niveau), **Netlify** (gratis niveau), **Fly.io** (hosting i EU), **Cloudflare Pages** (hurtigt CDN).\n\nSlå **Udgiv automatisk ved gem** til, så dit site udgives hver gang du gemmer indhold."
+  },
+  "agents-intro": {
+    "title": "Hvad er AI-agenter?",
+    "body": "AI-agenter skriver indhold ud fra din brand voice og din opsætning. Hver agent har sin rolle:\n\n**Content Writer** — skriver nye blogindlæg, sider og beskrivelser\n\n**SEO Optimizer** — forbedrer metafelter, søgeord og overskrifter\n\n**GEO Optimizer** — omstrukturerer indhold, så AI gerne citerer det (svaret først, tal, kilder)\n\n**Translator** — oversætter indhold til andre sprog\n\n**Content Refresher** — opdaterer forældet indhold med aktuelle oplysninger\n\nAgenterne laver kladder, der lander i **Kurateringskø** til din gennemsyn. De respekterer **AI-lås** — felter, du selv har skrevet, bliver ikke overskrevet.",
+    "actions": {
+      "a0": "Gennemse genereret indhold i Kurateringskø"
+    }
+  },
+  "media-ai-analysis": {
+    "title": "AI-analyse af billeder",
+    "body": "AI-analyse laver automatisk billedtekster, alt-tekst og tags til dine billeder. Alt-tekst er vigtig for:\n\n**SEO** — søgemaskiner kan ikke se billeder uden alt-tekst\n\n**Tilgængelighed** — skærmlæsere læser alt-teksten op for synshandicappede\n\n**GEO** — AI-platforme bruger alt-tekst til at forstå sidens indhold\n\nAnalysen kører automatisk, når du uploader. Du kan også analysere eksisterende billeder samlet fra Medier."
+  },
+  "media-library-intro": {
+    "title": "Medier",
+    "body": "Upload billeder, video, lyd og filer. Biblioteket laver automatisk optimerede **WebP-udgaver** og henter **EXIF-data**, herunder GPS-koordinater.\n\nHold orden med **mapper** og **egne tags**. Søg finder filer på navn, AI-billedtekst, alt-tekst og tags. Træk og slip for at uploade, eller indsæt fra udklipsholderen.",
+    "actions": {
+      "a0": "Indstil WebP-kvalitet og billedstørrelser"
+    }
+  },
+  "dashboard-intro": {
+    "title": "Dit site på et øjeblik",
+    "body": "Oversigten viser de vigtigste tal for dit site: antal dokumenter i hver samling, planlagte udgivelser, størrelsen på Medier og din SEO-sundhed.\n\nKlik på et kort for at gå til den del. **Synlighed-scoren** samler SEO (søgemaskiner) og GEO (AI-platforme) — sigt efter 80+."
+  },
+  "collection-list-intro": {
+    "title": "Håndter dokumenter",
+    "body": "Hver samling rummer dokumenter af én type — blogindlæg, sider, produkter osv. Dokumenter har en **status**:\n\n**Udgivet** — synligt på dit site\n\n**Kladde** — ikke synligt, under arbejde\n\n**Planlagt** — udgives automatisk på et bestemt tidspunkt\n\nBrug knappen **Generér** til at lave nyt indhold med AI, eller **Nyt dokument** for et tomt dokument."
+  },
+  "editor-intro": {
+    "title": "Redigér indhold",
+    "body": "Editoren gemmer automatisk, mens du skriver. Brug værktøjslinjen til formatering, medier, blokke og tabeller. Det vigtigste:\n\n**AI-lås** — klik på låseikonet ved et felt for at beskytte det mod at blive overskrevet af AI\n\n**SEO-panel** — klik på SEO i værktøjslinjen for at redigere metatitel, beskrivelse og søgeord\n\n**Forhåndsvisning** — klik på Forhåndsvisning for at se siden på dit site\n\n**Cmd+S** — gem og skriv til disk med det samme",
+    "actions": {
+      "a0": "Klik på AI i værktøjslinjen for at skrive eller forbedre indhold"
+    }
+  },
+  "curation-intro": {
+    "title": "Gennemse AI-genereret indhold",
+    "body": "Når AI-agenter skriver indhold, lander det her, så du kan gennemse det, før det udgives. Sådan foregår det:\n\n1. **Klar** — indhold, der venter på gennemsyn\n2. **Under gennemsyn** — nogen kigger på det\n3. **Godkendt** — klar til at udgive (klik på Udgiv for at gå live)\n4. **Afvist** — skal laves om eller kasseres\n\nDu kan rette indholdet direkte, før du godkender. Felter med **AI-lås** er skrevet af et menneske og bliver ikke rørt af agenter."
+  },
+  "scheduled-intro": {
+    "title": "Indholdskalender",
+    "body": "Kalenderen viser alt indhold med en planlagt dato for udgivelse eller afpublicering. Planlæggeren kører hvert 60. sekund og skifter automatisk status på dokumentet, når tiden er inde.\n\nSådan planlægger du indhold: åbn et dokument, klik på **Sæt udløb**, eller sæt en udgivelsesdato under **Egenskaber**, og gem."
+  },
+  "seo-dashboard-intro": {
+    "title": "SEO-oversigt",
+    "body": "Hold øje med SEO-sundheden på tværs af alt dit indhold. Hvert dokument får point efter 13 regler om metafelter, indholdets kvalitet og strukturerede data.\n\n**Optimér alle** kører AI-optimering på alle udgivne dokumenter — udfylder manglende metatitler, beskrivelser, søgeord og JSON-LD.\n\n**Søgeordssporing** lader dig følge dine placeringer i søgeresultaterne for dine vigtigste søgeord over tid.",
+    "actions": {
+      "a0": "Klik på Optimér alle for at rette alle SEO-problemer på én gang"
+    }
+  },
+  "linkchecker-intro": {
+    "title": "Find døde links",
+    "body": "Linktjek gennemgår alt dit udgivne indhold for døde links, kæder af omdirigeringer og manglende sider. Det tjekker både interne links (mellem dine dokumenter) og eksterne links (til andre websites).\n\nDøde links skader både SEO og brugeroplevelsen. Kør et tjek efter større ændringer i indholdet, eller før du udgiver."
+  },
+  "performance-intro": {
+    "title": "Forbrug af AI",
+    "body": "Følg, hvordan dine AI-agenter klarer sig: hvor mange dokumenter de har skrevet, hvor mange der blev godkendt eller afvist, tokenforbrug og anslået pris.\n\nBrug tallene til at finjustere dine agenter — bliver mange afvist, har agenten brug for bedre instruktioner eller mere træning i din brand voice."
+  },
+  "backup-intro": {
+    "title": "Backup og gendannelse",
+    "body": "En backup gemmer alt dit indhold, dine indstillinger og din site-opsætning som en zip-fil. Du kan gendanne enhver tidligere backup med ét klik.\n\nEn backup indeholder: alle dokumenter, oplysninger om medier, site-opsætning, agentopsætning og udgivelsesindstillinger. Selve mediefilerne er ikke med (de ligger i uploads/).",
+    "actions": {
+      "a0": "Sæt tidsplan for automatisk backup"
+    }
+  },
+  "cockpit-intro": {
+    "title": "AI-kontrolcenter",
+    "body": "Cockpittet giver dig overblik og styring over, hvordan AI skriver indhold. Du kan justere:\n\n**Temperatur** — højere = mere kreativ, lavere = mere ensartet\n\n**Kontekstdybde** — hvor meget AI'en får at vide om dit site\n\n**Hastighed eller kvalitet** — hurtige udkast eller gennemarbejdet tekst\n\nÆndringer her påvirker alle AI-agenter og chatten."
+  },
+  "interactives-intro": {
+    "title": "Interaktivt indhold",
+    "body": "Interaktive elementer er små datadrevne HTML-widgets, du kan sætte ind i et hvilket som helst tekstfelt: beregnere, quizzer, sammenligningstabeller, tidslinjer. De gemmes som selvstændige HTML-dokumenter og vises i en sikker, afgrænset ramme (iframe).\n\nLav interaktive elementer med AI, eller skriv din egen HTML/CSS/JS. Sæt dem ind i artikler med knappen **Indsæt interaktivt element** i editorens værktøjslinje."
+  },
+  "trash-intro": {
+    "title": "Papirkurv og gendannelse",
+    "body": "Dokumenter i papirkurven gemmes i **30 dage** (kan ændres i Indstillinger), før de slettes for altid. Du kan gendanne ethvert dokument fra papirkurven med dets tidligere status.\n\n**Tøm papirkurv** under Indstillinger → Generelt sletter straks alle dokumenter i papirkurven for altid, uanset hvor længe de ellers skulle gemmes."
+  },
+  "settings-team": {
+    "title": "Håndter dit team",
+    "body": "Invitér teammedlemmer via mail. Hvert medlem får en rolle:\n\n**Admin** — fuld adgang, kan ændre indstillinger, udgive og invitere andre\n\n**Redaktør** — kan oprette, redigere, udgive og slette dokumenter\n\n**Læser** — kan kun se og forhåndsvise, ikke redigere\n\nTeams gælder pr. site — forskellige sites kan have forskellige teams."
+  },
+  "settings-email": {
+    "title": "Systemmails",
+    "body": "Indstil afsenderadresse, udbyder og modtagere af notifikationer for udgående mail.\n\nCMS'et sender mail ved **invitationer til teamet**, **formularindsendelser**, **besked når en agent er færdig**, **fejl i backup**, **rapporter fra linktjek** og **Lighthouse-advarsler**.\n\nEr der ikke sat en mailudbyder op her, vises tilmeldingslinket til invitationer på skærmen i stedet, og indsendelser gemmes i indbakken uden besked.\n\n**Udbyder**: Resend. Indsæt din API-nøgle, vælg et bekræftet afsenderdomæne, og send en testmail for at tjekke, at det virker.",
+    "actions": {
+      "a0": "Opret en Resend-konto og et domæne"
+    }
+  },
+  "settings-geo": {
+    "title": "Synlighed i AI (GEO)",
+    "body": "**GEO** (Generative Engine Optimization) styrer, hvordan AI-platforme som ChatGPT, Claude og Perplexity finder og henviser til dit indhold.\n\n**robots.txt-strategien** er det vigtigste greb:\n\n- **Maksimal** — alle robotter er tilladt, også træning (bedst for synlighed)\n- **Balanceret** — søgerobotter er tilladt, træningsrobotter er blokeret\n- **Restriktiv** — alle AI-robotter er blokeret\n- **Tilpasset** — skriv dine egne regler\n\nHver bygning laver automatisk **llms.txt**, **llms-full.txt**, **sitemap.xml**, **robots.txt**, **feed.xml** og en **.md**-udgave af hver side, så AI-platforme selv kan finde og henvise til dit indhold."
+  },
+  "settings-beam": {
+    "title": "Beam — eksport og import af site",
+    "body": "En **beam** er en samlet fil med hele dit site — indhold, opsætning, indstillinger, skema, agenter, brand voice, team og hændelseslog. Brug den til at flytte et site mellem miljøer eller dele en site-skabelon.\n\nEn beam indeholder IKKE uploadede filer (billeder, video) eller hemmeligheder (API-nøgler fjernes). Du indtaster hemmelighederne igen ved import.\n\nTil planlagt, løbende backup skal du i stedet bruge Indstillinger → Backup.",
+    "actions": {
+      "a0": "Planlagt backup"
+    }
+  },
+  "settings-prompts": {
+    "title": "AI-instruktioner",
+    "body": "Erstat de indbyggede instruktioner (prompts), som CMS'et bruger til at udfylde felter, optimere SEO, oversætte og alle andre AI-funktioner — pr. site.\n\nHver instruktion har tre dele: **system** (fast), **brugerskabelon** (med pladsholdere) og **eksempel på resultat** (valgfrit).\n\nPrøv at justere **Brand voice**, før du erstatter noget — det er enklere og slår automatisk igennem i alle AI-funktioner. Brug egne instruktioner, når en bestemt funktion har krav, som Brand voice ikke kan udtrykke.",
+    "actions": {
+      "a0": "Redigér Brand voice først"
+    }
+  },
+  "settings-general": {
+    "title": "Generelle site-indstillinger",
+    "body": "Sitets grundoplysninger: **navn** (vises i toppen af admin), **preview-URL** (bruges til forhåndsvisning af sider), **beskrivelse** (standard-metabeskrivelsen) og **tidszone** (påvirker tidspunkter for planlægning og backup).\n\nPreview-URL'en er den adresse, admin bruger til links til forhåndsvisning. Sæt den til din rigtige adresse, når sitet er udgivet, eller til en localhost-adresse til lokal forhåndsvisning."
+  },
+  "settings-tools": {
+    "title": "Automatiske opgaver",
+    "body": "Indstil opgaver, der kører automatisk i baggrunden:\n\n**Tidsplan for linktjek** — tjek for døde links dagligt eller ugentligt\n\n**Tidsplan for Lighthouse** — måling af hastighed og kvalitet med faste mellemrum\n\n**Mediebehandling** — størrelser på WebP-udgaver, JPEG-kvalitet, om EXIF-data skal bevares\n\n**Webhooks** — udgående HTTP-kald, når indhold ændres\n\nHver opgave kører på den indbyggede planlægger og skrives i hændelsesloggen."
+  },
+  "settings-globals": {
+    "title": "Redigér fælles data",
+    "body": "**Globals** er samlinger med kun ét dokument til data, der går igen på mange sider: tekst i sidefoden, links til sociale medier, kontaktoplysninger, juridiske oplysninger.\n\nHver global redigeres som ét dokument. I modsætning til almindelige samlinger har de ikke `/admin/<collection>/<slug>`-adresser — de redigeres på denne fane, og dit site henter dem via indholds-API'et.\n\nTypiske globals: `footer`, `legal`, `contact`, `pricing-tiers`. Hver har sine egne felter i cms.config.ts."
+  },
+  "settings-deploy": {
+    "title": "Udgivelsesmål",
+    "body": "Vælg, hvor knappen Udgiv sender dit færdigbyggede site hen.\n\nUnderstøttede udbydere: **GitHub Pages** (gratis), **Vercel** (gratis niveau), **Netlify** (gratis niveau), **Fly.io** (EU-regioner, Docker-baseret), **Cloudflare Pages** (hurtigt CDN).\n\nSlå **Udgiv ved gem** til for at udgive automatisk efter hver ændring i indholdet — virker sammen med Instant Content Deployment, så ændringer er ude på 2 sekunder på understøttede sites.",
+    "actions": {
+      "a0": "Læs om Instant Content Deployment"
+    }
+  },
+  "settings-ai": {
+    "title": "Valg af AI-modeller",
+    "body": "Vælg, hvilke AI-modeller der driver CMS'ets funktioner:\n\n**Indholdsmodel** — bruges til at udfylde felter, optimere SEO og oversætte. Haiku er hurtig og billig, Sonnet er en god balance.\n\n**Chatmodel** — bruges i chatten. Sonnet anbefales, da den er bedst til at bruge værktøjer.\n\n**Premium-model** — bruges til krævende opgaver (brand voice, lange tekster). Opus giver den højeste kvalitet.\n\n**Kodemodel** — bruges til at lave interaktive elementer (HTML/CSS/JS).\n\nAlle modeller bruger din Anthropic API-nøgle. Tokengrænser bestemmer, hvor meget der højst skrives pr. forespørgsel."
+  },
+  "settings-brand-voice": {
+    "title": "Brand voice",
+    "body": "Brand voice bestemmer, hvordan AI skriver for dit site. Gennemfør **brand-interviewet** for at lære AI'en din tone, din målgruppe og din stil.\n\nNår det er sat op, følger alt AI-genereret indhold — agenter, chat, udfyldning af felter — dine retningslinjer. Interviewet tager 2-3 minutter og giver markant bedre tekster."
+  },
+  "settings-mcp": {
+    "title": "MCP (Model Context Protocol)",
+    "body": "MCP lader eksterne AI-værktøjer (som Claude Desktop, Cursor eller egne agenter) læse og skrive dit CMS-indhold via en fælles standard.\n\n**MCP med login** — fuld læse- og skriveadgang med API-nøgle. Brug det til at producere indhold.\n\n**Offentlig MCP** — kun læseadgang, intet login. Brug det til AI-drevet søgning på dit site.\n\nKopiér MCP-opsætningen (JSON), og indsæt den i dit AI-værktøjs indstillinger."
+  },
+  "settings-deploy-icd": {
+    "title": "Instant Content Deployment",
+    "body": "For Next.js-sites på Fly.io sendes ændringer i indholdet direkte via webhook på **~2 sekunder** — uden at hele sitet skal bygges om. Det kaldes **Instant Content Deployment (ICD)**.\n\nNår ICD er sat op (revalidateUrl + secret), sender et gem en sikker webhook, der skriver dokumentet til det udgivne site og opdaterer siden. En fuld udgivelse er kun nødvendig ved ændringer i koden."
+  },
+  "settings-schema": {
+    "title": "Redigér samlingernes skemaer",
+    "body": "Skemaer bestemmer, hvilke felter der findes i hver samling. Tilføj, fjern eller flyt rundt på felter her. Ændringer virker med det samme — ingen genstart nødvendig.\n\n**Felttyper**: text, textarea, richtext, number, boolean, date, image, image-gallery, video, audio, file, select, tags, relation, array, object, blocks, map, interactive, column-slots.\n\nVær forsigtig med at fjerne felter — eksisterende indhold beholder sine data, men de vises ikke længere i editoren."
+  },
+  "lighthouse-intro": {
+    "title": "Lighthouse-måling",
+    "body": "Lighthouse gennemgår dit udgivne site via Google PageSpeed Insights og giver point i fire kategorier: **Ydelse**, **Tilgængelighed**, **SEO** og **God praksis**.\n\nPointene følger Googles grænser: 🟢 90-100 (godt), 🟡 50-89 (kan forbedres), 🔴 0-49 (dårligt).\n\n**Core Web Vitals** er de målinger, Google bruger til at rangere i søgeresultaterne:\n- **LCP** — hvor hurtigt hovedindholdet indlæses (mål: < 2.5s)\n- **CLS** — hvor meget layoutet hopper under indlæsning (mål: < 0.1)\n- **FCP** — hvornår den første tekst eller det første billede vises (mål: < 1.8s)\n- **TTFB** — hvor hurtigt serveren svarer (mål: < 800ms)\n\n**Muligheder** viser konkrete forbedringer med anslået besparelse. **Diagnostik** peger på problemer som en meget stor side, ubrugt JavaScript eller manglende cache-headers.\n\nHver måling kører **både mobil og computer** på samme tid og viser resultaterne side om side. Målingen kræver en offentligt tilgængelig adresse — sæt dit sites rigtige adresse som Preview-URL i Indstillinger.",
+    "actions": {
+      "a0": "Indstil Preview-URL"
+    }
+  }
+}

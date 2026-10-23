@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Save, Loader2 } from "lucide-react";
+import { useT } from "@/lib/i18n-context";
 
 /**
  * Save button for Settings ActionBar.
@@ -17,6 +18,7 @@ import { Save, Loader2 } from "lucide-react";
  * - Dispatches: "cms:settings-save" → panels save their forms
  */
 export function SettingsSaveButton() {
+  const t = useT();
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -66,7 +68,7 @@ export function SettingsSaveButton() {
       {saving
         ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" />
         : <Save style={{ width: 14, height: 14 }} />}
-      {saving ? "Saving..." : dirty ? "Unsaved" : "Save"}
+      {saving ? t("settings.saveButton.saving") : dirty ? t("settings.saveButton.unsaved") : t("settings.saveButton.save")}
     </button>
   );
 }

@@ -130,14 +130,14 @@ export function CapabilitiesSettingsPanel({
                 />
                 <div>
                   <label style={{ fontSize: "0.8rem", fontWeight: 500, display: "block" }}>
-                    {def.label}
+                    {t(`settings.capabilities.items.${key}.label`)}
                     {disabled && (
                       <span style={{ fontSize: "0.68rem", fontWeight: 400, color: "var(--muted-foreground)", marginLeft: "0.4rem" }}>
-                        {t("settings.capabilities.needs", { list: blockedBy.map((r) => CAPABILITIES[r as CapabilityKey].label).join(", ") })}
+                        {t("settings.capabilities.needs", { list: blockedBy.map((r) => t(`settings.capabilities.items.${r}.label`)).join(", ") })}
                       </span>
                     )}
                   </label>
-                  <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>{def.description}</p>
+                  <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>{t(`settings.capabilities.items.${key}.description`)}</p>
                 </div>
               </div>
             );

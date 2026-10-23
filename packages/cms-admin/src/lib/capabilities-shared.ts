@@ -17,10 +17,8 @@
  */
 
 export interface CapabilityDef {
-  /** Human label for the Settings → Features toggle. */
-  label: string;
-  /** One-line description of what turning it off hides. */
-  description: string;
+  /* The toggle's label and description live in the message catalog
+   * (settings.capabilities.items.<key>), so they follow the admin language. */
   /** Capability keys that must also be on; if a required parent is off, this
    *  capability is forced off regardless of its own flag (e.g. agents/chat need ai).
    *  Typed as string[] to avoid a circular type with CapabilityKey; the runtime
@@ -35,46 +33,18 @@ export interface CapabilityDef {
  * reworking the gates.
  */
 export const CAPABILITIES = {
-  ai: {
-    label: "AI features",
-    description: "AI generate, proofread, SEO assistance, image analysis — the whole AI surface.",
-  },
-  seo: {
-    label: "SEO & visibility",
-    description: "SEO dashboard, scores and the visibility/GEO view.",
-  },
-  maps: {
-    label: "Maps",
-    description: "Map field type and map editing.",
-  },
-  interactives: {
-    label: "Interactives",
-    description: "Embeddable HTML interactives.",
-  },
-  forms: {
-    label: "Forms",
-    description: "Form inbox and form builder.",
-  },
-  scheduling: {
-    label: "Scheduled publishing",
-    description: "Schedule documents to publish/unpublish later.",
-  },
-  quality: {
-    label: "Quality tools",
-    description: "Link checker, Lighthouse and performance reports.",
-  },
-  backup: {
-    label: "Backup & restore",
-    description: "Content backup and restore.",
-  },
+  ai: {},
+  seo: {},
+  maps: {},
+  interactives: {},
+  forms: {},
+  scheduling: {},
+  quality: {},
+  backup: {},
   agents: {
-    label: "AI agents",
-    description: "Automated content-generation agents and workflows.",
     requires: ["ai"],
   },
   chat: {
-    label: "Chat",
-    description: "Chat-to-edit your site.",
     requires: ["ai"],
   },
 } as const satisfies Record<string, CapabilityDef>;

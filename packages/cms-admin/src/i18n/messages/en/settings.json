@@ -40,7 +40,49 @@
     "featuresHint": "Content and Media are always on (the core). Everything else can be toggled.",
     "needs": "(needs {list})",
     "saved": "Saved.",
-    "saveFeatures": "Save features"
+    "saveFeatures": "Save features",
+    "items": {
+      "ai": {
+        "label": "AI features",
+        "description": "AI generate, proofread, SEO assistance, image analysis — the whole AI surface."
+      },
+      "seo": {
+        "label": "SEO & visibility",
+        "description": "SEO dashboard, scores and the visibility/GEO view."
+      },
+      "maps": {
+        "label": "Maps",
+        "description": "Map field type and map editing."
+      },
+      "interactives": {
+        "label": "Interactives",
+        "description": "Embeddable HTML interactives."
+      },
+      "forms": {
+        "label": "Forms",
+        "description": "Form inbox and form builder."
+      },
+      "scheduling": {
+        "label": "Scheduled publishing",
+        "description": "Schedule documents to publish/unpublish later."
+      },
+      "quality": {
+        "label": "Quality tools",
+        "description": "Link checker, Lighthouse and performance reports."
+      },
+      "backup": {
+        "label": "Backup & restore",
+        "description": "Content backup and restore."
+      },
+      "agents": {
+        "label": "AI agents",
+        "description": "Automated content-generation agents and workflows."
+      },
+      "chat": {
+        "label": "Chat",
+        "description": "Chat-to-edit your site."
+      }
+    }
   },
   "siteDomains": {
     "noAccess": "You do not have access to domains",
@@ -438,5 +480,10 @@
     "sendingDots": "Sending...",
     "sendTest": "Send test",
     "testSent": "Test sent"
+  },
+  "saveButton": {
+    "save": "Save",
+    "saving": "Saving…",
+    "unsaved": "Unsaved"
   }
 }

@@ -40,7 +40,49 @@
     "featuresHint": "Indhold og Medier er altid slået til (kernen). Alt andet kan slås til og fra.",
     "needs": "(kræver {list})",
     "saved": "Gemt.",
-    "saveFeatures": "Gem funktioner"
+    "saveFeatures": "Gem funktioner",
+    "items": {
+      "ai": {
+        "label": "AI-funktioner",
+        "description": "AI-generering, korrektur, SEO-hjælp og billedanalyse — hele AI-delen."
+      },
+      "seo": {
+        "label": "SEO og synlighed",
+        "description": "SEO-oversigt, scorer og synligheds-/GEO-visningen."
+      },
+      "maps": {
+        "label": "Kort",
+        "description": "Kortfelt og redigering af kort."
+      },
+      "interactives": {
+        "label": "Interaktive elementer",
+        "description": "Indlejrbare interaktive HTML-elementer."
+      },
+      "forms": {
+        "label": "Formularer",
+        "description": "Formular-indbakke og formularbygger."
+      },
+      "scheduling": {
+        "label": "Planlagt udgivelse",
+        "description": "Planlæg at dokumenter udgives eller afpubliceres senere."
+      },
+      "quality": {
+        "label": "Kvalitetsværktøjer",
+        "description": "Linktjek, Lighthouse og performancerapporter."
+      },
+      "backup": {
+        "label": "Backup og gendannelse",
+        "description": "Backup og gendannelse af indhold."
+      },
+      "agents": {
+        "label": "AI-agenter",
+        "description": "Automatiske agenter og arbejdsgange, der skriver indhold."
+      },
+      "chat": {
+        "label": "Chat",
+        "description": "Redigér dit site ved at chatte."
+      }
+    }
   },
   "siteDomains": {
     "noAccess": "Du har ikke adgang til domæner",
@@ -438,5 +480,10 @@
     "sendingDots": "Sender...",
     "sendTest": "Send test",
     "testSent": "Test sendt"
+  },
+  "saveButton": {
+    "save": "Gem",
+    "saving": "Gemmer…",
+    "unsaved": "Ikke gemt"
   }
 }
