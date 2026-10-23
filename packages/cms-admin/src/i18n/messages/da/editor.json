@@ -567,5 +567,146 @@
   },
   "tagsInput": {
     "placeholder": "Tilføj tags…"
+  },
+  "builtinBlocks": {
+    "columns": {
+      "label": "Kolonner",
+      "fields": {
+        "label": {
+          "label": "Etiket (intern)"
+        },
+        "layout": {
+          "label": "Layout",
+          "options": {
+            "1-1": "50 / 50",
+            "2-1": "66 / 33",
+            "1-2": "33 / 66",
+            "1-1-1": "3 lige store",
+            "1-1-1-1": "4 lige store"
+          }
+        },
+        "columns": {
+          "label": "Kolonner"
+        }
+      }
+    },
+    "video": {
+      "label": "Video",
+      "fields": {
+        "src": {
+          "label": "Video-URL"
+        },
+        "caption": {
+          "label": "Billedtekst"
+        }
+      }
+    },
+    "audio": {
+      "label": "Lyd",
+      "fields": {
+        "src": {
+          "label": "Lydfil"
+        },
+        "caption": {
+          "label": "Billedtekst"
+        }
+      }
+    },
+    "file": {
+      "label": "Fil",
+      "fields": {
+        "src": {
+          "label": "Fil"
+        },
+        "filename": {
+          "label": "Visningsnavn"
+        }
+      }
+    },
+    "interactive": {
+      "label": "Interaktivt element",
+      "fields": {
+        "interactiveId": {
+          "label": "Interaktivt element"
+        },
+        "caption": {
+          "label": "Billedtekst"
+        },
+        "scale": {
+          "label": "Skala (%)"
+        },
+        "allowFullscreen": {
+          "label": "Fuldskærmsknap"
+        },
+        "fullscreenLabel": {
+          "label": "Tekst på fuldskærmsknap"
+        }
+      }
+    },
+    "text": {
+      "label": "Tekst",
+      "fields": {
+        "body": {
+          "label": "Tekst"
+        }
+      }
+    },
+    "textarea": {
+      "label": "Tekstområde",
+      "fields": {
+        "content": {
+          "label": "Tekst"
+        }
+      }
+    },
+    "richtext": {
+      "label": "Formateret tekst",
+      "fields": {
+        "content": {
+          "label": "Indhold"
+        }
+      }
+    },
+    "image": {
+      "label": "Billede",
+      "fields": {
+        "src": {
+          "label": "Billede"
+        },
+        "alt": {
+          "label": "Alt-tekst"
+        },
+        "caption": {
+          "label": "Billedtekst"
+        }
+      }
+    },
+    "image-gallery": {
+      "label": "Billedgalleri",
+      "fields": {
+        "images": {
+          "label": "Billeder"
+        },
+        "caption": {
+          "label": "Billedtekst"
+        }
+      }
+    },
+    "htmldoc": {
+      "label": "HTML-dokument",
+      "fields": {
+        "content": {
+          "label": "HTML"
+        }
+      }
+    },
+    "form": {
+      "label": "Indlejret formular",
+      "fields": {
+        "formName": {
+          "label": "Formularens navn (fx \"contact\")"
+        }
+      }
+    }
   }
 }

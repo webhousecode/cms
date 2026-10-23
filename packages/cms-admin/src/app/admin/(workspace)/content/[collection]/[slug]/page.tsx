@@ -7,6 +7,8 @@ import { readSiteConfig } from "@/lib/site-config";
 import { getSiteRole } from "@/lib/require-role";
 import { getActiveSiteEntry } from "@/lib/site-paths";
 import { hasPermission, ROLE_PERMISSIONS } from "@/lib/permissions-shared";
+import { getServerT } from "@/i18n/server";
+import { localizeBuiltinBlocks } from "@/lib/localize-builtin-blocks";
 
 type Props = {
   params: Promise<{ collection: string; slug: string }>;
@@ -16,7 +18,7 @@ type Props = {
 export default async function DocumentPage({ params, searchParams }: Props) {
   const { collection, slug } = await params;
   const { from } = await searchParams;
-  const [cms, config, siteConfig, siteRole, siteEntry] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig(), getSiteRole(), getActiveSiteEntry()]);
+  const [cms, config, siteConfig, siteRole, siteEntry, t] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig(), getSiteRole(), getActiveSiteEntry(), getServerT()]);
 
   const colConfig = config.collections.find((c) => c.name === collection);
   if (!colConfig) notFound();
@@ -36,7 +38,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
         key={doc.id}
         collection={collection}
         colConfig={colConfig}
-        blocksConfig={[...builtinBlocks, ...(config.blocks ?? [])]}
+        blocksConfig={[...localizeBuiltinBlocks(builtinBlocks, t), ...(config.blocks ?? [])]}
         locales={siteConfig.locales?.length ? siteConfig.locales : (config.locales ?? [])}
         defaultLocale={siteConfig.defaultLocale || config.defaultLocale || "en"}
         initialDoc={{
