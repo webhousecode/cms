@@ -1,3 +1,4 @@
+/* i18n-ignore-file: protocol errors returned to an API/MCP client in the response body, not shown to a person */
 /**
  * Read a JSON request body, refusing it once it passes `maxBytes`.
  *
