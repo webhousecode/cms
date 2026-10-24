@@ -46,7 +46,7 @@ const collectionConfigSchema = z.object({
   urlPrefix: z.string().optional(),
   parentField: z.string().optional(),
   fields: z.array(fieldConfigSchema).min(1),
-  hooks: z.record(z.any()).optional(),
+  hooks: z.record(z.string(), z.any()).optional(),
 });
 
 const cmsConfigSchema = z.object({
@@ -85,7 +85,9 @@ const cmsConfigSchema = z.object({
 });
 
 export function validateConfig(config: unknown): CmsConfig {
-  return cmsConfigSchema.parse(config) as CmsConfig;
+  // reportInput: an invalid value is named in the issue (zod 4 leaves it out by
+  // default), so cms-admin can say WHICH field type was wrong.
+  return cmsConfigSchema.parse(config, { reportInput: true }) as CmsConfig;
 }
 
 export function safeValidateConfig(config: unknown): { success: true; data: CmsConfig } | { success: false; error: z.ZodError } {

@@ -37,8 +37,8 @@ async function formatSiteError(err: unknown, site: SiteEntry): Promise<string> {
   if (err instanceof ZodError) {
     const issues = err.issues.map((issue) => {
       const path = issue.path.join(".");
-      if (issue.code === "invalid_enum_value" && path.endsWith(".type")) {
-        const received = (issue as { received?: string }).received ?? "";
+      if (issue.code === "invalid_value" && path.endsWith(".type")) {
+        const received = String((issue as { input?: unknown }).input ?? "");
         const validTypes = VALID_FIELD_TYPES.join(", ");
         return t("deployText.sitePool.invalidFieldType", { received, path, validTypes });
       }
