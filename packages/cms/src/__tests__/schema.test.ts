@@ -38,7 +38,7 @@ describe('schema validation', () => {
       validateConfig({ collections: [{ name: 'p', fields: [{ name: 't', type: 'txet' }] }] });
       expect.unreachable();
     } catch (e) {
-      const issue = (e as { issues: Array<{ code: string; path: PropertyKey[]; input?: unknown }> }).issues[0];
+      const issue = (e as { issues: Array<{ code: string; path: PropertyKey[]; input?: unknown }> }).issues[0]!;
       expect(issue.code).toBe('invalid_value');
       expect(issue.path.join('.')).toBe('collections.0.fields.0.type');
       expect(issue.input).toBe('txet');
