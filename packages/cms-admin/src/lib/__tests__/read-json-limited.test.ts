@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readJsonLimited } from "../read-json-limited";
+import { readJsonLimited, measureJsonShape } from "../read-json-limited";
 
 // A body with no Content-Length — the case request.json() and a header check both miss.
 function chunked(text: string): Request {
@@ -59,11 +59,19 @@ describe("readJsonLimited — shape (F209.4)", () => {
     if (!r.ok) expect(r.error).toMatch(/entries exceed 50/);
   });
 
-  it("walks deep nesting without blowing the stack", async () => {
+  it("walks deep nesting without blowing the stack", () => {
+    // Built and measured directly: JSON.stringify/parse are themselves recursive
+    // and overflow on CI's smaller stack at this depth (they would answer 400
+    // "Invalid JSON" through readJsonLimited, which is also safe).
     let v: unknown = 1;
-    for (let i = 0; i < 5000; i++) v = [v];
-    const r = await readJsonLimited(chunked(JSON.stringify(v)), 64 * 1024, { maxArrayLength: 10, maxObjectKeys: 10, maxTotalEntries: 100_000 });
-    expect(r.ok).toBe(true);
+    for (let i = 0; i < 100_000; i++) v = [v];
+    expect(measureJsonShape(v, { maxArrayLength: 10, maxObjectKeys: 10, maxTotalEntries: 1_000_000 })).toBeNull();
+  });
+
+  it("a body too deep for JSON.parse is refused, not thrown", async () => {
+    const deep = "[".repeat(200_000) + "]".repeat(200_000);
+    const r = await readJsonLimited(chunked(deep), 1024 * 1024, L);
+    expect(r.ok).toBe(false);
   });
 
   it("passes a normal MCP message unchanged", async () => {
