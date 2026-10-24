@@ -22,7 +22,11 @@ function repoWith(files: Record<string, string>): string {
 describe("compliance scan", () => {
   it("reports a repo it cannot read as NOT SCANNED, never as zero vendors", () => {
     const cache = mkdtempSync(path.join(tmpdir(), "cscan-cache-"));
-    const { result, scan } = scanProject({ slug: "ghost", repo: "broberg-ai/this-repo-does-not-exist-f201" }, cache);
+    // The clone is injected: a real `gh repo clone` took 7.7 s on CI (5 s timeout)
+    // and spends the fleet's shared GitHub quota. What is under test is what a
+    // FAILED clone turns into, not GitHub's answer.
+    const failingClone = () => { throw new Error("GraphQL: Could not resolve to a Repository with the name 'broberg-ai/this-repo-does-not-exist-f201'."); };
+    const { result, scan } = scanProject({ slug: "ghost", repo: "broberg-ai/this-repo-does-not-exist-f201" }, cache, failingClone);
     expect(result.status).toBe("not_scanned");
     expect(result.reason).toMatch(/kunne ikke klones/);
     expect(scan).toBeNull();

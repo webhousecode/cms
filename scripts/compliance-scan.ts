@@ -225,10 +225,10 @@ export function scanDir(repo: string, dir: string) {
  * One project → a result that says SCANNED or NOT SCANNED (with why). A repo we
  * cannot read must never come back looking like a repo with no vendors.
  */
-export function scanProject(p: { slug: string; repo: string | null }, cacheDir = CACHE) {
+export function scanProject(p: { slug: string; repo: string | null }, cacheDir = CACHE, clone: typeof checkout = checkout) {
   if (!p.repo) return { result: { slug: p.slug, repo: null, status: "not_scanned", reason: "intet repo registreret i cardmem" } as ProjectResult, scan: null };
   let co: { dir: string; sha: string };
-  try { co = checkout(p.repo, cacheDir); } catch (e) {
+  try { co = clone(p.repo, cacheDir); } catch (e) {
     const reason = `kunne ikke klones: ${String((e as Error).message).split("\n")[0].slice(0, 160)}`;
     return { result: { slug: p.slug, repo: p.repo, status: "not_scanned", reason } as ProjectResult, scan: null };
   }
