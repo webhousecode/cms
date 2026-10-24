@@ -1640,3 +1640,42 @@ what the system must remember, who may change it, what is shared) ·
 Review needs a side-by-side per state (`mockup_comparison`) · and Done needs
 `cardmem_check_mockup_fidelity` to have passed — content and order per state, compared by
 the server, never pixels. An agent cannot record that check itself.
+
+## «Intet at bygge» bærer sit tal — Backlog counts, not only Ready (F403)
+
+> **Canonical section per F057 multi-project convention.** Copied verbatim into every
+> cardmem-compatible repo (owner order, Christian 2026-10-24).
+
+**"Nothing in Ready" is not "nothing to build".** Measured on 24 Oct 2026: an agent
+reported «Intet nyt at bygge» with 26 cards in Backlog, 0 in Ready, and a standing
+order assigning that Backlog — the third time that day the owner had to ask *«Er dit
+plan board tomt?»*. The claim had never been counted; only Ready was looked at. A claim
+of emptiness fails in the GREEN direction: it reads as discipline while assigned work
+sits still.
+
+**So the number is the server's, never yours:**
+
+1. **Read `work_available`** in your `cardmem_session_start` payload: Backlog + Ready
+   counts, every blocked card with its blocker named, every empty epic, and what
+   assigns the Backlog (`standing_orders`, live `build_orders`). When it carries a
+   `contract` line, «nothing to build» is not a valid answer on this board.
+2. **Before a quiet loop tick or any "nothing to build", call `cardmem_report_idle({
+   session_id, project, session_name })`.** It counts the board and answers `idle_ok`
+   or `work_waiting` with the cards named. The **third `work_waiting` in a row** (no card
+   picked up, handed off or moved by you in between) files ONE report in the owner's
+   Inbox — he learns it from cardmem instead of asking a fourth time.
+3. **An ASSIGNED Backlog outranks the stay-quiet default.** A standing order or a live
+   build order that assigns Backlog work is tasked work — `~/.claude/loop.md` says the
+   same since buddy `b516f9f`. This does not widen D-0e1d9c: a card is still not an
+   order just because it exists; it is the ASSIGNMENT that makes it yours.
+4. **A blocker names its gate and what precedes it** — «waits for mockup X to be
+   approved», not «needs a mockup later». A gate you cannot name is not a gate; record
+   real ones as a `blocks` dependency (`cardmem_add_dependency`) so the count sees them.
+5. **An empty epic is a violation, not waiting work.** The owner: *«en epic uden
+   actions/cards er ikke brugbart på et board. Så må den epic blive et card på en anden
+   epic.»* Fix each one `work_available.empty_epics` lists: give it ≥1 story with
+   acceptance criteria, or reparent it as a story under another epic
+   (`cardmem_reparent_card`).
+
+**Say it with the number.** «Backlog 26 · Ready 0 · 3 blocked (F010.2 ← waits for
+mockup approval)» is an answer the owner can check; «nothing to build» is not.
