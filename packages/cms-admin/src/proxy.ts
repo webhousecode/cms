@@ -455,11 +455,18 @@ export async function proxy(request: NextRequest) {
           // (until TOKEN_SCOPE_ENFORCE=all): a missing permission or an unmapped
           // route on the token's OWN site — existing callers may rely on those.
           const { decideTokenRequest } = await import("./lib/token-scope");
+          // Security W43 C7 — judge the site the route WILL act on: the
+          // sanitized pair (incl. ?site= injection), not the raw browser cookie.
+          // A raw cms-active-site of your own site next to a victim's
+          // cms-active-org used to pass here and then resolve to the victim.
+          const { loadRegistry: loadReg } = await import("./lib/site-registry");
+          const { sanitizeActiveSiteCookies: sanitize, activeSiteFromCookieHeader } = await import("./lib/active-site-cookie");
+          const effectiveSite = activeSiteFromCookieHeader(sanitize(requestHeaders.get("cookie") ?? "", await loadReg())).siteId ?? null;
           const decision = decideTokenRequest({
             token: tokenEntry,
             method: request.method,
             pathname,
-            site: request.nextUrl.searchParams.get("site") ?? request.cookies.get("cms-active-site")?.value ?? null,
+            site: effectiveSite,
             clientIp: request.headers.get("fly-client-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "",
           });
           if (!decision.allow) {
@@ -475,7 +482,7 @@ export async function proxy(request: NextRequest) {
             const { loadRegistry, findSiteOrgId } = await import("./lib/site-registry");
             const registry = await loadRegistry();
             if (registry) {
-              const siteId = request.nextUrl.searchParams.get("site") ?? request.cookies.get("cms-active-site")?.value ?? registry.defaultSiteId;
+              const siteId = effectiveSite ?? registry.defaultSiteId;
               const orgId = siteId ? findSiteOrgId(registry, siteId) : null;
               const { getUsers } = await import("./lib/auth");
               const { getTeamMembersForSite } = await import("./lib/team");
@@ -601,6 +608,33 @@ export async function proxy(request: NextRequest) {
     const lensReadOnly = payload.lens === true && payload.lensWrite !== true;
     if (lensReadOnly && ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
       return NextResponse.json({ error: (await proxyT(request))("system.proxy.lensReadOnly") }, { status: 403 });
+    }
+    // Security W43 — membership on the site this /api/* request resolves to.
+    if (isApi) {
+      const { membershipExempt, membershipDecision } = await import("./lib/site-membership-gate");
+      if (!membershipExempt(pathname, request.method)) {
+        const { loadRegistry, getDefaultSite } = await import("./lib/site-registry");
+        const { sanitizeActiveSiteCookies, activeSiteFromCookieHeader } = await import("./lib/active-site-cookie");
+        const { isSelfDescribingPrincipal } = await import("./lib/require-role");
+        const { isInstanceAdminUser } = await import("./lib/instance-admin");
+        const { getUsers } = await import("./lib/auth");
+        const { getTeamMembersForSite } = await import("./lib/team");
+        const registry = await loadRegistry();
+        const sub = typeof payload.sub === "string" ? payload.sub : undefined;
+        const named = activeSiteFromCookieHeader(sanitizeActiveSiteCookies(requestHeaders.get("cookie") ?? "", registry));
+        const def = registry ? getDefaultSite(registry) : null;
+        const site = !registry ? null
+          : named.orgId && named.siteId ? { orgId: named.orgId, siteId: named.siteId }
+          : def ? { orgId: def.org.id, siteId: def.site.id } : null;
+        const selfDescribing = isSelfDescribingPrincipal(sub);
+        const instanceAdmin = !selfDescribing && !!sub && isInstanceAdminUser({ sub, role: payload.role as never } as never, await getUsers());
+        const team = site && !selfDescribing && !instanceAdmin ? await getTeamMembersForSite(site.orgId, site.siteId) : [];
+        const refused = membershipDecision({ pathname, method: request.method, sub, selfDescribing, instanceAdmin, site, team });
+        if (refused) {
+          console.warn(`[membership] DENY user=${sub ?? "-"} ${request.method} ${pathname} site=${site?.siteId ?? "-"} reason=${refused}`);
+          return NextResponse.json({ error: (await proxyT(request))("system.auth.noSiteAccess") }, { status: 403 });
+        }
+      }
     }
     return forwardOk();
   } catch (err) {

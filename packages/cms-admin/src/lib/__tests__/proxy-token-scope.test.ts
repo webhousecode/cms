@@ -7,11 +7,12 @@ import { describe, it, expect, vi, beforeAll } from "vitest";
 import { NextRequest } from "next/server";
 
 vi.mock("../site-registry", () => ({
-  loadRegistry: vi.fn(async () => ({ orgs: [{ id: "broberg-ai", sites: [] }, { id: "webhouse", sites: [] }] })),
+  loadRegistry: vi.fn(async () => ({ orgs: [{ id: "broberg-ai", sites: [{ id: "trail" }, { id: "broberg-ai" }] }, { id: "webhouse", sites: [{ id: "sanneandersen" }] }] })),
   findSite: (_r: unknown, org: string, site: string) =>
     (org === "broberg-ai" && (site === "trail" || site === "broberg-ai")) || (org === "webhouse" && site === "sanneandersen")
       ? { id: site }
       : null,
+  getDefaultSite: () => ({ org: { id: "broberg-ai" }, site: { id: "trail" } }),
   findSiteOrgId: (_r: unknown, site: string) =>
     site === "trail" || site === "broberg-ai" ? "broberg-ai" : site === "sanneandersen" ? "webhouse" : null,
 }));
@@ -79,6 +80,13 @@ describe("proxy: a trail-only token", () => {
     expect(res.status).toBe(403);
   });
 
+  it("W43 C7 — is refused when its OWN site cookie sits next to a VICTIM org", async () => {
+    // The raw cookie named trail (allowed) while the route resolved to the
+    // victim org's site. The proxy now judges the sanitized pair.
+    const res = await hit("/api/cms/pages/x", "PATCH", "cms-active-org=webhouse; cms-active-site=trail");
+    expect(res.status).toBe(403);
+  });
+
   it("is refused a deploy of another site", async () => {
     const res = await hit("/api/admin/deploy?site=broberg-ai", "POST");
     expect(res.status).toBe(403);
@@ -98,5 +106,24 @@ describe("proxy: W41 C7 — a full-access token whose owner is on no team", () =
       const res = await hit(`/api/admin/backups?site=${site}`, "GET", "", "wh_orphan");
       expect(res.status).toBe(403);
     }
+  });
+});
+
+describe("proxy: W43 — a signed-in user reaches only the sites they are on", () => {
+  async function asUser(path: string, method = "GET") {
+    const { SignJWT } = await import("jose");
+    const jwt = await new SignJWT({ sub: "u", email: "u@x", name: "U", role: "editor" })
+      .setProtectedHeader({ alg: "HS256" }).setExpirationTime("5m")
+      .sign(new TextEncoder().encode(process.env.CMS_JWT_SECRET!));
+    const { proxy } = await import("../../proxy");
+    return proxy(new NextRequest(`https://webhouse.app${path}`, { method, headers: { cookie: `cms-session=${jwt}` } }));
+  }
+  it("is refused on a site whose team they are not on (an unguarded route)", async () => {
+    expect((await asUser("/api/media/rotate?site=sanneandersen", "POST")).status).toBe(403);
+  });
+  it("is let through on their own site", async () => {
+    const res = await asUser("/api/media/rotate?site=trail", "POST");
+    expect(res.status).not.toBe(403);
+    expect(res.status).not.toBe(401);
   });
 });

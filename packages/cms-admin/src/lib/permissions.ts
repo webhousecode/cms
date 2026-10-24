@@ -73,7 +73,26 @@ async function tryTokenAuth(permission: string): Promise<Response | null | "no-b
       { status: 403 },
     );
   }
+  // Security W43 C7 — the token was judged against "org:*" alone, so a viewer
+  // holding a `*` token minted where they are admin got admin on every site
+  // they could reach. The token now grants at most what its OWNER's role grants
+  // on the site this request resolves to (the proxy minted the session as the
+  // owner, so getSiteRole() answers for them). The instance admin acts anywhere.
+  if (!(await ownerRoleGrants(permission))) {
+    return NextResponse.json(
+      { error: (await serverT())("system.auth.forbidden"), reason: "token owner lacks this permission on the site", permission }, // i18n-ignore: machine reason field; the human text is in error
+      { status: 403 },
+    );
+  }
   return null;
+}
+
+/** Does the token owner's own role on the active site grant `permission`? */
+export async function ownerRoleGrants(permission: string): Promise<boolean> {
+  const { isInstanceAdmin } = await import("./instance-admin");
+  if (await isInstanceAdmin()) return true;
+  const role = await getSiteRole();
+  return !!role && hasPermission(ROLE_PERMISSIONS[role] ?? [], permission);
 }
 
 /**

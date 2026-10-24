@@ -104,8 +104,21 @@ export async function GET(req: NextRequest) {
     // Resolve live URLs from site configs in parallel (same logic as site-health)
     const sitePromises: Promise<void>[] = [];
 
+    // Security W43 C3 — list only the sites this user is on, with THEIR role
+    // there. Every org and site, each labelled with the user's global role,
+    // let any signed-in phone enumerate every tenant (+ live URLs and signed
+    // preview links). The instance admin still sees everything.
+    const { getTeamMembersForSite } = await import("@/lib/team");
+    const { isInstanceAdminUser } = await import("@/lib/instance-admin");
+    const { getUsers } = await import("@/lib/auth");
+    const instanceAdmin = isInstanceAdminUser({ sub: user.id }, await getUsers());
+
     for (const org of registry.orgs) {
       for (const site of org.sites) {
+        const memberRole = instanceAdmin
+          ? (user.role ?? "admin")
+          : (await getTeamMembersForSite(org.id, site.id)).find((m) => m.userId === user.id)?.role;
+        if (!memberRole) continue;
         // Build proxy URL for fullscreen preview (enables URL tracking via injected script)
         const lanHost = rewriteLocalhostUrl(`${reqUrl.protocol}//${reqUrl.host}`) ?? `${reqUrl.protocol}//${reqUrl.host}`;
         const liveOrPreview = site.previewUrl;
@@ -117,7 +130,7 @@ export async function GET(req: NextRequest) {
           orgName: org.name,
           siteId: site.id,
           siteName: site.name,
-          role: (user.role ?? "admin") as "owner" | "admin" | "editor" | "viewer",
+          role: memberRole as "owner" | "admin" | "editor" | "viewer",
           adapter: site.adapter as "filesystem" | "github",
           previewUrl: derivePreviewUrl(site, reqUrl),
           liveUrl: undefined as string | undefined,

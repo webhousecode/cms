@@ -48,10 +48,29 @@ export function sanitizeActiveSiteCookies(cookieHeader: string, registry: Regist
   if (registry && keepOrg) {
     const o = registry.orgs.find((x) => x.id === keepOrg);
     if (!o) keepOrg = keepSite = undefined;
-    else if (keepSite && !o.sites.some((s) => s.id === keepSite)) keepSite = undefined;
+    else if (!keepSite || !o.sites.some((s) => s.id === keepSite)) {
+      // Security W43 C7 — name the site that WILL be used. getActiveSitePaths
+      // falls back to the org's first site; leaving the site out let the token
+      // owner check (which read the raw cookie) judge one site while the route
+      // acted on another tenant's. One explicit pair, the same for every reader.
+      keepSite = o.sites[0]?.id;
+    }
   }
 
   if (keepOrg) rest.push(`${ORG}=${keepOrg}`);
   if (keepSite) rest.push(`${SITE}=${keepSite}`);
   return rest.join("; ");
+}
+
+/** The org/site pair a (sanitized) Cookie header names, if any. */
+export function activeSiteFromCookieHeader(cookieHeader: string): { orgId?: string; siteId?: string } {
+  const out: { orgId?: string; siteId?: string } = {};
+  for (const p of cookieHeader.split(/;\s*/)) {
+    const eq = p.indexOf("=");
+    if (eq === -1) continue;
+    const name = p.slice(0, eq).trim();
+    if (name === ORG) out.orgId = p.slice(eq + 1).trim();
+    else if (name === SITE) out.siteId = p.slice(eq + 1).trim();
+  }
+  return out;
 }

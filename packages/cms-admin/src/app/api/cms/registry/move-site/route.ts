@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { moveSite } from "@/lib/site-registry";
-import { getSiteRole } from "@/lib/require-role";
+import { requireInstanceAdmin } from "@/lib/instance-admin";
 import { getServerTSafe } from "@/i18n/server";
 
 export async function POST(req: NextRequest) {
   const t = await getServerTSafe();
-  const role = await getSiteRole();
-  if (role !== "admin") return NextResponse.json({ error: t("errCms.registry.adminOnly") }, { status: 403 });
+  // Security W43 NY-K3 — the check was "admin on the ACTIVE site", then the
+  // body named any site and any two orgs: a customer admin could move another
+  // tenant's site into their own org. Moving a site between organisations is
+  // an instance-level act.
+  const denied = await requireInstanceAdmin();
+  if (denied) return denied;
 
   try {
     const { siteId, fromOrgId, toOrgId } = await req.json() as { siteId?: string; fromOrgId?: string; toOrgId?: string };

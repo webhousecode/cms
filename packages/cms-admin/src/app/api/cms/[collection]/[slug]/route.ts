@@ -8,6 +8,7 @@ import { getSiteRole, getSessionWithSiteRole } from "@/lib/require-role";
 import { fireContentEvent } from "@/lib/webhook-events";
 import { GitHubStorageAdapter } from "@webhouse/cms";
 import { NextResponse } from "next/server";
+import { requirePermission } from "@/lib/permissions";
 import type { NextRequest } from "next/server";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSiteOrgId } from "@/lib/site-registry";
@@ -143,6 +144,11 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const cors = corsHeaders(req.headers.get("origin"), await getAllowedOrigins());
   const result = await runScoped(req, async () => {
     try {
+      // Security W43 H2→K — reading a document needs membership on the site
+      // it belongs to; any signed-in user could read any tenant's drafts with
+      // ?site=. Every member role (viewer too) holds content.read.
+      const denied = await requirePermission("content.read");
+      if (denied) return new NextResponse(denied.body, { status: denied.status, headers: { ...Object.fromEntries(denied.headers), ...cors } });
       const { collection, slug } = await params;
       const missing = await collectionMissing(collection, cors);
       if (missing) return missing;

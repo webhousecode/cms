@@ -85,8 +85,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Path traversal guard
+    // Security W43 NY-K2 — with a separator: siteId "sanne" + "content/../../
+    // sanneandersen/_data/team.json" resolved to a sibling site whose name
+    // merely starts with the same letters, and a bare startsWith let it through.
     const resolved = path.resolve(targetPath);
-    if (!resolved.startsWith(path.resolve(siteDir))) {
+    const siteRoot = path.resolve(siteDir);
+    if (resolved !== siteRoot && !resolved.startsWith(siteRoot + path.sep)) {
       return NextResponse.json(
         { error: t("errApi.beamReceive.pathTraversal") },
         { status: 400 },

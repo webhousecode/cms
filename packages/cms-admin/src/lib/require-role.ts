@@ -87,7 +87,11 @@ export async function denyViewers(): Promise<Response | null> {
     const hasWrite = (token.permissions ?? []).some(
       (p) => p === "*" || WRITE_SUFFIXES.some((s) => p.endsWith(s)),
     );
-    if (hasWrite) return null;
+    // Security W43 C7 — and the OWNER must not be a viewer (or a non-member) on
+    // the site this request acts on: a write token never out-ranks its owner.
+    const { isInstanceAdmin } = await import("./instance-admin");
+    const ownerRole = (await isInstanceAdmin()) ? "admin" : await getSiteRole();
+    if (hasWrite && ownerRole && ownerRole !== "viewer") return null;
     const { NextResponse } = await import("next/server");
     return NextResponse.json({ error: (await serverT())("system.auth.noWriteAccess") }, { status: 403 });
   }

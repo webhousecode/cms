@@ -1,4 +1,5 @@
 import type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult } from '../types.js';
+import { assertPathSegment } from '../filesystem/adapter.js';
 import { generateId } from '../../utils/id.js';
 import { generateSlug } from '../../utils/slug.js';
 import { now } from '../../utils/date.js';
@@ -55,12 +56,15 @@ export class GitHubStorageAdapter implements StorageAdapter {
     };
   }
 
+  // Security W43 H2→K — the same rule as the filesystem adapter: a slug or
+  // collection is one path segment, so `../_data/users` cannot leave the
+  // collection in the repository either.
   private filePath(collection: string, slug: string): string {
-    return `${this.contentDir}/${collection}/${slug}.json`;
+    return `${this.dirPath(collection)}/${assertPathSegment(slug, 'slug')}.json`;
   }
 
   private dirPath(collection: string): string {
-    return `${this.contentDir}/${collection}`;
+    return `${this.contentDir}/${assertPathSegment(collection, 'collection')}`;
   }
 
   private encode(content: string): string {

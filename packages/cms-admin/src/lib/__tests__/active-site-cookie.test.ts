@@ -28,9 +28,10 @@ describe("sanitizeActiveSiteCookies", () => {
     expect(sanitizeActiveSiteCookies("cms-active-org=evil; cms-active-site=trail", REG)).toBe("");
   });
 
-  it("drops a site that belongs to another org, keeps the org", () => {
+  it("replaces a site that belongs to another org with the org's first site (W43 C7: one explicit pair)", () => {
+    const first = (REG as { orgs: { id: string; sites: { id: string }[] }[] }).orgs.find((o) => o.id === "webhouse")!.sites[0]!.id;
     expect(sanitizeActiveSiteCookies("cms-active-org=webhouse; cms-active-site=trail", REG))
-      .toBe("cms-active-org=webhouse");
+      .toBe(`cms-active-org=webhouse; cms-active-site=${first}`);
   });
 
   it("collapses duplicates to the LAST occurrence (the proxy appends its injected pair)", () => {

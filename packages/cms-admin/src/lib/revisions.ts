@@ -6,7 +6,7 @@
  */
 import { readFile, writeFile, mkdir } from "fs/promises";
 import path from "path";
-import type { Document } from "@webhouse/cms";
+import { assertPathSegment, type Document } from "@webhouse/cms";
 import { getActiveSitePaths } from "./site-paths";
 
 const MAX_REVISIONS = 20;
@@ -23,7 +23,10 @@ async function getRevisionsDir(): Promise<string> {
 }
 
 async function revisionFile(collection: string, slug: string): Promise<string> {
-  return path.join(await getRevisionsDir(), collection, `${slug}.json`);
+  // Security W43 H2→K — the revisions store was the second door to the slug
+  // traversal the storage adapter closed: `..%2F..%2F_data%2Fusers/revisions`
+  // read the admin users file. One path segment each, same rule as the adapter.
+  return path.join(await getRevisionsDir(), assertPathSegment(collection, "collection"), `${assertPathSegment(slug, "slug")}.json`);
 }
 
 export async function listRevisions(collection: string, slug: string): Promise<Revision[]> {

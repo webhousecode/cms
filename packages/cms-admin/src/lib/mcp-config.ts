@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import { ROLE_PERMISSIONS } from "./permissions-shared";
 import path from "path";
 import crypto from "crypto";
 import { getActiveSitePaths } from "./site-paths";
@@ -134,8 +135,16 @@ export async function resolveApiKeyToSite(bearerHeader: string | null, clientIp 
       const { getUsers } = await import("./auth");
       const { getTeamMembersForSite } = await import("./team");
       const { tokenOwnerMayAct } = await import("./token-owner");
-      if (!tokenOwnerMayAct(stored.userId, await getUsers(), await getTeamMembersForSite(orgId, siteId))) return null;
-      return { orgId, siteId, label: stored.name, scopes };
+      const users = await getUsers();
+      const team = await getTeamMembersForSite(orgId, siteId);
+      if (!tokenOwnerMayAct(stored.userId, users, team)) return null;
+      // Security W43 NY-H2→K — and never more than the OWNER may do there: a
+      // `*` token mapped to admin MCP scopes, so a viewer on the bound site got
+      // config, deploy and backup tools.
+      const { isInstanceAdminUser } = await import("./instance-admin");
+      const ownerIsInstance = stored.userId === "service-token" || stored.userId === "dev-token" || isInstanceAdminUser({ sub: stored.userId }, users);
+      const ownerRole = ownerIsInstance ? "admin" : team.find((m) => m.userId === stored.userId)?.role;
+      return { orgId, siteId, label: stored.name, scopes: capScopesToRole(scopes, ownerRole) };
     }
     // Looked like wh_ but didn't verify — fall through (caller returns 401)
   }
@@ -214,6 +223,18 @@ function permissionsToMcpScopes(perms: readonly string[]): string[] {
   // Grant "ai" when content:write is present so AI tools remain usable.
   if (out.has("write")) out.add("ai");
   return Array.from(out);
+}
+
+/** The MCP scopes a site role may use at most (Security W43 NY-H2→K). */
+export function capScopesToRole(scopes: string[], role: string | undefined): string[] {
+  if (!role) return [];
+  if (role === "admin") return scopes;
+  const granted = new Set(ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] ?? []);
+  const allowed = new Set<string>(["read"]);
+  if (granted.has("content.edit")) allowed.add("write").add("ai");
+  if (granted.has("content.publish")) allowed.add("publish");
+  if (granted.has("deploy.trigger")) allowed.add("deploy");
+  return scopes.filter((s) => allowed.has(s));
 }
 
 /** Derive the (orgId, siteId) that a token's resource filters bind to.

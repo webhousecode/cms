@@ -13,7 +13,7 @@ export { expandShortcodes } from './build/shortcodes.js';
 export type { ShortcodeOptions, InteractiveParams } from './build/shortcodes.js';
 
 // Storage
-export { FilesystemStorageAdapter } from './storage/filesystem/adapter.js';
+export { FilesystemStorageAdapter, assertPathSegment } from './storage/filesystem/adapter.js';
 export { SqliteStorageAdapter } from './storage/sqlite/adapter.js';
 export { GitHubStorageAdapter } from './storage/github/adapter.js';
 export type { GitHubAdapterConfig } from './storage/github/adapter.js';

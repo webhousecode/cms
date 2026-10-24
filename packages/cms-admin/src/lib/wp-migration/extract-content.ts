@@ -109,7 +109,12 @@ export async function extractAllContent(
     if (!sourceUrl) continue;
 
     try {
-      const ext = path.extname(new URL(sourceUrl).pathname) || ".jpg";
+      // Security W43 NY-K5 — the WordPress site names these URLs. Only public
+      // http(s) hosts and media file types: no internal addresses (SSRF into
+      // the uploads folder) and no .html/.svg/.js written next to the site.
+      const media = safeMediaSource(sourceUrl);
+      if (!media) continue;
+      const ext = media.ext;
       const localName = `${slugify(m.slug ?? `media-${i}`)}${ext}`; // i18n-ignore: file name
       const localPath = path.join(uploadDir, localName);
 
@@ -282,4 +287,17 @@ function decodeHtmlEntities(text: string): string {
 
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const MEDIA_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".mp4", ".webm", ".mp3", ".m4a", ".pdf"]);
+const PRIVATE_HOST = /^(localhost|.*\.localhost|.*\.internal|.*\.local|0\.|127\.|10\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$|\[?f[cd][0-9a-f]{2}:)/i;
+
+/** A media URL we may fetch and store, with its (allowed) extension — or null. */
+export function safeMediaSource(raw: string): { ext: string } | null {
+  let u: URL;
+  try { u = new URL(raw); } catch { return null; }
+  if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+  if (PRIVATE_HOST.test(u.hostname)) return null;
+  const ext = (path.extname(u.pathname) || ".jpg").toLowerCase();
+  return MEDIA_EXTENSIONS.has(ext) ? { ext } : null;
 }
