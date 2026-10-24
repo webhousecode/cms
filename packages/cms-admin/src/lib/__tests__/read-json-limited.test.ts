@@ -37,3 +37,42 @@ describe("readJsonLimited", () => {
     expect(r).toEqual({ ok: false, status: 400, error: "Invalid JSON" });
   });
 });
+
+describe("readJsonLimited — shape (F209.4)", () => {
+  const L = { maxArrayLength: 10, maxObjectKeys: 10, maxTotalEntries: 50 };
+  const send = (v: unknown) => readJsonLimited(chunked(JSON.stringify(v)), 64 * 1024, L);
+
+  it("refuses an array longer than the limit, naming where", async () => {
+    const r = await send({ params: { arguments: { a: new Array(11).fill(1) } } });
+    expect(r).toEqual({ ok: false, status: 400, error: "Body shape refused — params.arguments.a: array of 11 exceeds 10" });
+  });
+
+  it("refuses an object with too many keys (z.record has no .max())", async () => {
+    const r = await send({ params: Object.fromEntries(Array.from({ length: 11 }, (_, i) => [`k${i}`, 1])) });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/params: object with 11 keys exceeds 10/);
+  });
+
+  it("refuses many small arrays that add up past the total", async () => {
+    const r = await send({ a: Array.from({ length: 6 }, () => new Array(9).fill(1)) });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/entries exceed 50/);
+  });
+
+  it("walks deep nesting without blowing the stack", async () => {
+    let v: unknown = 1;
+    for (let i = 0; i < 5000; i++) v = [v];
+    const r = await readJsonLimited(chunked(JSON.stringify(v)), 64 * 1024, { maxArrayLength: 10, maxObjectKeys: 10, maxTotalEntries: 100_000 });
+    expect(r.ok).toBe(true);
+  });
+
+  it("passes a normal MCP message unchanged", async () => {
+    const msg = { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "get_page", arguments: { slug: "home" } } };
+    expect(await send(msg)).toEqual({ ok: true, value: msg });
+  });
+
+  it("without shape limits, behaves as before", async () => {
+    const r = await readJsonLimited(chunked(JSON.stringify({ a: new Array(100).fill(1) })), 64 * 1024);
+    expect(r.ok).toBe(true);
+  });
+});

@@ -1,6 +1,6 @@
 /* i18n-ignore-file: MCP protocol endpoint — tool results, errors and server info are returned to an AI client, not shown to a person */
 import { type NextRequest, NextResponse } from "next/server";
-import { readJsonLimited, MCP_MAX_BODY_BYTES } from "@/lib/read-json-limited";
+import { readJsonLimited, MCP_MAX_BODY_BYTES, MCP_JSON_SHAPE_LIMITS } from "@/lib/read-json-limited";
 import { getTransportSession, checkRateLimit } from "@webhouse/cms-mcp-client";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Session not found or expired" }, { status: 404 });
   }
 
-  const body = await readJsonLimited(request, MCP_MAX_BODY_BYTES);
+  const body = await readJsonLimited(request, MCP_MAX_BODY_BYTES, MCP_JSON_SHAPE_LIMITS);
   if (!body.ok) {
     return NextResponse.json({ error: body.error }, { status: body.status });
   }
