@@ -466,7 +466,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
         >
           <iframe
             srcDoc={value}
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts"
             style={{ width: "100%", height: "100%", border: "none" }}
             title={`${field.label ?? field.name} preview`}
           />
@@ -488,7 +488,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
           <iframe
             ref={iframeRef}
             srcDoc={injectWysiwyg(value)}
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts"
             style={{ width: "100%", height: "100%", border: "none" }}
             title={`${field.label ?? field.name} visual editor`}
           />
@@ -518,7 +518,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
           >
             <iframe
               srcDoc={aiPreview || value}
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts"
               style={{ width: "100%", height: "100%", border: "none" }}
               title={`${field.label ?? field.name} AI preview`}
             />

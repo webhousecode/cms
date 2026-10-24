@@ -13,6 +13,9 @@ const MIME: Record<string, string> = {
   pdf: "application/pdf", html: "text/html",
 };
 
+/** Served on the admin domain: never executable there (Security W43 NY-HØJ-A / H4). */
+const INERT = { "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "sandbox" } as const;
+
 /**
  * Serve static files from the site's public/ directory or proxy from previewUrl.
  * Used for image previews in the admin when paths are relative to the site (e.g. /images/photo.png).
@@ -20,8 +23,10 @@ const MIME: Record<string, string> = {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path: segments } = await params;
 
-  // Prevent path traversal
-  if (segments.some((s) => s === ".." || s.includes("\0"))) {
+  // Prevent path traversal. Security W43 NY-HØJ-A: a backslash too — the
+  // segment %5Cevil.example decodes to "\\evil.example", and
+  // new URL("/\\evil.example/x", previewUrl) is https://evil.example/x.
+  if (segments.some((s) => s === "" || s === "." || s === ".." || s.includes("\0") || s.includes("\\") || s.includes("/"))) {
     return NextResponse.json({ error: (await getServerTSafe())("errApi.common.forbidden") }, { status: 403 });
   }
 
@@ -33,11 +38,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
   // Try local public/ directory first
   const publicDir = path.join(sitePaths.projectDir, "public");
   const filePath = path.join(publicDir, ...segments);
-  if (filePath.startsWith(publicDir)) {
+  if (filePath.startsWith(publicDir + path.sep)) {
     try {
       const data = await readFile(filePath);
       return new NextResponse(data, {
-        headers: { "Content-Type": contentType, "Cache-Control": "public, max-age=60" },
+        headers: { "Content-Type": contentType, "Cache-Control": "public, max-age=60", ...INERT },
       });
     } catch { /* fall through */ }
   }
@@ -45,15 +50,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
   // Try previewUrl (for GitHub-backed sites where files aren't local)
   if (sitePaths.previewUrl) {
     try {
-      const upstream = new URL(relPath, sitePaths.previewUrl).href;
-      const res = await fetch(upstream, { next: { revalidate: 300 } });
+      // Only the site's own preview origin, no redirects followed (SSRF), and
+      // OUR content type from the extension — never the upstream's.
+      const base = new URL(sitePaths.previewUrl);
+      const upstream = new URL(relPath, base);
+      if (upstream.origin !== base.origin) {
+        return NextResponse.json({ error: (await getServerTSafe())("errApi.common.forbidden") }, { status: 403 });
+      }
+      const res = await fetch(upstream.href, { redirect: "manual", next: { revalidate: 300 } });
       if (res.ok) {
         const data = await res.arrayBuffer();
         return new NextResponse(data, {
-          headers: {
-            "Content-Type": res.headers.get("content-type") ?? contentType,
-            "Cache-Control": "public, max-age=300",
-          },
+          headers: { "Content-Type": contentType, "Cache-Control": "public, max-age=300", ...INERT },
         });
       }
     } catch { /* fall through */ }

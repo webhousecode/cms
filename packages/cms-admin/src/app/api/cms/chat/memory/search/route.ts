@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 import { queryMemories } from "@/lib/chat/memory-search";
 import { getServerTSafe } from "@/i18n/server";
 
@@ -8,6 +9,9 @@ export async function GET(request: NextRequest) {
   const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
   if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
+  // Security W43 NY-HØJ-B — memories are injected into the site chat agent's
+  // system prompt; reading or writing them is chat use, not mere membership.
+  { const denied = await requirePermission("chat.use"); if (denied) return denied; }
 
   const q = request.nextUrl.searchParams.get("q") ?? "";
   if (!q.trim()) {

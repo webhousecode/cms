@@ -18,6 +18,9 @@ export async function GET(
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control": "no-store",
+        // Security W43 H4 — user/site HTML served on the admin domain runs in an
+        // opaque origin: its scripts cannot read the admin session or DOM.
+        "Content-Security-Policy": "sandbox allow-scripts allow-forms allow-popups", // i18n-ignore: HTTP header value
       },
     });
   } catch (err) {

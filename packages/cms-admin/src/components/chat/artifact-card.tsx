@@ -131,7 +131,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
         >
           <iframe
             ref={iframeRef}
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts"
             srcDoc={htmlWithBase}
             title={title}
             style={{ width: "100%", height: "100%", border: "none" }}

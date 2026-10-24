@@ -1072,7 +1072,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                   <iframe
                     src={file.url}
                     title={file.name}
-                    sandbox="allow-scripts allow-same-origin"
+                    sandbox="allow-scripts"
                     loading="lazy"
                     style={{ width: "200%", height: "300px", border: "none", transform: "scale(0.5)", transformOrigin: "top left", pointerEvents: "none", position: "absolute", top: 0, left: 0 }}
                   />

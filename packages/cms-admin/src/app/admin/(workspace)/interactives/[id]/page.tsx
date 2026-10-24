@@ -971,7 +971,7 @@ export default function InteractiveDetailPage() {
             <iframe
               src={`/api/interactives/${siblings[0].id}/preview?t=${Date.now()}`}
               title={siblings[0].name}
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts"
               style={{ width: "100%", flex: 1, border: "none", background: "white" }}
             />
           </div>
@@ -982,7 +982,7 @@ export default function InteractiveDetailPage() {
           <iframe
             src={`/api/interactives/${id}/preview?t=${Date.now()}`}
             title={detail.name}
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts"
             style={{
               width: "100%",
               flex: 1,
@@ -999,7 +999,7 @@ export default function InteractiveDetailPage() {
               ref={iframeRef}
               srcDoc={injectWysiwyg(codeValue)}
               title={t("pages.interactiveEdit.visualEditFrameTitle", { name: detail.name })}
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts"
               style={{
                 width: "100%",
                 flex: 1,
@@ -1041,7 +1041,7 @@ export default function InteractiveDetailPage() {
               <iframe
                 src={`/api/interactives/${id}/preview?t=${Date.now()}`}
                 title={detail.name}
-                sandbox="allow-scripts allow-same-origin"
+                sandbox="allow-scripts"
                 style={{ width: "100%", flex: 1, border: "none", background: "white" }}
               />
             </div>

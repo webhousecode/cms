@@ -435,7 +435,7 @@ export default function InteractivesPage() {
                 <iframe
                   src={`/api/interactives/${item.id}/preview`}
                   title={item.name}
-                  sandbox="allow-scripts allow-same-origin"
+                  sandbox="allow-scripts"
                   style={{ width: "200%", height: "300px", border: "none", transform: "scale(0.5)", transformOrigin: "top left", pointerEvents: "none" }}
                 />
               </div>

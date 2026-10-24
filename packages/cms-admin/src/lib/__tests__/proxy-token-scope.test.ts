@@ -127,3 +127,22 @@ describe("proxy: W43 — a signed-in user reaches only the sites they are on", (
     expect(res.status).not.toBe(401);
   });
 });
+
+describe("proxy: W43 H6 — the inline-edit token as a cookie cannot reach login settings", () => {
+  async function asEditSession(path: string, method = "POST") {
+    const { SignJWT } = await import("jose");
+    const jwt = await new SignJWT({ sub: "u", email: "u@x", name: "U", role: "editor", editSession: true, site: "trail" })
+      .setProtectedHeader({ alg: "HS256" }).setExpirationTime("5m")
+      .sign(new TextEncoder().encode(process.env.CMS_JWT_SECRET!));
+    const { proxy } = await import("../../proxy");
+    return proxy(new NextRequest(`https://webhouse.app${path}`, { method, headers: { cookie: `cms-session=${jwt}` } }));
+  }
+  it("is refused on passkey registration and TOTP", async () => {
+    for (const p of ["/api/auth/passkey/register/options", "/api/auth/totp/enroll/start", "/api/auth/qr/approve"]) {
+      expect((await asEditSession(p)).status, p).toBe(403);
+    }
+  });
+  it("may still read /api/auth/me", async () => {
+    expect((await asEditSession("/api/auth/me", "GET")).status).not.toBe(403);
+  });
+});

@@ -405,6 +405,22 @@ export async function proxy(request: NextRequest) {
     if (decision) return NextResponse.json({ error: decision.error }, { status: decision.status });
   }
 
+  // Security W43 H6 — public prefixes return before the editSession allowlist,
+  // and /api/auth/ is one of them. The 30-day inline-edit token used as a
+  // COOKIE reached qr/approve, passkey/register, totp enroll/delete: enough to
+  // add a passkey or strip 2FA from the account. It may read /api/auth/me
+  // (its allowlist) and nothing else under /api/auth/.
+  if (isPublicPrefix && pathname.startsWith("/api/auth/") && pathname !== "/api/auth/me") {
+    const sessionCookie = request.cookies.get(COOKIE_NAME)?.value;
+    if (sessionCookie) {
+      try {
+        const { payload } = await jwtVerify(sessionCookie, getJwtSecret());
+        if (payload.editSession === true) {
+          return NextResponse.json({ error: (await proxyT(request))("system.proxy.editSessionScope") }, { status: 403 });
+        }
+      } catch { /* not a valid session — the route treats it as none */ }
+    }
+  }
   if (isPublicPrefix) return forwardOk();
 
   // F157: CORS preflight (OPTIONS) on /api/cms/{collection}/{slug},

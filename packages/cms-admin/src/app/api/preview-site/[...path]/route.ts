@@ -67,6 +67,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
         headers: {
           "Content-Type": contentType,
           "Cache-Control": "no-cache",
+          // Security W43 H4 — a built site served on the admin domain runs in an
+          // opaque origin: its scripts cannot read the admin session or DOM.
+          "Content-Security-Policy": "sandbox allow-scripts allow-forms allow-popups", // i18n-ignore: HTTP header value
+          "X-Content-Type-Options": "nosniff",
         },
       });
     } catch { /* try next candidate */ }

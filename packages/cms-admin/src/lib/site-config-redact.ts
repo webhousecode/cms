@@ -12,9 +12,12 @@ const SECRET_FIELDS = [
  * so a key added next month is covered without anyone remembering this list.
  */
 const SECRET_NAME = /(api_?key|token|secret|password|username|accesskeyid)$/i;
+/** Security W43 H3 — webhook lists carry {url, secret}, and a Discord/Slack
+ *  URL IS the credential; schedulerWebhookUrl the same. Any *Webhooks/*WebhookUrl. */
+const WEBHOOK_NAME = /(webhooks|webhookurl)$/i;
 export function stripSecretsForNonAdmin(result: Record<string, unknown>): void {
   for (const key of Object.keys(result)) {
-    if (SECRET_FIELDS.includes(key) || SECRET_NAME.test(key)) delete result[key];
+    if (SECRET_FIELDS.includes(key) || SECRET_NAME.test(key) || WEBHOOK_NAME.test(key)) delete result[key];
   }
   delete result.mcpServers;
   delete result.deployHookUrl;

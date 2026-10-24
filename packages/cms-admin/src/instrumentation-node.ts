@@ -252,7 +252,11 @@ export function startSchedulers() {
 
         const email = process.env.ADMIN_EMAIL!;
         const crypto = await import("crypto");
-        const password = process.env.ADMIN_PASSWORD || crypto.randomBytes(16).toString("hex");
+        // Security W43 H9 — the old kit's default is a known password; never
+        // create an admin with it. A random one is logged once instead.
+        const given = process.env.ADMIN_PASSWORD;
+        const password = given && given !== "changeme" ? given : crypto.randomBytes(16).toString("hex");
+        if (!given || given === "changeme") console.log(`[setup] admin ${process.env.ADMIN_EMAIL} created with a generated password: ${password}`); // i18n-ignore: operator boot log
         const name = email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
         const user = await createUser(email, password, name, { role: "admin", source: "local" });
 

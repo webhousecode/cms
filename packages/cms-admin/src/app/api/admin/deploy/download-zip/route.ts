@@ -1,7 +1,7 @@
 /**
  * POST /api/admin/deploy/download-zip — Generate a self-host Docker package.
  *
- * Returns a ZIP with Dockerfile, docker-compose.yml, .env.example, and README.
+ * Returns a ZIP with Dockerfile, docker-compose.yml, a generated .env, and README.
  * For users who want to self-host without connecting a Fly.io token.
  *
  * Body: { template, appName }
@@ -36,19 +36,19 @@ EXPOSE 3010
     // docker-compose.yml
     zip.file(
       "docker-compose.yml",
+      // i18n-ignore: docker-compose contents written into the zip, not shown in the admin
       `version: "3.8"
 services:
   cms:
     image: ghcr.io/webhousecode/cms-admin:latest
+    # Bound to this machine only — put a TLS reverse proxy in front to publish it.
     ports:
-      - "3010:3010"
+      - "127.0.0.1:3010:3010"
     volumes:
       - cms-data:/site
+    env_file: .env
     environment:
       - NODE_ENV=production
-      - ADMIN_EMAIL=\${ADMIN_EMAIL:-admin@webhouse.app}
-      - ADMIN_PASSWORD=\${ADMIN_PASSWORD:-changeme}
-      - CMS_JWT_SECRET=\${CMS_JWT_SECRET}
     restart: unless-stopped
 
 volumes:
@@ -56,16 +56,19 @@ volumes:
 `,
     );
 
-    // .env.example
+    // .env — Security W43 H9: generated per download. The kit used to start
+    // with an empty CMS_JWT_SECRET, a known default admin password and port 3010 open
+    // on every interface: following the README gave an open admin.
+    const { randomBytes } = await import("node:crypto");
     zip.file(
-      ".env.example",
-      `# Generate a secure JWT secret:
-#   openssl rand -hex 32
-CMS_JWT_SECRET=
+      ".env",
+      `# Generated for this download — keep this file private.
+CMS_JWT_SECRET=${randomBytes(32).toString("hex")}
 
-# Admin account (created on first boot if no users exist)
+# Admin account (created on first boot if no users exist). Change the password
+# after the first login.
 ADMIN_EMAIL=admin@webhouse.app
-ADMIN_PASSWORD=changeme
+ADMIN_PASSWORD=${randomBytes(12).toString("base64url")}
 
 # Optional: AI keys
 # ANTHROPIC_API_KEY=
@@ -81,16 +84,12 @@ ADMIN_PASSWORD=changeme
 ## Quick Start
 
 \`\`\`bash
-# 1. Copy .env.example and fill in values
-cp .env.example .env
-
-# 2. Generate a JWT secret
-echo "CMS_JWT_SECRET=$(openssl rand -hex 32)" >> .env
-
-# 3. Start the CMS
+# 1. .env already holds a generated JWT secret and admin password — keep it private
+# 2. Start the CMS
 docker compose up -d
 
-# 4. Open the admin at http://localhost:3010
+# 3. Open the admin at http://localhost:3010 (sign in with ADMIN_EMAIL / ADMIN_PASSWORD
+#    from .env, then change the password). To publish it, put a TLS reverse proxy in front.
 \`\`\`
 
 ## Deploy to Fly.io

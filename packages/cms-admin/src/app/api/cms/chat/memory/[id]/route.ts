@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 import { deleteMemory, updateMemory } from "@/lib/chat/memory-store";
 import { getServerTSafe } from "@/i18n/server";
 
@@ -11,6 +12,9 @@ export async function DELETE(
   const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
   if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
+  // Security W43 NY-HØJ-B — memories are injected into the site chat agent's
+  // system prompt; reading or writing them is chat use, not mere membership.
+  { const denied = await requirePermission("chat.use"); if (denied) return denied; }
 
   const { id } = await params;
   const deleted = await deleteMemory(id);
@@ -28,6 +32,9 @@ export async function PATCH(
   const t = await getServerTSafe();
   const session = await getSessionWithSiteRole();
   if (!session) return NextResponse.json({ error: t("errCms.shared.noAccess") }, { status: 403 });
+  // Security W43 NY-HØJ-B — memories are injected into the site chat agent's
+  // system prompt; reading or writing them is chat use, not mere membership.
+  { const denied = await requirePermission("chat.use"); if (denied) return denied; }
 
   const { id } = await params;
   const body = await request.json();

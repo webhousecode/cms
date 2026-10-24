@@ -16,6 +16,14 @@
   regex = '''https://(?:ptb\.|canary\.)?discord(?:app)?\.com/api/webhooks/[0-9]{17,20}/[A-Za-z0-9_-]{60,70}'''
   keywords = ["discord"]
 
+# Not in gitleaks' defaults: our own access tokens (W43 NY-H1 — a full admin
+# wh_ token sat in a public doc and every scan stayed green).
+[[rules]]
+  id = "webhouse-access-token"
+  description = "@webhouse/cms access token (wh_ + 64 hex)"
+  regex = '''\bwh_[a-f0-9]{64}\b'''
+  keywords = ["wh_"]
+
 # Suppress known false positives:
 # Dev JWT secrets in test files and e2e specs are intentional test fixtures
 
@@ -28,6 +36,15 @@
     '''.*\.spec\.ts$''',
     '''.*e2e/.*''',
     '''.*__tests__/.*''',
+  ]
+
+  # The two commits that added/removed the W43 NY-H1 token. Measured dead
+  # 24/10-2026: its SHA-256 is in none of production's access-token files.
+  # History is public and is not rewritten; without this the full-history CI
+  # scan would stay red forever on a credential that no longer opens anything.
+  commits = [
+    "44dd23ca48517397da41906a06035dac3c8a9381",
+    "5c2dd2793d531ec8e50ca819d9f5562e19025e2b",
   ]
 
   # Known dev-only values (not used in production)
