@@ -1,17 +1,19 @@
 # @webhouse/cms — Development Instructions
 
-## Peer intercom (buddy)
+## Cardmem Intercom
 
-This workspace runs alongside other cc sessions in other repos (monitored by buddy).
+Cross-session messaging is **Cardmem Intercom** (D-245b0a) — use it when work touching this repo needs a sibling session (cms for the CMS side, cardmem for the board and the harness, trail-* for KB work).
 
-**To reach Christian on his iPhone**: just answer naturally. Your reply
-becomes a turn that lands in YOUR session's Chat tab on his phone via the
-Stop hook → SSE pipe. No special tool needed. If Christian asks you to
-"send X to my mobile", that means: write X as your normal response — he
-will see it on the Chat tab for your session.
+1. `cardmem_list_fleet_sessions` — who runs where right now, from cardmem's own roster. Don't guess a name.
+2. `cardmem_ask_peer({ session_id, to, message, reply_to? })` — 1:1. You are the sender (your registered session name); `reply_to` threads an answer to that `announcement_id`.
+3. `cardmem_announce({ session_id, message })` — every OTHER session in your own repo (shared code / schema / dependency changes).
+4. `cardmem_broadcast({ session_id, message })` — every running session in the fleet. Sparingly: it lands in every turn.
 
-**To reach another cc session** (cc-to-cc — NOT visible on mobile), use
-the buddy peer tools:
+**Read the receipt, not just «ok».** It says `delivered` (with the recipient's own `announcement_id`), `sent_unproven`, `queued` (the session is asleep and gets it when it starts), `ambiguous` (two machines answer to that name — nothing was guessed) or NOT SENT. A broadcast returns one receipt per recipient.
+
+**Cardmem is the only intercom.** Messages arrive as `<channel source="cardmem" type="intercom" …>` (shown as `← Intercom: …`) and are answered with `cardmem_ask_peer` + `reply_to`. Send only with the `cardmem_*` verbs above. No `cardmem_ask_peer` in your catalog? Restart the session — the catalog is read at start. Discord is not part of Cardmem Intercom (F412.10).
+
+<!-- kept by the cardmem sync: written by this repo, not canonical -->
 
 - `mcp__buddy__list_sessions()` — returns all active peer sessions with `sessionName`, `repo` (cwd), and start-time. No params. **Call this first when you're unsure which sessions are running** — the returned `sessionName` is the value you pass as `to` in `ask_peer`. Saves an "unknown target" round-trip.
 - `mcp__buddy__ask_peer({ to, message, reply_to? })` — direct 1:1 message to a named session (supports threading via `reply_to`)
@@ -22,12 +24,6 @@ Flow:
 2. `ask_peer({ to: 'sanne-andersen', message: '...' })` → deliver directly
 
 Direct to Discord: `ask_peer({ to: 'discord', message: '...' })` — pipes the message back to Christian's Discord channel.
-
-Use peer tools before disruptive changes, to delegate work the user asks
-you to hand off, or to ask a peer that owns a different domain. Incoming
-peer messages arrive as `<channel type="intercom" from="..." announcement_id="N">`
-and live ONLY in the receiving cc's context — they are never auto-forwarded
-to Christian's phone.
 
 ## HARD RULE: Don't kill the CMS admin dev server on port 3010
 
