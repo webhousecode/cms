@@ -16,6 +16,6 @@ jobs:
       matrix:
         include:
           - { app: webhouse-app, config: fly.toml }
-    uses: broberg-ai/components/.github/workflows/image-hygiene.yml@v1.0.3
-    with: { app: "${{ matrix.app }}", config: "${{ matrix.config }}", reason: "${{ inputs.reason }}", engine-ref: v1.0.3 }
+    uses: broberg-ai/components/.github/workflows/image-hygiene.yml@v1.0.10
+    with: { app: "${{ matrix.app }}", config: "${{ matrix.config }}", reason: "${{ inputs.reason }}", engine-ref: v1.0.10 }
     secrets: inherit
