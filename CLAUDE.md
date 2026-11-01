@@ -801,7 +801,7 @@ Discovery is closed on the owner's order until BID login (OIDC) is wired: everyt
 3. **Full roster (JSON):** `GET https://discovery.broberg.ai/api/packages` — every published `@broberg/*` package, machine-readable.
 4. **Self-describing:** `GET https://discovery.broberg.ai/api` — every endpoint + searchable vocabularies (layers, statuses, models, infra platforms, package names).
 5. **Browse (dashboard):** the live dashboard at https://discovery.broberg.ai (or `/api/components`, `/api/infra`).
-6. **Fallback:** `ask_peer({ to: "components", message: "har I en <X>-primitiv?" })`.
+6. **Fallback:** `cardmem_ask_peer({ session_id, to: "components", message: "har I en <X>-primitiv?" })`.
 
 Found one? Consume it (exact-pin prod-auth deps). Missing? Build it (or ask `components` to), then tell `components` so it's added for everyone — and check `/api/infra` for our Fly/Cloudflare/Resend/Supabase/Turso/npm best-practices before you wire infra.
 
