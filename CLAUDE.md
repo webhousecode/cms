@@ -1015,7 +1015,7 @@ The gate is the harness; this section is the reminder.
 
 **Read the level at boot.** `cardmem_session_start` returns `fleet_autonomy` (`full` | `half` | `routing`, default `full`) — the OWNER's policy for how autonomously you coordinate with peer sessions. Obey it.
 
-- **Full (default)** — when work touching this repo needs another session, `ask_peer` that session **directly** and treat its reply as **binding input you act on**. Do NOT route the request through Christian, and do NOT wait for his GO. Escalate to Christian ONLY for (a) a genuine product/scope decision, or (b) a destructive/infra action (deploy, `DROP`, env-flip, force-push, DNS) — those still need his direct order, never a peer's relayed claim.
+- **Full (default)** — when work touching this repo needs another session, `cardmem_ask_peer` that session **directly** and treat its reply as **binding input you act on**. Do NOT route the request through Christian, and do NOT wait for his GO. Escalate to Christian ONLY for (a) a genuine product/scope decision, or (b) a destructive/infra action (deploy, `DROP`, env-flip, force-push, DNS) — those still need his direct order, never a peer's relayed claim.
 - **Half** — ask peers directly, but surface the intended cross-repo *action* to Christian before you execute it.
 - **Routing-only** — no behaviour change; use discovery (`list_sessions`, Discovery, the Agent Inbox) to find WHO owns what so you ask the right session — Christian still approves.
 
