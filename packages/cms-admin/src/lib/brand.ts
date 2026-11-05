@@ -79,19 +79,15 @@ export function isDefaultBrand(brand: BrandPack): boolean {
   return brand.id === DEFAULT_BRAND.id;
 }
 
-/** F212 — webhouse's own docs site. */
-export const WEBHOUSE_DOCS_URL = "https://docs.webhouse.app";
-
-/** F212 — what a doc page path (/docs/<slug>) is appended to on this brand:
- *  webhouse's docs site, or nothing on a customer's address, whose own /docs
- *  is the white-label copy of the same docs (same paths). */
-export function docsBase(brand: BrandPack): string {
-  return isDefaultBrand(brand) ? WEBHOUSE_DOCS_URL : "";
+/** F212 — the docs live under /docs on every address (webhouse.app/docs,
+ *  cms.<brand>/docs), so a doc page path (/docs/<slug>) is used as is. */
+export function docsBase(_brand: BrandPack): string {
+  return "";
 }
 
 /** F212 — the docs' front door on this brand. */
-export function docsHome(brand: BrandPack): string {
-  return isDefaultBrand(brand) ? WEBHOUSE_DOCS_URL : "/docs";
+export function docsHome(_brand: BrandPack): string {
+  return "/docs";
 }
 
 export function resolveBrand(host: string | null | undefined, packs: BrandPack[] = BRAND_PACKS): BrandPack {

@@ -1,11 +1,12 @@
 /**
- * F212 — white-label docs. On a customer's address (cms.fysio.work) /docs is
- * the docs app (the same one that serves docs.webhouse.app), forwarded by
- * proxy.ts. No machine of its own: the docs app renders itself in the
- * customer's name, colours and language from the x-docs-brand header, which
- * carries the brand pack's PUBLIC fields — the pack stays the one source.
+ * F212 — the docs. On every address (webhouse.app/docs, cms.fysio.work/docs)
+ * /docs is the docs app, which runs as a second process on this same machine
+ * (DOCS_ORIGIN) and is forwarded by proxy.ts — no machine of its own. It
+ * renders itself in the brand's name, colours and language from the
+ * x-docs-brand header, which carries the brand pack's PUBLIC fields — the
+ * pack stays the one source.
  */
-import { isDefaultBrand, type BrandPack } from "./brand";
+import type { BrandPack } from "./brand";
 
 export const DOCS_BRAND_HEADER = "x-docs-brand";
 
@@ -34,7 +35,8 @@ export function isDocsPath(pathname: string): boolean {
 export function docsBrandHeader(brand: BrandPack): string {
   return JSON.stringify({
     id: brand.id,
-    address: brand.hosts[0],
+    // webhouse's own pack has no hosts (it is the fallback); its name is its address.
+    address: brand.hosts[0] ?? brand.name,
     locale: brand.defaultLocale ?? "en",
     color: brand.color,
     colorForeground: brand.colorForeground,
@@ -49,9 +51,8 @@ export function docsBrandHeader(brand: BrandPack): string {
 }
 
 /**
- * Where to forward a /docs request, with which headers — or null when this
- * address has no white-label docs (webhouse's own brand, whose docs live on
- * docs.webhouse.app, or no DOCS_ORIGIN configured).
+ * Where to forward a /docs request, with which headers — or null when no
+ * DOCS_ORIGIN is configured (no hard-coded fallback).
  */
 export function docsForward(
   brand: BrandPack,
@@ -59,7 +60,7 @@ export function docsForward(
   headers: Headers,
   docsOrigin: string | undefined,
 ): { target: URL; headers: Headers } | null {
-  if (isDefaultBrand(brand) || !docsOrigin || !brand.hosts[0]) return null;
+  if (!docsOrigin) return null;
   const target = new URL(`${url.pathname}${url.search}`, docsOrigin);
   const out = new Headers();
   for (const name of FORWARDED) {

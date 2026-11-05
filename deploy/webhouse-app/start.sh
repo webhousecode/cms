@@ -57,6 +57,22 @@ if [ "$bad" -gt 0 ]; then
   done
 fi
 
+# ── Start the docs app (F212) ─────────────────────────────────
+# webhouse.app/docs and cms.<brand>/docs are forwarded to it by cms-admin's
+# proxy (DOCS_ORIGIN in fly.toml). Loopback only — never reachable from
+# outside except through that proxy. Restarted if it ever exits.
+if [ -f /app/docs-app/server.js ]; then
+  (
+    cd /app/docs-app
+    while true; do
+      PORT=3036 HOSTNAME=127.0.0.1 node server.js
+      echo "[start] docs app exited ($?) — restarting in 2s"
+      sleep 2
+    done
+  ) &
+  echo "[start] docs app starting on 127.0.0.1:3036"
+fi
+
 # ── Start cms-admin ───────────────────────────────────────────
 export CMS_CONFIG_PATH="$CONFIG_PATH"
 export UPLOAD_DIR="$UPLOADS_DIR"

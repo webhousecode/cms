@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { useBrand } from "@/lib/brand-context";
-import { isDefaultBrand, WEBHOUSE_DOCS_URL } from "@/lib/brand";
+import { isDefaultBrand, docsHome } from "@/lib/brand";
 import { useT } from "@/lib/i18n-context";
 
 /**
@@ -24,7 +24,7 @@ export function PoweredBy({ docs = false, style }: { docs?: boolean; style?: CSS
           {" · "}
           <a
             data-testid="login-docs-link"
-            href={WEBHOUSE_DOCS_URL}
+            href={docsHome(brand)}
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: "var(--brand-on-dark)", textDecoration: "none" }}

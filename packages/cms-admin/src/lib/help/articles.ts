@@ -19,7 +19,7 @@ export interface HelpActionDef {
 export interface HelpArticleDef {
   id: string;
   actions?: HelpActionDef[];
-  /** Path on docs.webhouse.app (e.g. "/docs/seo") */
+  /** Path on the docs, under /docs on every address (e.g. "/docs/seo") */
   learnMorePath?: string;
   /** Unique docs API reference — can be used to fetch extended content from docs site */
   docsRef?: string;

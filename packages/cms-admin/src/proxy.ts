@@ -171,9 +171,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL("/home.html", request.url));
   }
 
-  // F212 — /docs on a customer's address is the white-label docs: the docs
-  // app, forwarded with the brand and without the admin's cookies or tokens.
-  // Public like docs.webhouse.app, so it comes before every auth check.
+  // F212 — /docs is the docs app (a second process on this machine),
+  // forwarded with the address's brand and without the admin's cookies or
+  // tokens. Public docs, so it comes before every auth check.
   if (pathname === "/docs" || pathname.startsWith("/docs/")) {
     const { brandForRequest } = await import("./lib/brand");
     const { docsForward } = await import("./lib/docs-mount");

@@ -70,6 +70,23 @@ RUN --mount=type=cache,id=cms-tsup-cms,target=/app/packages/cms/.tsup-cache \
  && pnpm --filter @webhouse/cms-mcp-server build \
  && pnpm --filter @webhouse/cms-admin build
 
+# ── Stage 2b: docs (F212) ─────────────────────────────────────
+# The docs (webhousecode/cms-docs) run as a second process on this machine and
+# answer /docs on every address — webhouse.app/docs, cms.<brand>/docs — so they
+# need no machine of their own. ADD of the branch tarball re-downloads on every
+# build and only reuses the layers below when main has not changed.
+FROM node:24-slim AS docs
+WORKDIR /docs
+# The same pnpm as cms-docs' own build (its lockfile and pnpm-workspace.yaml
+# settings are written for it).
+RUN corepack enable && corepack prepare pnpm@latest --activate
+ADD https://codeload.github.com/webhousecode/cms-docs/tar.gz/refs/heads/main /tmp/cms-docs.tar.gz
+RUN tar -xzf /tmp/cms-docs.tar.gz --strip-components=1 -C /docs \
+ && rm /tmp/cms-docs.tar.gz
+RUN --mount=type=cache,id=docs-pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+RUN pnpm build
+
 # ── Stage 3: runner ───────────────────────────────────────────
 FROM node:24-slim AS runner
 
@@ -104,6 +121,13 @@ COPY --from=builder /app/packages/cms-admin      ./packages/cms-admin
 COPY --from=builder /app/packages/cms-ai         ./packages/cms-ai
 COPY --from=builder /app/packages/cms-mcp-client ./packages/cms-mcp-client
 COPY --from=builder /app/packages/cms-mcp-server ./packages/cms-mcp-server
+
+# F212 — the docs app (standalone Next server + its static files and content).
+# It reads content/ relative to its working directory, so it runs from here.
+COPY --from=docs /docs/.next/standalone ./docs-app
+COPY --from=docs /docs/.next/static     ./docs-app/.next/static
+COPY --from=docs /docs/public           ./docs-app/public
+COPY --from=docs /docs/content          ./docs-app/content
 
 # Bake in cms.config.ts seed for webhouse.app
 COPY deploy/webhouse-app/cms.config.ts  /seed/cms.config.ts

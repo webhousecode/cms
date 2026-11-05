@@ -6,7 +6,7 @@ import { docsForward, docsBrandHeader, isDocsPath, DOCS_BRAND_HEADER } from "../
 import { BRAND_PACKS, DEFAULT_BRAND, docsBase, docsHome, resolveBrand } from "../brand";
 
 const fysio = resolveBrand("cms.fysio.work");
-const ORIGIN = "https://docs.webhouse.app";
+const ORIGIN = "http://127.0.0.1:3036";
 
 function adminRequestHeaders(): Headers {
   return new Headers({
@@ -23,7 +23,7 @@ function adminRequestHeaders(): Headers {
 describe("docsForward", () => {
   it("forwards a customer's /docs path to the docs app, same path and query", () => {
     const f = docsForward(fysio, new URL("https://cms.fysio.work/docs/seo-da?x=1"), adminRequestHeaders(), ORIGIN);
-    expect(f?.target.toString()).toBe("https://docs.webhouse.app/docs/seo-da?x=1");
+    expect(f?.target.toString()).toBe(`${ORIGIN}/docs/seo-da?x=1`);
   });
 
   it("never forwards the admin's cookies, bearer token or service token", () => {
@@ -53,8 +53,11 @@ describe("docsForward", () => {
     });
   });
 
-  it("does nothing on webhouse's own address (its docs are docs.webhouse.app)", () => {
-    expect(docsForward(DEFAULT_BRAND, new URL("https://webhouse.app/docs"), adminRequestHeaders(), ORIGIN)).toBeNull();
+  it("forwards webhouse's own address too, named webhouse.app", () => {
+    const f = docsForward(DEFAULT_BRAND, new URL("https://webhouse.app/docs/seo"), adminRequestHeaders(), ORIGIN)!;
+    expect(f.target.toString()).toBe(`${ORIGIN}/docs/seo`);
+    expect(JSON.parse(f.headers.get(DOCS_BRAND_HEADER)!)).toMatchObject({ id: "webhouse", address: "webhouse.app", locale: "en" });
+    expect(f.headers.get("cookie")).toBeNull();
   });
 
   it("does nothing without DOCS_ORIGIN — no hard-coded fallback", () => {
@@ -74,6 +77,7 @@ describe("docsBrandHeader", () => {
       }
       expect(b.address).toMatch(/^[a-z0-9-]+(\.[a-z0-9-]+)+$/);
     }
+    expect(JSON.parse(docsBrandHeader(DEFAULT_BRAND)).address).toBe("webhouse.app");
   });
 });
 
@@ -87,9 +91,9 @@ describe("isDocsPath", () => {
 });
 
 describe("docs links follow the brand", () => {
-  it("webhouse links to docs.webhouse.app, a customer to its own /docs", () => {
-    expect(docsHome(DEFAULT_BRAND)).toBe("https://docs.webhouse.app");
-    expect(`${docsBase(DEFAULT_BRAND)}/docs/seo`).toBe("https://docs.webhouse.app/docs/seo");
+  it("every address links to its own /docs", () => {
+    expect(docsHome(DEFAULT_BRAND)).toBe("/docs");
+    expect(`${docsBase(DEFAULT_BRAND)}/docs/seo`).toBe("/docs/seo");
     expect(docsHome(fysio)).toBe("/docs");
     expect(`${docsBase(fysio)}/docs/seo`).toBe("/docs/seo");
   });
