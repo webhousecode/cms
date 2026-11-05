@@ -19,6 +19,8 @@ primary_region = "arn"
   WEBHOUSE_DATA_DIR = "/data/cms-admin"
   # F206.3 — sites build in their own repo; this server never runs site build code.
   CMS_SERVER_BUILDS = "off"
+  # F212 — the docs app that cms.<brand>/docs forwards to (white-label docs).
+  DOCS_ORIGIN = "https://docs.webhouse.app"
 
 [mounts]
   source = "cms_data"

@@ -31,6 +31,7 @@ const NOT_TEXT = [
 /** Deliberate: the line keeps "webhouse" on purpose. file → substring → reason. */
 const DELIBERATE: Array<[file: string, needle: string, reason: string]> = [
   ["components/powered-by.tsx", "{\"@webhouse/cms\"}", "rendered on webhouse's own brand only — returns null for a customer brand"],
+  ["components/powered-by.tsx", "href={WEBHOUSE_DOCS_URL}", "webhouse's own docs, in the same line — shown on webhouse's own brand only (F212)"],
   ["components/settings/webhook-list.tsx", "Test from webhouse.app", "outgoing webhook payload; must match lib/webhook-dispatch.ts, which moves in F210.4"],
   ["components/settings/webhook-list.tsx", "*webhouse.app*", "same — outgoing webhook payload, F210.4"],
   ["components/settings/webhook-list.tsx", "source: \"webhouse.app\"", "same — outgoing webhook payload, F210.4"],

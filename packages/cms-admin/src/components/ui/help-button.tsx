@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, lazy, Suspense, type ComponentType } from "react";
 import { createPortal } from "react-dom";
 import { useT } from "@/lib/i18n-context";
+import { useBrand } from "@/lib/brand-context";
+import { docsBase } from "@/lib/brand";
 import { Lightbulb, ExternalLink, X, Settings2, Loader2 } from "lucide-react";
 import { getHelpArticle, localizeHelpArticle } from "@/lib/help/articles";
 
@@ -72,6 +74,7 @@ function renderInline(text: string): React.ReactNode {
 }
 
 export function HelpButton({ articleId }: HelpButtonProps) {
+  const brand = useBrand();
   const t = useT();
   const def = getHelpArticle(articleId);
   const article = def ? localizeHelpArticle(def, t) : undefined;
@@ -214,7 +217,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid var(--border)" }}>
               <a
                 data-testid="help-button-learn-more"
-                href={`https://docs.webhouse.app${article.learnMorePath}`}
+                href={`${docsBase(brand)}${article.learnMorePath}`}
                 target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.7rem", color: "var(--brand)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
               >

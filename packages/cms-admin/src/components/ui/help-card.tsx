@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useT } from "@/lib/i18n-context";
+import { useBrand } from "@/lib/brand-context";
+import { docsBase } from "@/lib/brand";
 import { Lightbulb, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { getHelpArticle, localizeHelpArticle, type HelpArticle } from "@/lib/help/articles";
 
@@ -73,6 +75,7 @@ function renderInline(text: string): React.ReactNode {
 }
 
 export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
+  const brand = useBrand();
   const t = useT();
   const def = getHelpArticle(articleId);
   const article = def ? localizeHelpArticle(def, t) : undefined;
@@ -133,7 +136,7 @@ export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
             <div style={{ marginTop: "0.75rem" }}>
               <a
                 data-testid="help-learn-more-link"
-                href={`https://docs.webhouse.app${article.learnMorePath}`}
+                href={`${docsBase(brand)}${article.learnMorePath}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ fontSize: "0.7rem", color: "var(--brand)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}

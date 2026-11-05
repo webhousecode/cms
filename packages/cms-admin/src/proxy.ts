@@ -171,6 +171,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL("/home.html", request.url));
   }
 
+  // F212 — /docs on a customer's address is the white-label docs: the docs
+  // app, forwarded with the brand and without the admin's cookies or tokens.
+  // Public like docs.webhouse.app, so it comes before every auth check.
+  if (pathname === "/docs" || pathname.startsWith("/docs/")) {
+    const { brandForRequest } = await import("./lib/brand");
+    const { docsForward } = await import("./lib/docs-mount");
+    const forward = docsForward(brandForRequest(request.headers), request.nextUrl, request.headers, process.env.DOCS_ORIGIN);
+    if (forward) return NextResponse.rewrite(forward.target, { request: { headers: forward.headers } });
+    return new NextResponse(null, { status: 404 });
+  }
+
   // F199.5 — BID's login rule: with Broberg ID on, webhouse.app HAS no login
   // page. /admin/login (and signup/setup) answer 302 straight to BID's own
   // dialog — no cms page, logo or button in between. The one exception is a
@@ -672,5 +683,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin/:path*", "/api/:path*"],
+  matcher: ["/", "/admin/:path*", "/api/:path*", "/docs", "/docs/:path*"],
 };

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useBrand } from "@/lib/brand-context";
+import { docsBase, docsHome, type BrandPack } from "@/lib/brand";
 import { useT } from "@/lib/i18n-context";
 import {
   HelpCircle, X, BookOpen, Wrench, Activity, Mail,
@@ -15,9 +16,10 @@ import {
 
 const ICON_SIZE = { width: "1rem", height: "1rem" };
 
-const HELP_LINKS = [
-  { testid: "documentation", label: "shell.helpDrawer.links.documentation", icon: <BookOpen style={ICON_SIZE} />, href: "https://docs.webhouse.app" },
-  { testid: "troubleshooting", label: "shell.helpDrawer.links.troubleshooting", icon: <Wrench style={ICON_SIZE} />, href: "https://docs.webhouse.app/docs/troubleshooting" },
+// F212 — the docs links follow the brand (a customer's address has its own /docs).
+const helpLinks = (brand: BrandPack) => [
+  { testid: "documentation", label: "shell.helpDrawer.links.documentation", icon: <BookOpen style={ICON_SIZE} />, href: docsHome(brand) },
+  { testid: "troubleshooting", label: "shell.helpDrawer.links.troubleshooting", icon: <Wrench style={ICON_SIZE} />, href: `${docsBase(brand)}/docs/troubleshooting` },
   { testid: "system-status", label: "shell.helpDrawer.links.systemStatus", icon: <Activity style={ICON_SIZE} />, href: "https://status.webhouse.app" },
   { testid: "contact-support", label: "shell.helpDrawer.links.contactSupport", icon: <Mail style={ICON_SIZE} />, href: "mailto:cms@webhouse.dk" },
 ];
@@ -175,6 +177,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
 /* ─── Help page ──────────────────────────────────────────────── */
 
 function HelpPage() {
+  const brand = useBrand();
   const t = useT();
   return (
     <>
@@ -183,7 +186,7 @@ function HelpPage() {
         <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>{t("shell.helpDrawer.startWithDocs")}</p>
 
         <div style={{ borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden" }}>
-          {HELP_LINKS.map((link, i) => (
+          {helpLinks(brand).map((link, i) => (
             <a
               data-testid={`help-link-${link.testid}`}
               key={link.label}
