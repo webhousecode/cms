@@ -273,6 +273,24 @@ export function evaluateToken(
   return { allow: true };
 }
 
+/**
+ * A token's verdict for a request on `siteId`: allowed when the token covers
+ * that site, or — as before — the whole org. TTL, IP and permission checks run
+ * either way; only the resource differs.
+ */
+export function evaluateTokenOnSite(
+  token: StoredToken,
+  permission: string,
+  siteId: string | undefined | null,
+  ip: string,
+  now: Date = new Date(),
+): EvaluateResult {
+  const org = evaluateToken(token, permission as Permission, "org:*", ip, now);
+  if (org.allow || !siteId) return org;
+  const site = evaluateToken(token, permission as Permission, `site:${siteId}`, ip, now);
+  return site.allow ? site : org;
+}
+
 // ─── CRUD ─────────────────────────────────────────────────────────
 
 export interface CreateTokenInput {

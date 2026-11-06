@@ -19,7 +19,7 @@ export {
 } from "./permissions-shared";
 
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { getSiteRole } from "./require-role";
 import { ROLE_PERMISSIONS, hasPermission } from "./permissions-shared";
 
@@ -42,6 +42,7 @@ function toF134Permission(p: string): string {
   return p;
 }
 
+
 /**
  * Try to authorise via Bearer access token. Returns:
  *   - null if no Bearer present (caller falls back to session check)
@@ -55,18 +56,21 @@ async function tryTokenAuth(permission: string): Promise<Response | null | "no-b
 
   const raw = auth.replace(/^Bearer\s+/i, "").trim();
 
-  const { verifyAccessToken, evaluateToken } = await import("./access-tokens");
+  const { verifyAccessToken, evaluateTokenOnSite } = await import("./access-tokens");
   const token = await verifyAccessToken(raw);
   if (!token) {
     return NextResponse.json({ error: (await serverT())("system.auth.invalidAccessToken") }, { status: 401 });
   }
 
-  // All non-site-specific admin surfaces live under "org:*". Per-site routes
-  // (/api/admin/deploy) call requireToken() directly with their own scoping;
-  // the catch-all behaviour here is for org-level admin API.
+  // Judged on the site this request acts on. The proxy has already refused a
+  // token on any site outside its list and forwards ONE explicit site cookie,
+  // so that cookie names the site here. Judging every request as "org:*"
+  // refused a site-limited token everywhere — invisible until W43 put this
+  // guard on content GET (sanneandersen, 6/11-2026: 403 "resource not in
+  // include set" on its own site's documents).
   const mapped = toF134Permission(permission);
   const ip = (h.get("x-forwarded-for") ?? "").split(",")[0]?.trim() ?? "";
-  const result = evaluateToken(token, mapped as never, "org:*", ip, new Date());
+  const result = evaluateTokenOnSite(token, mapped, (await cookies()).get("cms-active-site")?.value, ip);
   if (!result.allow) {
     return NextResponse.json(
       { error: (await serverT())("system.auth.forbidden"), reason: result.reason ?? "token denied", permission: mapped }, // i18n-ignore: "token denied" is a machine reason field; the human text is in error
