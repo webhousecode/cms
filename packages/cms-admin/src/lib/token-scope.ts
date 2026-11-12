@@ -49,6 +49,9 @@ export function requiredFor(method: string, pathname: string): Need {
   if (starts("/api/forms") || starts("/api/admin/forms")) {
     return { permission: read ? "forms:read" : "forms:write", scope: "site" };
   }
+  // Schema sync from a site's own repo (trail's agent token calls POST
+  // /api/schema/sync). The route itself still checks the owner's role.
+  if (starts("/api/schema")) return { permission: read ? "content:read" : "content:write", scope: "site" };
   if (starts("/api/conversations")) {
     return {
       permission: read ? "conversations:read" : m === "DELETE" ? "conversations:delete" : "conversations:write",
@@ -128,7 +131,13 @@ export function decideTokenRequest(input: {
   }
 
   if (need === null) {
-    if (perms.includes("*")) return { allow: true, permission: "*" };
+    if (perms.includes("*")) {
+      // Security W46 H1 — a full-access token on an unmapped route still has
+      // to be inside its validity window and IP filters.
+      const window = evaluateToken({ ...token, permissions: ["*"], resources: [] }, "content:read", "org:*", input.clientIp, input.now); // i18n-ignore: resource identifier
+      if (!window.allow) return { allow: false, reason: window.reason ?? "denied", kind: "other" };
+      return { allow: true, permission: "*" };
+    }
     return { allow: false, reason: `route ${input.method} ${input.pathname} requires a full-access token`, kind: "unmapped" }; // i18n-ignore: machine reason code for API-token callers
   }
 

@@ -221,6 +221,9 @@ async function serverT() {
 export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
+    // Security W46 H2 — an intermediate token (stage: "totp-pending", signed
+    // with the same key) is never a session; only /api/auth/totp/verify reads it.
+    if (payload.stage !== undefined) return null;
     return payload as unknown as SessionPayload;
   } catch {
     return null;

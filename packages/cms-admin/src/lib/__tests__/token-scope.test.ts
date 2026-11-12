@@ -96,3 +96,15 @@ describe("stored resource shapes", () => {
     expect(decide(broken, "GET", "/api/cms/pages/x", "trail")).toMatchObject({ allow: false, kind: "malformed" });
   });
 });
+
+describe("W46 H1 — validity window on unmapped routes", () => {
+  it("a full-access token past notAfter is refused even on an unmapped route", () => {
+    const d = decideTokenRequest({
+      token: { id: "t", name: "t", hash: "h", userId: "u", createdAt: "2026-01-01T00:00:00Z", displayPrefix: null,
+        permissions: ["*"], resources: [], ipFilters: [], notAfter: "2026-01-02T00:00:00Z" } as never,
+      method: "POST", pathname: "/api/some/unmapped", site: null, clientIp: "1.2.3.4", now: new Date("2026-06-01T00:00:00Z"),
+    });
+    expect(d.allow).toBe(false);
+    expect(d.allow === false && d.kind).toBe("other");
+  });
+});

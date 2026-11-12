@@ -349,11 +349,14 @@ export async function verifyAccessToken(raw: string): Promise<StoredToken | null
   const hash = hashToken(raw);
   const store = await loadStore();
   const match = store.tokens.find((t) => t.hash === hash);
-  if (match) {
-    match.lastUsed = new Date().toISOString();
-    saveStore(store).catch(() => {});
-  }
-  return match ?? null;
+  if (!match) return null;
+  // Security W46 H1 — outside its validity window a token is no token at all,
+  // on every path that looks it up (proxy, MCP, requireToken).
+  const now = new Date();
+  if ((match.notBefore && now < new Date(match.notBefore)) || (match.notAfter && now >= new Date(match.notAfter))) return null;
+  match.lastUsed = now.toISOString();
+  saveStore(store).catch(() => {});
+  return match;
 }
 
 /** Legacy helper — still used by some call sites pending F134 migration.

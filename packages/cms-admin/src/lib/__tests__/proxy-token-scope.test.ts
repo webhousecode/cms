@@ -27,6 +27,13 @@ vi.mock("../access-tokens", async (orig) => {
             id: "t-orphan", name: "orphan", hash: "h", userId: "orphan", createdAt: "2026-10-02T00:00:00Z",
             displayPrefix: null, ipFilters: [], permissions: ["*"], resources: [],
           }
+        : raw === "wh_readonly"
+        ? {
+            id: "t-ro", name: "trail — read only", hash: "h", userId: "u", createdAt: "2026-10-02T00:00:00Z",
+            displayPrefix: null, ipFilters: [],
+            permissions: ["content:read"],
+            resources: [{ scope: "site", effect: "include", targets: ["trail"] }],
+          }
         : raw === "wh_trail"
         ? {
             id: "t-trail", name: "trail — site agent", hash: "h", userId: "u", createdAt: "2026-10-02T00:00:00Z",
@@ -144,5 +151,45 @@ describe("proxy: W43 H6 — the inline-edit token as a cookie cannot reach login
   });
   it("may still read /api/auth/me", async () => {
     expect((await asEditSession("/api/auth/me", "GET")).status).not.toBe(403);
+  });
+});
+
+describe("proxy: W46 H1 — a token's own rules are enforced, not just logged", () => {
+  it("a read-only token cannot write on its own site", async () => {
+    expect((await hit("/api/cms/pages/x?site=trail", "PATCH", "", "wh_readonly")).status).toBe(403);
+  });
+  it("but may read there", async () => {
+    expect((await hit("/api/cms/pages/x?site=trail", "GET", "", "wh_readonly")).status).not.toBe(403);
+  });
+  it("a scoped token is refused on an unmapped route (e.g. minting an inline-edit token)", async () => {
+    expect((await hit("/api/inline-edit/token?site=trail", "POST")).status).toBe(403);
+  });
+  it("trail's schema sync is mapped (content:write) and still let through", async () => {
+    expect((await hit("/api/schema/sync?site=trail", "POST")).status).not.toBe(403);
+  });
+  it("TOKEN_SCOPE_ENFORCE=log is the emergency switch back to logging only", async () => {
+    process.env.TOKEN_SCOPE_ENFORCE = "log";
+    try {
+      expect((await hit("/api/cms/pages/x?site=trail", "PATCH", "", "wh_readonly")).status).not.toBe(403);
+    } finally {
+      delete process.env.TOKEN_SCOPE_ENFORCE;
+    }
+  });
+});
+
+describe("proxy: W46 H2 — the 2FA-pending token is not a session", () => {
+  async function pending(stage: string | undefined) {
+    const { SignJWT } = await import("jose");
+    const jwt = await new SignJWT(stage ? { sub: "u", stage } : { sub: "u", email: "u@x", name: "U", role: "editor" })
+      .setProtectedHeader({ alg: "HS256" }).setExpirationTime("5m")
+      .sign(new TextEncoder().encode(process.env.CMS_JWT_SECRET!));
+    const { proxy } = await import("../../proxy");
+    return proxy(new NextRequest("https://webhouse.app/api/admin/site-config?site=trail", { method: "GET", headers: { cookie: `cms-session=${jwt}` } }));
+  }
+  it("copied into cms-session it is refused", async () => {
+    expect((await pending("totp-pending")).status).toBe(401);
+  });
+  it("control: a real session for the same user is let through", async () => {
+    expect((await pending(undefined)).status).not.toBe(401);
   });
 });

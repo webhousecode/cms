@@ -478,9 +478,14 @@ export async function proxy(request: NextRequest) {
           // F205.1 — the token's own sites + permissions decide, not its creator's.
           // ENFORCED now, on every route: naming a site outside the token's list,
           // a site-limited token naming no site (it would land on the registry
-          // default — another site), and an unreadable resource list. LOGGED only
-          // (until TOKEN_SCOPE_ENFORCE=all): a missing permission or an unmapped
-          // route on the token's OWN site — existing callers may rely on those.
+          // default — another site), and an unreadable resource list.
+          // Security W46 H1 — and now ALSO an expired or IP-refused token, a
+          // missing permission and an unmapped route: logged-only, an expired
+          // or read-only token acted with its owner's full rights. Measured
+          // before switching (12/11-2026): no production token has an expiry
+          // or IP filter, and the only would-deny in the logs was trail's
+          // POST /api/schema/sync, now mapped. TOKEN_SCOPE_ENFORCE=log is the
+          // emergency switch back to logging only.
           const { decideTokenRequest } = await import("./lib/token-scope");
           // Security W43 C7 — judge the site the route WILL act on: the
           // sanitized pair (incl. ?site= injection), not the raw browser cookie.
@@ -498,7 +503,7 @@ export async function proxy(request: NextRequest) {
           });
           if (!decision.allow) {
             const hard = decision.kind === "site-mismatch" || decision.kind === "no-site" || decision.kind === "malformed";
-            const enforce = hard || process.env.TOKEN_SCOPE_ENFORCE === "all";
+            const enforce = hard || process.env.TOKEN_SCOPE_ENFORCE !== "log";
             console.warn(`[token-scope] ${enforce ? "DENY" : "would-deny"} token=${tokenEntry.id} (${tokenEntry.name}) ${request.method} ${pathname} site=${request.nextUrl.searchParams.get("site") ?? "-"} kind=${decision.kind}: ${decision.reason}`);
             if (enforce) {
               return NextResponse.json({ error: (await proxyT(request))("system.proxy.tokenNotAllowed", { reason: decision.reason }) }, { status: 403 });
@@ -550,6 +555,8 @@ export async function proxy(request: NextRequest) {
     // scope alone are not sufficient (see docs/features/F157-inline-editing.md).
     try {
       const { payload } = await jwtVerify(bearerToken, getJwtSecret());
+      // Security W46 H2 — a 2FA-pending token (stage) is not a session.
+      if (payload.stage !== undefined) throw new Error("intermediate token"); // i18n-ignore: internal, caught below
       if (payload.editSession === true) {
         const tokenSite = typeof payload.site === "string" ? payload.site : "";
         const requestSite = request.nextUrl.searchParams.get("site") ?? "";
@@ -613,6 +620,9 @@ export async function proxy(request: NextRequest) {
 
   try {
     const { payload } = await jwtVerify(token, getJwtSecret());
+    // Security W46 H2 — the password step's "code still missing" token is
+    // signed with the session key; copied into cms-session it skipped 2FA.
+    if (payload.stage !== undefined) throw new Error("intermediate token"); // i18n-ignore: internal, caught below → 401 / login
     // F151: the Lens principal is read-only — block every mutating method.
     // No-op for all real users (no `lens` claim); the only read-only boundary
     // for the minted lens session (its role is admin so surfaces still render).
