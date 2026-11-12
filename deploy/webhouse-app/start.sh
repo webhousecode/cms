@@ -65,7 +65,11 @@ if [ -f /app/docs-app/server.js ]; then
   (
     cd /app/docs-app
     while true; do
-      PORT=3036 HOSTNAME=127.0.0.1 node server.js
+      # KEEP_ALIVE_TIMEOUT: hold idle connections longer than cms-admin's
+      # proxy does, so the proxy always closes first. At Node's default 5 s the
+      # docs server closed sockets the proxy was about to reuse → sporadic
+      # "Failed to proxy … read ECONNRESET" (measured 11/11-2026).
+      PORT=3036 HOSTNAME=127.0.0.1 KEEP_ALIVE_TIMEOUT=65000 node server.js
       echo "[start] docs app exited ($?) — restarting in 2s"
       sleep 2
     done
