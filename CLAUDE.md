@@ -988,13 +988,14 @@ Conventions every repo in this universe converges on — apply them by default, 
 - **Buttons give feedback** — `:active`, `:hover`, loading >100ms, post-action confirmation, error state. **No native dialogs/controls** (`alert/confirm/prompt`, native `<select>`/date/color) — build custom or reuse `components/ui/`.
 - **Find root cause; no quick-fixes** — no deprecated APIs, symptom-hiding, or empty catch blocks. Tokens are cheaper than tech debt.
 
-## DNS + domains — always via buddy
+## DNS + domains — via cardmem
 
-Domain work — registering a new domain, editing a DNS record, moving a domain, adding a subdomain, issuing a cert that needs a record — goes through **buddy** via intercom, never hand-rolled. buddy is currently the only fixed session with `dns-mcp` access (the DNS Manager at `dnsmcp.webhouse.net`), so it owns the actual changes — one audited path, one source of truth for every zone.
+Domain work — a new record, a subdomain, a moved domain, a record a certificate needs — goes through **cardmem**, never hand-rolled. One audited path, one log for every zone (D-4092fb, D-3c407d: buddy is out of this loop).
 
-- Need a record created/changed? `ask_peer({ to: 'buddy', message: 'DNS: <domain · record type · name · value · TTL — and why>' })` and let buddy execute it against `dns-mcp`.
-- **Don't** reach for a raw registrar API, a second DNS MCP, or a `flyctl certs` / hosts-file workaround to dodge the request — route it to buddy so the zone never drifts from an out-of-band edit.
-- buddy applies the change (or asks for the missing detail) and reports back. Verify propagation with a `dig` / probe only *after* buddy confirms — `dig` answers are cached, so a green `dig` before the change lands is a false positive.
+- **Inside a project's Build Contract:** name the record in the contract. The owner's ONE yes to the contract is his word for it, and cardmem creates the record itself. Check first with `cardmem_contract_covers({ project, action, card })`; a record the contract does not name is an amendment (`POST /api/build-contracts/<id>/request`), not a stop.
+- **Outside a contract:** a DNS change still needs the owner's own words (D-7f890c). Ask the cardmem session — `cardmem_ask_peer({ to: 'cardmem', message: 'DNS: <domain · type · name · value · TTL — and why>' })` — and it executes once he has said yes.
+- **Don't** reach for a raw registrar or Cloudflare API, a second DNS tool, or a `flyctl certs` / hosts-file workaround — zones drift from out-of-band edits. Domains at Simply stay on Simply's DNS (D-1d1afa); a customer's apex MX is never taken (D-bfcb1e).
+- Verify propagation with a `dig` / probe only AFTER cardmem confirms — `dig` answers are cached, so a green `dig` before the change lands is a false positive.
 
 ## Harness-kontrakt (HARD RULE) — byg harnesses ind i dit system
 
