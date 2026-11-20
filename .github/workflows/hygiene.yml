@@ -17,6 +17,6 @@ jobs:
         include:
           - { app: webhouse-app, config: fly.toml }
           - { app: webhouse-cms, config: deploy/fly.toml }
-    uses: broberg-ai/components/.github/workflows/image-hygiene.yml@v1.0.10
+    uses: broberg-ai/components/.github/workflows/image-hygiene.yml@6973f3cabaaf4c598d42ec7c82f5a5ba170cffca # v1.0.10
     with: { app: "${{ matrix.app }}", config: "${{ matrix.config }}", reason: "${{ inputs.reason }}", engine-ref: v1.0.10 }
     secrets: { FLY_API_TOKEN: "${{ secrets.FLY_API_TOKEN }}" }
