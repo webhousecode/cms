@@ -73,13 +73,13 @@
   "homepage": "https://docs.webhouse.app",
   "dependencies": {
     "@webhouse/cms": "workspace:*",
-    "stripe": "^22.6.2"
+    "stripe": "^23.1.0"
   },
   "devDependencies": {
-    "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.7",
-    "vitest": "^4.1.11"
+    "tsup": "^9.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
   },
   "publishConfig": {
     "access": "public"
