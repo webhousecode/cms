@@ -18,5 +18,5 @@ jobs:
   security:
     permissions:
       contents: read
-    uses: broberg-ai/components/.github/workflows/security-gate.yml@18a80f773995646164b0e18989f3222f5d20011d # security-gate-v1.0.2
-    with: { engine-ref: security-gate-v1.0.2 }
+    uses: broberg-ai/components/.github/workflows/security-gate.yml@26b8e67a08b8775e41b0d70190b7757aea287d01 # security-gate-v1.0.3
+    with: { engine-ref: security-gate-v1.0.3 }
