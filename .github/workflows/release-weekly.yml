@@ -31,7 +31,7 @@ jobs:
       calver: ${{ steps.version.outputs.calver }}
       last_tag: ${{ steps.version.outputs.last_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0   # need full history to find last weekly tag
 
@@ -87,7 +87,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Tag commit for future diff gates
         run: |
