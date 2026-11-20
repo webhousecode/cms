@@ -1,0 +1,18 @@
+# Automatic dependency updates (cardmem F427). WRITTEN BY CARDMEM — a repo that wants its
+# own update policy replaces this file; cardmem then leaves it alone.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+    groups:
+      all:
+        patterns: ["*"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "weekly" }
+    open-pull-requests-limit: 5
+    groups:
+      all:
+        patterns: ["*"]
