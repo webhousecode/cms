@@ -1,0 +1,22 @@
+# Fleet security gate (cardmem F427, engine: components security-gate). Deterministic checks
+# that can go red: known-vulnerable and malicious dependencies (OSV), static code analysis
+# (Semgrep), GitHub Actions hardening (zizmor), frozen lockfile install, plus an SBOM.
+# Runs on every push, every pull request and every night. WRITTEN BY CARDMEM — change it in
+# cardmem (packages/mcp-tools/src/tools/security-workflow.ts), not here.
+# A finding you have judged: add it to .github/security-ack.json with a reason and an expiry
+# date. Never disable the check.
+name: security
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "23 1 * * *"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  security:
+    permissions:
+      contents: read
+    uses: broberg-ai/components/.github/workflows/security-gate.yml@security-gate-v1.0.1
+    with: { engine-ref: security-gate-v1.0.1 }
