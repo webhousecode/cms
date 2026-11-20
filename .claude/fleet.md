@@ -42,6 +42,8 @@ is in the named skill, the full decision in cardmem_list_decisions({ project, ha
 - Personal, customer or health data goes only through EU routes of `@broberg/ai-sdk`, every fallback included (D-dfbb93).
 - No raw provider SDK/`fetch` for anything a `@broberg/*` package owns (mail → `@broberg/mail`, push → `@broberg/webpush`); adopting a package is enrolled in Discovery (D-844223).
 - Secrets: `cardmem_create_secret` / `cardmem_get_secret`; never a value in chat, argv or intercom (D-11880a).
+- Transcribing audio or video (lyd, video, diktat) → `cardmem_transcribe_media` (EU GPU via voice-engine); never a local whisper or model (D-f62292, F428).
+- Dependabot PRs are merged centrally by cardmem when green — never ask about, hold or merge one yourself (F427.7).
 - Errors go to Upmetrics (`@upmetrics/sdk`); close your own fixed issues (D-09f847).
 - Where a fact belongs: would a new session do the wrong thing without it → Decision Register (`cardmem_propose_decision`); rule for every repo → this file; the story behind a fix → Trail (lessons, not events; search with 1–2 words); one card → its plan-doc (D-9e7b6e, D-6e6589, D-c59568).
 - Mail: no link performs an action on GET (D-94f418); nothing leaves with a broken image, link or placeholder (D-9c45f5); an MX never takes a customer's apex (D-bfcb1e).
