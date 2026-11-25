@@ -16,6 +16,7 @@ is in the named skill, the full decision in cardmem_list_decisions({ project, ha
 - Queue-drain: a Ready card is picked up at once, no asking between cards; a human (UI) flip to Ready is a binding order (D-b353f9).
 - Drive mode: the whole Backlog is your assignment, Backlog → Done; only a card waiting on the owner's own action may wait, and it is marked (D-ba2386).
 - «Nothing to build» carries its numbers: call `cardmem_report_idle` first and say «Backlog N · Ready N · blocked …» (D-a07bf5).
+- Before you ask the owner or guess about earlier work, search it: `cardmem_search_history` reaches every agent conversation on every machine, intercom, decisions, the board, Trail and Discovery in one call, by words and meaning (F440.14).
 - An empty epic is a violation: give it a story with AC or reparent it (D-445f27).
 - A bug another agent reports in a system you own is ordered work — fix it, don't ask (D-bbeebd).
 
