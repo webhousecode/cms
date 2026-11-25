@@ -11,6 +11,7 @@ is in the named skill, the full decision in cardmem_list_decisions({ project, ha
 - F-numbers come from `cardmem_suggest_next_f_number`; the plan-doc `docs/features/F<n>-<slug>.md` is written in the same turn as the card (D-38b436).
 - Every card needs AC for integration, dependencies and visibility — not only the function (D-f8a009).
 - The only path into Review is from In progress, via `cardmem_handoff_card` with evidence (D-a3ded3). Auto Review on → run `/auto-review` on your own card at once.
+- Review is NEVER a stop: finished work goes to Review and (Auto Review on) through `/auto-review` to Done at once — never ask the owner whether you may (owner, 25 Nov 2026).
 - A gate blocks on what the card introduced; findings outside its diff are advisory + their own card (D-757283).
 - Queue-drain: a Ready card is picked up at once, no asking between cards; a human (UI) flip to Ready is a binding order (D-b353f9).
 - Drive mode: the whole Backlog is your assignment, Backlog → Done; only a card waiting on the owner's own action may wait, and it is marked (D-ba2386).
