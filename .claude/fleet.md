@@ -4,6 +4,9 @@
 cardmem repo. A repo's own rules go in its CLAUDE.md. Each line is the rule; the full text
 is in the named skill, the full decision in cardmem_list_decisions({ project, handle }). -->
 
+## Language — every session, every repo (D-55c9d6)
+- **Talk Danish** to the owner (chat, status, questions). **Write English**: code, identifiers, file names, URLs, routes, DB columns, branches, commits, and SDK/API documentation.
+
 ## Working with cardmem — skill `cardmem-board`
 - `cardmem_session_start({ repo: '<owner>/<name>' })` at start; always pass `repo` — it decides which project you write to (D-a91969).
 - The board is your todo list — never `TaskCreate` for a feature's plan. Every epic gets ≥1 story with testable AC **before** code (D-c7da44).
