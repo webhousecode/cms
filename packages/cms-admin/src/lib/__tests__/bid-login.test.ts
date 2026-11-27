@@ -44,7 +44,7 @@ describe("the pinned @broberg/sso refuses an id_token issued to another client",
     }) as typeof fetch;
     const config: SsoConfig = {
       issuer: ISSUER, clientId: "cms", redirectUri: "https://webhouse.app/api/auth/bid/callback",
-      scopes: ["openid"], cookieSecret: "x".repeat(64), cookieName: "s", sessionMaxAge: 3600,
+      scopes: ["openid"], cookieSecret: "x".repeat(64), cookieName: "s", sessionProfile: "standard",
     };
     const sso = createSsoClient(config, { fetchImpl });
     const sign = (aud: string) => new SignJWT({ sub: "sub-cb", nonce: "n" })
