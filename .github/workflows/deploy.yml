@@ -60,29 +60,25 @@ jobs:
   secret-gate:
     uses: broberg-ai/components/.github/workflows/secret-gate.yml@secret-gate-v1
 
-  deploy:
-    name: Deploy to Fly.io
+  # A late run must never roll prod back. The concurrency group on `deploy`
+  # only cancels a deploy running at the same moment; on 23 Oct 2026 the OLDEST
+  # of three runs finished its gate last and replaced newer live code.
+  # Fly labels each image with the sha it was built from (GH_SHA).
+  stale:
+    name: Skip if newer code is already live
     needs: [gate, secret-gate]
     runs-on: ubuntu-latest
-    # Measured max 375 s over 15 runs; the default 360 min would let a hung
-    # deploy sit invisible for six hours (F200.2).
-    timeout-minutes: 20
-    concurrency:
-      group: deploy-webhouse-app
-      cancel-in-progress: true
+    timeout-minutes: 5
+    outputs:
+      skip: ${{ steps.stale.outputs.skip }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-
-      # A late run must never roll prod back. The concurrency group above only
-      # cancels a deploy running at the same moment; on 23 Oct 2026 the OLDEST
-      # of three runs finished its gate last and replaced newer live code.
-      # Fly labels each image with the sha it was built from (GH_SHA).
-      - name: Skip if newer code is already live
-        id: stale
+      - uses: superfly/flyctl-actions/setup-flyctl@98172f70657cb3e15db199af139be99bd3e61200 # master, same pin as fly-server-deploy
+        with:
+          version: "0.5.1"
+      - id: stale
         run: |
           LIVE=$(flyctl image show --app webhouse-app --json | jq -r '.[0].Labels // "{}" | fromjson | .GH_SHA // empty')
           echo "live=$LIVE candidate=$GITHUB_SHA"
@@ -93,28 +89,47 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Deploy to Fly.io
-        if: steps.stale.outputs.skip != 'true'
-        run: flyctl deploy --remote-only --build-arg NEXT_PUBLIC_UPMETRICS_DSN="${{ vars.NEXT_PUBLIC_UPMETRICS_DSN }}" --build-arg GIT_SHA="${{ github.sha }}"
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+  # The deploy itself is the fleet-shared workflow (owner 27/11 2026): single-
+  # writer guard, machine-plan/verify and health-verify come from components.
+  deploy:
+    name: Deploy to Fly.io
+    needs: [stale]
+    if: needs.stale.outputs.skip != 'true'
+    concurrency:
+      group: deploy-webhouse-app
+      cancel-in-progress: true
+    uses: broberg-ai/components/.github/workflows/fly-server-deploy.yml@main
+    with:
+      app: webhouse-app
+      # One machine: the data lives on the `cms_data` volume.
+      ha: false
+      health_url: https://webhouse.app/home
+      # The shared workflow passes a 7-char GIT_SHA; the later full-sha arg
+      # wins, so Upmetrics releases keep their current naming.
+      extra_deploy_args: --build-arg NEXT_PUBLIC_UPMETRICS_DSN=${{ vars.NEXT_PUBLIC_UPMETRICS_DSN }} --build-arg GIT_SHA=${{ github.sha }}
+    secrets:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
+  notify:
+    name: Notify Discord
+    needs: [deploy]
+    if: always() && needs.deploy.result != 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Notify Discord
-        if: always()
+        env:
+          RESULT: ${{ needs.deploy.result }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WEBHOOK: ${{ secrets.DEPLOY_DISCORD_WEBHOOK }}
         run: |
-          STATUS="${{ job.status }}"
-          if [ "$STATUS" = "success" ]; then
-            COLOR=3066993
-            EMOJI="✅"
-            MSG="**webhouse.app deployed** to production"
+          if [ "$RESULT" = "success" ]; then
+            COLOR=3066993; EMOJI="✅"; MSG="**webhouse.app deployed** to production"
           else
-            COLOR=15158332
-            EMOJI="❌"
-            MSG="**webhouse.app deploy failed**"
+            COLOR=15158332; EMOJI="❌"; MSG="**webhouse.app deploy failed**"
           fi
           COMMIT_MSG=$(git log -1 --pretty=format:'%s' HEAD)
-          ACTOR="${{ github.actor }}"
-          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -s -X POST "${{ secrets.DEPLOY_DISCORD_WEBHOOK }}" \
-            -H "Content-Type: application/json" \
-            -d "{\"embeds\":[{\"title\":\"$EMOJI $MSG\",\"description\":\"$COMMIT_MSG\",\"color\":$COLOR,\"fields\":[{\"name\":\"Site\",\"value\":\"[webhouse.app](https://webhouse.app)\",\"inline\":true},{\"name\":\"Triggered by\",\"value\":\"$ACTOR\",\"inline\":true},{\"name\":\"Run\",\"value\":\"[View]($RUN_URL)\",\"inline\":true}]}]}" || true
+          BODY=$(jq -n --arg t "$EMOJI $MSG" --arg d "$COMMIT_MSG" --argjson c "$COLOR" --arg a "$ACTOR" --arg r "$RUN_URL" \
+            '{embeds:[{title:$t,description:$d,color:$c,fields:[{name:"Site",value:"[webhouse.app](https://webhouse.app)",inline:true},{name:"Triggered by",value:$a,inline:true},{name:"Run",value:("[View](" + $r + ")"),inline:true}]}]}')
+          curl -s -X POST "$WEBHOOK" -H "Content-Type: application/json" -d "$BODY" || true
