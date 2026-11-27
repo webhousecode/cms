@@ -113,6 +113,9 @@ export function cmsModel(opts: {
  * carries the permission guarantee. A model is still required (and real), so
  * nothing here is a stub that would have to be replaced to make round two work.
  */
+/** The CMS chat assistant's name (what the model calls itself). */
+export const CMS_CHAT_NAME = "Aidan"; // i18n-ignore: the assistant's name, not UI text
+
 export function createCmsChat(opts: {
   tools: ChatTool<void>[];
   model?: ModelFn;
@@ -134,6 +137,10 @@ export function createCmsChat(opts: {
       } as ModelFn),
     tools: opts.tools,
     can,
+    // @broberg/chat 0.9.0 dropped its built-in persona: without a name the
+    // model is told it is "Assistant". The CMS chat has always been Aidan;
+    // that stays until the owner picks another name.
+    name: CMS_CHAT_NAME,
     systemPrompt: opts.systemPrompt,
     maxRounds: opts.maxRounds,
     history: opts.history,

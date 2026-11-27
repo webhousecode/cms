@@ -22,7 +22,7 @@ describe("every frame the engine can emit reaches the user as something", () => 
   // kind, this array is where it has to be added — and the exhaustiveness
   // check in frames.ts (a switch over the union) makes the compiler say so.
   const KINDS: ChatFrame["type"][] = [
-    "text", "tool-call", "tool-result", "history", "limit", "error", "done",
+    "text", "tool-call", "tool-result", "history", "limit", "refused", "error", "done",
   ];
 
   const sample = (t: ChatFrame["type"]): ChatFrame => {
@@ -32,6 +32,7 @@ describe("every frame the engine can emit reaches the user as something", () => 
       case "tool-result": return { type: "tool-result", id: "1", name: "list_documents", result: "ok" };
       case "history": return { type: "history", action: "reduced", note: "Ældre beskeder er sammenfattet.", dropped: 4 };
       case "limit": return { type: "limit", reason: "cap-reached" as never, note: "Grænsen er nået." };
+      case "refused": return { type: "refused", reason: "policy" as never, note: "blocked by policy" };
       case "error": return { type: "error", scope: "tool", name: "x", message: "boom" };
       case "done": return { type: "done", reason: "complete" };
     }
@@ -43,7 +44,7 @@ describe("every frame the engine can emit reaches the user as something", () => 
     // the failure mode they exist to prevent.
     const empty = KINDS.filter((k) => frameToEvents(sample(k)).length === 0);
     expect(empty, `frames that produced no event at all: ${empty.join(", ")}`).toEqual([]);
-    expect(KINDS.length, "the frame list shrank — did a kind disappear?").toBe(7);
+    expect(KINDS.length, "the frame list shrank — did a kind disappear?").toBe(8); // @broberg/chat 0.8.0 added "refused"
   });
 
   it("a shortened conversation TELLS the user — it is not an error and not silence", () => {

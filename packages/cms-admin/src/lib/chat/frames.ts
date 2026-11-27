@@ -115,6 +115,12 @@ export function frameToEvents(frame: ChatFrame, t: T = getT("en")): SseEvent[] {
       // In the reader's language for the same reason as above.
       return [{ event: "text", data: { text: `\n\n${t("chat.frames.limitReached")}` } }];
 
+    case "refused":
+      // @broberg/chat 0.8.0: a policy or EU-residency rule held the answer
+      // back. cms sets neither today, but the rule above holds — the user is
+      // told, in their language; `frame.note` is English and for a log.
+      return [{ event: "text", data: { text: `\n\n${t("chat.frames.refused")}` } }];
+
     case "error":
       return [{ event: "error", data: { message: frame.message, scope: frame.scope } }];
 

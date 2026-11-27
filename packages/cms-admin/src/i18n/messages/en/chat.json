@@ -176,7 +176,8 @@
     "compactionFailed": "I could not summarise the earlier part of the conversation. Try again, or start a new conversation if it keeps happening.",
     "overheadExceeds": "There is no room for this conversation in the current setup. It is not something you can fix — we are looking into it.",
     "notShortened": "The conversation could not be shortened. Try starting a new conversation.",
-    "limitReached": "I had to stop here: the conversation has reached its limit for this round. Start a new conversation and we can continue."
+    "limitReached": "I had to stop here: the conversation has reached its limit for this round. Start a new conversation and we can continue.",
+    "refused": "I can't give that answer here, so I stopped. Try asking in a different way."
   },
   "toolContext": {
     "permissionDenied": "This action requires the permission \"{permission}\", which you do not have. ({operation})",

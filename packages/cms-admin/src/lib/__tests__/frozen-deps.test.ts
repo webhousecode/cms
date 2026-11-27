@@ -53,7 +53,9 @@ const LEDGER: Record<string, string> = {
     "0.9.2 is a security fix: fontSans/fontSerif became an allowlist because ';' " +
     "could inject CSS. We were not exposed (our fonts are constants in " +
     "lib/mail/brand.ts, never tenant data), but the old range had resolved to " +
-    "0.9.0. Exact so a later minor is read before it ships.",
+    "0.9.0. Exact so a later minor is read before it ships. " +
+    "0.10.2 on 2026-11-27 (components F115.2): quadratic-time regexes replaced " +
+    "by linear code; no API or output change. Owner's order.",
   "@broberg/i18n":
     "Exact-pinned 0.3.1 on 2026-10-22 (F211.1) — the admin's own language. Exact " +
     "on purpose: we use only its pure translate() + missingKeys(), and 0.3.0 → " +
@@ -66,7 +68,10 @@ const LEDGER: Record<string, string> = {
     "per-request timeout and was fixed the same day, so a newer release is " +
     "taken deliberately, with fly-machines.test.ts run against it. " +
     "0.5.0 (F200.2, same day): a machine that 404s on the first poll now throws. " +
-    "0.6.0 (F200.4, 2026-09-29): getMachineLogs() — the builder log stream's only source.",
+    "0.6.0 (F200.4, 2026-09-29): getMachineLogs() — the builder log stream's only source. " +
+    "0.11.1 on 2026-11-27 (components F115.2, owner's order): additive since 0.6.0 " +
+    "(createDeployEventBus, unused here) plus the regex security fix; FlyClient " +
+    "unchanged. fly-machines.test.ts green on it.",
   "@broberg/sso":
     "Exact-pinned 0.3.2 on 2026-09-28 (F199.2) — the Broberg ID login. Exact on " +
     "purpose: it is the auth chokepoint, and the package has shipped real " +

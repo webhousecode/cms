@@ -176,7 +176,8 @@
     "compactionFailed": "Jeg kunne ikke sammenfatte den tidligere del af samtalen. Prøv igen, eller start en ny samtale hvis det bliver ved.",
     "overheadExceeds": "Der er ikke plads til denne samtale i den nuværende opsætning. Det er ikke noget du kan gøre ved — vi kigger på det.",
     "notShortened": "Samtalen kunne ikke forkortes. Prøv at starte en ny samtale.",
-    "limitReached": "Jeg måtte stoppe her: samtalen har nået sin grænse for denne omgang. Start en ny samtale, så kan vi fortsætte."
+    "limitReached": "Jeg måtte stoppe her: samtalen har nået sin grænse for denne omgang. Start en ny samtale, så kan vi fortsætte.",
+    "refused": "Det svar kan jeg ikke give her, så jeg stoppede. Prøv at spørge på en anden måde."
   },
   "toolContext": {
     "permissionDenied": "Denne handling kræver rettigheden \"{permission}\", som du ikke har. ({operation})",
