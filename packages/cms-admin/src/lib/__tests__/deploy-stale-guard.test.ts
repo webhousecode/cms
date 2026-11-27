@@ -63,17 +63,25 @@ describe("deploy-is-stale.sh", () => {
 
 describe("deploy.yml wires the guard", () => {
   const yml = readFileSync(join(ROOT, ".github/workflows/deploy.yml"), "utf8");
-  const job = yml.slice(yml.indexOf("\n  deploy:"));
+  // The guard is its own job; the deploy itself is the fleet-shared
+  // fly-server-deploy workflow (owner 27/11 2026), which cms cannot edit —
+  // so the gate lives on the calling job.
+  const stale = yml.slice(yml.indexOf("\n  stale:"), yml.indexOf("\n  deploy:"));
+  const deploy = yml.slice(yml.indexOf("\n  deploy:"));
 
   it("checks out full history (merge-base needs both commits)", () => {
-    expect(job).toMatch(/fetch-depth:\s*0/);
+    expect(yml.indexOf("\n  stale:"), "deploy.yml has no stale job").toBeGreaterThan(-1);
+    expect(stale).toMatch(/fetch-depth:\s*0/);
   });
 
-  it("runs the guard BEFORE flyctl deploy and gates the deploy on it", () => {
-    const guardAt = job.indexOf("scripts/deploy-is-stale.sh");
-    const deployAt = job.indexOf("flyctl deploy");
-    expect(guardAt, "deploy.yml does not call scripts/deploy-is-stale.sh").toBeGreaterThan(-1);
-    expect(guardAt).toBeLessThan(deployAt);
-    expect(job.slice(guardAt, deployAt + 200)).toMatch(/if:\s*steps\.stale\.outputs\.skip\s*!=\s*'true'/);
+  it("the stale job runs the guard and exposes its verdict", () => {
+    expect(stale.indexOf("scripts/deploy-is-stale.sh"), "deploy.yml does not call scripts/deploy-is-stale.sh").toBeGreaterThan(-1);
+    expect(stale).toMatch(/skip:\s*\$\{\{\s*steps\.stale\.outputs\.skip\s*\}\}/);
+  });
+
+  it("the deploy job waits for the guard and is skipped on stale", () => {
+    expect(deploy).toMatch(/needs:\s*\[?\s*stale\s*\]?/);
+    expect(deploy).toMatch(/if:\s*needs\.stale\.outputs\.skip\s*!=\s*'true'/);
+    expect(deploy).toMatch(/uses:\s*broberg-ai\/components\/\.github\/workflows\/fly-server-deploy\.yml@/);
   });
 });

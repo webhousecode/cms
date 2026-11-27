@@ -248,8 +248,8 @@ importers:
         specifier: ^1.9.0
         version: 1.9.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@broberg/ai-sdk':
-        specifier: 0.66.0
-        version: 0.66.0
+        specifier: 0.78.1
+        version: 0.78.1
       '@broberg/chat':
         specifier: '>=0.9.0 <1'
         version: 0.9.0
@@ -267,7 +267,7 @@ importers:
         version: 0.11.1
       '@broberg/i18n':
         specifier: 0.3.1
-        version: 0.3.1(@broberg/ai-sdk@0.66.0)
+        version: 0.3.1(@broberg/ai-sdk@0.78.1)
       '@broberg/mail':
         specifier: 0.16.0
         version: 0.16.0
@@ -528,8 +528,8 @@ importers:
   packages/cms-ai:
     dependencies:
       '@broberg/ai-sdk':
-        specifier: ^0.66.0
-        version: 0.66.0
+        specifier: ^0.78.1
+        version: 0.78.1
       '@webhouse/cms':
         specifier: workspace:*
         version: link:../cms
@@ -1038,8 +1038,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@broberg/ai-sdk@0.66.0':
-    resolution: {integrity: sha512-pFgxvVtAkKQawz4M50GL4CTfjgvIxScX5jJvj5jwH9l9XFAd0clmTM2pEEUuPQn2CTOJ2IrDn3UyevAtylwYFA==}
+  '@broberg/ai-sdk@0.78.1':
+    resolution: {integrity: sha512-XZI7q+4fh48m3QaYX8niTub48154+HwTn/Ebr2O9MjLaxN1Z2hE8nqNoXH2YZuk5Wl47JzAcIJVqKoANn9zpyw==}
     engines: {bun: '>=1.3.0'}
 
   '@broberg/chat@0.9.0':
@@ -6829,7 +6829,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
 
-  '@broberg/ai-sdk@0.66.0':
+  '@broberg/ai-sdk@0.78.1':
     dependencies:
       zod: 4.6.7
 
@@ -6843,13 +6843,13 @@ snapshots:
 
   '@broberg/deploy-core@0.11.1': {}
 
-  '@broberg/i18n@0.3.1(@broberg/ai-sdk@0.66.0)':
+  '@broberg/i18n@0.3.1(@broberg/ai-sdk@0.78.1)':
     optionalDependencies:
-      '@broberg/ai-sdk': 0.66.0
+      '@broberg/ai-sdk': 0.78.1
 
   '@broberg/lens-engine@0.11.0':
     dependencies:
-      '@broberg/ai-sdk': 0.66.0
+      '@broberg/ai-sdk': 0.78.1
       '@mozilla/readability': 0.6.0
       jsdom: 25.0.1
       playwright: 1.64.0
