@@ -70,20 +70,20 @@
     "access": "public"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.17",
-    "better-sqlite3": "^11.10.0",
+    "@hono/node-server": "^2.1.11",
+    "better-sqlite3": "^13.2.0",
     "drizzle-orm": "^0.45.4",
-    "hono": "^4.13.13",
-    "marked": "^15.0.12",
-    "nanoid": "^5.1.16",
+    "hono": "^4.13.21",
+    "marked": "^18.3.0",
+    "nanoid": "^6.0.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^22.20.5",
-    "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.7",
-    "vitest": "^4.1.11"
+    "@types/node": "^26.6.6",
+    "tsup": "^9.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
   }
 }
